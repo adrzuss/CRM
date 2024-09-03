@@ -1,0 +1,25 @@
+        <div class="card">
+            <div class="card-body">
+                <h3>Ingreso de movimiento en cta cte</h3>
+                <form action="{{ url_for('ctactecli.add_cta_cte') }}" method="post">
+                    <div class="mb-3"> 
+                        <label for="idcliente">Id Cliente</label>
+                        <input class="form-control" type="text" name="idcliente" id="idcliente" placeholder="Id del cliente">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha">E-mail</label>
+                        <input class="form-control" type="date" name="fecha" id="fecha" placeholder="Fecha del movimiento">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="debe">Debe</label>
+                        <input class="form-control" type="text" name="debe" id="debe" placeholder="Importe debe">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="haber">Haber</label>
+                        <input class="form-control" type="text" name="haber" id="haber" placeholder="Importe haber">
+                    </div>    
+
+                    <button class="btn btn-exito" type="submit">Grabar</button>
+                </form>
+            </div>    
+        </div>   

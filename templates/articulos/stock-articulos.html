@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="m-3">
+        <h2>Listado de stock</h2>
+    </div>
+    <div class="card m-3"  >
+        <h3 class="m-3">Stock de artículos</h3>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-borderless align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Detalle</th>
+                            <th scope="col">Actual</th>
+                            <th scope="col">Mínimo</th>
+                            <th scope="col">Deseable</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for articulo in listado %}
+                            <tr class="">
+                                <td scope="row"> {{ articulo.codigo }}</td>
+                                <td>{{ articulo.detalle }}</td>
+                                <td>{{ articulo.actual }}</td>
+                                <td>{{ articulo.minimo }}</td>
+                                <td>{{ articulo.deseable }}</td>
+                            </tr>
+                        {% endfor %}    
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    
+{% endblock %}    

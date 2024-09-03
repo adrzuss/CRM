@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block body %}
+    <div class="row m-3">
+        <div class="card col-4 m-3">
+            <div class="class-body">
+                <h3>Ingreso de clientes</h3>
+                <form action="{{ url_for('clientes.update_cliente', id=cliente.id) }}" method="post">
+                    <div class="mb-3"> 
+                        <label for="nombre">Nombre</label>
+                        <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ cliente.nombre }}">
+                    </div>
+                    <div class="mb-3"> 
+                        <label for="documento">Documento</label>
+                        <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el documento" value="{{ cliente.documento }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail">E-mail</label>
+                        <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail" value="{{ cliente.email }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="telefono">Teléfono</label>
+                        <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono" value="{{ cliente.telefono }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="direccion">Dirección</label>
+                        <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ cliente.direccion }}">
+                    </div>    
+                    <div class="form-check">
+                        {% if cliente.ctacte == 1 %}
+                            <input class="form-check-input" type="checkbox" value="" name="ctacte" id="ctacte" checked>
+                        {% else %}    
+                            <input class="form-check-input" type="checkbox" value="" name="ctacte" id="ctacte">
+                        {% endif %}
+                        <label class="form-check-label" for="ctacte">Cliente con cta. cte.</label>
+                    </div>
+
+                    <button class="btn btn-success m-3" type="submit">Grabar</button>
+                </form>
+            </div>    
+        </div>   
+    </div>      
+{% endblock %}

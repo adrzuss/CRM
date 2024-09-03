@@ -1,0 +1,99 @@
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify
+from datetime import datetime, date
+from models.clientes import Clientes
+from models.ventas import Factura
+from utils.db import db
+
+bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
+
+@bp_clientes.route('/clientes')
+def clientes():
+    clientes = Clientes.query.all()
+    return render_template('clientes.html', clientes=clientes)
+
+@bp_clientes.route('/new_cliente', methods=['POST'])
+def add_cliente():
+    nombre = request.form['nombre']
+    documento = request.form['documento']
+    mail = request.form['mail']
+    telefono = request.form['telefono']
+    direccion = request.form['direccion']
+    ctacte = request.form.get("ctacte") != None
+    clientes = Clientes(nombre, documento, mail, telefono, direccion, ctacte)
+    db.session.add(clientes)
+    db.session.commit()
+    flash('Cliente agregado')
+    return redirect('/')
+
+@bp_clientes.route('/get_cliente/<id>')
+def get_cliente(id):
+    cliente = Clientes.query.get(id)
+    print(cliente)
+    if cliente:
+        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte})
+    else:
+        return jsonify(success=False)
+
+@bp_clientes.route('/get_clientes')
+def get_clientes():
+    nombre = request.args.get('nombre', '')
+    if nombre:
+        clientes = Clientes.query.filter(Clientes.nombre.like(f"{nombre}%")).all()
+    else:
+        clientes = []
+    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte} for c in clientes])
+
+@bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
+def update_cliente(id):
+    cliente = Clientes.query.get(id)
+    if request.method == 'GET':
+        return render_template('upd-cliente.html', cliente = cliente)
+    if request.method == 'POST':
+        ctacte = request.form.get("ctacte") != None
+        cliente.nombre = request.form['nombre']
+        cliente.documento = request.form['documento']
+        cliente.email = request.form['mail']
+        cliente.telefono = request.form['telefono']
+        cliente.direccion = request.form['direccion']
+        cliente.ctacte = ctacte
+        db.session.commit()
+        flash('Cliente grabado')
+        return redirect(url_for('clientes.clientes'))
+
+@bp_clientes.route('/delete_cliente/<id>')
+def delete_cliente(id):
+    cliente = Clientes.query.get(id)
+    db.session.delete(cliente)
+    db.session.commit()
+    flash('Cliente eliminado')
+    return redirect(url_for('clientes'))
+
+@bp_clientes.route('/facturas_cliente/<id>', methods=['GET', 'POST'])
+def facturas_cliente(id):
+    cliente = Clientes.query.get(id)
+    if request.method == 'POST':
+        # Obtener las fechas del formulario
+        desde_str = request.form['desde']
+        hasta_str = request.form['hasta']
+
+        # Convertir las fechas a objetos datetime
+        desde = datetime.strptime(desde_str, '%Y-%m-%d')
+        hasta = datetime.strptime(hasta_str, '%Y-%m-%d')
+        
+        # Realizar la consulta con join y filtro por fechas
+        facturas = db.session.query(Factura).join(Clientes).filter(
+            Factura.idcliente == cliente.id,
+            Factura.fecha >= desde,
+            Factura.fecha <= hasta
+        ).all()
+        
+        # Pasar los resultados a la plantilla
+        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str)
+    desde = date.today()
+    hasta = date.today()
+    facturas = db.session.query(Factura).join(Clientes).filter(
+            Factura.idcliente == cliente.id,
+            Factura.fecha >= desde,
+            Factura.fecha <= hasta
+        ).all()
+    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta)

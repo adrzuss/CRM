@@ -1,0 +1,34 @@
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-primary">
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Mail</th>
+                    <th scope="col">Telefono</th>
+                    <th scope="col">Cta.Cte.</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                    <tr class="">
+                        <td scope="row">{{ cliente.nombre }}</td>
+                        <td>{{ cliente.email }}</td>
+                        <td>{{ cliente.telefono }}</td>
+                        <td>
+                            <a href="{{ url_for('ctactecli.lst_cta_cte', id=cliente.id) }}" class="btn btn-dark">Movs.cta.cte.</a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-success">Actualizar</a>
+                            <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-danger">Eliminar</a>
+                            <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-warning">Facturas</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>    
+</div>

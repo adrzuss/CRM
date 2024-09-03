@@ -1,0 +1,42 @@
+{% include 'base.html'%}
+
+{% block body %}
+<div class="row">
+    <div class="col-6">
+        <div class="card">
+            <div class="table-responsive" >
+                <table class="table table-striped table-hover table-borderless table-primary align-middle">
+                    <thead class="table-light">
+                        <caption>
+                            Movimientos de cuenta corriente de proveedores
+                        </caption>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Fecha</th>
+                            <th>Debe</th>
+                            <th>Haber</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        <tr class="table-primary">
+                            {% for movimiento in movimientos %}
+                                <td>{{ movimiento.id }}</td>
+                                <td>{{ movimiento.fecha }}</td>
+                                <td>{{ movimiento.debe }}</td>
+                                <td>{{ movimiento.haber }}</td>
+                            {% endfor %}
+                            
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        
+                    </tfoot>
+                </table>
+            </div>
+            
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}

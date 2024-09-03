@@ -1,0 +1,25 @@
+{% extends 'base.html'%}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Ingreso de marcas</h3>
+                    <form action="{{ url_for('articulos.add_marca') }}" method="post">
+                        <div class="mb-3">
+                            <label for="marca">Marca</label>
+                            <input class="form-control" type="text" name="marca" id="marca" placeholder="Ingrese la marca">
+                        </div>    
+                                               
+                        <button class="btn btn-success" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-marcas.html' %}
+        </div>     
+    </div>      
+{% endblock %}    

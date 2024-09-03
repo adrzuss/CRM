@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+
+    <h1 class="m-3">Nueva factura de venta</h1>
+    <div class="container">
+        <form id="invoice_form" method="post">
+            <div class="card mb-3">
+                <!--
+                TODO agregar busqueda de clientes
+                -->
+                <h4 class="m-2">Cliente</h4>
+
+                <div class="modal fade" id="clienteModal" tabindex="-1" role="dialog" aria-labelledby="clienteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="clienteModalLabel">Seleccione un Cliente</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="modalContent">
+                                <!-- Aquí se mostrarán las opciones de clientes -->
+                                
+                                 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+
+                <div class="cardbody">
+                    <div class="row m-3">
+                        <div class="col-md-1">
+                            <label for="id">#Cli</label>
+                            <input class="form-control" type="text" name="id" id="id" readonly>   
+                        </div>
+                        <div class="col-md-2">
+                            <label for="idcliente">Cliente:</label>
+                            <input class="form-control" type="text" name="idcliente" id="idcliente" required>
+                        </div>    
+                        <div class="col-md-5">
+                            <label for="cliente_nombre">Nombre del Cliente:</label>
+                            <input class="form-control" type="text" name="cliente_nombre" id="cliente_nombre" readonly>   
+                        </div>    
+                        <div class="col-md-2">
+                            <label for="fecha">Fecha:</label>
+                            <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                        </div>    
+                        <div class="col-md-2">
+                            <label for="idlista" class="form-label">Lista de precios:</label>
+                            <select class="form-select form-select-md" name="idlista" id="idlista">
+                                {% for lista in listas_precio %}
+                                    {% if lista.id == 1 %}
+                                        <option value="{{ lista.id }}" selected>{{ lista.nombre }}</option>
+                                    {% endif %}    
+                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                {% endfor %}    
+                            </select>
+                        </div>
+                    </div>    
+                </div>    
+            </div>    
+
+            <div class="card">
+                <div class="cardbody">
+                    <div id="items" name="items">
+                        
+                    </div>
+                </div>
+            </div>    
+
+            <div class="row">
+                <button class="btn btn-success col-2 m-2" type="button" id="add_item">Agregar Item</button>
+                <h3 class="m-3">Total Factura: $<span id="total_factura">0.00</span></h3>
+            </div>
+
+            <div class="card">
+                <h4 class="m-3">Formas de pago</h4>
+                <div class="card-body">
+                    <div class="row justify-content-md-center">
+                        <div class="col-3 mt-3">
+                            <label for="efectivo">Efectivo</label>
+                            <input type="number" name="efectivo" id="efectivo" class="form-control" value="0">
+                        </div>
+                        <div class="col-3">
+                            <label for="entidad" class="form-label">Entidad</label>
+                            <select class="form-select form-select-md" name="entidad" id="entidad" >
+                                <option selected>Elija una</option>
+                                {% for entidad in entidades %}
+                                    <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="ctacte">Tarjeta</label>
+                            <input type="number" name="tarjeta" id="tarjeta" class="form-control" value="0">
+                        </div>    
+                        <div class="col-3 mt-3">    
+                            <label for="ctacte">Cta. Cte.</label>
+                            <input type="number" name="ctacte" id="ctacte" class="form-control" value="0">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+            </div>
+        </form>
+    </div>    
+
+    <script>
+        async function fetchCliente(input) {
+            let response;
+        
+            // Determinar si la entrada es un ID numérico o un nombre
+            if (!isNaN(input)) {
+                // Si es un número, buscar por ID
+                response = await fetch(`/get_cliente/${input}`);
+            } else {
+                // Si es un nombre parcial, buscar por nombre
+                response = await fetch(`/get_clientes?nombre=${input}`);
+            }
+        
+            if (!response.ok) {
+                console.error("Error en la búsqueda del cliente");
+                return;
+            }
+        
+            const data = await response.json();
+           
+            if (data.length > 1) {
+                // Si hay más de un resultado, mostrar un modal para seleccionar
+                mostrarModalSeleccionClientes(data);
+            } else if (data.cliente != undefined) {
+                // Si hay un solo resultado, asignar directamente
+                asignarCliente(data.cliente);
+            } else {
+                alert("No se encontraron clientes con ese nombre.");
+            }
+        }
+        
+        function mostrarModalSeleccionClientes(clientes) {
+            // Crear el contenido del modal con las opciones de cliente
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = '';
+            const listaClientes = document.createElement('ul');
+            listaClientes.classList.add('list-group')
+            modalContent.appendChild(listaClientes)
+            
+            clientes.forEach(cliente => {
+                const clienteOption = document.createElement('li');
+                clienteOption.classList.add('cliente-option');
+                clienteOption.classList.add('list-group-item');
+                clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
+                clienteOption.onclick = () => {
+                    asignarCliente(cliente);
+                    $('#clienteModal').modal('hide');
+                };
+                listaClientes.appendChild(clienteOption);
+            });
+        
+            // Mostrar el modal
+            $('#clienteModal').modal('show');
+        }
+        
+        function asignarCliente(cliente) {
+            document.getElementById('idcliente').value = cliente.id;
+            document.getElementById('cliente_nombre').value = cliente.nombre;
+            document.getElementById('id').value = cliente.id;
+            document.getElementById('ctacte').readOnly = cliente.ctacte == 1;
+        }
+
+        async function fetchArticulo(id, idlista, itemDiv) {
+            const response = await fetch(`/articulo/${id}/${idlista}`);
+            const data = await response.json();
+            if (data.success) {
+                itemDiv.querySelector('.articulo_detalle').textContent = data.articulo.detalle;
+                itemDiv.querySelector('.articulo_precio').value = data.articulo.precio;
+                updateItemTotal(itemDiv);
+                updateTotalFactura();
+            } else {
+                itemDiv.querySelector('.articulo_detalle').textContent = data.error;
+                itemDiv.querySelector('.articulo_precio').value = '0.00';
+                itemDiv.querySelector('.articulo_precio').readOnly = false
+                updateItemTotal(itemDiv);
+                updateTotalFactura();
+            }
+        }
+
+        function updateItemTotal(itemDiv) {
+            const precioUnitario = parseFloat(itemDiv.querySelector('.articulo_precio').value);
+            const cantidad = parseFloat(itemDiv.querySelector('.cantidad').value);
+            const precioTotal = (precioUnitario * cantidad).toFixed(2);
+            if (isNaN(precioTotal)){
+                precioTotal = 0;
+            }
+            itemDiv.querySelector('.precio_total').value = precioTotal;
+        }
+
+        function updateTotalFactura() {
+            const itemDivs = document.querySelectorAll('#items .item');
+            let totalFactura = 0;
+            itemDivs.forEach(itemDiv => {
+                const precioTotal = parseFloat(itemDiv.querySelector('.precio_total').value);
+                totalFactura += precioTotal;
+            });
+            document.getElementById('total_factura').textContent = totalFactura.toFixed(2);
+        }
+
+        function removeItem(itemDiv) {
+            itemDiv.remove();
+            updateTotalFactura();
+            renumberItems();
+        }
+
+        function renumberItems() {
+            const itemDivs = document.querySelectorAll('#items .item');
+            itemDivs.forEach((itemDiv, index) => {
+                itemDiv.querySelector('.idarticulo').setAttribute('name', `items[${index}][idarticulo]`);
+                itemDiv.querySelector('.cantidad').setAttribute('name', `items[${index}][cantidad]`);
+                itemDiv.querySelector('.precio_articulo').setAttribute('name', `items[${index}][cantidad]`);
+            });
+        }
+
+        function checkDatosTarjeta(){
+            const tarjeta = parseFloat(document.getElementById('tarjeta').value);
+            if (tarjeta > 0){
+                const entidad = document.getElementById('entidad').value;
+             
+                if (entidad <= 0){
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        function checkTotales() {
+            const totalFac = parseFloat(document.getElementById('total_factura').textContent);
+            const efectivo = parseFloat(document.getElementById('efectivo').value);
+            const ctacte = parseFloat(document.getElementById('ctacte').value);
+            const tarjeta = parseFloat(document.getElementById('tarjeta').value);
+            let HayDiferencia = (totalFac == (efectivo + tarjeta + ctacte));
+            
+            return HayDiferencia;
+        }
+
+        document.getElementById('idcliente').addEventListener('blur', function() {
+            const idcliente = this.value;
+            fetchCliente(idcliente);
+        });
+
+        document.getElementById('items').addEventListener('input', function(e) {
+            if (e.target.classList.contains('idarticulo') || e.target.classList.contains('cantidad')) {
+                const itemDiv = e.target.closest('.item');
+                updateItemTotal(itemDiv);
+                updateTotalFactura();
+            }
+        });
+
+        document.getElementById('add_item').addEventListener('click', function() {
+            const itemsDiv = document.getElementById('items');
+            const itemCount = itemsDiv.children.length;
+
+            const newItem = document.createElement('div');
+            newItem.classList.add('item');
+
+            newItem.innerHTML = `
+                <div class="row m-3">
+                    <div class="col-2">
+                        <label for="idarticulo">Cod artículo:</label>
+                        <input type="number" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
+                    </div>    
+                    <div class="col-3">
+                        <label for="articulo_detalle">Detalle:</label>
+                        <span class="articulo_detalle"></span>
+                    </div>    
+                    <div class="col-2">
+                        <label for="articulo_precio">Precio Unitario:</label>
+                        <input type="number" name="items[${itemCount}][articulo_precio]" class="form-control articulo_precio" readonly>
+                    </div>    
+                    <div class="col-1">
+                        <label for="cantidad">Cantidad:</label>
+                        <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control" min="1" value='1' required>
+                    </div>    
+
+                    <div class="col-2">
+                        <label for="precio_total">Precio Total:</label>
+                        <input type="text" name="precio_total" id="precio_total" class="precio_total form-control" value="0.00" readonly>
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="remove_item btn btn-danger">Eliminar</button>
+                    </div>
+                </div>    
+            `;
+
+            itemsDiv.appendChild(newItem);
+
+            newItem.querySelector('.idarticulo').addEventListener('blur', function() {
+                const idarticulo = this.value;
+                const idlista = document.getElementById('idlista').value
+                fetchArticulo(idarticulo, idlista, newItem);
+            });
+
+            newItem.querySelector('.remove_item').addEventListener('click', function() {
+                removeItem(newItem);
+            });
+
+        });
+
+        document.getElementById('invoice_form').addEventListener('submit', function(event) {
+            if (document.querySelectorAll('#items .item').length === 0) {
+                event.preventDefault();
+                alert('Debe agregar al menos un item a la factura');
+            }   
+            if (checkDatosTarjeta() == false){
+                event.preventDefault();
+                alert('Debe completar correctamente los datos de tarjeta');
+            }
+
+            if (checkTotales() == false){
+                event.preventDefault();
+                alert('La suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura');
+            }    
+            if (confirm('¿Grabar la factura?') == false) {
+                event.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

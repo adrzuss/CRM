@@ -1,0 +1,59 @@
+body{
+    background-color: #0198a5;
+}
+
+.body2{
+    background-color: #ececec;
+}
+
+.text-bg-uno {
+
+    background-color: rgba(15, 15, 189, 0.349);
+    color: white;
+}
+
+.text-bg-dos {
+    background-color: rgba(134, 15, 189, 0.349);
+    color: white;
+}
+
+.text-bg-tres {
+    background-color: rgba(15, 189, 131, 0.37);
+    color: white;
+}
+
+.text-bg-cuatro {
+    background-color: rgba(189, 15, 15, 0.349);
+    color: white;
+}
+
+.btn-primario{
+    background-color: rgb(61, 136, 187);
+    color: white;
+}
+
+.btn-primario:hover{
+    background-color: rgb(3, 113, 187);
+    color: white;
+}    
+
+.btn-exito{
+    background-color: rgb(61, 187, 109);
+    color: white;
+}
+
+.btn-exito:hover{
+    background-color: rgb(1, 182, 71);
+    color: white;
+}    
+
+
+.btn-peligro{
+    background-color: rgb(192, 73, 73);
+    color: white;
+}
+
+.btn-peligro:hover{
+    background-color: rgb(197, 4, 4);
+    color: white;
+}

@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-primary">
+            <thead>
+                <tr>
+                    <th scope="col"># Lista</th>
+                    <th scope="col">Lista de precio</th>
+                    <th scope="col">Markup</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lista_precio in listas_precios %}
+                    <tr class="">
+                        <td scope="row">{{ lista_precio.id }}</td>
+                        <td>{{ lista_precio.nombre }}</td>
+                        <td>{{ lista_precio.markup }}</td>
+                        <td>
+                            <a href="#" class="btn btn-success">Actualizar</a>
+                            <a href="#" class="btn btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>    
+</div>

@@ -1,0 +1,46 @@
+{% extends 'layout.html'%}
+{% block body %}
+    <div class="row m-2">
+        <div class="col-sm-3">
+            <div class="card text-bg-uno">
+                <div class="card-header">
+                    Ventas
+                </div>
+                <div class="card-body">
+                    Total vtas: {{ vta_hoy }}
+                </div>
+            </div>
+        </div>    
+        <div class="col-sm-3">
+            <div class="card text-bg-dos">
+                <div class="card-header">
+                    Cta Cte Clientes
+                </div>
+                <div class="card-body">
+                    Saldos: {{ saldo_cta_cte }}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">    
+            <div class="card text-bg-tres">
+                <div class="card-header">
+                    Compras
+                </div>
+                <div class="card-body">
+                    Cuerpo
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card text-bg-cuatro">
+                <div class="card-header">
+                    Cta Cte Proveedores
+                </div>
+                <div class="card-body">
+                    Cuerpo
+                </div>
+            </div>
+        </div>    
+    </div>
+    
+{% endblock %}    

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block body %}
+    <form action="{{ url_for('articulos.update_articulo', id=articulo.id) }}" id="articulo_form" method="post" enctype="multipart/form-data">
+    <div class="row justify-content-md-center mt-3">
+        <div class="col-6">
+            <div class="card">
+                <h3 class="m-3">Modificacion de artículos</h3>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="mb-3 col-4"> 
+                            <label for="id">#</label>
+                            <input class="form-control" type="text" name="id" id="id" value="{{ articulo.id }}" readonly>
+                        </div>
+                        <div class="mb-3 col-8"> 
+                            <label for="codigo">Código</label>
+                            <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}">
+                        </div>
+                    </div>    
+                    <div class="mb-3">
+                        <label for="detalle">Detalle</label>
+                        <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle" value="{{ articulo.detalle }}">
+                    </div>    
+                    <div class="row">
+                        <div class="mb-3 col-5">
+                            <label for="precio">Costo</label>
+                            <input class="form-control" type="text" name="costo" id="costo" placeholder="Ingrese el precio" value="{{ articulo.costo }}">
+                        </div>    
+                
+                        <div class="mb-3 col-5">
+                            <label for="idiva">IVA:</label>
+                            <select class="form-control" id="idiva" name="idiva" required value="{{ articulo.idiva }}">
+                            {% for iva in ivas %}
+                                <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
+                            {% endfor %}
+                            </select>
+                        </div>    
+                    </div>    
+                    <div class="mb-3">
+                        <label for="idmarca">Marca:</label>
+                        <select class="form-control" id="idmarca" name="idmarca" required value="{{ articulo.idmarca }}">
+                        {% for marca in marcas %}
+                            <option value="{{ marca.id }}">{{ marca.nombre }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>    
+                    <div class="mb-3">
+                        <label for="imagen">Imagen:</label>
+                        <input class="form-control" type="file" id="imagen" name="imagen" value="{{ articulo.imagen }}" >
+                    </div>    
+                    {% if articulo.imagen %}
+                        <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo">
+                    {% else %}    
+                    <img src="" alt="Imagen del artículo">               
+                    {% endif %}
+                    <button class="btn btn-exito" type="submit">Grabar</button>
+    
+                </div>  
+            </div>
+        </div>    
+        <div class="col-4">
+            <div class="col-12">
+            <div class="card mb-3">
+                <h5 class="m-3">Precios de venta al público</h5>
+                <div class="card-body">
+                    <div class="precios" id="precios">
+                        {% for lista in listas_precio %}
+                            <div class="row" id="precio">
+                                <div class="col-md-2 mb-3">
+                                    <label for="idlista{{loop.index}}">#Lista</label>
+                                    <input class="form-control" type="text" name="precio[{{loop.index}}][idlista]" id="precio[{{loop.index}}][idlista]" value="{{ lista.id }}" readonly>
+                                </div> 
+                                <div class="col-md-4 mb-3">
+                                    <label for="lista{{loop.index}}">Lista</label>
+                                    <input class="form-control" type="text" name="precio[{{loop.index}}][lista]" id="precio[{{loop.index}}][lista]" value="{{ lista.nombre }}" readonly>
+                                </div>    
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="pvp{{loop.index}}">Precio V.P.</label>
+                                    <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}">
+                                </div>    
+
+                                <div class="col-md-2 mb-3">
+                                    <label for="markaup{{loop.index}}">Markup</label>
+                                    <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup }}">
+                                </div>    
+                            </div>
+
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+            
+            <div>
+                <div class="card">
+                    <h5 class="m-3">Stock de artículos</h5>
+                    <div class="card-body">
+                        {% for stock in stocks %}
+                            <label for="stock">Stock</label>
+                            <input type="text" class="form-control" value="{{ stock.actual }}" readonly>
+                        {% endfor %}
+                    </div>    
+            </div>
+            </div>
+        </div>
+    </div>      
+    </form>
+
+    <script>
+        document.getElementById('costo').addEventListener('input', function(e) {
+            const costo = parseFloat(document.getElementById('costo').value);
+            const itemDivs = document.querySelectorAll('.precios #precio');
+            itemDivs.forEach((itemDiv, index) => {
+                const markup = parseFloat(itemDiv.querySelector('.markup').value);
+                itemDiv.querySelector('.precio').value = markup.toFixed(2) * costo.toFixed(2);
+            });
+            
+        });
+    
+        async function checkArt(e){
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value;
+            const respuesta = await fetch(`/articulo/${codigo}/0`);
+            const data = await respuesta.json();
+            if ((data.error = 'Artículo no encontrado') || (data.success == false)){
+                form_articulos.removeEventListener('submit', checkArt)
+                form_articulos.submit();
+            }
+            else{
+                alert(`El código: ${codigo} ya figura en otro artículo: ${data.articulo.id}: ${data.articulo.detalle}`);
+            }
+        }
+    
+        let form_articulos = document.getElementById('articulo_form');
+        form_articulos.addEventListener('submit', checkArt);
+    
+    </script>
+    
+{% endblock %}
+

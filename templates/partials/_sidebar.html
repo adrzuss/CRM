@@ -1,0 +1,143 @@
+<!-- Sidebar -->
+        <!--
+        <ul class="navbar-nav bg-gradient-secondary sidebar sidebar-dark accordion" id="accordionSidebar">
+        -->    
+        <ul class="navbar-nav sidebar sidebar-dark accordion bg-color-mediumblue" id="accordionSidebar" >
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-shop"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">SoftTech<sup></sup></div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('index') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Tablero</span></a>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Clientes
+            </div>
+            <!-- Nav Item - Utilities Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseClientes"
+                    aria-expanded="true" aria-controls="collapseClientes">
+                    <i class="fas fa-fw fa-credit-card"></i>
+                    <span>Clientes</span>
+                </a>
+                <div id="collapseClientes" class="collapse" aria-labelledby="headingClientes"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de clientes:</h6>
+                        <a class="collapse-item" href="{{ url_for('clientes.clientes') }}">ABM de clientes</a>
+                        <a class="collapse-item" href="{{ url_for('ctactecli.saldos') }}">Cta. cte. de clientes</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+                    aria-expanded="true" aria-controls="collapseVentas">
+                    <i class="fas fa-fw fa-wallet"></i>
+                    <span>Ventas</span>
+                </a>
+                <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Ventas de artículos:</h6>
+                        <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
+                    </div>
+                </div>
+            </li>
+
+                        
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Artículos
+            </div>
+            <!-- Nav Item - Utilities Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFinanzas"
+                    aria-expanded="true" aria-controls="collapseFinanzas">
+                    <i class="fas fa-fw fa-money-bill"></i>
+                    <span>Artículos</span>
+                </a>
+                <div id="collapseFinanzas" class="collapse" aria-labelledby="headingIngresos"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Artículos</h6>
+                        <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">ABM de artículos</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.stock_art') }}">Listado de stock</a>
+                        
+                    </div>
+                </div>
+            </li>
+            <!-- Divider -->
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Proveedores
+            </div>
+            <!-- Nav Item - Utilities Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProveedores"
+                    aria-expanded="true" aria-controls="collapseProveedores">
+                    <i class="fas fa-fw fa-cart-plus"></i>
+                    <span>Proveedores</span>
+                </a>
+                <div id="collapseProveedores" class="collapse" aria-labelledby="headingProveedores"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Proveedores</h6>
+                        <a class="collapse-item" href="{{ url_for('proveedores.proveedores') }}">ABM Proveedores</a>
+                        <a class="collapse-item" href="{{ url_for('ctacteprov.proveedores') }}">Cta. cte de proveedores</a>
+                    </div>
+                    
+                </div>
+            </li>    
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCompras"
+                    aria-expanded="true" aria-controls="collapseCompras">
+                    <i class="fas fa-fw fa-cart-plus"></i>
+                    <span>Compras</span>
+                </a>
+                <div id="collapseCompras" class="collapse" aria-labelledby="headingCompras"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Compras</h6>
+                        <a class="collapse-item" href="{{ url_for('proveedores.compras') }}">Listado de compras</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.nueva_compra') }}">Nueva compra</a>
+                    </div>
+                    
+                </div>
+                
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+            <!-- Sidebar Message -->
+            <div class="sidebar-card d-none d-lg-flex">         
+                <img class="sidebar-card-illustration mb-2" src="/static/img/softtechweb.png" alt="...">
+                <p class="text-center mb-2"><strong>Desarrollador por</strong> SoftTech Web</p>
+                <a class="btn btn-primary btn-sm" href="https://adrianzussino.com">Visite nuestra página</a>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->

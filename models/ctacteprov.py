@@ -1,0 +1,16 @@
+from utils.db import db
+
+
+class CtaCteProv(db.Model):
+    __tablename__ = 'cta_cte_prov'
+    id = db.Column(db.Integer, primary_key=True)
+    idProveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=False)
+    fecha = db.Column(db.Date, nullable = False)
+    debe = db.Column(db.Numeric(20,6), nullable = False)
+    haber = db.Column(db.Numeric(20,6), nullable = False)
+    
+    def __init__(self, idProveedor, fecha, debe = 0, haber = 0):
+        self.idProveedor = idProveedor
+        self.fecha = fecha
+        self.debe = debe
+        self.haber = haber

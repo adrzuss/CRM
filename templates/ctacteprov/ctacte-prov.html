@@ -1,0 +1,33 @@
+{% extends 'base.html'%}
+
+{% block body%}
+
+<div class="col-md-5">
+    <div class="card">
+        <div class="card-body">
+            <h3>Ingreso de movimiento en cta cte</h3>
+            <form action="{{ url_for('ctacteprov.add_cta_cte') }}" method="post">
+                <div class="mb-3"> 
+                    <label for="idproveedor">Id Proveedor</label>
+                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" placeholder="Id del proveedor">
+                </div>
+                <div class="mb-3">
+                    <label for="fecha">E-mail</label>
+                    <input class="form-control" type="date" name="fecha" id="fecha" placeholder="Fecha del movimiento">
+                </div>    
+                <div class="mb-3">
+                    <label for="debe">Debe</label>
+                    <input class="form-control" type="text" name="debe" id="debe" placeholder="Importe debe">
+                </div>    
+                <div class="mb-3">
+                    <label for="haber">Haber</label>
+                    <input class="form-control" type="text" name="haber" id="haber" placeholder="Importe haber">
+                </div>    
+
+                <button class="btn btn-success" type="submit">Grabar</button>
+            </form>
+        </div>    
+    </div>   
+</div>
+
+{% endblock %}

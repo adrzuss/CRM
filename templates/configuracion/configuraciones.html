@@ -1,0 +1,18 @@
+{% extends 'base.html'%}
+
+{% block body %}
+    <div class="card m-3">
+        <h4 class="m-3">Alícuotas de IVA</h4>
+        <div class="card-body">
+            {% include '/partials/_alicuotas-iva.html' %}
+        </div>    
+    </div>
+
+    <div class="card m-3">
+        <h4 class="m-3">Listas de precios</h4>
+        <div class="card-body">
+            {% include '/partials/_listas-precios.html' %}
+        </div>
+    </div>
+
+{% endblock %}

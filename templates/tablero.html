@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block body %}
+
+    <!-- Begin Page Content -->
+    <meta http-equiv="refresh" content="300">
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Tablero informativo</h1>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
+                    class="fas fa-download fa-sm text-white-50"></i> Generar reporte </a>
+        </div>
+        
+        <!-- Content Row 
+        segunda fila de datos
+        -->
+        <div class="row">
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-dark shadow h-100 py-2">
+                
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Ventas </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"></div>
+                                <hr>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de hoy: {{ vta_hoy }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de esta semana: {{ vta_semana }} </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings (Monthly) Card Example -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                
+                <div class="card border-left-primary shadow h-100 py-2">
+                               
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Cta. cte. clientes
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"> </div>
+                                <hr>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo {{ saldo_clientes }} </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-address-book fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         
+            <!-- Earnings (Monthly) Card Example -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Cta. cte. proveedores</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800"></div>
+                                <hr>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo {{ saldo_proveedores }}  </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Earnings (Monthly) Card Example -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Ventas</div>
+                                
+                                <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"></div>
+                                <hr>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Este mes:  </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Este año:  </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-camera-retro fa-2x text-gray-300"></i>
+                                <!--
+                                <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+
+        
+        <!-- Content Row -->
+        
+        <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Ventas de los últimos 6 meses</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                aria-labelledby="dropdownMenuLink">
+                                <div class="dropdown-header">Opciones del grafico:</div>
+                                <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                                <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Opciones</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="barrasEventos"></canvas>
+                            
+                            <script>
+                                mesess = {{ meses|tojson }};
+                                eventoss = {{ operaciones|tojson }};
+                            </script>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Proximos eventos</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                aria-labelledby="dropdownMenuLink">
+                                <div class="dropdown-header">Dropdown Header:</div>
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="myPieChart"></canvas>
+                            
+                            <!-- acá va el script con los datos j son-->
+                            
+                            
+                        </div>
+                        <div class="mt-4 text-center small" id="coloresPie">
+                            
+                            <!--
+                            las leyendas y colores se establecen en chart-pie-demo.js    
+                            -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Row -->
+        <div class="row">
+
+            
+
+            <!-- tarjetas con información del lado derecho de la grilla -->
+            <div class="col-lg-12 mb-4">
+                <!-- Color System -->
+                <div class="row">
+                    
+                    <div class="col-lg-3 mb-4">
+                        {% for evento in proximosEventos %}
+                            <div class="card bg-primary text-white shadow">
+                                <div class="card-body">
+                                    Evento: {{ evento[1] }}
+                                    <hr class="sidebar-divider">
+                                    <!-- e.id, e.nombre_evento, e.lugar_evento, e.fecha, c.apellido, c.nombret, e.tipo_evento -->
+                                    <div class="text-white-50 small">Tipo: {{ evento[6] }}</div>
+                                    <div class="text-white-50 small">Fecha: {{ evento[3] }}</div>
+                                    <div class="text-white-50 small">Lugar: {{ evento[2] }}</div>
+                                    <div class="text-white-50 small">Cliente: {{ evento[4] }}, {{ evento[5] }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-lg-3 mb-4">
+                        <!-- ct.id, ct.dia, ct.hora, ct.lugar_evento, c.apellido, c.nombre -->
+                        {% for cita in proximasCitas %}
+                            <div class="card bg-success text-white shadow">
+                                <div class="card-body">
+                                    Cita: {{cita[4]}}, {{cita[5]}}
+                                    <hr class="sidebar-divider">
+                                    <div class="text-white-50 small">Dia: {{ cita[1] }}</div>
+                                    <div class="text-white-50 small">Hora: {{ cita[2] }}</div>
+                                    <div class="text-white-50 small">Lugar evento: {{ cita[3] }}</div>
+                                    
+                                </div>
+                            </div>
+                        {% endfor %}    
+                    </div>
+                    <div class="col-lg-3 mb-4">
+                        <!-- cc.id, cc.cuota, cc.vto_cuota, cc.importe, e.nombre_evento, c.apellido, c.nombre -->
+                        {% for cuota in proximasCuotas %}
+                            <div class="card bg-info text-white shadow">
+                                <div class="card-body">
+                                    Evento {{ cuota[4] }}
+                                    <hr class="sidebar-divider">
+                                    <div class="text-white-50 small">Cuota N°: {{ cuota[1] }}</div>
+                                    <div class="text-white-50 small">Vencimiento: {{ cuota[2] }}</div>
+                                    <div class="text-white-50 ">Importe: {{ cuota[3] }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}    
+                    </div>
+                    <div class="col-lg-3 mb-4">
+                        {% for vencida in cuotasVencidas %}
+                        <div class="card bg-danger text-white shadow">
+                            <div class="card-body">
+                                Evento: {{ vencida[4] }}
+                                <hr class="sidebar-divider">
+                                <div class="text-white-50 small">Cuota N°: {{ vencida[1] }}</div>
+                                <div class="text-white-50 small">Vencimiento: {{vencida[2]}}</div>
+                                <div class="text-white-50">Importe: {{vencida[3]}}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!--
+                    <div class="col-lg-6 mb-4">
+                        <div class="card bg-warning text-white shadow">
+                            <div class="card-body">
+                                Warning
+                                <div class="text-white-50 small">#f6c23e</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card bg-danger text-white shadow">
+                            <div class="card-body">
+                                Danger
+                                <div class="text-white-50 small">#e74a3b</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card bg-secondary text-white shadow">
+                            <div class="card-body">
+                                Secondary
+                                <div class="text-white-50 small">#858796</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card bg-light text-black shadow">
+                            <div class="card-body">
+                                Light
+                                <div class="text-black-50 small">#f8f9fc</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card bg-dark text-white shadow">
+                            <div class="card-body">
+                                Dark
+                                <div class="text-white-50 small">#5a5c69</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>    
+            -->    
+            <!-- 
+            <div class="col-lg-6 mb-4">
+
+                <!-- Illustrations ->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Illustrations</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
+                                src="img/undraw_posting_photo.svg" alt="...">
+                        </div>
+                        <p>Add some quality, svg illustrations to your project courtesy of <a
+                                target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>, a
+                            constantly updated collection of beautiful svg images that you can use
+                            completely free and without attribution!</p>
+                        <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on
+                            unDraw &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Approach ->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce
+                            CSS bloat and poor page performance. Custom CSS classes are used to create
+                            custom components and custom utility classes.</p>
+                        <p class="mb-0">Before working with this theme, you should become familiar with the
+                            Bootstrap framework, especially the utility classes.</p>
+                    </div>
+                </div>
+
+            </div>
+        -->
+        </div>
+
+    </div>
+    <!-- /.container-fluid -->
+                   
+{% endblock %}
+
+{% block js_script %}
+    <!-- Page level plugins -->
+    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Page level custom scripts-->
+    <script src="/static/js/demo/chart-bar-demo.js"></script>
+
+    <script src="/static/js/demo/chart-pie-demo.js"></script>
+
+{% endblock %}
+
+<!-- 
+<script>
+    mesess = {{ meses|tojson }};
+    eventoss = {{ eventos|tojson }};
+</script>
+<script>
+    tipoEvento = {{ tipoEventos|tojson }};
+    cantTipoEvento = {{ cantTipoEventos|tojson }};
+</script>
+-->

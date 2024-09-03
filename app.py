@@ -1,0 +1,29 @@
+from flask import Flask, session
+from utils.config import Config
+from routes.clientes import bp_clientes
+from routes.ctactecli import bp_ctactecli
+from routes.articulos import bp_articulos
+from routes.ventas import bp_ventas
+from routes.proveedores import bp_proveedores
+from routes.ctacteprov import bp_ctacteprov
+from routes.configs import bp_configuraciones
+from routes.entidades_cred import bp_entidades
+from flask_sqlalchemy import SQLAlchemy
+
+def create_app():
+    app = Flask(__name__)
+    
+    app.config.from_object(Config)
+    app.register_blueprint(bp_clientes)
+    app.register_blueprint(bp_ctactecli)
+    app.register_blueprint(bp_articulos)
+    app.register_blueprint(bp_ventas)
+    app.register_blueprint(bp_proveedores)
+    app.register_blueprint(bp_ctacteprov)
+    app.register_blueprint(bp_configuraciones)
+    app.register_blueprint(bp_entidades)
+    
+    return app
+
+
+

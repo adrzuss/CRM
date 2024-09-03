@@ -1,0 +1,38 @@
+{% extends 'base.html'%}
+{% block body %}
+    <div class="m-2">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>Ingreso de Proveedores</h3>
+                        <form action="{{ url_for('proveedores.add_proveedor') }}" method="post">
+                            <div class="mb-3"> 
+                                <label for="nombre">Nombre</label>
+                                <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre">
+                            </div>
+                            <div class="mb-3">
+                                <label for="mail">E-mail</label>
+                                <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail">
+                            </div>    
+                            <div class="mb-3">
+                                <label for="telefono">Teléfono</label>
+                                <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono">
+                            </div>    
+                            <div class="mb-3">
+                                <label for="documento">Documento/CUIT/CUIL</label>
+                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el n° de documento/CUIL/CUIT">
+                            </div>    
+
+                            <button class="btn btn-success" type="submit">Grabar</button>
+                        </form>
+                    </div>    
+                </div>   
+            </div>    
+            
+            <div class="col-md-7">
+                {% include 'partials/_lst-proveedores.html' %}
+            </div>     
+        </div>      
+    </div>    
+{% endblock %}    

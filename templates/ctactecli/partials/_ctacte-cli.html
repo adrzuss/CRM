@@ -1,22 +1,45 @@
         <div class="card">
             <div class="card-body">
                 <h3>Ingreso de movimiento en cta cte</h3>
-                <form action="{{ url_for('ctactecli.add_cta_cte') }}" method="post">
-                    <div class="mb-3"> 
-                        <label for="idcliente">Id Cliente</label>
-                        <input class="form-control" type="text" name="idcliente" id="idcliente" placeholder="Id del cliente">
-                    </div>
-                    <div class="mb-3">
-                        <label for="fecha">E-mail</label>
+                <form action="{{ url_for('ctactecli.add_cta_cte') }}" id="movCtaCte" method="post">
+                    <div class="row">
+                        <div class="mb-3 col-2"> 
+                            <label for="idcliente">#Cliente</label>
+                            <input class="form-control" type="text" name="idcliente" id="idcliente" readonly value="{{ idCliente }}" >
+                        </div>
+                        <div class="mb-3 col-10"> 
+                            <label for="nombre">Nombre</label>
+                            <input class="form-control" type="text" name="nombre" id="nombre" readonly value="{{ nomCliente }}">
+                        </div>
+                    </div>    
+                    <div class="mb-3 col-4">
+                        <label for="fecha">Fecha</label>
                         <input class="form-control" type="date" name="fecha" id="fecha" placeholder="Fecha del movimiento">
+                    </div>   
+                    <div class="m-3">
+                        <hr>
+                        <h6 class="ml-3">Tipo de ingreso</h6>
+                        <hr>
+                        <div class="row m-3">
+                            <div class="form-check col-6">
+                                <input class="form-check-input" type="radio" name="debe_haber" id="debe" value="debe">
+                                <label class="form-check-label" for="flexRadioDefault1">
+                                Debe
+                                </label>
+                            </div>
+                            <div class="form-check col-6">
+                                <input class="form-check-input" type="radio" name="debe_haber" id="haber" value="haber">
+                                <label class="form-check-label" for="flexRadioDefault2">
+                                Haber
+                                </label>
+                            </div>
+                        </div>    
+                        <hr>
                     </div>    
-                    <div class="mb-3">
-                        <label for="debe">Debe</label>
-                        <input class="form-control" type="text" name="debe" id="debe" placeholder="Importe debe">
-                    </div>    
-                    <div class="mb-3">
-                        <label for="haber">Haber</label>
-                        <input class="form-control" type="text" name="haber" id="haber" placeholder="Importe haber">
+                                       
+                    <div class="mb-3 col-6">
+                        <label for="importe">Importe</label>
+                        <input class="form-control" type="text" name="importe" id="importe" placeholder="Ingrese el monto">
                     </div>    
 
                     <button class="btn btn-exito" type="submit">Grabar</button>

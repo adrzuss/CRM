@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 from sqlalchemy import func
+from datetime import datetime
 from utils.utils import format_currency
 from models.proveedores import Proveedores
 from models.ctacteprov import CtaCteProv
 from utils.db import db
 
-bp_ctacteprov = Blueprint('ctacteprov', __name__)
+bp_ctacteprov = Blueprint('ctacteprov', __name__, template_folder='../templates/ctacteprov')
 
 @bp_ctacteprov.route('/addCtaCte', methods = ['POST','GET'])
 def add_cta_cte():
@@ -28,11 +29,40 @@ def add_cta_cte():
     if request.method == 'GET':
         return render_template('ctacte-prov.html')
 
-@bp_ctacteprov.route('/lstctacte/<id>)')
-def lst_cta_cte(id):
+@bp_ctacteprov.route('/lstctacteprov/<id>)')
+def lst_cta_cte_prov(id):
     proveedor = Proveedores.query.get_or_404(id)
-    movimientos = CtaCteProv.query.filter_by(idProveedor=proveedor.id).all()
-    return render_template('lst-ctacteprov.html', movimientos=movimientos)
+    movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
+    return render_template('lst-ctacteprov.html', movimientos=movimientos, nomProveedor=proveedor.nombre)
+
+@bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
+def saldosprov():
+    if request.method == 'POST':
+        # Obtener la fecha del formulario
+        fecha_str = request.form['fecha']
+        
+        # Convertir la fecha a un objeto datetime
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
+        
+        # Realizar la consulta agregada
+        saldos = db.session.query(
+            Proveedores.nombre,
+            CtaCteProv.idproveedor,
+            func.sum(CtaCteProv.debe).label('total_debe'),
+            func.sum(CtaCteProv.haber).label('total_haber')
+        ).join(
+            Proveedores, Proveedores.id == CtaCteProv.idproveedor        
+        ).filter(
+            CtaCteProv.fecha >= fecha
+        ).group_by(
+            Proveedores.nombre,
+            CtaCteProv.idproveedor
+        ).all()
+
+        # Pasar los resultados a la plantilla
+        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str)
+    desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
+    return render_template('saldos-ctacteprov.html', desde=desde)
 
 def get_saldo_proveedores():
     try:

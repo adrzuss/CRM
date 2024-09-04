@@ -6,7 +6,7 @@
         <div class="card">
             <h5 class="m-3">Consultar Cta Cte desde Fecha</h5>
             <div class="card-body">
-                <form action="{{ url_for('ctactecli.saldos') }}" method="POST">
+                <form action="{{ url_for('ctactecli.saldoscli') }}" method="POST">
                     <label for="fecha">Fecha de Inicio:</label>
                     <input class="form-control" type="date" id="fecha" name="fecha" value="{{ desde }}" required><br>
 
@@ -22,7 +22,7 @@
 <div class="row justify-content-center align-items-center g-2 m-3">
     <div class="col-8">
         <div class="card">
-            <h3 class="m-3">Saldos de Cta Cte</h3>
+            <h3 class="m-3">Saldos de cta cte de clientes</h3>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover table-borderless table-dark align-middle">
@@ -45,7 +45,7 @@
                                     <td>{{ saldo.nombre }}</td>
                                     <td>{{ "${:,.2f}".format(saldo.total_debe) }}</td>
                                     <td>{{ "${:,.2f}".format(saldo.total_haber) }}</td>
-                                    <td> <a class="btn btn-dark" href="{{ url_for('ctactecli.lst_cta_cte', id=saldo.idcliente )}}"> Cta. cte. cliente </a></td>
+                                    <td> <a class="btn btn-dark" href="{{ url_for('ctactecli.lst_cta_cte_cli', id=saldo.idcliente )}}"> Cta. cte. cliente </a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>

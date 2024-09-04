@@ -44,7 +44,12 @@ body{
 
 .btn-exito:hover{
     background-color: rgb(1, 182, 71);
-    color: white;
+    color: rgb(203, 203, 203);
+    border-right-color: rgb(5, 248, 98);
+    border-top-color: rgb(5, 248, 98);
+    border-left-color: rgb(2, 80, 32);
+    border-bottom-color: rgb(2, 80, 32);
+    
 }    
 
 

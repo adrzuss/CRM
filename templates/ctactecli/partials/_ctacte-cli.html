@@ -1,7 +1,7 @@
         <div class="card">
             <div class="card-body">
                 <h3>Ingreso de movimiento en cta cte</h3>
-                <form action="{{ url_for('ctactecli.add_cta_cte') }}" id="movCtaCte" method="post">
+                <form action="{{ url_for('ctactecli.add_cta_cte_cli') }}" id="movCtaCte" method="post">
                     <div class="row">
                         <div class="mb-3 col-2"> 
                             <label for="idcliente">#Cliente</label>
@@ -42,7 +42,7 @@
                         <input class="form-control" type="text" name="importe" id="importe" placeholder="Ingrese el monto">
                     </div>    
 
-                    <button class="btn btn-exito" type="submit">Grabar</button>
+                    <button class="btn btn-exito" type="submit">Grabar movimiento</button>
                 </form>
             </div>    
         </div>   

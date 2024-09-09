@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-        <table class="table table-primary">
+        <table class="table table-striped table-hover table-borderless align-middle">
             <thead>
                 <tr>
                     <th scope="col">Nombre</th>
@@ -18,12 +18,12 @@
                         <td>{{ cliente.email }}</td>
                         <td>{{ cliente.telefono }}</td>
                         <td>
-                            <a href="{{ url_for('ctactecli.lst_cta_cte', id=cliente.id) }}" class="btn btn-dark">Movs.cta.cte.</a>
+                            <a href="{{ url_for('ctactecli.lst_cta_cte_cli', id=cliente.id) }}" class="btn btn-dark">Movs.cta.cte.</a>
                         </td>
                         <td>
-                            <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-success">Actualizar</a>
-                            <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-danger">Eliminar</a>
-                            <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-warning">Facturas</a>
+                            <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
+                            <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-peligro">Eliminar</a>
+                            <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
                         </td>
                     </tr>
                 {% endfor %}

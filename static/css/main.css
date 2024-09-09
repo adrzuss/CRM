@@ -44,12 +44,7 @@ body{
 
 .btn-exito:hover{
     background-color: rgb(1, 182, 71);
-    color: rgb(203, 203, 203);
-    border-right-color: rgb(5, 248, 98);
-    border-top-color: rgb(5, 248, 98);
-    border-left-color: rgb(2, 80, 32);
-    border-bottom-color: rgb(2, 80, 32);
-    
+    color: white;
 }    
 
 
@@ -61,4 +56,34 @@ body{
 .btn-peligro:hover{
     background-color: rgb(197, 4, 4);
     color: white;
+}
+
+.btn-cuidado{
+    background-color: rgb(253, 255, 151);
+    color: black;
+}
+
+.btn-cuidado:hover{
+    background-color: rgb(252, 255, 89);
+    color: black;
+}
+/* colores para usar generalmente para valores negativos positivos y cero*/
+
+.positivo{
+    color: black;
+}
+
+.negativo{
+    color: red;
+}
+
+.neutro{
+    color: green;
+}
+
+.centrado{
+    display: block;
+    margin: auto;
+    width: 80%;
+
 }

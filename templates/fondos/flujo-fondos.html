@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2 class="m-3">Flujo de fondos</h2>
+
+    <div class="row justify-content-center align-items-center mb-3">
+        <div class="col-6">
+            <form action="" method="POST">
+                <div class="card">
+                    <h6 class="m-3">Flujo de fondos</h6>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4">
+                                <label for="" class="form-label">Desde</label>
+                                <input type="date" class="form-control" name="desde" id="desde" aria-describedby="helpId"  placeholder="Flujo de fondos desde" value="{{ desde }}"/>
+                                <small id="helpId" class="form-text text-muted">Análisis de flujo de fondos desde</small>
+                            </div>
+                            <div class="col-4">
+                                <label for="" class="form-label">Hasta</label>
+                                <input type="date" class="form-control" name="hasta" id="hasta" aria-describedby="helpId"  placeholder="Flujo de fondos hasta" value="{{ hasta }}"/>
+                                <small id="helpId" class="form-text text-muted">Análisis de flujo de fondos hasta</small>
+                            </div>
+                            <div class="col-4 mt-4">
+                                <button type="submit" class="btn btn-exito ">Consultar</button>
+                            </div>    
+                        </div>    
+                    </div>
+                </div>
+            </form>    
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center align-items-center">
+
+        <!-- Area Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Flujo de fondos del periodo</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Opciones del grafico:</div>
+                            <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                            <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Opciones</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="flujoFondos"></canvas>
+                        
+                        <script>
+                            leyendasFlujos = {{ detalles|tojson }};
+                            totalesFlujos = {{ montos|tojson }};
+                        </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+{% endblock %}
+
+{% block js_script %}
+    <!-- Page level plugins -->
+    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Page level custom scripts-->
+    <script src="/static/js/demo/chart-bar-flujo-fondos.js"></script>
+
+{% endblock %}

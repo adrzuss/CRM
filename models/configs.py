@@ -10,3 +10,11 @@ class AlcIva(db.Model):
     def __init__(self, descripcion, alicuota):
         self.descripcion = descripcion
         self.alicuota = alicuota
+        
+class PagosCobros(db.Model):
+    __tablename__ = 'pagos_cobros'
+    id = db.Column(db.Integer, primary_key=True)
+    pagos_cobros = db.Column(db.String(50), nullable=False)
+    
+    def __init__(self, pagos_cobros):
+        self.pagos_cobros = pagos_cobros

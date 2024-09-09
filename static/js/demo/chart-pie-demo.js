@@ -4,17 +4,18 @@ Chart.defaults.global.defaultFontColor = '#858796';
 
 // Pie Chart Example
 var ctx = document.getElementById("myPieChart");
-var tipoEvento;
-var cantTipoEvento;
+var tipoPagos;
+var cantPagos;
 var coloresPie;
 
 /*coloresPie = ['#4e73df', '#1cc88a', '#36b9cc', '#731d56', '#c81b90', '#277540'];*/
-coloresPie = ['#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844'];
+coloresPie = ['#1150af', '#008060', '#bb1133', '#a95943', '#f6a22d', '#4f3844'];
+coloresPieHover = ['#1870F5','#00EDB2', '#FF1746']
 
 window.onload = () => {
   const titulosPie = document.getElementById('coloresPie');
-  for(let i = 0; i < tipoEvento.length; i++){
-    titulosPie.innerHTML += '<span class="mr-2">  <i class="fas fa-circle" style="color:' + coloresPie[i] + '"></i> ' + tipoEvento[i] + ' </span>';
+  for(let i = 0; i < tipoPagos.length; i++){
+    titulosPie.innerHTML += '<span class="mr-2">  <i class="fas fa-circle" style="color:' + coloresPie[i] + '"></i> ' + tipoPagos[i] + ' </span>';
   }
   
 }
@@ -22,11 +23,11 @@ window.onload = () => {
 var myPieChart = new Chart(ctx, {
   type: 'doughnut',
   data: {
-    labels: tipoEvento,
+    labels: tipoPagos,
     datasets: [{
-      data: cantTipoEvento,
+      data: cantPagos,
       backgroundColor: coloresPie,
-      hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf'],
+      hoverBackgroundColor: coloresPieHover,
       hoverBorderColor: "rgba(234, 236, 244, 1)",
     }],
   },

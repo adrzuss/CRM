@@ -1,88 +1,22 @@
 {% extends 'base.html'%}
 {% block body %}
-
+    <!-- TODO 
+     cambair la dispocion de la entada de datso
+     poner toda la entrada arriba y deja ele listado abajo
+     ver la posibilidd de al menos mostrar el precio de la primer lista de precios
+     -->
     <div class="m-2">
-        <div class="row">
-            <div class="col-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h3>Ingreso de artículos</h3>
-                        <form  method="post" id="articulo_form" enctype="multipart/form-data">
-                            <div class="mb-3"> 
-                                <label for="codigo">Código</label>
-                                <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código">
-                            </div>
-                            <div class="mb-3">
-                                <label for="detalle">Detalle</label>
-                                <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle">
-                            </div>    
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label for="costo">Costo</label>
-                                    <input class="form-control" type="text" name="costo" id="costo" placeholder="Ingrese el costo">
-                                </div>    
-
-                                <div class="col-6 mb-3">
-                                    <label for="idiva">IVA:</label>
-                                    <select class="form-control" id="idiva" name="idiva" required>
-                                    {% for iva in ivas %}
-                                        <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
-                                    {% endfor %}
-                                    </select>
-                                </div>    
-                            </div>    
-                            <div class="mb-3">
-                                <label for="idmarca">Marca:</label>
-                                <select class="form-control" id="idmarca" name="idmarca" required>
-                                {% for marca in marcas %}
-                                    <option value="{{ marca.id }}">{{ marca.nombre }}</option>
-                                {% endfor %}
-                                </select>
-                            </div>    
-                            <div class="mb-3">
-                                <label for="imagen">Imagen:</label>
-                                <input class="form-control" type="file" id="imagen" name="imagen">
-                            </div>    
-                            <hr>
-                            
-                                <h5>Precios de venta al público</h5>
-                                <div class="precios" id="precios">
-                                {% for lista in listas_precio %}
-                                    <div class="row" id="precio">
-                                        <div class="col-2 mb-3">
-                                            <label for="idlista{{loop.index}}">#Lista</label>
-                                            <input class="form-control" type="text" name="precio[{{loop.index}}][idlista]" id="precio[{{loop.index}}][idlista]" value="{{ lista.id }}" readonly>
-                                        </div> 
-                                        <div class="col-4 mb-3">
-                                            <label for="lista{{loop.index}}">Lista</label>
-                                            <input class="form-control" type="text" name="precio[{{loop.index}}][lista]" id="precio[{{loop.index}}][lista]" value="{{ lista.nombre }}" readonly>
-                                        </div>    
-        
-                                        <div class="col-4 mb-3">
-                                            <label for="pvp{{loop.index}}">Precio V.P.</label>
-                                            <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" placeholder="Ingrese el precio de V.P.">
-                                        </div>    
-
-                                        <div class="col-2 mb-3">
-                                            <label for="markaup{{loop.index}}">Markup</label>
-                                            <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup }}">
-                                        </div>    
-                                    </div>
-
-                                {% endfor %}
-                                </div>
-                            
-
-                            <button class="btn btn-exito" type="submit">Grabar</button>
-                        </form>
-                    </div>    
-                </div>   
+            <div class="row justify-content-center align-items-center">
+                <div class="col-sm-10 m-3">
+                    {% include 'partials/_alta-articulos.html' %}
+                </div>
+            </div>
+            <div class="row justify-content-center align-items-center">
+                <div class="col-12 m-3">
+                    {% include 'partials/_lst-articulos.html' %}
+                </div>     
             </div>    
-            
-            <div class="col-8">
-                {% include 'partials/_lst-articulos.html' %}
-            </div>     
-        </div>      
+             
     </div>   
 
     <script>

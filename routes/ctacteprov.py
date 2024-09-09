@@ -8,23 +8,29 @@ from utils.db import db
 
 bp_ctacteprov = Blueprint('ctacteprov', __name__, template_folder='../templates/ctacteprov')
 
-@bp_ctacteprov.route('/addCtaCte', methods = ['POST','GET'])
-def add_cta_cte():
+@bp_ctacteprov.route('/addCtaCteProv', methods = ['POST','GET'])
+def add_cta_cte_prov():
     if request.method == 'POST':
         idproveedor = request.form['idproveedor']
         fecha = request.form['fecha']
-        debe = request.form['debe']
-        haber = request.form['haber']
+        importe = request.form['importe']
+        debe_haber = request.form.get('debe_haber')
         try:
+            if debe_haber == 'debe':
+                debe = importe
+                haber = 0
+            else:
+                debe = 0
+                haber = importe
             ctacteprov = CtaCteProv(idproveedor, fecha, debe, haber)
             db.session.add(ctacteprov)
             db.session.commit()
             flash('Movimiento de cta cte grabado')
-            return redirect(url_for('proveedores.home'))
+            return redirect(url_for('ctacteprov.lst_cta_cte_prov', id=idproveedor))
         except Exception as e:
             db.session.rollback()
             flash(f'Error grabado ctacte: {e}')
-            return redirect(url_for('ctactecli.add_cta_cte'))
+            return redirect(url_for('ctacteprov.lst_cta_cte_prov', id=idproveedor))
     
     if request.method == 'GET':
         return render_template('ctacte-prov.html')
@@ -33,7 +39,9 @@ def add_cta_cte():
 def lst_cta_cte_prov(id):
     proveedor = Proveedores.query.get_or_404(id)
     movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
-    return render_template('lst-ctacteprov.html', movimientos=movimientos, nomProveedor=proveedor.nombre)
+    saldo_total = saldo_ctacte(proveedor.id)
+    saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
+    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal)
 
 @bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
 def saldosprov():
@@ -63,6 +71,19 @@ def saldosprov():
         return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
     return render_template('saldos-ctacteprov.html', desde=desde)
+
+def saldo_ctacte(idproveedor):
+    # Consulta SQLAlchemy para sumar los campos "debe" y "haber"
+    result = db.session.query(
+        func.sum(CtaCteProv.debe).label('total_debe'),
+        func.sum(CtaCteProv.haber).label('total_haber')
+    ).filter(CtaCteProv.idproveedor == idproveedor).one()
+
+    # Convertir el resultado a un diccionario
+    total_debe = result.total_debe if result.total_debe else 0
+    total_haber = result.total_haber if result.total_haber else 0
+    # Devolver el resultado como JSON
+    return {'total_debe': total_debe, 'total_haber': total_haber}
 
 def get_saldo_proveedores():
     try:

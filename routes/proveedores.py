@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app
 from datetime import date
-from models.proveedores import Proveedores, FacturaC, ItemC
+from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
 from models.articulos import Articulo, Stock
 from models.ctacteprov import CtaCteProv
 from utils.db import db
@@ -74,6 +74,9 @@ def nueva_compra():
         idproveedor = request.form['idproveedor']
         fecha = request.form['fecha']
         total = 0  # Esto se calculará más tarde
+        
+        efectivo = float(request.form['efectivo'])
+        ctacte = float(request.form['ctacte'])
 
         nueva_factura = FacturaC(idproveedor=idproveedor, fecha=fecha, total=total)
         db.session.add(nueva_factura)
@@ -112,8 +115,26 @@ def nueva_compra():
         nueva_factura = FacturaC.query.get(idfactura)
         nueva_factura.total = total
         
-        ctacteprov = CtaCteProv(idproveedor, fecha, total, 0)
-        db.session.add(ctacteprov)
+        if efectivo > 0:
+            pagosfc = PagosFC(idfactura, 1, 0, efectivo)
+            db.session.add(pagosfc)
+            db.session.commit()
+               
+            
+        if ctacte > 0:
+            pagosfc = PagosFC(idfactura, 3, 0, ctacte)
+            db.session.add(pagosfc)
+            db.session.commit()
+            
+            debe = ctacte
+            haber = 0
+            try:
+                ctacteprov = CtaCteProv(idproveedor, fecha, debe, haber)
+                db.session.add(ctacteprov)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error grabado entidad crediticia: {e}')
         
         db.session.commit()
         flash('Factura grabada')

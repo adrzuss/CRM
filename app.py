@@ -8,6 +8,7 @@ from routes.proveedores import bp_proveedores
 from routes.ctacteprov import bp_ctacteprov
 from routes.configs import bp_configuraciones
 from routes.entidades_cred import bp_entidades
+from routes.fondos import bp_fondos
 from flask_sqlalchemy import SQLAlchemy
 
 def create_app():
@@ -22,6 +23,7 @@ def create_app():
     app.register_blueprint(bp_ctacteprov)
     app.register_blueprint(bp_configuraciones)
     app.register_blueprint(bp_entidades)
+    app.register_blueprint(bp_fondos)
     
     return app
 

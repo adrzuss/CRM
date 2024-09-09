@@ -28,22 +28,22 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 }
 
 var coloresBarras;
-coloresPie = ['#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844'];
+coloresPie = ['#9BB0C1', '#E1AFD1', '#C5EBAA', '#FFCF81', '#FF8080', '#B0A695', '#AC87C5', '#99BC85', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d'];
 
-var ctxCob = document.getElementById("barrasCobranzas");
-var cobranzasEnSucs;
-var leyendasCob;
+var ctxCob = document.getElementById("flujoFondos");
+var totalesFlujos;
+var leyendasFlujos;
 
 var myCobBarChart = new Chart(ctxCob, {
   type: 'bar',
   data: {
-    labels: leyendasCob,
+    labels: leyendasFlujos,
     datasets: [{
       label: "Cobranzas",
       backgroundColor: coloresPie,
       hoverBackgroundColor: "#2e59d9",
       borderColor: "#4e73df",
-      data: cobranzasEnSucs,
+      data: totalesFlujos,
     }],
   },
   options: {
@@ -72,7 +72,7 @@ var myCobBarChart = new Chart(ctxCob, {
       }],
       yAxes: [{
         ticks: {
-          min: 0,
+          //min: 0,
           //max: 1000,
           maxTicksLimit: 5,
           padding: 10,

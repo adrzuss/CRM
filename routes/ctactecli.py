@@ -9,8 +9,8 @@ from utils.db import db
 
 bp_ctactecli = Blueprint('ctactecli', __name__, template_folder='../templates/ctactecli')
 
-@bp_ctactecli.route('/addCtaCte', methods = ['POST','GET'])
-def add_cta_cte():
+@bp_ctactecli.route('/addCtaCteCli', methods = ['POST','GET'])
+def add_cta_cte_cli():
     if request.method == 'POST':
         idcliente = request.form['idcliente']
         fecha = request.form['fecha']
@@ -86,7 +86,6 @@ def saldo_ctacte(idcliente):
     total_debe = result.total_debe if result.total_debe else 0
     total_haber = result.total_haber if result.total_haber else 0
     # Devolver el resultado como JSON
-   
     return {'total_debe': total_debe, 'total_haber': total_haber}
 
 def get_saldo_clientes():

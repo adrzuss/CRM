@@ -12,8 +12,13 @@
             <div class="table-responsive" >
                 <table class="table table-striped table-hover table-borderless table-dark align-middle">
                     <thead class="table-light">
-                        <caption>
-                            Movimientos de cuenta corriente de proveedores
+                        {% if saldoTotal > 0 %}
+                            <caption class="ml-3" style="font-style: italic; font-weight: bold; color:red">
+                                Movimientos de cuenta corriente de proveedores. Saldo deudor: {{ "${:,.2f}".format(saldoTotal) }}
+                        {% else %}    
+                            <caption class="ml-3" style="font-style: italic; font-weight: bold;">    
+                                Movimientos de cuenta corriente de proveedores. Saldo acreedor: {{ "${:,.2f}".format(saldoTotal) }}
+                        {% endif %}    
                         </caption>
                         <tr>
                             <th>#ID</th>
@@ -42,5 +47,45 @@
         </div>
     </div>
 </div>
+
+<script>
+    const debe = document.getElementById('debe');
+    const haber = document.getElementById('haber');
+
+    debe.addEventListener('click', ()=> {
+            debe.checked = true;
+            haber.checked = false;
+        }
+    );
+    haber.addEventListener('click', () => {
+            haber.checked = true;        
+            debe.checked = false;
+        }
+    );
+
+    function checkMovCtaCte() {
+        const inputFecha = document.getElementById('fecha').value;
+        const fecha = new Date(inputFecha);
+        const fechaControl = new Date('2024-01-01');
+        const importe = parseFloat(document.getElementById('importe').value)
+        
+        if (((debe.checked) || (haber.checked)) && (fecha >= fechaControl) && (importe > 0)){
+            return true
+        }
+        else{
+            alert('faltan datos');
+            return false;
+        }
+        
+    }
+
+    document.getElementById('movCtaCte').addEventListener('submit', function(event){
+        if (checkMovCtaCte() == false){
+            event.preventDefault();
+        }
+
+    });
+
+</script>
 
 {% endblock %}

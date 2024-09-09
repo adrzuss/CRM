@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2 class="m-3">Detalle de Caja</h2>
+
+    <div class="row justify-content-center align-items-center">
+        <div class="col-6">
+            <form action="" method="POST">
+                <div class="card">
+                    <h6 class="m-3">Día de la caja</h6>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="mb-3 col-4">
+                                <label for="" class="form-label">Fecha</label>
+                                <input type="date" class="form-control" name="fecha" id="fecha" aria-describedby="helpId"  placeholder="Fecha de la caja" value="{{ fecha }}"/>
+                                <small id="helpId" class="form-text text-muted">Ingrese la fecha de la caja a consultar</small>
+                            </div>
+                            <div class="col-4 mt-4">
+                                <button type="submit" class="btn btn-exito ">Consultar</button>
+                            </div>    
+                        </div>    
+                    </div>
+                </div>
+            </form>    
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-6 row justify-content-center">
+            <div class="col-10 m-3">
+                <div class="card">
+                    <h6 class="m-3">Detalle de ventas</h6>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless table-dark align-middle">
+                                <thead class="table-light">
+                                    <caption>
+                                        Total de ventas {{ "${:,.2f}".format(totalVenta)}}
+                                    </caption>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for registro in resultadosVentas %}
+                                        <tr class="table-success">
+                                            <td scope="row">{{ registro['tipo_ingreso'] }}</td>
+                                            <td>{{ "${:,.2f}".format(registro['total_ingreso']) }}</td>
+                                        </tr>
+                                    {% endfor %}    
+                                </tbody>
+                                <tfoot>
+                                    
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                    </div>   
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 row justify-content-center">
+            <div class="col-10 m-3">
+                <div class="card">
+                    <h6 class="m-3">Detalle de compras</h6>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless table-dark align-middle">
+                                <thead class="table-light">
+                                    <caption>
+                                        Total de compras {{ "${:,.2f}".format(totalCompra)}}
+                                    </caption>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for registro in resultadosCompras %}
+                                        <tr class="table-secondary">
+                                            <td scope="row">{{ registro['tipo_ingreso'] }}</td>
+                                            <td>{{ "${:,.2f}".format(registro['total_ingreso']) }}</td>
+                                        </tr>
+                                    {% endfor %}    
+                                </tbody>
+                                <tfoot>
+                                    
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                    </div>   
+                </div>
+            </div>
+        </div>
+    </div> 
+    
+    <h3 class="ml-3">Total caja: <span id="saldo_factura">{{"${:,.2f}".format(totalVenta - totalCompra)}}</span></h3>
+
+    <script>
+        let lblSaldo = document.getElementById('saldo_factura');
+        let diferencia = lblSaldo.textContent;
+        let numeroEnCadena = diferencia.replace('$', '').replace(',', '.');
+        if (numeroEnCadena > 0){
+            lblSaldo.className = 'positivo';
+        }
+        else if (numeroEnCadena == 0){
+            lblSaldo.className = 'neutro';
+        }
+        else{
+            lblSaldo.className = 'negativo';
+        }
+    </script>
+{% endblock %}

@@ -32,3 +32,16 @@ class ItemC(db.Model):
     precio_total = db.Column(db.Float, nullable=False)
     articulo = db.relationship('Articulo', backref=db.backref('itemsc', lazy=True))
     factura = db.relationship('FacturaC', backref=db.backref('itemsc', lazy=True))
+    
+class PagosFC(db.Model):
+    __tablename__ = 'pagos_fc'
+    idfactura = db.Column(db.Integer, db.ForeignKey('facturac.id'), primary_key=True)
+    idpago = db.Column(db.Integer, primary_key=True)
+    tipo  = db.Column(db.Integer, nullable=False)
+    total = db.Column(db.Float, nullable=False)
+    
+    def __init__(self, idfactura, idpago, tipo, total):
+        self.idfactura = idfactura
+        self.idpago = idpago
+        self.tipo = tipo
+        self.total = total

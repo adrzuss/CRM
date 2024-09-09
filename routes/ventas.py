@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app
+from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, jsonify
 from datetime import date, timedelta
 from utils.utils import format_currency
 from models.articulos import Articulo, Stock, ListasPrecios, Precio
 from models.ventas import Factura, Item, PagosFV
 from models.ctactecli import CtaCteCli
 from models.entidades_cred import EntidadesCred
+from models.configs import PagosCobros
 from sqlalchemy import func, extract
 from utils.db import db
 
@@ -169,3 +170,29 @@ def ventas_por_mes():
             'meses': nombres_meses,
             'operaciones': cantidades_operaciones
         }
+        
+def pagos_hoy():
+    fecha = date.today()
+    resultados = db.session.query(
+                 func.sum(PagosFV.total).label('total_pago'),
+                 PagosCobros.pagos_cobros
+                 ).join(Factura, Factura.id == PagosFV.idfactura) \
+                 .join(PagosCobros, PagosFV.idpago == PagosCobros.id) \
+                 .filter(Factura.fecha == fecha) \
+                 .group_by(PagosCobros.pagos_cobros).all()
+
+    # Convertir el resultado a una lista de diccionarios
+    tipo_pago = []
+    total_pago = []
+    
+    for resultado in resultados:
+        tipo_pago.append(resultado.pagos_cobros)
+        total_pago.append(resultado.total_pago)
+
+        # Devolver las listas como respuesta
+    return {
+        'tipo_pago': tipo_pago,
+        'total_pago': total_pago
+    }
+    
+    

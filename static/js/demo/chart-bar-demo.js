@@ -28,7 +28,7 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 }
 
 var coloresBarras;
-coloresBarras = ['#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844'];
+coloresBarras = ['#9BB0C1', '#E1AFD1', '#C5EBAA', '#FFCF81', '#FF8080', '#B0A695', '#AC87C5', '#99BC85', '#d0daea', '#fdca8f', '#a95943', '#f6a22d', '#4f3844', '#1e3c7c', '#d0daea', '#fdca8f', '#a95943', '#f6a22d'];
 
 // Bar Chart Example
 var ctx = document.getElementById("barrasEventos");

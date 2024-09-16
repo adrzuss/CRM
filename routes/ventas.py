@@ -130,6 +130,21 @@ def get_vta_semana():
     except:
         return 0.0
 
+def get_vta_desde_hasta(desde, hasta):
+    try:
+        # Realizar la consulta para obtener el total de ventas de la semana
+        vta_desde_hasta = db.session.query(
+            func.sum(Factura.total).label('total_ventas'),
+            func.count(Factura.id).label('cantidad_ventas')
+        ).filter(
+            Factura.fecha >= desde,
+            Factura.fecha <= hasta
+        ).all()
+        print(f'venta desde hasat: {vta_desde_hasta}')
+        return vta_desde_hasta
+    except:
+        return []
+
 def ventas_por_mes():
     # Obtener la fecha de hoy
     fecha_hoy = date.today()

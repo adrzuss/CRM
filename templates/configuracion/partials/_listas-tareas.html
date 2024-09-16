@@ -1,0 +1,23 @@
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Ingreso de listas de precios</h6>
+                    <form action="{{ url_for('configuraciones.add_tarea') }}" method="post">
+                        <div class="mb-3"> 
+                            <label for="lista_precio">Tarea</label>
+                            <input class="form-control" type="text" name="tarea" id="tarea" placeholder="Tarea">
+                        </div>
+                        
+                        <button class="btn btn-success" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-tareas.html' %}
+        </div>     
+    </div>      
+

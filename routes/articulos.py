@@ -121,12 +121,12 @@ def update_articulo(id):
             
         items = request.form  # Obtener todo el formulario
         item_count = 0  # Contador de items agregados
-        item_count = len([key for key in items.keys() if key.startswith('pvp') and key.endswith('[precio]')])
+        item_count = len([key for key in items.keys() if key.startswith('precio') and key.endswith('[precio]')])
             
         for i in range(item_count):
             try:
-                idlista = request.form[f'idlista{i+1}']
-                pvp = request.form[f'pvp{i+1}[precio]']
+                idlista = request.form[f'precio[{i+1}][idlista]']
+                pvp = request.form[f'precio[{i+1}][precio]']
                 if (idlista != None) and (pvp != None):
                     precio = Precio.query.get((idlista, id))
                     if precio:

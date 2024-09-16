@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, redirect, flash, url_for, jsonify, request
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy import func, and_
 from models.ventas import Factura, PagosFV
+from routes.ventas import get_vta_desde_hasta
 from models.proveedores import FacturaC, PagosFC
 from models.configs import PagosCobros
 from utils.db import db
@@ -56,8 +57,8 @@ def flujo_fondos():
     totalCompra = 0
     
     if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
+        desde = request.args.get('desde', datetime.now().strftime('%Y-%m-01'))  # Por defecto, inicio de mes
+        hasta = request.args.get('hasta', datetime.now().strftime('%Y-%m-%d'))   # Por defecto, hoy
         
     if request.method == 'POST':
         desde = request.form['desde']
@@ -72,8 +73,7 @@ def flujo_fondos():
             detalles.append('Comp. ' + registro[0])
             montos.append(-registro[1])
             totalCompra = totalCompra + registro[1]
-        
-    print(f'Ventas: {resultadosVentas}' )
-    print(f'detalle: {detalles}' )
-    print(f'montos: {montos}' )
+        ventas_desde_hasta = get_vta_desde_hasta(desde, hasta)
+        print(ventas_desde_hasta)    
+    
     return render_template('flujo-fondos.html', desde=desde, hasta=hasta, detalles=detalles, montos=montos)

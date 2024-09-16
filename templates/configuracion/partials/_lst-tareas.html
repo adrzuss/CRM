@@ -1,21 +1,19 @@
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-        <table class="table table-primary">
+        <table class="table table-dark">
             <thead>
                 <tr>
                     <th scope="col"># Lista</th>
-                    <th scope="col">Lista de precio</th>
-                    <th scope="col">Markup</th>
+                    <th scope="col">Tarea</th>
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                {% for lista_precio in listas_precios %}
+                {% for tarea in tareas %}
                     <tr class="table table-light">
-                        <td scope="row">{{ lista_precio.id }}</td>
-                        <td>{{ lista_precio.nombre }}</td>
-                        <td>{{ lista_precio.markup }}</td>
+                        <td scope="row">{{ tarea.id }}</td>
+                        <td>{{ tarea.tarea }}</td>
                         <td>
                             <a href="#" class="btn btn-success">Actualizar</a>
                             <a href="#" class="btn btn-danger">Eliminar</a>

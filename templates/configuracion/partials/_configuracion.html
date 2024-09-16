@@ -1,0 +1,55 @@
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Ingreso de datos de configuracion</h6>
+                    <form action="{{ url_for('configuraciones.update_config') }}" method="post">
+                        <div class="row">
+                            <div class="col-4 mb-3"> 
+                                <label for="descripcion">Propietario</label>
+                                <input class="form-control" type="text" name="propietario" id="propietario" placeholder="Nombre del propietario" value="{{ configuracion.nombre_propietario }}">
+                            </div>
+                            <div class="col-4 mb-3">
+                                <label for="alicuota">Nombre de fantasia</label>
+                                <input class="form-control" type="text" name="fantasia" id="fantasia" placeholder="Nombre de fantasia" value="{{ configuracion.nombre_fantasia }}">
+                            </div>
+                            <div class="col-4 mb-3"> 
+                                <label for="iva">Responsibilidad IVA</label>
+                                <select class="form-select form-select-bg" name="iva" id="iva">
+                                    <option selected>Seleccione una opcion</option>
+                                    {% for iva in tipo_iva %}
+                                        <option value="iva.id">{{ iva.descripcion }}</option>
+                                    {% endfor %}    
+                                </select>
+                            </div>
+                        </div>    
+                        <div class="row">
+                            <div class="col-4 mb-3">
+                                <label for="telefono">Numeros de teléfono</label>
+                                <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Numeros de telefonos" value="{{ configuracion.telefono }}">
+                            </div>    
+                            <div class="col-6 mb-3">
+                                <label for="mail">Direccion de mail</label>
+                                <input class="form-control" type="mail" name="mail" id="mail" placeholder="Direccion de mail" value="{{ configuracion.mail }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 mb-3"> 
+                                <label for="iva">Vencimiento</label>
+                                <input class="form-control" type="text" name="vencimiento" id="vencimiento" value="{{ configuracion.vencimiento }} " readonly>
+                            </div>
+                            <div class="col-5 mb-3">
+                                <label for="licencia">Licencia</label>
+                                <input class="form-control" type="text" name="licencia" id="licencia" value="{{ configuracion.licencia }}" readonly>
+                            </div>    
+                        </div>    
+
+                        <button class="btn btn-success" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+    </div>      
+

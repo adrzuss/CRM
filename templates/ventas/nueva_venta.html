@@ -131,13 +131,13 @@
             }
         
             const data = await response.json();
-           
+            
             if (data.length > 1) {
                 // Si hay más de un resultado, mostrar un modal para seleccionar
                 mostrarModalSeleccionClientes(data);
-            } else if (data.cliente != undefined) {
+            } else if (data.length === 1) {
                 // Si hay un solo resultado, asignar directamente
-                asignarCliente(data.cliente);
+                asignarCliente(data[0]);
             } else {
                 alert("No se encontraron clientes con ese nombre.");
             }
@@ -168,6 +168,7 @@
         }
         
         function asignarCliente(cliente) {
+            console.log('Asignando cliente: ' + cliente.id);
             document.getElementById('idcliente').value = cliente.id;
             document.getElementById('cliente_nombre').value = cliente.nombre;
             document.getElementById('id').value = cliente.id;

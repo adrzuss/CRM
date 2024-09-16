@@ -1,6 +1,14 @@
 {% extends 'base.html'%}
 
 {% block body %}
+
+    <div class="card m-3">
+        <h4 class="m-3">Configuracion general</h4>
+        <div class="card-body">
+            {% include '/partials/_configuracion.html' %}
+        </div>    
+    </div>
+
     <div class="card m-3">
         <h4 class="m-3">Alícuotas de IVA</h4>
         <div class="card-body">
@@ -12,6 +20,13 @@
         <h4 class="m-3">Listas de precios</h4>
         <div class="card-body">
             {% include '/partials/_listas-precios.html' %}
+        </div>
+    </div>
+
+    <div class="card m-3">
+        <h4 class="m-3">Listas de tareas</h4>
+        <div class="card-body">
+            {% include '/partials/_listas-tareas.html' %}
         </div>
     </div>
 

@@ -1,0 +1,56 @@
+{% extends 'base.html'%}
+{% block body %}
+
+    <div class="row m-3">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Ingreso de usuarios</h3>
+                    <form action="{{ url_for('sesion.add_user') }}" method="post">
+                        <div class="mb-3"> 
+                            <label for="nombre">Nombre</label>
+                            <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre">
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3"> 
+                                <label for="documento">Documento</label>
+                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el documento">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="telefono">Teléfono</label>
+                                <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono">
+                            </div>
+                        </div>    
+                        <div class="mb-3">
+                            <label for="mail">E-mail</label>
+                            <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail">
+                        </div>    
+                        <div class="mb-3">
+                            <label for="direccion">Dirección</label>
+                            <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección">
+                        </div>    
+                        <div class="mb-3">
+                            <label for="usuario">Usuario</label>
+                            <input class="form-control" type="text" name="usuario" id="usuario" placeholder="Ingrese el nombre de usuario">
+                        </div>    
+                        <div class="mb-3">
+                            <label for="clave">Clave</label>
+                            <input class="form-control" type="password" name="clave" id="clave" placeholder="Ingrese la clave">
+                        </div>    
+                        <div class="mb-3">
+                            <label for="clave2">Reingrese la clave</label>
+                            <input class="form-control" type="password" name="clave2" id="clave2" placeholder="Re ingrese la clave">
+                        </div>    
+
+                        <button class="btn btn-success m-3" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-usuarios.html' %}
+        </div>     
+        
+    </div>      
+{% endblock %}    

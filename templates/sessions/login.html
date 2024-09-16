@@ -20,7 +20,7 @@
     <!-- Custom styles for this template-->
     <link href="static/css/sb-admin-2.min.css" rel="stylesheet">
     
-    <link href="static/nova/css/nova.pref.css" rel="stylesheet" type="text/css">
+    <link href="static/css/main.css" rel="stylesheet" type="text/css">
 
 </head>
 
@@ -65,7 +65,7 @@
                                     <div class="text-center">
                                         <h1 class="h4 text-gray-900 mb-4">Bienvenido!</h1>
                                     </div>
-                                    <form class="ingresar" action="ingresar" method="POST">
+                                    <form class="ingresar" method="POST">
                                         <div class="form-group">
                                             <input type="text" class="form-control form-control-user"
                                                 id="usuario" name="usuario" aria-describedby="userHelp"
@@ -79,11 +79,11 @@
                                     </form>
                                     <hr>
                                     <div class="text-center">
-                                        <a class="small" href="{{ url_for('accesos_bp.forgot_password') }}">¿Olvidó su contraseña?</a>
+                                        <a class="small" href="#">¿Olvidó su contraseña?</a>
                                     </div>
                                     
                                     <div class="text-center">
-                                        <a class="small" href="{{ url_for('accesos_bp.register') }}">Sos nuevo, registrate acá!</a>
+                                        <a class="small" href="#">Sos nuevo, registrate acá!</a>
                                     </div>
                                     
                                 </div>

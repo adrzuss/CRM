@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block body %}
+<form action="{{ url_for('sesion.update_user', id=usuario.id) }}" method="post">
+    <div class="row m-3">
+        <div class="card col-4 m-3">
+            <div class="class-body">
+                <h3>Ingreso de usuario</h3>
+                    <div class="mb-3"> 
+                        <label for="nombre">Nombre</label>
+                        <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ usuario.nombre }}">
+                    </div>
+                    <div class="mb-3"> 
+                        <label for="documento">Documento</label>
+                        <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el documento" value="{{ usuario.documento }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail">E-mail</label>
+                        <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail" value="{{ usuario.email }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="telefono">Teléfono</label>
+                        <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono" value="{{ usuario.telefono }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="direccion">Dirección</label>
+                        <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ usuario.direccion }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="usuario">Usuario</label>
+                        <input class="form-control" type="text" name="usuario" id="usuario" placeholder="Ingrese el nombre del usuario" value="{{ usuario.usuario }}">
+                    </div>    
+                    <div class="mb-3">
+                        <label for="clave">Clave</label>
+                        <input class="form-control" type="password" name="clave" id="clave" placeholder="Ingrese la clave" value="{{ usuario.clave }}">
+                    </div>    
+            </div>    
+        </div>
+        <div class="card col-7 m-3">
+            <div class="class-body">
+                    <h3 class="m-3">Asignar Tareas a {{ usuario.nombre }}</h3>
+                    <ul>
+                        {% for tarea in tareas %}
+                        <li>
+                            <input class="form-check-input" type="checkbox" name="tareas" value="{{ tarea.id }}"
+                                {% if tarea.id in tareas_asignadas %}checked{% endif %}>
+                            {{ tarea.tarea }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+            </div>
+        </div>        
+    </div>      
+    <button class="btn btn-success m-3" type="submit">Grabar</button>
+</form>
+{% endblock %}

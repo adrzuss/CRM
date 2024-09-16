@@ -8,7 +8,7 @@
 
     <!-- Topbar Search -->
     <div class="row">
-        <h3 style = "color:#10246a" class="ml-3">Empresa:  </h3> 
+        <h3 style = "color:#10246a" class="ml-3">Empresa: {{ session['owner'] }} </h3> 
     </div>
     
 
@@ -143,13 +143,17 @@
             <!-- Dropdown - User Information -->
             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                 aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="{{ url_for('sesion.update_user', id=session['user_id']) }}">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Perfil
                 </a>
                 <a class="dropdown-item" href="{{ url_for('configuraciones.configuraciones') }}">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                     Opciones
+                </a>
+                <a class="dropdown-item" href="{{ url_for('sesion.usuarios') }}">
+                    <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Usuarios
                 </a>
                 <a class="dropdown-item" href="#">
                     <i class="fas fa-bars fa-sm fa-fw mr-2 text-gray-400"></i>

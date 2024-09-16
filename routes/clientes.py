@@ -37,8 +37,10 @@ def get_cliente(id):
 @bp_clientes.route('/get_clientes')
 def get_clientes():
     nombre = request.args.get('nombre', '')
+    print(f'Voy a buscar: {nombre}')
     if nombre:
         clientes = Clientes.query.filter(Clientes.nombre.like(f"{nombre}%")).all()
+        print(clientes)
     else:
         clientes = []
     return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte} for c in clientes])

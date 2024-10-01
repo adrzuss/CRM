@@ -22,6 +22,8 @@ def login():
 def logout():
     if 'user_id' in session:
         session.pop('user_id', None)
+    if 'user_name' in session:
+        session.pop('user_name', None)    
     session.clear()     
     return redirect(url_for('index'))
 

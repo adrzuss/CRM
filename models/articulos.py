@@ -8,16 +8,19 @@ class Articulo(db.Model):
     costo = db.Column(db.Float, nullable=False)
     idiva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'))
     idmarca = db.Column(db.Integer, db.ForeignKey('marcas.id'))
+    idrubro = db.Column(db.Integer, db.ForeignKey('rubros.id'))
     imagen = db.Column(db.String(255))
     iva = db.relationship('AlcIva', back_populates='articulos')
     marca = db.relationship('Marca', back_populates='articulos')
+    rubro = db.relationship('Rubro', back_populates='articulos')
     precios = db.relationship('Precio', backref='articulo', lazy=True)
 
-    def __init__(self, codigo, detalle, costo, idiva, idmarca, imagen):
+    def __init__(self, codigo, detalle, costo, idiva, idrubro, idmarca, imagen):
         self.codigo = codigo
         self.detalle = detalle
         self.costo = costo
         self.idiva = idiva
+        self.idrubro = idrubro
         self.idmarca = idmarca
         self.imagen = imagen
         
@@ -52,6 +55,15 @@ class Marca(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     articulos = db.relationship('Articulo', back_populates='marca')
+    
+    def __init__(self, nombre):
+        self.nombre = nombre
+
+class Rubro(db.Model):
+    __tablename__ = 'rubros'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    articulos = db.relationship('Articulo', back_populates='rubro')
     
     def __init__(self, nombre):
         self.nombre = nombre

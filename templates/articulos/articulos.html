@@ -1,7 +1,11 @@
 {% extends 'base.html'%}
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
 {% block body %}
     <!-- TODO 
-     cambair la dispocion de la entada de datso
+     cambiar la dispocion de la entrada de datos
      poner toda la entrada arriba y deja ele listado abajo
      ver la posibilidd de al menos mostrar el precio de la primer lista de precios
      -->
@@ -18,8 +22,28 @@
             </div>    
              
     </div>   
+        
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/dataTables.js"></script>
 
     <script>
+        
+        new DataTable('#dataTable', {
+            iDisplayLength: 50,
+            language: {
+                entries: {
+                    _: "entradas",
+                    1: "entrada"
+                },
+                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
+                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+                sLengthMenu: "_MENU_ _ENTRIES_ por página",
+                sSearch: 'Buscar',
+                sSearchPlaceholder: 'Buscar registros'
+            }
+        });
+
         document.getElementById('costo').addEventListener('input', function(e) {
             const costo = parseFloat(document.getElementById('costo').value);
             const itemDivs = document.querySelectorAll('.precios #precio');

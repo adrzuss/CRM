@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app
 from werkzeug.utils import secure_filename
 import os
-from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios
+from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro
 from models.configs import AlcIva
+from services.articulos import get_listado_precios
 from sqlalchemy import func, and_, join
 from utils.db import db
 from utils.config import allowed_file
@@ -11,11 +12,30 @@ bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/ar
 
 @bp_articulos.route('/articulos')
 def articulos():
-    articulos = Articulo.query.all()
+    #articulos = Articulo.query.all()
+    
+    articulos = (db.session.query(
+            Articulo.id,
+            Articulo.detalle,
+            Articulo.codigo,
+            Articulo.costo,
+            Articulo.imagen,
+            Rubro.nombre.label('rubro'),
+            Marca.nombre.label('marca')
+            ).join(
+                Rubro, and_(Articulo.idrubro == Rubro.id)
+            ).join(
+                Marca, and_(Articulo.idmarca == Marca.id)    
+            ).order_by(
+                Articulo.id    
+            ).all()
+        )
+    
     marcas = Marca.query.all()
+    rubros = Rubro.query.all()
     ivas = AlcIva.query.all()
     listas_precio = ListasPrecios.query.all()
-    return render_template('articulos.html', articulos=articulos, marcas=marcas, ivas=ivas, listas_precio=listas_precio)
+    return render_template('articulos.html', articulos=articulos, rubros=rubros, marcas=marcas, ivas=ivas, listas_precio=listas_precio)
 
 @bp_articulos.route('/add_articulo', methods=['POST'])
 def add_articulo():
@@ -25,6 +45,7 @@ def add_articulo():
     costo = request.form['costo']
     idiva = request.form['idiva']
     idmarca = request.form['idmarca']
+    idrubro = request.form['idrubro']
     
     # Manejar la imagen
     if 'imagen' not in request.files:
@@ -46,7 +67,7 @@ def add_articulo():
     else:
         filename = ''    
     
-    articulo = Articulo(codigo, detalle, costo, idiva, idmarca, filename)
+    articulo = Articulo(codigo, detalle, costo, idiva, idrubro, idmarca, filename)
     db.session.add(articulo)
     db.session.commit()
     idarticulo = articulo.id
@@ -74,6 +95,7 @@ def add_articulo():
 def update_articulo(id):
     marcas = Marca.query.all()
     ivas = AlcIva.query.all()
+    rubros = Rubro.query.all()
     articulo = Articulo.query.get(id)
     listas_precios = db.session.query(
                 ListasPrecios.id.label('id'),
@@ -90,13 +112,14 @@ def update_articulo(id):
     stocks = db.session.query(Stock).join(Articulo, Stock.idarticulo == Articulo.id).filter(Articulo.id == articulo.id)
         
     if request.method == 'GET':
-        return render_template('upd-articulos.html', articulo=articulo, marcas=marcas, ivas=ivas, listas_precio=listas_precios, stocks=stocks)
+        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, listas_precio=listas_precios, stocks=stocks)
     if request.method == 'POST':
         articulo.codigo = request.form['codigo']
         articulo.detalle = request.form['detalle']
         articulo.costo = request.form['costo']
         articulo.idiva = request.form['idiva']
         articulo.idmarca = request.form['idmarca']
+        articulo.idrubro = request.form['idrubro']
         
         # Manejar la imagen
         if 'imagen' not in request.files:
@@ -137,6 +160,12 @@ def update_articulo(id):
                     db.session.commit()
             except Exception as e:
                 flash(f'Error grabando precios {e}', 'error')
+        if 'deseable' in items:        
+            stock_deseable = request.form['deseable']        
+            stock_maximo = request.form['maximo']
+            stocks[0].deseable = stock_deseable
+            stocks[0].maximo = stock_maximo
+            db.session.commit()
         flash('Articulo grabado')
         return redirect('/articulos')
         
@@ -148,7 +177,7 @@ def get_articulo(codigo, idlista):
     articulo = Articulo.query.filter_by(codigo=codigo).first()
     
     if not articulo:
-        return {"error": "Artículo no encontrado"}, 404
+        return jsonify(success=False, articulo={}), 404
     
     # Obtener el precio del artículo según la lista especificada (idlista)
     # Si la lista es 0 es porque vengo desde las compra 
@@ -164,10 +193,23 @@ def get_articulo(codigo, idlista):
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo})
     
-    
+@bp_articulos.route('/lst_precios', methods=['GET', 'POST']) 
+def lst_precios():
+    listas_precios = ListasPrecios.query.all()
+    if request.method == 'GET':
+        listado = []
+    else:        
+        idlista = request.form['idlista']
+        if idlista :
+            listado = get_listado_precios(idlista)
+        else:
+            listado = []    
+    return render_template('precios-articulos.html', listas_precios=listas_precios, listado=listado)
+
 @bp_articulos.route('/stock_art') 
 def stock_art():
     listado = db.session.query(
+        Articulo.id,
         Articulo.codigo,
         Articulo.detalle,
         Stock.actual,
@@ -177,7 +219,29 @@ def stock_art():
         Stock, Articulo.id == Stock.idarticulo
     ).all()  
     return render_template('stock-articulos.html', listado=listado)
+
+@bp_articulos.route('/stock_faltantes') 
+def stock_faltantes():
+    listado = db.session.query(
+        Articulo.id,
+        Articulo.codigo,
+        Articulo.detalle,
+        Stock.actual,
+        Stock.maximo,
+        Stock.deseable
+    ).join(
+        Stock, Articulo.id == Stock.idarticulo
+    ).filter(Stock.actual <= 0
+    ).all()  
+    return render_template('stock-articulos.html', listado=listado)
+
     
+#------------- Marcas y Rubros ---------------------        
+@bp_articulos.route('/rubros_marcas')    
+def rubros_marcas():    
+    rubros = Rubro.query.all()
+    marcas = Marca.query.all()
+    return render_template('rubros-marcas.html', rubros=rubros, marcas=marcas)
     
 #------------- Marcas ---------------------    
 @bp_articulos.route('/marcas')    
@@ -191,4 +255,20 @@ def add_marca():
     marca = Marca(det_marca)
     db.session.add(marca)
     db.session.commit()
-    return redirect('/marcas')
+    flash('Marca agregada')
+    return redirect(url_for('articulos.rubros_marcas'))
+
+#------------- Rubros ---------------------    
+@bp_articulos.route('/rubros')    
+def rubros():
+    rubro = Rubro.query.all()
+    return render_template('rubros.html', rubro=rubro)
+
+@bp_articulos.route('/add_rubro', methods=['POST'])
+def add_rubro():
+    det_rubro = request.form["rubro"]
+    rubro = Rubro(det_rubro)
+    db.session.add(rubro)
+    db.session.commit()
+    flash('Rubro agregado')
+    return redirect(url_for('articulos.rubros_marcas'))

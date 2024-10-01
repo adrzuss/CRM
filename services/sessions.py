@@ -6,11 +6,11 @@ from models.sessions import Usuarios, Tareas, TareasUsuarios
 
 def check_user(usr_name, clave_usr):
     usuario = Usuarios.query.filter_by(usuario=usr_name, clave=clave_usr).first()
-    print(f'el usuario {usuario}')
     if not usuario:
         return False
     else:
         session['user_id'] = usuario.id
+        session['user_name'] = usuario.nombre
         return True
         
     

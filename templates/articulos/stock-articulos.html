@@ -14,17 +14,17 @@
                             <th scope="col">Código</th>
                             <th scope="col">Detalle</th>
                             <th scope="col">Actual</th>
-                            <th scope="col">Mínimo</th>
+                            <th scope="col">Máximo</th>
                             <th scope="col">Deseable</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
                         {% for articulo in listado %}
                             <tr class="">
-                                <td scope="row"> {{ articulo.codigo }}</td>
+                                <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=articulo.id ) }}">{{ articulo.codigo }}</a></td>
                                 <td>{{ articulo.detalle }}</td>
                                 <td>{{ articulo.actual }}</td>
-                                <td>{{ articulo.minimo }}</td>
+                                <td>{{ articulo.maximo }}</td>
                                 <td>{{ articulo.deseable }}</td>
                             </tr>
                         {% endfor %}    

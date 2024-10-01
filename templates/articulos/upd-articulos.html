@@ -37,16 +37,35 @@
                     </div>    
                     <div class="mb-3">
                         <label for="idmarca">Marca:</label>
-                        <select class="form-control" id="idmarca" name="idmarca" required value="{{ articulo.idmarca }}">
+                        <select class="form-control" id="idmarca" name="idmarca" required>
                         {% for marca in marcas %}
-                            <option value="{{ marca.id }}">{{ marca.nombre }}</option>
+                            {% if marca.id == articulo.idmarca %}
+                                <option value="{{ marca.id }}" selected>{{ marca.nombre }}</option>
+                            {% else %}
+                                <option value="{{ marca.id }}">{{ marca.nombre }}</option>
+                            {% endif %}
                         {% endfor %}
                         </select>
                     </div>    
-                    <div class="mb-3">
-                        <label for="imagen">Imagen:</label>
-                        <input class="form-control" type="file" id="imagen" name="imagen" value="{{ articulo.imagen }}" >
-                    </div>    
+                    <div class="row">
+                        <div class="col-7 mb-3">
+                            <label for="idrubro">Rubro:</label>
+                            <select class="form-control" id="idrubro" name="idrubro" required>
+                            {% for rubro in rubros %}
+                                {% if rubro.id == articulo.idrubro %}
+                                    <option value="{{ rubro.id }}" selected>{{ rubro.nombre }}</option>
+                                {% else %}
+                                    <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+                                {% endif %}    
+                            {% endfor %}
+                            </select>
+                        </div>    
+                        <div class="col-5 mb-3">
+                            <label for="imagen">Imagen:</label>
+                            <input class="form-control" type="file" id="imagen" name="imagen" value="{{ articulo.imagen }}">
+                        </div>    
+                    </div>
+                    
                     {% if articulo.imagen %}
                         <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo">
                     {% else %}    
@@ -76,7 +95,7 @@
 
                                 <div class="col-md-4 mb-3">
                                     <label for="pvp{{loop.index}}">Precio V.P.</label>
-                                    <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}">
+                                    <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}">
                                 </div>    
 
                                 <div class="col-md-2 mb-3">
@@ -96,8 +115,22 @@
                     <h5 class="m-3">Stock de artículos</h5>
                     <div class="card-body">
                         {% for stock in stocks %}
-                            <label for="stock">Stock</label>
-                            <input type="text" class="form-control" value="{{ stock.actual }}" readonly>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="stock">Stock</label>
+                                    <input type="text" class="form-control" value="{{ stock.actual }}" readonly>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="stock">Stock deseable</label>
+                                    <input type="text" class="form-control" id="deseable" name="deseable" value="{{ stock.deseable }}">
+                                </div>
+                                <div class="col-6">
+                                    <label for="stock">Stock maximo</label>
+                                    <input type="text" class="form-control" id="maximo" name="maximo" value="{{ stock.maximo }}">
+                                </div>
+                            </div>
                         {% endfor %}
                     </div>    
             </div>
@@ -112,7 +145,7 @@
             const itemDivs = document.querySelectorAll('.precios #precio');
             itemDivs.forEach((itemDiv, index) => {
                 const markup = parseFloat(itemDiv.querySelector('.markup').value);
-                itemDiv.querySelector('.precio').value = markup.toFixed(2) * costo.toFixed(2);
+                itemDiv.querySelector('.precio').value = (markup.toFixed(2) * costo.toFixed(2)).toFixed(2);
             });
             
         });

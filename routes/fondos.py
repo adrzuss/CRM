@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, flash, url_for, jsonify,
 from datetime import date, datetime
 from sqlalchemy import func, and_
 from models.ventas import Factura, PagosFV
-from routes.ventas import get_vta_desde_hasta
+from services.ventas import get_vta_desde_hasta
 from models.proveedores import FacturaC, PagosFC
 from models.configs import PagosCobros
 from utils.db import db

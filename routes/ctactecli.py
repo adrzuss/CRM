@@ -4,6 +4,7 @@ from sqlalchemy import func
 from utils.utils import format_currency
 from models.clientes import Clientes
 from models.ctactecli import CtaCteCli
+from services.ctactecli import saldo_ctacte
 from datetime import date
 from utils.db import db
 
@@ -74,24 +75,3 @@ def saldoscli():
         return render_template('saldos-ctactecli.html', saldos=saldos, desde=fecha_str)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
     return render_template('saldos-ctactecli.html', desde=desde)
-
-def saldo_ctacte(idcliente):
-    # Consulta SQLAlchemy para sumar los campos "debe" y "haber"
-    result = db.session.query(
-        func.sum(CtaCteCli.debe).label('total_debe'),
-        func.sum(CtaCteCli.haber).label('total_haber')
-    ).filter(CtaCteCli.idcliente == idcliente).one()
-
-    # Convertir el resultado a un diccionario
-    total_debe = result.total_debe if result.total_debe else 0
-    total_haber = result.total_haber if result.total_haber else 0
-    # Devolver el resultado como JSON
-    return {'total_debe': total_debe, 'total_haber': total_haber}
-
-def get_saldo_clientes():
-    try:
-        saldos_cta_cte = db.session.query(func.sum(CtaCteCli.debe).label('debe'), func.sum(CtaCteCli.haber).label('haber')).all()
-        saldos =  format_currency( float(saldos_cta_cte[0][0] - saldos_cta_cte[0][1]))
-        return saldos
-    except:
-        return format_currency(0.0)

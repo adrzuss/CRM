@@ -73,7 +73,7 @@
             </div>    
 
             <div class="row">
-                <button class="btn btn-success col-2 m-2" type="button" id="add_item">Agregar Item</button>
+                <button class="btn btn-success col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
                 <h3 class="m-3">Total Factura: $<span id="total_factura">0.00</span></h3>
                 <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
             </div>
@@ -84,7 +84,7 @@
                     <div class="row justify-content-md-center">
                         <div class="col-3 mt-3">
                             <label for="efectivo">Efectivo</label>
-                            <input type="number" name="efectivo" id="efectivo" class="form-control" value="0">
+                            <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0">
                         </div>
                         <div class="col-3">
                             <label for="entidad" class="form-label">Entidad</label>
@@ -95,11 +95,11 @@
                                 {% endfor %}
                             </select>
                             <label for="ctacte">Tarjeta</label>
-                            <input type="number" name="tarjeta" id="tarjeta" class="form-control" value="0">
+                            <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0">
                         </div>    
                         <div class="col-3 mt-3">    
-                            <label for="ctacte">Cta. Cte.</label>
-                            <input type="number" name="ctacte" id="ctacte" class="form-control" value="0">
+                            <label for="ctacte" id="label-ctacte">Cta. Cte.</label>
+                            <input type="number" name="ctacte" id="ctacte" class="form-control" step="0.01" value="0">
                         </div>
                     </div>
 
@@ -107,12 +107,54 @@
             </div>
 
             <div class="row">
-                <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+                <button class="btn btn-primary col-2 m-2" type="submit" id="grabarVenta">Guardar Factura F9</button>
             </div>
         </form>
     </div>    
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('invoice_form');
+            const btnAgregar = document.getElementById('agregarArticulo');
+            const btnGrabar = document.getElementById('grabarVenta');
+        
+            // Detectar tecla Enter en los inputs del formulario
+            form.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();  // Evita que se envíe el formulario
+        
+                    // Obtener todos los inputs del formulario
+                    let inputs = Array.from(form.elements);
+                    
+                    // Encontrar el input actual
+                    let currentIndex = inputs.indexOf(event.target);
+                    
+                    // Buscar el siguiente input que no sea readonly
+                    let nextIndex = currentIndex + 1;
+                    while (nextIndex < inputs.length && inputs[nextIndex].readOnly) {
+                        nextIndex++;
+                    }
+                    
+                    // Si existe un siguiente input no readonly, enfocarlo
+                    if (nextIndex < inputs.length) {
+                        inputs[nextIndex].focus();
+                    }
+                }
+
+                // Asignar tecla F9 para grabar venta
+                if (event.key === 'F9') {
+                    event.preventDefault();  // Evita el comportamiento por defecto de la tecla
+                    btnGrabar.click();  // Simula un click en el botón "Grabar Venta"
+                }
+
+                // Asignar tecla F5 para agregar un nuevo artículo
+                if (event.key === 'F4') {
+                    event.preventDefault();  // Evita la recarga de página con F5
+                    btnAgregar.click();  // Simula un click en el botón "Agregar Artículo"
+                }
+            });
+        });
+
         async function fetchCliente(input) {
             let response;
         
@@ -131,15 +173,24 @@
             }
         
             const data = await response.json();
-            
-            if (data.length > 1) {
-                // Si hay más de un resultado, mostrar un modal para seleccionar
-                mostrarModalSeleccionClientes(data);
-            } else if (data.length === 1) {
-                // Si hay un solo resultado, asignar directamente
-                asignarCliente(data[0]);
+
+            if (data.success) {
+                if (data.cliente) {
+                    // Si se encuentra un cliente por ID, asignarlo directamente
+                    asignarCliente(data.cliente);
+                } else {
+                    alert("No se encontraron clientes con ese ID.");
+                }
             } else {
-                alert("No se encontraron clientes con ese nombre.");
+                if (data.length > 1) {
+                    // Si hay más de un resultado, mostrar un modal para seleccionar
+                    mostrarModalSeleccionClientes(data);
+                } else if (data.length === 1) {
+                    // Si hay un solo resultado, asignar directamente
+                    asignarCliente(data[0]);
+                } else {
+                    alert("No se encontraron clientes con ese nombre.");
+                }
             }
         }
         
@@ -168,11 +219,16 @@
         }
         
         function asignarCliente(cliente) {
-            console.log('Asignando cliente: ' + cliente.id);
             document.getElementById('idcliente').value = cliente.id;
             document.getElementById('cliente_nombre').value = cliente.nombre;
             document.getElementById('id').value = cliente.id;
-            document.getElementById('ctacte').readOnly = cliente.ctacte == 1;
+            document.getElementById('ctacte').readOnly = cliente.ctacte == 0;
+            if (cliente.ctacte == 0){
+                document.getElementById('label-ctacte').innerText = 'Cta. Cte. - Cliente sin cta. cte.'
+            }
+            else{
+                document.getElementById('label-ctacte').innerText = 'Cta. Cte.'
+            }
         }
 
         async function fetchArticulo(id, idlista, itemDiv) {
@@ -247,6 +303,15 @@
             const efectivo = parseFloat(document.getElementById('efectivo').value);
             const tarjeta = parseFloat(document.getElementById('tarjeta').value);
             const ctacte = parseFloat(document.getElementById('ctacte').value);
+            if (isNaN(efectivo)){
+                efectivo = 0;    
+            }
+            if (isNaN(tarjeta)){
+                tarjeta = 0;
+            }
+            if (isNaN(ctacte)){
+                ctacte = 0;
+            }
             let diferencia = (totalFac - (efectivo + tarjeta + ctacte));
             let lblSaldo = document.getElementById('saldo_factura');
             lblSaldo.textContent = diferencia;
@@ -266,7 +331,16 @@
             const efectivo = parseFloat(document.getElementById('efectivo').value);
             const ctacte = parseFloat(document.getElementById('ctacte').value);
             const tarjeta = parseFloat(document.getElementById('tarjeta').value);
-            let HayDiferencia = (totalFac == (efectivo + tarjeta + ctacte));
+            if (isNaN(efectivo)){
+                efectivo = 0;    
+            }
+            if (isNaN(tarjeta)){
+                tarjeta = 0;
+            }
+            if (isNaN(ctacte)){
+                ctacte = 0;
+            }
+            let HayDiferencia = (totalFac > 0) && (totalFac == (efectivo + tarjeta + ctacte));
             
             return HayDiferencia;
         }
@@ -299,7 +373,7 @@
             }
         });
 
-        document.getElementById('add_item').addEventListener('click', function() {
+        document.getElementById('agregarArticulo').addEventListener('click', function() {
             const itemsDiv = document.getElementById('items');
             const itemCount = itemsDiv.children.length;
 
@@ -337,6 +411,10 @@
 
             itemsDiv.appendChild(newItem);
 
+            // Dar foco al input de idarticulo
+            const idArticuloInput = newItem.querySelector('.idarticulo');
+            idArticuloInput.focus();
+
             newItem.querySelector('.idarticulo').addEventListener('blur', function() {
                 const idarticulo = this.value;
                 const idlista = document.getElementById('idlista').value
@@ -353,15 +431,21 @@
             if (document.querySelectorAll('#items .item').length === 0) {
                 event.preventDefault();
                 alert('Debe agregar al menos un item a la factura');
-            }   
+                event.preventDefault();
+                return false;
+            } 
             if (checkDatosTarjeta() == false){
                 event.preventDefault();
                 alert('Debe completar correctamente los datos de tarjeta');
+                event.preventDefault();
+                return false;
             }
 
             if (checkTotales() == false){
                 event.preventDefault();
-                alert('La suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura');
+                alert('El total debe ser mayor a cera y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura');
+                event.preventDefault();
+                return false;
             }    
             if (confirm('¿Grabar la factura?') == false) {
                 event.preventDefault();

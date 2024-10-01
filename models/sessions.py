@@ -25,6 +25,9 @@ class Tareas(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tarea = db.Column(db.String(50))
     
+    def __init__(self, tarea):
+        self.tarea = tarea
+    
 class TareasUsuarios(db.Model):
     __tablename__='tareas_usuario'
     idtarea = db.Column(db.Integer, primary_key=True)

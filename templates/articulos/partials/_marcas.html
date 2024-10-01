@@ -1,0 +1,47 @@
+<div class="col-6">
+    <div class="card">
+        <h5 class="m-3">Marcas</h5>
+        <div class="card-body">
+            <div class="card m-3">
+                <h5 class="ml-3 mt-3">Agregar Marcas</h5>
+                <form action="{{ url_for('articulos.add_marca') }}" method="post">
+                    <div class="m-3">
+                        <label for="marca" class="form-label">Marca</label>
+                        <input type="text" class="form-control" name="marca" id="marca" aria-describedby="helpId" placeholder="Ingrese la marca"/>
+                        <small id="helpId" class="form-text text-muted">Marca</small>
+                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    </div>
+                    
+                </form>
+            </div>    
+            <div class="card">
+                <h5 class="ml-3 mt-3">Listado de Marcas</h5>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#Id</th>
+                                    <th>Marca</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for marca in marcas %}
+                                    <tr class="table table-light">
+                                        <td scope="row">{{ marca.id }}</td>
+                                        <td style="width: 50%;">{{ marca.nombre }}</td>
+                                        <td>
+                                            <a href="#" class="btn btn-primario">Actualizar</a>
+                                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>    
+        </div>
+    </div>
+</div>

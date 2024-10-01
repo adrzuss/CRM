@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Doc. </th>
+                    <th scope="col">Documento</th>
+                    <th scope="col"># AFIP</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo_doc in tipo_docs %}
+                    <tr class="table table-light">
+                        <td scope="row">{{ tipo_doc.id }}</td>
+                        <td>{{ tipo_doc.nombre }}</td>
+                        <td>{{ tipo_doc.id_afip }}</td>
+                        <td>
+                            <a href="#" class="btn btn-exito">Actualizar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>    
+</div>

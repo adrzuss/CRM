@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
 {% block body %}
     <h2 class="m-3">Facturas de venta</h2>
     <div class="m-3">
@@ -34,11 +38,8 @@
     <div class="row justify-content-center align-items-center">
         <div class="col-8">
             <div class="table-responsive m-3" >
-                <table class="table table-striped table-hover table-borderless align-middle" >
-                    <thead class="table-light">
-                        <caption>
-                            Facturas de venta
-                        </caption>
+                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
+                    <thead class="table-dark">
                         <tr>
                             <th>Cliente</th>
                             <th>Fecha</th>
@@ -48,11 +49,11 @@
                     </thead>
                     <tbody class="table-group-divider">
                         {% for factura in facturas %}        
-                            <tr class="table-dark">
+                            <tr class="table-light">
                                 <td scope="row">{{ factura.cliente.nombre }}</td>
                                 <td>{{ factura.fecha.strftime("%d-%m-%Y") }}</td>
                                 <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
-                                <td><a href="#" class="btn btn-secondary">Ver factura</a></td>
+                                <td><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secondary">Ver factura</a></td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -64,5 +65,24 @@
         </div>    
     </div>
 
-    
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/dataTables.js"></script>
+    <script>
+        new DataTable('#dataTableVentas', {
+            iDisplayLength: 50,
+            language: {
+                entries: {
+                    _: "entradas",
+                    1: "entrada"
+                },
+                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
+                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+                sLengthMenu: "_MENU_ _ENTRIES_ por página",
+                sSearch: 'Buscar',
+                sSearchPlaceholder: 'Buscar registros'
+            }
+        });
+    </script>
+
 {% endblock %}

@@ -46,3 +46,9 @@ class PagosCobros(db.Model):
     
     def __init__(self, pagos_cobros):
         self.pagos_cobros = pagos_cobros
+        
+class TipoDocumento(db.Model):
+    __tablename__ = 'tipo_doc'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(30))
+    id_afip = db.Column(db.Integer)

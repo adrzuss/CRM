@@ -11,7 +11,6 @@ from routes.ctacteprov import bp_ctacteprov
 from routes.configs import bp_configuraciones
 from routes.entidades_cred import bp_entidades
 from routes.fondos import bp_fondos
-from flask_sqlalchemy import SQLAlchemy
 
 def create_app():
     app = Flask(__name__)
@@ -32,6 +31,9 @@ def create_app():
     @app.before_request
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
+        if not ('id_empresa' in session):
+            print('asignand la empresa')
+            session['id_empresa'] = 1
         
     return app
 

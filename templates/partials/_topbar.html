@@ -8,7 +8,7 @@
 
     <!-- Topbar Search -->
     <div class="row">
-        <h3 style = "color:#10246a" class="ml-3">Empresa: {{ session['owner'] }} </h3> 
+        <h4 style = "color:#10246a" class="ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} </h4> 
     </div>
     
 
@@ -61,7 +61,86 @@
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-bell fa-fw"></i>
                     <!-- Counter - Alerts -->
+                    <span class="badge badge-danger badge-counter">3+</span>
                 </a>
+
+                <!-- Dropdown - Alerts -->
+                <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
+                    <h6 class="dropdown-header">
+                        Centro de Alertas
+                    </h6>
+                    {% for alerta in alertas %}
+
+                            {% if alerta['url'] %}
+                                <a class="dropdown-item d-flex align-items-center" href="{{ url_for(alerta['url']) }}">
+                            {% else %}
+                                <a class="dropdown-item d-flex align-items-center" href="#">
+                            {% endif %}
+                            <div class="mr-3">
+                                {% if alerta['tipo'] == 'peligro' %}
+                                    <div class="icon-circle bg-danger">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>
+                                {% elif alerta['tipo'] == 'cuidado' %}    
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>
+                                {% elif alerta['tipo'] == 'bien' %}    
+                                    <div class="icon-circle bg-success">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="icon-circle bg-primary">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>    
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="small text-gray-500"> {{ alerta['titulo'] }} </div>
+                                <span class="font-weight-bold">{{ alerta['subtitulo'] }}</span>
+                            </div>
+                        </a>
+
+                    {% endfor %}
+                    <!--
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                        <div class="mr-3">
+                            <div class="icon-circle bg-primary">
+                                <i class="fas fa-file-alt text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="small text-gray-500">Fecha de alerta</div>
+                            <span class="font-weight-bold">Mensaje alerta 1</span>
+                        </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                        <div class="mr-3">
+                            <div class="icon-circle bg-success">
+                                <i class="fas fa-donate text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="small text-gray-500">Fecha de alerta</div>
+                            Mensaje alerta 2
+                        </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                        <div class="mr-3">
+                            <div class="icon-circle bg-warning">
+                                <i class="fas fa-exclamation-triangle text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="small text-gray-500">Fecha de alerta</div>
+                            Mensaje alerta 3
+                        </div>
+                    </a>
+                    -->
+                    <a class="dropdown-item text-center small text-gray-500" href="#">Ver todas las alertas</a>
+                </div>
+
+                
             </li>
         
 

@@ -3,8 +3,12 @@ from models.configs import Configuracion
 from utils.db import db
 
 def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, telefono, mail):
-    configuracion = Configuracion.query.get(session['user_id'])
+    configuracion = Configuracion.query.get(session['id_empresa'])
     if configuracion:
+        if 'owner' in session:
+            session['owner'] = nombre_propietario
+        if 'company' in session:
+            session['company'] = nombre_fantasia   
         configuracion.nombre_propietario = nombre_propietario
         configuracion.nombre_fantasia = nombre_fantasia
         configuracion.tipo_iva = tipo_iva
@@ -13,7 +17,6 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, telefono
         db.session.commit()
 
 def get_owner():
-    #session['user_id']
-    configuracion = Configuracion.query.get(1)
+    configuracion = Configuracion.query.get(session['id_empresa'])
     print(f'El propietario: {configuracion.nombre_propietario}')
-    return configuracion.nombre_propietario
+    return configuracion

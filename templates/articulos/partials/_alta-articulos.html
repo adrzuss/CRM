@@ -1,7 +1,7 @@
 <div class="card text-center">
     <div class="card-body">
         <h3>Ingreso de artículos</h3>
-        <form  method="post" id="articulo_form" enctype="multipart/form-data">
+        <form  method="post" action="{{ url_for('articulos.add_articulo') }}" id="articulo_form" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-7">
                 <div class="row">
@@ -30,7 +30,7 @@
                     </div>    
                     <div class="col-7 mb-3">
                         <label for="idmarca">Marca:</label>
-                        <select class="form-control" id="idmarca" name="idmarca" required>
+                        <select class="form-select" id="idmarca" name="idmarca" required>
                         {% for marca in marcas %}
                             <option value="{{ marca.id }}">{{ marca.nombre }}</option>
                         {% endfor %}
@@ -38,9 +38,19 @@
                     </div>    
                 </div>    
                 
-                <div class="mb-3">
-                    <label for="imagen">Imagen:</label>
-                    <input class="form-control" type="file" id="imagen" name="imagen">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label for="idrubro">Rubro:</label>
+                        <select class="form-select" id="idrubro" name="idrubro" required>
+                        {% for rubro in rubros %}
+                            <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>    
+                    <div class="col-6 mb-3">
+                        <label for="imagen">Imagen:</label>
+                        <input class="form-control" type="file" id="imagen" name="imagen">
+                    </div>    
                 </div>    
                 </div>
                 <div class="col-5">
@@ -60,12 +70,12 @@
 
                             <div class="col-4 mb-3">
                                 <label for="pvp{{loop.index}}">Precio V.P.</label>
-                                <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" placeholder="Ingrese el precio de V.P.">
+                                <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P.">
                             </div>    
 
                             <div class="col-2 mb-3">
                                 <label for="markaup{{loop.index}}">Markup</label>
-                                <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup }}">
+                                <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" step="0.01" value="{{ lista.markup }}">
                             </div>    
                         </div>
 

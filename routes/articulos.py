@@ -7,10 +7,12 @@ from services.articulos import get_listado_precios
 from sqlalchemy import func, and_, join
 from utils.db import db
 from utils.config import allowed_file
+from utils.utils import check_session
 
 bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/articulos')
 
 @bp_articulos.route('/articulos')
+@check_session
 def articulos():
     #articulos = Articulo.query.all()
     
@@ -38,6 +40,7 @@ def articulos():
     return render_template('articulos.html', articulos=articulos, rubros=rubros, marcas=marcas, ivas=ivas, listas_precio=listas_precio)
 
 @bp_articulos.route('/add_articulo', methods=['POST'])
+@check_session
 def add_articulo():
     #FIXME al agregar articulo insertar stcok en cero
     codigo = request.form['codigo']
@@ -92,6 +95,7 @@ def add_articulo():
     
      
 @bp_articulos.route('/update_articulo/<id>', methods=['GET', 'POST'])
+@check_session
 def update_articulo(id):
     marcas = Marca.query.all()
     ivas = AlcIva.query.all()
@@ -172,8 +176,10 @@ def update_articulo(id):
                 
 
 @bp_articulos.route('/articulo/<string:codigo>/<int:idlista>')
+@check_session
 def get_articulo(codigo, idlista):
     # Buscar el artículo por código
+    print('por id')
     articulo = Articulo.query.filter_by(codigo=codigo).first()
     
     if not articulo:
@@ -193,7 +199,25 @@ def get_articulo(codigo, idlista):
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo})
     
+    
+@bp_articulos.route('/get_articulos')
+@check_session
+def get_articulos():
+    # Buscar el artículo por detalle
+    detalle = request.args.get('detalle', '')
+    idlista = request.args.get('idlista', '')
+    if detalle and idlista:
+        articulos = db.session.query(Articulo.id,
+                                     Articulo.detalle,
+                                     Articulo.costo,
+                                     Precio.precio
+                                     ).join(Precio, Precio.idarticulo == Articulo.id).filter(Articulo.detalle.like(f"%{detalle}%"), Precio.idlista == idlista).all()
+    else:
+        articulos = []
+    return jsonify([{'id': a.id, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])
+    
 @bp_articulos.route('/lst_precios', methods=['GET', 'POST']) 
+@check_session
 def lst_precios():
     listas_precios = ListasPrecios.query.all()
     if request.method == 'GET':
@@ -207,6 +231,7 @@ def lst_precios():
     return render_template('precios-articulos.html', listas_precios=listas_precios, listado=listado)
 
 @bp_articulos.route('/stock_art') 
+@check_session
 def stock_art():
     listado = db.session.query(
         Articulo.id,
@@ -221,6 +246,7 @@ def stock_art():
     return render_template('stock-articulos.html', listado=listado)
 
 @bp_articulos.route('/stock_faltantes') 
+@check_session
 def stock_faltantes():
     listado = db.session.query(
         Articulo.id,
@@ -238,6 +264,7 @@ def stock_faltantes():
     
 #------------- Marcas y Rubros ---------------------        
 @bp_articulos.route('/rubros_marcas')    
+@check_session
 def rubros_marcas():    
     rubros = Rubro.query.all()
     marcas = Marca.query.all()
@@ -245,11 +272,13 @@ def rubros_marcas():
     
 #------------- Marcas ---------------------    
 @bp_articulos.route('/marcas')    
+@check_session
 def marcas():
     marcas = Marca.query.all()
     return render_template('marcas.html', marcas=marcas)
 
 @bp_articulos.route('/add_marca', methods=['POST'])
+@check_session
 def add_marca():
     det_marca = request.form["marca"]
     marca = Marca(det_marca)
@@ -260,11 +289,13 @@ def add_marca():
 
 #------------- Rubros ---------------------    
 @bp_articulos.route('/rubros')    
+@check_session
 def rubros():
     rubro = Rubro.query.all()
     return render_template('rubros.html', rubro=rubro)
 
 @bp_articulos.route('/add_rubro', methods=['POST'])
+@check_session
 def add_rubro():
     det_rubro = request.form["rubro"]
     rubro = Rubro(det_rubro)

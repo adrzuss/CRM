@@ -6,10 +6,12 @@ from models.proveedores import Proveedores
 from models.ctacteprov import CtaCteProv
 from services.ctacteprov import saldo_ctacte
 from utils.db import db
+from utils.utils import check_session
 
 bp_ctacteprov = Blueprint('ctacteprov', __name__, template_folder='../templates/ctacteprov')
 
 @bp_ctacteprov.route('/addCtaCteProv', methods = ['POST','GET'])
+@check_session
 def add_cta_cte_prov():
     if request.method == 'POST':
         idproveedor = request.form['idproveedor']
@@ -37,6 +39,7 @@ def add_cta_cte_prov():
         return render_template('ctacte-prov.html')
 
 @bp_ctacteprov.route('/lstctacteprov/<id>)')
+@check_session
 def lst_cta_cte_prov(id):
     proveedor = Proveedores.query.get_or_404(id)
     movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
@@ -45,6 +48,7 @@ def lst_cta_cte_prov(id):
     return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal)
 
 @bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
+@check_session
 def saldosprov():
     if request.method == 'POST':
         # Obtener la fecha del formulario

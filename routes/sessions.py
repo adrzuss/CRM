@@ -1,7 +1,6 @@
 from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, jsonify
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 
-
 bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions')
 
 @bp_sesiones.route('/login', methods=['GET', 'POST'])

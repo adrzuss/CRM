@@ -5,10 +5,12 @@ from models.ventas import Factura
 from models.configs import TipoDocumento, TipoIva
 from services.clientes import save_cliente
 from utils.db import db
+from utils.utils import check_session
 
 bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
 
 @bp_clientes.route('/clientes')
+@check_session
 def clientes():
     clientes = Clientes.query.all()
     tipo_docs = TipoDocumento.query.all()
@@ -16,6 +18,7 @@ def clientes():
     return render_template('clientes.html', clientes=clientes, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas)
 
 @bp_clientes.route('/new_cliente', methods=['POST'])
+@check_session
 def add_cliente():
     nombre = request.form['nombre']
     documento = request.form['documento']
@@ -30,6 +33,7 @@ def add_cliente():
     return redirect('/')
 
 @bp_clientes.route('/get_cliente/<id>')
+@check_session
 def get_cliente(id):
     cliente = Clientes.query.get(id)
     if cliente:
@@ -38,17 +42,17 @@ def get_cliente(id):
         return jsonify(success=False)
 
 @bp_clientes.route('/get_clientes')
+@check_session
 def get_clientes():
     nombre = request.args.get('nombre', '')
-    print(f'Voy a buscar: {nombre}')
     if nombre:
         clientes = Clientes.query.filter(Clientes.nombre.like(f"{nombre}%")).all()
-        print(clientes)
     else:
         clientes = []
     return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte} for c in clientes])
 
 @bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
+@check_session
 def update_cliente(id):
     cliente = Clientes.query.get(id)
     tipo_docs = TipoDocumento.query.all()
@@ -70,6 +74,7 @@ def update_cliente(id):
         return redirect(url_for('clientes.clientes'))
 
 @bp_clientes.route('/delete_cliente/<id>')
+@check_session
 def delete_cliente(id):
     cliente = Clientes.query.get(id)
     db.session.delete(cliente)
@@ -78,6 +83,7 @@ def delete_cliente(id):
     return redirect(url_for('clientes'))
 
 @bp_clientes.route('/facturas_cliente/<id>', methods=['GET', 'POST'])
+@check_session
 def facturas_cliente(id):
     cliente = Clientes.query.get(id)
     if request.method == 'POST':

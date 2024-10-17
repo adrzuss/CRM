@@ -4,10 +4,12 @@ from models.sessions import Tareas
 from models.articulos import ListasPrecios
 from services.configs import grabar_configuracion
 from utils.db import db
+from utils.utils import check_session
 
 bp_configuraciones = Blueprint('configuraciones', __name__, template_folder='../templates/configuracion')
 
 @bp_configuraciones.route('/configuraciones')
+@check_session
 def configuraciones():
     configuracion = Configuracion.query.get(session['id_empresa'])
     alcIva = AlcIva.query.all()
@@ -25,6 +27,7 @@ def alc_iva():
 """    
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
+@check_session
 def update_config():
     nombre_propietario = request.form['propietario']
     nombre_fantasia = request.form['fantasia']
@@ -36,6 +39,7 @@ def update_config():
     return redirect('configuraciones')
 
 @bp_configuraciones.route('/add_alc_iva', methods=['POST'])
+@check_session
 def add_alc_iva():
     descripcion = request.form['descripcion']
     alicuota = request.form['alicuota']
@@ -46,6 +50,7 @@ def add_alc_iva():
     return redirect('configuraciones')
 
 @bp_configuraciones.route('/add_lista_precio', methods=['POST'])
+@check_session
 def add_lista_precio():
     try:
         nombre_lista_precio = request.form['lista_precio']
@@ -60,6 +65,7 @@ def add_lista_precio():
         return redirect('configuraciones')    
     
 @bp_configuraciones.route('/add_tarea', methods=['POST'])
+@check_session
 def add_tarea():
     try:
         nombre_tarea = request.form['tarea']

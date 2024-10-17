@@ -1,8 +1,8 @@
 from flask import session, redirect, url_for
 from app import create_app
 from services.configs import get_owner
-from routes.sessions import login
 from utils.db import db
+from utils.utils import check_session
 
 app = create_app()
 
@@ -11,14 +11,13 @@ with app.app_context():
     db.create_all()   
 
 @app.route('/')
+@check_session
 def index():
-    if ('user_id' in session):
-        configuracion = get_owner()
-        session['owner'] = configuracion.nombre_propietario
-        session['company'] = configuracion.nombre_fantasia
-        return redirect(url_for('tableros.tablero_inicial'))
-    else:
-        return redirect(url_for('sesion.login'))    
+    configuracion = get_owner()
+    session['owner'] = configuracion.nombre_propietario
+    session['company'] = configuracion.nombre_fantasia
+    return redirect(url_for('tableros.tablero_inicial'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

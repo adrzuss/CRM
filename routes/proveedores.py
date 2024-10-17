@@ -3,6 +3,7 @@ from datetime import date
 from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
 from models.articulos import Articulo, Stock
 from models.ctacteprov import CtaCteProv
+from utils.utils import check_session
 from utils.db import db
 
 bp_proveedores = Blueprint('proveedores', __name__, template_folder='../templates/proveedores')
@@ -10,11 +11,13 @@ bp_proveedores = Blueprint('proveedores', __name__, template_folder='../template
 #------------------ proveedores --------------
 
 @bp_proveedores.route('/proveedores')
+@check_session
 def proveedores():
     proveedores = Proveedores.query.all()
     return render_template('proveedores.html', proveedores=proveedores)
 
 @bp_proveedores.route('/add_proveedor', methods=['POST'])
+@check_session
 def add_proveedor():
     nombre = request.form['nombre']
     mail = request.form['mail']
@@ -27,6 +30,7 @@ def add_proveedor():
     return redirect(url_for('proveedores.proveedores'))
 
 @bp_proveedores.route('/proveedor/<id>')
+@check_session
 def get_proveedor(id):
     proveedor = Proveedores.query.get(id)
     if proveedor:
@@ -35,6 +39,7 @@ def get_proveedor(id):
         return jsonify(success=False)
 
 @bp_proveedores.route('/update_proveedor/<id>', methods=['GET', 'POST'])
+@check_session
 def update_proveedor(id):
     proveedor = Proveedores.query.get(id)
     if request.method == 'GET':
@@ -49,6 +54,7 @@ def update_proveedor(id):
         return redirect(url_for('proveedores.proveedores'))
 
 @bp_proveedores.route('/delete_proveedor/<id>')
+@check_session
 def delete_proveedor(id):
     proveedor = Proveedores.query.get(id)
     db.session.delete(proveedor)
@@ -58,6 +64,7 @@ def delete_proveedor(id):
 
 # ----------------- compras ------------------
 @bp_proveedores.route('/compras', methods=['GET', 'POST'])
+@check_session
 def compras():
     if request.method == 'GET':
         desde = date.today()
@@ -69,6 +76,7 @@ def compras():
     return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta)
     
 @bp_proveedores.route('/nueva_compra', methods=['GET', 'POST'])
+@check_session
 def nueva_compra():
     if request.method == 'POST':
         idproveedor = request.form['idproveedor']

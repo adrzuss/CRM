@@ -8,10 +8,12 @@ from models.entidades_cred import EntidadesCred
 from services.ventas import get_factura
 from sqlalchemy import func, extract
 from utils.db import db
+from utils.utils import check_session   
 
 bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas')
 
 @bp_ventas.route('/ventas', methods=['GET', 'POST'])
+@check_session
 def ventas():
     if request.method == 'GET':
         desde = date.today()
@@ -23,6 +25,7 @@ def ventas():
     return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/nueva_venta', methods=['GET', 'POST'])
+@check_session
 def nueva_venta():
     if request.method == 'POST':
         idcliente = request.form['idcliente']
@@ -107,6 +110,7 @@ def nueva_venta():
     return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio)
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
+@check_session
 def ver_factura_vta(id):
     factura, items, pagos = get_factura(id)
     return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos)

@@ -3,10 +3,12 @@ from services.ventas import get_vta_hoy, get_vta_semana, ventas_por_mes, pagos_h
 from services.articulos import alerta_stocks
 from services.ctactecli import get_saldo_clientes
 from services.ctacteprov import get_saldo_proveedores
+from utils.utils import check_session
 
 bp_tableros = Blueprint('tableros', __name__, template_folder='../templates/tableros')
 
 @bp_tableros.route('/tablero-inicial')
+@check_session
 def tablero_inicial():
     vta_hoy = get_vta_hoy()
     vta_semana = get_vta_semana()

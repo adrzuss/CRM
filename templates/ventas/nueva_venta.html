@@ -7,28 +7,11 @@
     <div class="container">
         <form id="invoice_form" method="post">
             <div class="card mb-3">
-                <!--
-                TODO agregar busqueda de clientes
-                -->
+               
                 <h4 class="m-2">Cliente</h4>
 
-                <div class="modal fade" id="clienteModal" tabindex="-1" role="dialog" aria-labelledby="clienteModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="clienteModalLabel">Seleccione un Cliente</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body" id="modalContent">
-                                <!-- Aquí se mostrarán las opciones de clientes -->
-                                
-                                 
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Modal para seleccionar cliente y articulos -->
+                {% include 'partials/_modal-cliente.html' %}
                 
 
                 <div class="cardbody">
@@ -196,6 +179,8 @@
         
         function mostrarModalSeleccionClientes(clientes) {
             // Crear el contenido del modal con las opciones de cliente
+            const tituloModal = document.getElementById('clienteModalLabel'); 
+            tituloModal.textContent = 'Seleccione un Cliente';
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = '';
             const listaClientes = document.createElement('ul');
@@ -231,21 +216,81 @@
             }
         }
 
+
+
         async function fetchArticulo(id, idlista, itemDiv) {
-            const response = await fetch(`/articulo/${id}/${idlista}`);
-            const data = await response.json();
-            if (data.success) {
-                itemDiv.querySelector('.articulo_detalle').textContent = data.articulo.detalle;
-                itemDiv.querySelector('.articulo_precio').value = data.articulo.precio;
-                updateItemTotal(itemDiv);
-                updateTotalFactura();
-            } else {
-                itemDiv.querySelector('.articulo_detalle').textContent = data.error;
-                itemDiv.querySelector('.articulo_precio').value = '0.00';
-                itemDiv.querySelector('.articulo_precio').readOnly = false
-                updateItemTotal(itemDiv);
-                updateTotalFactura();
+            let response;
+            if (!isNaN(id)){
+                response = await fetch(`/articulo/${id}/${idlista}`);
+                
             }
+            else{
+                response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+            }    
+
+            if (!response.ok) {
+                console.error("Error en la búsqueda de artículos");
+                return;
+            }
+            //const data = await response.json();
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.articulo) {
+                    // Si se encuentra un cliente por ID, asignarlo directamente
+                    asignarArticulo(data.articulo, itemDiv);
+                } else {
+                    alert("No se encontraron articulos con ese ID.");
+                }
+            } else {
+                if (data.length > 1) {
+                    // Si hay más de un resultado, mostrar un modal para seleccionar
+                    mostrarModalSeleccionArticulos(data, itemDiv);
+                } else if (data.length === 1) {
+                    // Si hay un solo resultado, asignar directamente
+                    asignarArticuloElegido(data[0], itemDiv);
+                } else {
+                    alert("No se encontraron articulos con ese detalle.");
+                }
+            }
+       }
+
+        function asignarArticuloElegido(articulo, itemDiv) {
+            itemDiv.querySelector('.idarticulo').value = articulo.id;
+            asignarArticulo(articulo, itemDiv); 
+        }
+
+        function asignarArticulo(articulo, itemDiv) {
+            itemDiv.querySelector('.articulo_detalle').textContent = articulo.detalle;
+            itemDiv.querySelector('.articulo_precio').value = articulo.precio;
+            updateItemTotal(itemDiv);
+            updateTotalFactura();
+        }
+
+        function mostrarModalSeleccionArticulos(articulos, itemDiv) {
+            // Crear el contenido del modal con las opciones de cliente
+            const tituloModal = document.getElementById('clienteModalLabel'); 
+            tituloModal.textContent = 'Seleccione un Artículo';
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = '';
+            const listaArticulos = document.createElement('ul');
+            listaArticulos.classList.add('list-group')
+            modalContent.appendChild(listaArticulos)
+            
+            articulos.forEach(articulo => {
+                const articuloOption = document.createElement('li');
+                articuloOption.classList.add('cliente-option');
+                articuloOption.classList.add('list-group-item');
+                articuloOption.textContent = `${articulo.detalle} - ${articulo.precio}`;
+                articuloOption.onclick = () => {
+                    asignarArticuloElegido(articulo, itemDiv);
+                    $('#clienteModal').modal('hide');
+                };
+                listaArticulos.appendChild(articuloOption);
+            });
+        
+            // Mostrar el modal
+            $('#clienteModal').modal('show');
         }
 
         function updateItemTotal(itemDiv) {
@@ -384,7 +429,7 @@
                 <div class="row m-3">
                     <div class="col-2">
                         <label for="idarticulo">Cod artículo:</label>
-                        <input type="number" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
+                        <input type="text" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
                     </div>    
                     <div class="col-3">
                         <label for="articulo_detalle">Detalle:</label>

@@ -121,7 +121,6 @@ def get_factura(id):
             .join(Clientes, Clientes.id == Factura.idcliente) \
             .join(ListasPrecios, ListasPrecios.id == Factura.idlista) \
             .filter(Factura.id == id).all()
-    print(f'La factura: {factura}')        
    #Factura.query.get(id)
     items = db.session.query(
             Item.id,

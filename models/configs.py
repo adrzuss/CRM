@@ -52,3 +52,17 @@ class TipoDocumento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(30))
     id_afip = db.Column(db.Integer)
+    
+class TipoComprobantes(db.Model):
+    __tablename__ = 'tipo_comprobantes'
+    id = db.Column(db.Integer, primary_key=True)
+    id_tipo_iva = db.Column(db.Integer, db.ForeignKey('tipo_iva.id'))
+    id_afip = db.Column(db.Integer)
+    nombre = db.Column(db.String(50))
+    
+    def __init__(self, nombre, id_tipo_iva, id_afip):
+        self.id_tipo_iva = id_tipo_iva
+        self.id_afip = id_afip
+        self.nombre = nombre
+        
+    

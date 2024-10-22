@@ -8,7 +8,11 @@
         <form id="invoice_form" method="post">
             <div class="card mb-3">
                
-                <h4 class="m-2">Cliente</h4>
+                <div class="row">
+                    <h4 class="m-2 col-5">Cliente</h4>
+                    <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                    <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+                </div>
 
                 <!-- Modal para seleccionar cliente y articulos -->
                 {% include 'partials/_modal-cliente.html' %}
@@ -96,6 +100,15 @@
     </div>    
 
     <script>
+        let isFormSubmited = false;
+
+        window.onbeforeunload = function() {
+            if (!isFormSubmited) {
+                return '¿Estás seguro de cerrar la venta sin guardar los cambios?';
+            }
+        };
+        
+
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('invoice_form');
             const btnAgregar = document.getElementById('agregarArticulo');
@@ -208,6 +221,8 @@
             document.getElementById('cliente_nombre').value = cliente.nombre;
             document.getElementById('id').value = cliente.id;
             document.getElementById('ctacte').readOnly = cliente.ctacte == 0;
+            document.getElementById('tipo_comprobante').innerText = 'Tipo de factura: ' + cliente.tipo_comprobante;
+            document.getElementById('id_tipo_comprobante').value = cliente.id_tipo_comprobante;
             if (cliente.ctacte == 0){
                 document.getElementById('label-ctacte').innerText = 'Cta. Cte. - Cliente sin cta. cte.'
             }
@@ -494,6 +509,9 @@
             }    
             if (confirm('¿Grabar la factura?') == false) {
                 event.preventDefault();
+            }
+            else{
+                isFormSubmited = true;
             }
         });
     </script>

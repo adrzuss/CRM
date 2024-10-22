@@ -43,6 +43,7 @@
                         <tr>
                             <th>Cliente</th>
                             <th>Fecha</th>
+                            <th>Tipo</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -50,8 +51,9 @@
                     <tbody class="table-group-divider">
                         {% for factura in facturas %}        
                             <tr class="table-light">
-                                <td scope="row">{{ factura.cliente.nombre }}</td>
+                                <td scope="row">{{ factura.cliente }}</td>
                                 <td>{{ factura.fecha.strftime("%d-%m-%Y") }}</td>
+                                <td>{{ factura.tipo_comprobante }}</td>
                                 <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
                                 <td><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secondary">Ver factura</a></td>
                             </tr>

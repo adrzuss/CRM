@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from datetime import datetime, date
 from models.clientes import Clientes
 from models.ventas import Factura
-from models.configs import TipoDocumento, TipoIva
+from models.configs import TipoDocumento, TipoIva, TipoComprobantes
 from services.clientes import save_cliente
 from utils.db import db
 from utils.utils import check_session
@@ -35,9 +35,24 @@ def add_cliente():
 @bp_clientes.route('/get_cliente/<id>')
 @check_session
 def get_cliente(id):
-    cliente = Clientes.query.get(id)
+    #cliente = Clientes.query.get(id)
+    cliente = db.session.query(
+        Clientes.id.label('id'),
+        Clientes.nombre.label('nombre'),
+        Clientes.documento.label('documento'),
+        Clientes.email.label('email'),
+        Clientes.telefono.label('telefono'),
+        Clientes.direccion.label('direccion'),
+        Clientes.ctacte.label('ctacte'),
+        Clientes.id_tipo_doc.label('id_tipo_doc'),
+        Clientes.id_tipo_iva.label('id_tipo_iva'),
+        TipoComprobantes.id.label('id_tipo_comprobante'),
+        TipoComprobantes.nombre.label('tipo_comprobante'))\
+        .outerjoin(TipoComprobantes, Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva)\
+        .filter(Clientes.id == id).first()
+      
     if cliente:
-        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte})
+        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte, 'id_tipo_comprobante': cliente.id_tipo_comprobante, 'tipo_comprobante':cliente.tipo_comprobante, 'tipo_doc':cliente.id_tipo_doc, 'tipo_iva':cliente.id_tipo_iva}) 
     else:
         return jsonify(success=False)
 
@@ -46,10 +61,22 @@ def get_cliente(id):
 def get_clientes():
     nombre = request.args.get('nombre', '')
     if nombre:
-        clientes = Clientes.query.filter(Clientes.nombre.like(f"{nombre}%")).all()
+        clientes = db.session.query(
+        Clientes.id.label('id'),
+        Clientes.nombre.label('nombre'),
+        Clientes.documento.label('documento'),
+        Clientes.email.label('email'),
+        Clientes.telefono.label('telefono'),
+        Clientes.direccion.label('direccion'),
+        Clientes.ctacte.label('ctacte'),
+        Clientes.id_tipo_doc.label('id_tipo_doc'),
+        Clientes.id_tipo_iva.label('id_tipo_iva'),
+        TipoComprobantes.nombre.label('tipo_comprobante'))\
+        .outerjoin(TipoComprobantes, Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva)\
+        .filter(Clientes.nombre.like(f"{nombre}%")).all()
     else:
         clientes = []
-    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte} for c in clientes])
+    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte, 'tipo_comprobante':c.tipo_comprobante, 'tipo_doc':c.id_tipo_doc, 'tipo_iva':c.id_tipo_iva} for c in clientes]) 
 
 @bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
 @check_session

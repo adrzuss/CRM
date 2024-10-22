@@ -8,14 +8,17 @@ class Factura(db.Model):
     idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Float, nullable=False)
+    idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
     cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
     lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
+    tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
     
-    def __init__(self, idcliente, idlista, fecha, total=0):
+    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, total=0):
         self.idcliente = idcliente
         self.idlista = idlista
         self.fecha = fecha
         self.total = total
+        self.idtipocomprobante = id_tipo_comprobante
 
 class Item(db.Model):
     __tablename__ = 'itemsv'

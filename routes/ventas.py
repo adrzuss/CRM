@@ -3,8 +3,10 @@ from datetime import date, timedelta
 from utils.utils import format_currency
 from models.articulos import Articulo, Stock, ListasPrecios, Precio
 from models.ventas import Factura, Item, PagosFV
+from models.clientes import Clientes
 from models.ctactecli import CtaCteCli
 from models.entidades_cred import EntidadesCred
+from models.configs import TipoComprobantes
 from services.ventas import get_factura
 from sqlalchemy import func, extract
 from utils.db import db
@@ -21,7 +23,15 @@ def ventas():
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-    facturas = Factura.query.filter(Factura.fecha >= desde, Factura.fecha <= hasta)
+    facturas = db.session.query(Factura.id,
+                                Factura.fecha,
+                                Factura.total,
+                                Clientes.nombre.label('cliente'),
+                                TipoComprobantes.nombre.label('tipo_comprobante')
+                                ).join(Clientes, Factura.idcliente == Clientes.id 
+                                ).join(TipoComprobantes, Factura.idtipocomprobante == TipoComprobantes.id
+                                ).filter(Factura.fecha >= desde, Factura.fecha <= hasta).all()
+    #facturas =  Factura.query.filter(Factura.fecha >= desde, Factura.fecha <= hasta)
     return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/nueva_venta', methods=['GET', 'POST'])
@@ -31,12 +41,13 @@ def nueva_venta():
         idcliente = request.form['idcliente']
         fecha = request.form['fecha']
         idlista = request.form['idlista']
+        id_tipo_comprobante = request.form['id_tipo_comprobante']
         efectivo = float(request.form['efectivo'])
         tarjeta = float(request.form['tarjeta'])
         ctacte = float(request.form['ctacte'])
         total = 0  # Esto se calculará más tarde
 
-        nueva_factura = Factura(idcliente=idcliente, idlista=idlista, fecha=fecha, total=total)
+        nueva_factura = Factura(idcliente=idcliente, idlista=idlista, fecha=fecha, total=total, id_tipo_comprobante = id_tipo_comprobante)
         db.session.add(nueva_factura)
         db.session.commit()
 

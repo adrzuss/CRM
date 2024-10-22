@@ -1,5 +1,5 @@
 from flask import session
-from models.configs import Configuracion
+from models.configs import Configuracion, TipoComprobantes
 from utils.db import db
 
 def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, telefono, mail):
@@ -20,3 +20,7 @@ def get_owner():
     configuracion = Configuracion.query.get(session['id_empresa'])
     print(f'El propietario: {configuracion.nombre_propietario}')
     return configuracion
+
+def get_comprobantes():
+    tipo_comprobantes = TipoComprobantes.query.all()
+    return tipo_comprobantes

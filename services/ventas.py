@@ -116,7 +116,9 @@ def get_factura(id):
                 Factura.id,
                 Factura.fecha,
                 Factura.total,
+                Clientes.id.label('idcliente'),
                 Clientes.nombre,
+                Clientes.direccion,
                 ListasPrecios.nombre.label('lista')) \
             .join(Clientes, Clientes.id == Factura.idcliente) \
             .join(ListasPrecios, ListasPrecios.id == Factura.idlista) \
@@ -138,3 +140,4 @@ def get_factura(id):
             ).filter(PagosFV.idfactura == id
             ).all()
     return factura[0], items, pagos
+

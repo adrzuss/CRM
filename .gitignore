@@ -2,3 +2,12 @@
 __pycache__ 
 .vscode 
 *.txt
+utils/.env
+static/img/articulos/*
+static/img/clientes/*
+static/img/proveedores/*
+static/img/ventas/*
+static/img/ctactecli/*
+static/img/ctacteprov/*
+static/img/entidades/*
+static/img/fondos/*

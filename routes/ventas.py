@@ -11,6 +11,7 @@ from services.ventas import get_factura
 from sqlalchemy import func, extract
 from utils.db import db
 from utils.utils import check_session   
+from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 
 bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas')
 
@@ -113,6 +114,11 @@ def nueva_venta():
                 flash(f'Error grabado entidad crediticia: {e}')
 
         flash('Factura grabada')
+        generar_factura_pdf(idfactura)
+        cliente = Clientes.query.get(idcliente)
+        if cliente.email != None:
+            pdf_path = f"factura-{idfactura}.pdf"
+            enviar_factura_por_email(cliente.email, pdf_path)
         return redirect(url_for('index'))
 
     hoy = date.today()
@@ -125,3 +131,20 @@ def nueva_venta():
 def ver_factura_vta(id):
     factura, items, pagos = get_factura(id)
     return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos)
+
+@bp_ventas.route('/imprimir_factura_vta/<id>') 
+@check_session
+def imprimir_factura_vta(id):
+    generar_factura_pdf(id, footer_text="")
+    return redirect(url_for('ventas.ver_factura_vta', id=id))
+
+@bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
+@check_session
+def enivar_factura_vta_mail(id, idcliente):
+    print('uno')
+    generar_factura_pdf(id, footer_text="")
+    cliente = Clientes.query.get(idcliente)
+    if cliente.email != None:
+        pdf_path = f"factura-{id}.pdf"
+        enviar_factura_por_email(cliente.email, pdf_path)
+    return redirect(url_for('ventas.ver_factura_vta', id=id))

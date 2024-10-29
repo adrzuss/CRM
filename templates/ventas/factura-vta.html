@@ -91,6 +91,10 @@
             </div>
         </div>
 
+        <a href="{{ url_for('ventas.imprimir_factura_vta', id=factura.id) }}" class="btn btn-primary"> Imprimir </a>
+        <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=factura.id, idcliente=factura.idcliente) }}" class="btn btn-success"> Enviar al mail </a>
+    </div>
+
 
 
 {% endblock %}

@@ -16,15 +16,17 @@ class Configuracion(db.Model):
     tipo_iva = db.Column(db.Integer, nullable=False) 
     telefono = db.Column(db.String(30), nullable=False)
     mail = db.Column(db.String(100), nullable=False)
+    clave = db.Column(db.String(100), nullable=False)
     vencimiento = db.Column(db.Date, nullable=False)
     licencia = db.Column(db.String(200), nullable=False)
     
-    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, telefono, mail, vencimiento, licencia):
+    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, telefono, mail, clave, vencimiento, licencia):
         self.nombre_propietario = nombre_propietario
         self.nombre_fantasia = nombre_fantasia
         self.tipo_iva = tipo_iva
         self.telefono = telefono
         self.mail = mail
+        self.clave = clave
         self.vencimiento = vencimiento
         self.licencia = licencia
 

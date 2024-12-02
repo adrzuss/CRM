@@ -18,6 +18,7 @@ class Config:
     SESSION_COOKIE_SECURE = True  # Para HTTPS
     SESSION_COOKIE_HTTPONLY = True  # Protege de ataques XSS
     SESSION_COOKIE_SAMESITE = 'Lax'  # Protege de ataques CSRF
+    INVOICES_FOLDER = os.getenv('INVOICES_FOLDER')
 
     
 

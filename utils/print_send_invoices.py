@@ -16,9 +16,10 @@ from models.configs import Configuracion
 # Generación de factura
 
 def generar_factura_pdf(id, footer_text=""):
+    configuracion = Configuracion.query.get(1)
     logo_path=None
     factura, items, pagos = get_factura(id)
-    archivo_pdf = f"factura-{id}.pdf"
+    archivo_pdf = Config.INVOICES_FOLDER + f"/factura-{id}.pdf"
     c = canvas.Canvas(archivo_pdf, pagesize=A4)
     width, height = A4
 
@@ -77,12 +78,11 @@ def generar_factura_pdf(id, footer_text=""):
 
 # Envio de mail
 def enviar_factura_por_email(destinatario, pdf_path, asunto="Factura Electrónica"):
+    pdf_path = Config.INVOICES_FOLDER + f"/{pdf_path}"
     configuracion = Configuracion.query.first()
     remitente = configuracion.mail  # Cambia esto con tu correo
     password = configuracion.clave  # Cambia esto con la contraseña de tu correo
-    
-    print('remitente', remitente)
-    print('clave', password)
+        
     # Configuración de la conexión
     #server = smtplib.SMTP("smtp.gmail.com", 587)
     #server.starttls()

@@ -6,6 +6,22 @@ body{
     background-color: #ececec;
 }
 
+.text-uno-bold{
+    color: rgb(15, 15, 189);
+    font-weight: bold;
+}
+
+.text-dos-bold{
+    color: rgb(189, 15, 15);
+    font-weight: bold;
+}
+
+.text-tres-bold{
+    color: rgb(15, 189, 15);
+    font-weight: bold;
+}
+
+
 .text-bg-uno {
 
     background-color: rgba(15, 15, 189, 0.349);
@@ -93,3 +109,18 @@ body{
     font-size: small;
     color:rgb(3, 113, 187)
 }
+
+.sucursal_span{
+    font-weight: bold;
+    color:rgb(1, 153, 102)
+}
+
+.precio-normal {
+    color: blue;
+    font-weight: bold;
+  }
+
+.precio-danger {
+    color: red;
+    font-weight: bold;
+  }

@@ -32,7 +32,6 @@ def create_app():
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
         if not ('id_empresa' in session):
-            print('asignand la empresa')
             session['id_empresa'] = 1
         
     return app

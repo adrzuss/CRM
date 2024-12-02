@@ -1,0 +1,36 @@
+<div class="card text-center">
+    <div class="card-body">
+        <h3>Editar datos de sucursal</h3>
+        <form  method="post" action="{{ url_for('configuraciones.abm_sucursales') }}" id="sucursales_form">
+            <div class="row">
+                <div class="col-7">
+                    <div class="row">
+                        <div class="col-1 mb-3"> 
+                            <label for="id_sucursal">#ID</label>
+                            <input class="form-control" type="text" name="id_sucursal" id="id_sucursal" value="{{ sucursal.id }}" readonly>
+                        </div>
+                        <div class="col-4 mb-3"> 
+                            <label for="nombre">Nombre</label>
+                            <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ sucursal.nombre }}">
+                        </div>
+                        <div class="col-7 mb-3">
+                            <label for="direccion">Dirección</label>
+                            <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ sucursal.direccion }}">
+                        </div>    
+                    </div>    
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="telefono">Teléfono</label>
+                            <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el teléfono" value="{{ sucursal.telefono }}">
+                        </div>    
+                        <div class="col-6 mb-3">
+                            <label for="email">E-mail</label>
+                            <input class="form-control" type="email" name="email" id="email" placeholder="Ingrese el mail" value="{{ sucursal.email }}">
+                        </div>    
+                    </div>    
+                </div>
+            </div>
+            <button class="btn btn-exito" type="submit">Grabar</button>
+        </form>
+    </div>    
+</div>   

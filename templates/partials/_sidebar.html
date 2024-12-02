@@ -69,20 +69,33 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFinanzas"
-                    aria-expanded="true" aria-controls="collapseFinanzas">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulos"
+                    aria-expanded="true" aria-controls="collapseArticulos">
                     <i class="fas fa-fw fa-boxes-stacked"></i>
                     <span>Artículos</span>
                 </a>
-                <div id="collapseFinanzas" class="collapse" aria-labelledby="headingIngresos"
+                <div id="collapseArticulos" class="collapse" aria-labelledby="headingIngresos"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Artículos</h6>
                         <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">ABM de artículos</a>
                         <a class="collapse-item" href="{{ url_for('articulos.rubros_marcas') }}">Rubros y Marcas</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.stock_art') }}">Listado de stock</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Listado de precios</a>
-                        
+                        <a class="collapse-item" href="{{ url_for('articulos.ing_balance') }}">Ingreso de balance</a>
+                    </div>
+                </div>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulosListados"
+                    aria-expanded="true" aria-controls="collapseArticulosListados">
+                    <i class="fas fa-fw fa-boxes-stacked"></i>
+                    <span>Listados</span>
+                </a>
+                <div id="collapseArticulosListados" class="collapse" aria-labelledby="headingIngresos"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Listado de artículos</h6>
+                        <a class="collapse-item" href="{{ url_for('articulos.stock_art') }}">Stock</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.stock_art_faltantes') }}">Faltantes</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.stock_sucursales') }}">Stock de sucursales</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Precios</a>
                     </div>
                 </div>
             </li>
@@ -123,7 +136,21 @@
                     </div>
                     
                 </div>
-                
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGastos"
+                    aria-expanded="true" aria-controls="collapseGastos">
+                    <i class="fas fa-regular fa-comment-dollar"></i>
+                    <span>Gastos</span>
+                </a>
+                <div id="collapseGastos" class="collapse" aria-labelledby="headingGastos"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gastos</h6>
+                        <a class="collapse-item" href="{{ url_for('proveedores.nuevo_gasto') }}">Nuevo gasto</a>
+                    </div>
+                    
+                </div>
             </li>
             <div class="sidebar-heading">
                 Fondos

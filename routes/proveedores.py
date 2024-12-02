@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from datetime import date
 from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
 from models.articulos import Articulo, Stock
@@ -86,7 +86,7 @@ def nueva_compra():
         efectivo = float(request.form['efectivo'])
         ctacte = float(request.form['ctacte'])
 
-        nueva_factura = FacturaC(idproveedor=idproveedor, fecha=fecha, total=total)
+        nueva_factura = FacturaC(idproveedor=idproveedor, fecha=fecha, total=total, idsucursal=session['id_sucursal'])
         db.session.add(nueva_factura)
         db.session.commit()
 
@@ -150,3 +150,23 @@ def nueva_compra():
 
     hoy = date.today()
     return render_template('nueva_compra.html', hoy=hoy)
+
+@bp_proveedores.route('/nuevo_gasto', methods=['GET', 'POST'])
+@check_session
+def nuevo_gasto():
+    if request.method == 'POST':
+        idproveedor = request.form['idproveedor']
+        fecha = request.form['fecha']
+        gasto = float(request.form['total'])
+
+        nueva_gasto = FacturaC(idproveedor=idproveedor, fecha=fecha, total=gasto, idsucursal=session['id_sucursal'])
+        db.session.add(nueva_gasto)
+        db.session.commit()
+
+        idfactura = nueva_gasto.id
+        flash('Gasto grabado')
+        return redirect(url_for('index'))
+    else:
+        return render_template('nuevo_gasto.html')
+        
+        

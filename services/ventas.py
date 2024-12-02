@@ -1,10 +1,11 @@
+from flask import session
 from datetime import date, timedelta
 from utils.utils import format_currency
 from models.ventas import Factura, Item, PagosFV
 from models.clientes import Clientes
-from models.articulos import Articulo, ListasPrecios
+from models.articulos import Articulo, ListasPrecios, Stock, ArticuloCompuesto
 from models.configs import PagosCobros
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, update, and_
 from utils.db import db
 
 def get_vta_hoy():
@@ -41,7 +42,6 @@ def get_vta_desde_hasta(desde, hasta):
             Factura.fecha >= desde,
             Factura.fecha <= hasta
         ).all()
-        print(f'venta desde hasat: {vta_desde_hasta}')
         return vta_desde_hasta
     except:
         return []
@@ -141,3 +141,24 @@ def get_factura(id):
             ).all()
     return factura[0], items, pagos
 
+def actualizarStock(idstock, idarticulo, cantidad):
+    articulo = Articulo.query.get(idarticulo)
+    stock = Stock.query.filter(and_(Stock.idstock==idstock, Stock.idsucursal==session['id_sucursal'], Stock.idarticulo==idarticulo)).first()
+    if articulo.idtipoarticulo == 2: #servico
+        cantidad = (cantidad * -1)
+    if stock:
+        db.session.execute(
+            update(Stock).
+            where(Stock.idstock == idstock, Stock.idsucursal == session['id_sucursal'], Stock.idarticulo == idarticulo).
+            values(actual= (stock.actual - cantidad))
+        )
+    else:    
+        stock = Stock(idstock=idstock, idarticulo=idarticulo, idsucursal=session['id_sucursal'], actual=-cantidad, maximo=0, deseable=0)
+        db.session.add(stock)
+    db.session.commit() 
+    compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
+                                 ArticuloCompuesto.idart_comp,
+                                 ArticuloCompuesto.cantidad,
+                                ).filter(ArticuloCompuesto.idarticulo == idarticulo).all()
+    for compuesto in compuestos:
+        actualizarStock(idstock, compuesto.idart_comp, compuesto.cantidad)

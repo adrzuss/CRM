@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <h1 class="m-3">Nueva factura de gasto</h1>
+    <div class="m-2">
+        <div class="container-fluid">
+            <form id="invoice_form" method="post">
+                <div class="card mb-3">
+                    <h4 class="m-2">Proveedor</h4>
+                    <div class="cardbody">
+                        <div class="row m-3">
+                            <div class="col-md-2">
+                                <label for="idproveedor">Proveedor:</label>
+                                <input class="form-control" type="number" name="idproveedor" id="idproveedor" required>
+                            </div>    
+                            <div class="col-md-5">
+                                <label for="proveedor_nombre">Nombre del Proveedor:</label>
+                                <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+                            </div>    
+                            <div class="col-md-3">
+                                <label for="fecha">Fecha:</label>
+                                <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                            </div>    
+                            <div class="col-md-2">
+                                <label for="total">Total:</label>
+                                <input class="form-control" type="text" name="total" id="total" required>
+                            </div>    
+                        </div>    
+                    </div>    
+                </div>    
+
+                <div class="card">
+                    <div class="cardbody">
+                        <div id="items" name="items">
+                            
+                        </div>
+                    </div>
+                </div>    
+
+                <div class="row">
+                    <h3>Total Factura: $<span id="total_factura">0.00</span></h3>
+                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
+                </div>
+
+                <div class="card">
+                    <h4 class="m-3">Formas de pago</h4>
+                    <div class="card-body">
+                        <div class="row justify-content-md-center">
+                            <div class="col-3 mt-3">
+                                <label for="efectivo">Efectivo</label>
+                                <input type="number" name="efectivo" id="efectivo" class="form-control" value="0">
+                            </div>
+                                
+                            <div class="col-3 mt-3">    
+                                <label for="ctacte">Cta. Cte.</label>
+                                <input type="number" name="ctacte" id="ctacte" class="form-control" value="0">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="row">
+                    <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+                </div>
+
+            </form>
+        </div>    
+    </div>    
+
+    <!-- TODO
+     Mover todos los scripts a archivos separados y/o a un blocke de scripts
+    -->
+    <!-- FIXIT
+     si el campo de precio tiene un valor no actualizarlo
+    --> 
+    <script>
+        async function fetchProveedor(id) {
+            const response = await fetch(`/proveedor/${id}`);
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('proveedor_nombre').value = data.proveedor.nombre;
+            } else {
+                document.getElementById('proveedor_nombre').value = 'Proveedor no encontrado';
+            }
+        }
+
+        function calcSaldo(){
+            const totalFac = parseFloat(document.getElementById('total').value);
+            const efectivo = parseFloat(document.getElementById('efectivo').value);
+            const ctacte = parseFloat(document.getElementById('ctacte').value);
+            let diferencia = (totalFac - (efectivo + ctacte));
+            let lblSaldo = document.getElementById('saldo_factura');
+            lblSaldo.textContent = diferencia;
+            if (diferencia > 0){
+                lblSaldo.className = 'negativo';
+            }
+            else if (diferencia === 0){
+                lblSaldo.className = 'neutro';
+            }
+            else{
+                lblSaldo.className = 'positivo';
+            }
+        }
+
+        function checkTotales() {
+            const totalFac = parseFloat(document.getElementById('total').value);
+            const efectivo = parseFloat(document.getElementById('efectivo').value);
+            const ctacte = parseFloat(document.getElementById('ctacte').value);
+            let HayDiferencia = (totalFac == (efectivo + ctacte));
+            return HayDiferencia;
+        }
+
+        document.getElementById('efectivo').addEventListener('input', function(event){
+            calcSaldo();
+        }
+        )
+
+        document.getElementById('ctacte').addEventListener('input', function(event){
+            calcSaldo();
+        }
+        )
+
+        document.getElementById('idproveedor').addEventListener('blur', function() {
+            const idproveedor = this.value;
+            fetchProveedor(idproveedor);
+        });
+
+        document.getElementById('invoice_form').addEventListener('submit', function(event) {
+            const totalFac = parseFloat(document.getElementById('total').value);
+            if (totalFac <= 0) {
+                event.preventDefault();
+                alert('El total debe ser mayor a 0');
+            }   
+            
+            if (checkTotales() == false){
+                event.preventDefault();
+                alert('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
+            }    
+            if (confirm('¿Grabar la factura?') == false) {
+                event.preventDefault();
+            }
+        });
+
+    </script>
+{% endblock %}

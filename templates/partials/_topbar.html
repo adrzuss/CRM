@@ -8,7 +8,7 @@
 
     <!-- Topbar Search -->
     <div class="row">
-        <h4 style = "color:#10246a" class="ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} </h4> 
+        <h4 style = "color:#10246a" class="ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} <span class="sucursal_span">Sucursal: {{session['nombre_sucursal']}}</span></h4> 
     </div>
     
 
@@ -225,6 +225,10 @@
                 <a class="dropdown-item" href="{{ url_for('sesion.update_user', id=session['user_id']) }}">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Perfil
+                </a>
+                <a class="dropdown-item" href="{{ url_for('configuraciones.abm_sucursales') }}">
+                    <i class="fas fa-store fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Sucursales
                 </a>
                 <a class="dropdown-item" href="{{ url_for('configuraciones.configuraciones') }}">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>

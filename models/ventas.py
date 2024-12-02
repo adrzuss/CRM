@@ -1,5 +1,6 @@
 from utils.db import db
 from models.clientes import Clientes
+from models.sucursales import Sucursales
 
 class Factura(db.Model):
     __tablename__ = 'facturav'
@@ -9,16 +10,22 @@ class Factura(db.Model):
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Float, nullable=False)
     idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
+    cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
+    lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
+    tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
+    sucursal = db.relationship('Sucursales', backref=db.backref('sucursales', lazy=True))
     cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
     lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
     tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
     
-    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, total=0):
+    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, idsucursal, total=0):
         self.idcliente = idcliente
         self.idlista = idlista
         self.fecha = fecha
         self.total = total
         self.idtipocomprobante = id_tipo_comprobante
+        self.idsucursal = idsucursal
 
 class Item(db.Model):
     __tablename__ = 'itemsv'

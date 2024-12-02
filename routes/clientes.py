@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
 from datetime import datetime, date
 from models.clientes import Clientes
 from models.ventas import Factura
@@ -6,6 +6,7 @@ from models.configs import TipoDocumento, TipoIva, TipoComprobantes
 from services.clientes import save_cliente
 from utils.db import db
 from utils.utils import check_session
+from sqlalchemy import and_
 
 bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
 
@@ -32,10 +33,11 @@ def add_cliente():
     flash(f'Cliente agregado: {id_cliente}')
     return redirect('/')
 
-@bp_clientes.route('/get_cliente/<id>')
+@bp_clientes.route('/get_cliente/<id>/<tipo_operacion>')
 @check_session
-def get_cliente(id):
+def get_cliente(id, tipo_operacion):
     #cliente = Clientes.query.get(id)
+    print(f'tipo iva owner: {session["tipo_iva"]}')
     cliente = db.session.query(
         Clientes.id.label('id'),
         Clientes.nombre.label('nombre'),
@@ -48,7 +50,7 @@ def get_cliente(id):
         Clientes.id_tipo_iva.label('id_tipo_iva'),
         TipoComprobantes.id.label('id_tipo_comprobante'),
         TipoComprobantes.nombre.label('tipo_comprobante'))\
-        .outerjoin(TipoComprobantes, Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva)\
+        .outerjoin(TipoComprobantes, and_(Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == session['tipo_iva'], TipoComprobantes.id_tipo_operacion == tipo_operacion))\
         .filter(Clientes.id == id).first()
       
     if cliente:
@@ -60,6 +62,7 @@ def get_cliente(id):
 @check_session
 def get_clientes():
     nombre = request.args.get('nombre', '')
+    tipo_operacion = request.args.get('tipo_operacion', '')
     if nombre:
         clientes = db.session.query(
         Clientes.id.label('id'),
@@ -72,7 +75,7 @@ def get_clientes():
         Clientes.id_tipo_doc.label('id_tipo_doc'),
         Clientes.id_tipo_iva.label('id_tipo_iva'),
         TipoComprobantes.nombre.label('tipo_comprobante'))\
-        .outerjoin(TipoComprobantes, Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva)\
+        .outerjoin(TipoComprobantes, and_(Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == session['tipo_iva'], TipoComprobantes.id_tipo_operacion == tipo_operacion))\
         .filter(Clientes.nombre.like(f"{nombre}%")).all()
     else:
         clientes = []

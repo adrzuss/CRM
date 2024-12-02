@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from werkzeug.utils import secure_filename
 import os
-from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro
-from models.configs import AlcIva
-from services.articulos import get_listado_precios
-from sqlalchemy import func, and_, join
+from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, Balance, ItemBalance, ArticuloCompuesto
+from models.configs import AlcIva, TipoArticulos
+from models.sucursales import Sucursales
+from services.articulos import get_listado_precios, obtenerStockSucursales, update_insert_articulo_compuesto
+from services.ventas import actualizarStock
+from sqlalchemy import func, and_, case
 from utils.db import db
 from utils.config import allowed_file
 from utils.utils import check_session
@@ -36,8 +38,9 @@ def articulos():
     marcas = Marca.query.all()
     rubros = Rubro.query.all()
     ivas = AlcIva.query.all()
+    tipoarticulos = TipoArticulos.query.all()
     listas_precio = ListasPrecios.query.all()
-    return render_template('articulos.html', articulos=articulos, rubros=rubros, marcas=marcas, ivas=ivas, listas_precio=listas_precio)
+    return render_template('articulos.html', articulos=articulos, rubros=rubros, marcas=marcas, ivas=ivas, tipoarticulos=tipoarticulos, listas_precio=listas_precio)
 
 @bp_articulos.route('/add_articulo', methods=['POST'])
 @check_session
@@ -48,6 +51,8 @@ def add_articulo():
     costo = request.form['costo']
     idiva = request.form['idiva']
     idmarca = request.form['idmarca']
+    idTipoArticulo = request.form['idtipoarticulo']
+    esCompuesto = request.form.get("es_compuesto") != None
     idrubro = request.form['idrubro']
     
     # Manejar la imagen
@@ -69,8 +74,7 @@ def add_articulo():
             return redirect('/articulos') 
     else:
         filename = ''    
-    
-    articulo = Articulo(codigo, detalle, costo, idiva, idrubro, idmarca, filename)
+    articulo = Articulo(codigo, detalle, costo, idiva, idrubro, idmarca, idTipoArticulo, filename, esCompuesto)
     db.session.add(articulo)
     db.session.commit()
     idarticulo = articulo.id
@@ -100,6 +104,7 @@ def update_articulo(id):
     marcas = Marca.query.all()
     ivas = AlcIva.query.all()
     rubros = Rubro.query.all()
+    tipoarticulos = TipoArticulos.query.all()
     articulo = Articulo.query.get(id)
     listas_precios = db.session.query(
                 ListasPrecios.id.label('id'),
@@ -113,15 +118,30 @@ def update_articulo(id):
                 ).order_by(
                     ListasPrecios.id
                 ).all()
-    stocks = db.session.query(Stock).join(Articulo, Stock.idarticulo == Articulo.id).filter(Articulo.id == articulo.id)
-        
+    #stocks = db.session.query(Stock).join(Articulo, Stock.idarticulo == Articulo.id).filter(Articulo.id == articulo.id)
+    # Consulta para obtener el stock discriminado por sucursales
+    stocks = (
+        db.session.query(
+            Stock.actual.label("stock_actual"),
+            Stock.maximo.label("stock_maximo"),
+            Stock.deseable.label("stock_deseable"),
+            Stock.idsucursal.label("idsucursal"),
+            Sucursales.nombre.label("nombre_sucursal")
+        )
+        .join(Articulo, Stock.idarticulo == Articulo.id)  # Vincular Stock con Articulo
+        .join(Sucursales, Stock.idsucursal == Sucursales.id)  # Vincular Stock con Sucursales
+        .filter(Articulo.id == articulo.id)  # Filtrar por el ID del artículo
+        .all()  # Obtener los resultados
+    )
     if request.method == 'GET':
-        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, listas_precio=listas_precios, stocks=stocks)
+        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks)
     if request.method == 'POST':
         articulo.codigo = request.form['codigo']
         articulo.detalle = request.form['detalle']
         articulo.costo = request.form['costo']
         articulo.idiva = request.form['idiva']
+        articulo.idtipoarticulo = request.form['idtipoarticulo']
+        articulo.es_compuesto = request.form.get("es_compuesto") != None
         articulo.idmarca = request.form['idmarca']
         articulo.idrubro = request.form['idrubro']
         
@@ -173,13 +193,38 @@ def update_articulo(id):
         flash('Articulo grabado')
         return redirect('/articulos')
         
-                
+@bp_articulos.route('/update_composicion/<id>', methods=['GET', 'POST'])
+@check_session
+def update_composicion(id):        
+    idartComp = request.form['codigo']   
+    cant = request.form['cantidad']
+    update_insert_articulo_compuesto(id, idartComp, cant)
+    flash(f'Articulo agregado como composición')
+    return redirect(url_for('articulos.componer_art', id=id))
+
+@bp_articulos.route('/componer_art/<int:id>', methods=['GET', 'POST'])
+@check_session
+def componer_art(id):
+    articulo = Articulo.query.get(id)
+    compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
+                                 ArticuloCompuesto.idart_comp,
+                                 ArticuloCompuesto.cantidad,
+                                 Articulo.codigo,
+                                 Articulo.detalle,
+                                 Marca.nombre.label('marca'),
+                                 Rubro.nombre.label('rubro')
+                                ).join(Articulo, ArticuloCompuesto.idart_comp == Articulo.id
+                                ).join(Marca, Articulo.idmarca == Marca.id
+                                ).join(Rubro, Articulo.idrubro == Rubro.id
+                                ).filter(ArticuloCompuesto.idarticulo == articulo.id).all()
+    return render_template('componer-art.html', articulo=articulo, compuestos=compuestos)
+
+
 
 @bp_articulos.route('/articulo/<string:codigo>/<int:idlista>')
 @check_session
 def get_articulo(codigo, idlista):
     # Buscar el artículo por código
-    print('por id')
     articulo = Articulo.query.filter_by(codigo=codigo).first()
     
     if not articulo:
@@ -208,13 +253,14 @@ def get_articulos():
     idlista = request.args.get('idlista', '')
     if detalle and idlista:
         articulos = db.session.query(Articulo.id,
+                                     Articulo.codigo,
                                      Articulo.detalle,
                                      Articulo.costo,
                                      Precio.precio
                                      ).join(Precio, Precio.idarticulo == Articulo.id).filter(Articulo.detalle.like(f"%{detalle}%"), Precio.idlista == idlista).all()
     else:
         articulos = []
-    return jsonify([{'id': a.id, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])
+    return jsonify([{'id': a.id, 'codigo': a.codigo, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])
     
 @bp_articulos.route('/lst_precios', methods=['GET', 'POST']) 
 @check_session
@@ -242,8 +288,28 @@ def stock_art():
         Stock.deseable
     ).join(
         Stock, Articulo.id == Stock.idarticulo
+    ).filter(
+        Stock.idsucursal == session['id_sucursal']    
+    ).all()  
+    return render_template('stock-articulos.html', nombre_sucursal=session['nombre_sucursal'], listado=listado)
+
+@bp_articulos.route('/stock_art_faltantes') 
+@check_session
+def stock_art_faltantes():
+    listado = db.session.query(
+        Articulo.id,
+        Articulo.codigo,
+        Articulo.detalle,
+        Stock.actual,
+        Stock.maximo,
+        Stock.deseable
+    ).join(
+        Stock, Articulo.id == Stock.idarticulo
+    ).filter(
+        Stock.actual <= 0     
     ).all()  
     return render_template('stock-articulos.html', listado=listado)
+
 
 @bp_articulos.route('/stock_faltantes') 
 @check_session
@@ -261,6 +327,11 @@ def stock_faltantes():
     ).all()  
     return render_template('stock-articulos.html', listado=listado)
 
+@bp_articulos.route('/stock_sucursales') 
+@check_session
+def stock_sucursales():
+    resultado, column_names = obtenerStockSucursales()
+    return render_template('stock-sucursales.html', listado=resultado, columnas=column_names)
     
 #------------- Marcas y Rubros ---------------------        
 @bp_articulos.route('/rubros_marcas')    
@@ -303,3 +374,45 @@ def add_rubro():
     db.session.commit()
     flash('Rubro agregado')
     return redirect(url_for('articulos.rubros_marcas'))
+
+@bp_articulos.route('/ing_balance', methods=['GET', 'POST'])
+@check_session
+def ing_balance():
+    if request.method == 'POST':
+        fecha = request.form['fecha']
+        
+        nuevo_balance = Balance(idUsuario=session['user_id'], fecha=fecha, tipo_balance=1)
+        db.session.add(nuevo_balance)
+        db.session.commit()
+
+        idbalance = nuevo_balance.id
+        
+        items = request.form  # Obtener todo el formulario
+        item_count = 0  # Contador de items agregados
+
+        item_count = len([key for key in items.keys() if key.startswith('items') and key.endswith('[idarticulo]')])
+        idstock = current_app.config['IDSTOCK']
+
+        for i in range(item_count):
+            idarticulo = request.form[f'items[{i}][idarticulo]']
+            cantidad = int(request.form[f'items[{i}][cantidad]'])
+            articulo = db.session.query(Articulo.id, Articulo.costo).filter(Articulo.codigo == idarticulo).first()
+            precio_unitario = articulo.costo if articulo else 0
+            precio_total = precio_unitario * cantidad
+
+            nuevo_item = ItemBalance(idbalance=idbalance, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
+            db.session.add(nuevo_item)
+            # Actualizar la tabla de stocks
+            actualizarStock(idstock, articulo.id, -cantidad)
+            
+        
+        nuevo_balance = Balance.query.get(idbalance)
+                
+        db.session.commit()
+
+        flash('Balance grabado')
+        
+        return redirect(url_for('index'))
+    else:
+        return render_template('ing_balance.html')
+        

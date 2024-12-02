@@ -1,21 +1,26 @@
 from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, jsonify
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
+from models.sucursales import Sucursales
 
 bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions')
 
 @bp_sesiones.route('/login', methods=['GET', 'POST'])
 def login():
+    sucursales = Sucursales.query.all()
     if request.method == 'POST':
         usuario = request.form['usuario'] 
         clave = request.form['clave']
         usuario_ok = check_user(usuario, clave)
         if usuario_ok == True:
+            session['id_sucursal'] = int(request.form['sucursal'])
+            sucursal = Sucursales.query.get(session['id_sucursal'])
+            session['nombre_sucursal'] = sucursal.nombre
             return redirect(url_for('index'))
         else:
             flash('Nombre de usuario y/o contraseña incorrecta')
             return redirect( url_for('sesion.login'))
     else:    
-        return render_template('login.html')
+        return render_template('login.html', sucursales=sucursales)
 
 @bp_sesiones.route('/logout')
 def logout():
@@ -30,7 +35,6 @@ def logout():
 def usuarios():
     datos, status_code = get_usuarios()
     if status_code == 200:
-        print('ya tenemos los usuarios')
         return render_template('usuarios.html', usuarios=datos)
     else:
         usuarios = []
@@ -53,7 +57,6 @@ def add_user():
         clave2 = request.form['clave2']
         if clave == clave2:
             resultado, status_code = new_user(nombre, documento, telefono, mail, direccion, usuario, clave)
-            print(resultado)
             if (status_code == 200):
                 datos = resultado.get_json()
                 flash(f'Datos de usuario grabados {datos["datos"]["usuario"]}')

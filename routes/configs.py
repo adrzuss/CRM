@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from models.configs import Configuracion, AlcIva, TipoIva, TipoDocumento
 from models.sessions import Tareas
 from models.articulos import ListasPrecios
-from services.configs import grabar_configuracion
+from models.sucursales import Sucursales
+from services.configs import grabar_configuracion, save_and_update_lista_precios
 from utils.db import db
 from utils.utils import check_session
 
@@ -31,10 +32,12 @@ def alc_iva():
 def update_config():
     nombre_propietario = request.form['propietario']
     nombre_fantasia = request.form['fantasia']
-    tipo_iva = request.form['iva']
+    tipo_iva = request.form['tipo_iva']
     telefono = request.form['telefono']
     mail = request.form['mail']
-    grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, telefono, mail)
+    tipo_doc = request.form['tipo_doc']
+    documento = request.form['documento']
+    grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc,documento, telefono, mail)
     flash('Datos de configuracion grabados')
     return redirect('configuraciones')
 
@@ -55,9 +58,8 @@ def add_lista_precio():
     try:
         nombre_lista_precio = request.form['lista_precio']
         markup = request.form['markup']
-        lista_precio = ListasPrecios(nombre_lista_precio, markup)
-        db.session.add(lista_precio)
-        db.session.commit()
+        save_and_update_lista_precios(nombre_lista_precio, markup)
+        
         flash('Lista de precios grabada')
         return redirect('configuraciones')
     except Exception as e:
@@ -77,3 +79,42 @@ def add_tarea():
     except Exception as e:
         flash(f'Error grabando Tareas: {e}', 'error')
         return redirect('configuraciones')    
+    
+@bp_configuraciones.route('/abm_sucursales', methods=['GET', 'POST'])
+@check_session
+def abm_sucursales():
+    if request.method == 'POST':
+        id_sucursal = request.form['id_sucursal']
+        nombre_sucursal = request.form['nombre']
+        direccion_sucursal = request.form['direccion']
+        telefono_sucursal = request.form['telefono']
+        email_sucursal = request.form['email']
+        if id_sucursal:
+            sucursal = Sucursales.query.get(id_sucursal)
+            sucursal.nombre = nombre_sucursal
+            sucursal.direccion = direccion_sucursal
+            sucursal.telefono = telefono_sucursal
+            sucursal.email = email_sucursal
+            db.session.commit()
+            flash('Datos de sucursal actualizados')
+        else:
+            sucursal = Sucursales(nombre_sucursal, direccion_sucursal, telefono_sucursal, email_sucursal)
+            db.session.add(sucursal)
+            db.session.commit()
+            flash('Datos de sucursal grabados')
+    sucursal = None    
+    sucursales = Sucursales.query.all()
+    return render_template('abm-sucursales.html', sucursal=sucursal, sucursales=sucursales)
+
+@bp_configuraciones.route('/update_sucursal/<int:id>', methods=['GET'])
+@check_session
+def update_sucursal(id):
+    sucursal = Sucursales.query.get(id)
+    sucursales = Sucursales.query.all()
+    print(sucursal.id)
+    return render_template('abm-sucursales.html', sucursales=sucursales, sucursal=sucursal)
+
+@bp_configuraciones.route('/abm-sucursales/<int:id>/delete', methods=['GET', 'POST'])
+@check_session
+def abm_sucursales_delete(id):
+    pass

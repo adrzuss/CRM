@@ -1,13 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, jsonify, session
 from datetime import date, timedelta
 from utils.utils import format_currency
-from models.articulos import Articulo, Stock, ListasPrecios, Precio
+from models.articulos import Articulo, ListasPrecios, Precio
 from models.ventas import Factura, Item, PagosFV
 from models.clientes import Clientes
 from models.ctactecli import CtaCteCli
 from models.entidades_cred import EntidadesCred
 from models.configs import TipoComprobantes
-from services.ventas import get_factura
+from services.ventas import get_factura, actualizarStock
 from sqlalchemy import func, extract
 from utils.db import db
 from utils.utils import check_session   
@@ -48,7 +48,7 @@ def nueva_venta():
         ctacte = float(request.form['ctacte'])
         total = 0  # Esto se calculará más tarde
 
-        nueva_factura = Factura(idcliente=idcliente, idlista=idlista, fecha=fecha, total=total, id_tipo_comprobante = id_tipo_comprobante)
+        nueva_factura = Factura(idcliente=idcliente, idlista=idlista, fecha=fecha, total=total, id_tipo_comprobante=id_tipo_comprobante, idsucursal=session['id_sucursal'])
         db.session.add(nueva_factura)
         db.session.commit()
 
@@ -63,24 +63,18 @@ def nueva_venta():
         for i in range(item_count):
             idarticulo = request.form[f'items[{i}][idarticulo]']
             cantidad = int(request.form[f'items[{i}][cantidad]'])
-            articulo = Articulo.query.get(idarticulo)
-            precio = Precio.query.filter_by(idarticulo=idarticulo, idlista=idlista).first()
+            articulo = db.session.query(Articulo.id).filter(Articulo.codigo == idarticulo).first()
+            precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
             #precio_unitario = articulo.precio if articulo else 0
             precio_unitario = precio.precio if precio else 0
             precio_total = precio_unitario * cantidad
 
-            nuevo_item = Item(idfactura=idfactura, id=i, idarticulo=idarticulo, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
+            nuevo_item = Item(idfactura=idfactura, id=i, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
             db.session.add(nuevo_item)
             total += precio_total
-             # Actualizar la tabla de stocks
-            stock = Stock.query.filter_by(idstock=idstock, idarticulo=idarticulo).first()
-            if stock:
-                stock.actual -= cantidad
-                if stock.actual < 0:
-                    stock.actual = 0  # Para evitar cantidades negativas
-            else:
-                stock = Stock(idstock=idstock, idarticulo=idarticulo, actual=-cantidad, maximo=0, deseable=0)
-                db.session.add(stock)
+            # Actualizar la tabla de stocks
+            actualizarStock(idstock, articulo.id, cantidad)
+            
         
         nueva_factura = Factura.query.get(idfactura)
         nueva_factura.total = total
@@ -141,7 +135,6 @@ def imprimir_factura_vta(id):
 @bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
 @check_session
 def enivar_factura_vta_mail(id, idcliente):
-    print('uno')
     generar_factura_pdf(id, footer_text="")
     cliente = Clientes.query.get(idcliente)
     if cliente.email != None:

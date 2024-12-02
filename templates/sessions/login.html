@@ -75,6 +75,14 @@
                                             <input type="password" class="form-control form-control-user"
                                                 id="clave" name="clave" placeholder="Clave">
                                         </div>
+                                        <div class="form-group">
+                                            <select name="sucursal" id="sucursal" class="form-control form-select-user">
+                                                {% for sucursal in sucursales %}
+                                                    <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            
+                                        </div>
                                         <button type="submit" class="btn btn-primary btn-user btn-block">Ingresar</button>
                                     </form>
                                     <hr>

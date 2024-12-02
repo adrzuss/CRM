@@ -20,8 +20,16 @@ class FacturaC(db.Model):
     idproveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Float, nullable=False)
-    proveedor = db.relationship('Proveedores', backref=db.backref('facturasc', lazy=True))
-
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
+    proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
+    pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
+    
+    def __init__(self, idproveedor, fecha, total, idsucursal):
+        self.idproveedor = idproveedor
+        self.fecha = fecha
+        self.total = total
+        self.idsucursal = idsucursal
+        
 class ItemC(db.Model):
     __tablename__ = 'itemsc'
     idfactura = db.Column(db.Integer, db.ForeignKey('facturac.id'), primary_key=True)
@@ -32,6 +40,14 @@ class ItemC(db.Model):
     precio_total = db.Column(db.Float, nullable=False)
     articulo = db.relationship('Articulo', backref=db.backref('itemsc', lazy=True))
     factura = db.relationship('FacturaC', backref=db.backref('itemsc', lazy=True))
+    
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total):
+        self.idfactura = idfactura
+        self.id = id
+        self.idarticulo = idarticulo
+        self.cantidad = cantidad
+        self.precio_unitario = precio_unitario    
+        self.precio_total = precio_total
     
 class PagosFC(db.Model):
     __tablename__ = 'pagos_fc'

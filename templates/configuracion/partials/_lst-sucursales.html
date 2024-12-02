@@ -1,0 +1,53 @@
+<div class="m-3 card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Listado de sucursales</h6>
+    </div>
+    <div class="card-body">
+        <div class='input-group mb-3'>
+            
+        </div>
+        <div class="table-responsive">
+            
+            <table class="display table table-bordered table-striped" id="dataTable" width="100%">
+                
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Dirección</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col" style="width: 15%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tfoot class="thead-dark">
+                    <tr>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Dirección</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for sucursal in sucursales %}
+                    <tr class="">
+                        <td scope="row">{{ sucursal.id }}</td>
+                        <td>{{ sucursal.nombre }}</td>
+                        <td>{{ sucursal.direccion }}</td>
+                        <td>{{ sucursal.telefono }}</td>
+                        <td>{{ sucursal.email }}</td>
+                        <td>
+                            <a href="{{ url_for('configuraciones.update_sucursal', id=sucursal.id) }}" class="btn btn-primario">Actualizar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+

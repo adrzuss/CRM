@@ -15,17 +15,38 @@
                                 <input class="form-control" type="text" name="fantasia" id="fantasia" placeholder="Nombre de fantasia" value="{{ configuracion.nombre_fantasia }}">
                             </div>
                             <div class="col-4 mb-3"> 
-                                <label for="iva">Responsibilidad IVA</label>
-                                <select class="form-select form-select-bg" name="iva" id="iva">
+                                <label for="tipo_iva">Responsibilidad IVA</label>
+                                <select class="form-select form-select-bg" name="tipo_iva" id="tipo_iva">
                                     <option selected>Seleccione una opcion</option>
-                                    {% for iva in tipo_iva %}
-                                        <option value="iva.id">{{ iva.descripcion }}</option>
+                                    {% for iva in tipo_ivas %}
+                                        {% if iva.id == configuracion.tipo_iva %}
+                                            <option value="{{ iva.id }}" selected>{{ iva.descripcion }}</option>
+                                        {% else %}
+                                            <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
+                                        {% endif %}
                                     {% endfor %}    
                                 </select>
                             </div>
                         </div>    
                         <div class="row">
-                            <div class="col-4 mb-3">
+                            <div class="col-2 mb-3"> 
+                                <label for="tipo_doc">Tipo documento</label>
+                                <select class="form-select form-select-bg" name="tipo_doc" id="tipo_doc">
+                                    <option selected>Seleccione una opcion</option>
+                                    {% for tipo_doc in tipo_docs %}
+                                        {% if tipo_doc.id == configuracion.tipo_documento %}
+                                            <option value="{{ tipo_doc.id }}" selected>{{ tipo_doc.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ tipo_doc.id }}">{{ tipo_doc.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}    
+                                </select>
+                            </div>
+                            <div class="col-2 mb-3">
+                                <label for="documento">N° de Doc./CUIT/CUIL</label>
+                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Numero de documento/CUIT/CUIL" value="{{ configuracion.documento }}">
+                            </div>    
+                            <div class="col-2 mb-3">
                                 <label for="telefono">Numeros de teléfono</label>
                                 <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Numeros de telefonos" value="{{ configuracion.telefono }}">
                             </div>    

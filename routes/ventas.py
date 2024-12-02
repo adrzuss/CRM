@@ -108,11 +108,13 @@ def nueva_venta():
                 flash(f'Error grabado entidad crediticia: {e}')
 
         flash('Factura grabada')
+        """
         generar_factura_pdf(idfactura)
         cliente = Clientes.query.get(idcliente)
         if cliente.email != None:
             pdf_path = f"factura-{idfactura}.pdf"
             enviar_factura_por_email(cliente.email, pdf_path)
+        """    
         return redirect(url_for('index'))
 
     hoy = date.today()

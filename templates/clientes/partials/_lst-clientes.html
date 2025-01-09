@@ -1,8 +1,8 @@
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
-        <table class="table table-striped table-hover table-borderless align-middle">
-            <thead>
+        <table class="table table-striped table-hover table-borderless align-middle" id="dataTable">
+            <thead class="thead-dark">
                 <tr>
                     <th scope="col">Nombre</th>
                     <th scope="col">Mail</th>
@@ -14,17 +14,33 @@
             <tbody>
                 {% for cliente in clientes %}
                     <tr class="">
-                        <td scope="row">{{ cliente.nombre }}</td>
-                        <td>{{ cliente.email }}</td>
-                        <td>{{ cliente.telefono }}</td>
-                        <td>
-                            <a href="{{ url_for('ctactecli.lst_cta_cte_cli', id=cliente.id) }}" class="btn btn-dark">Movs.cta.cte.</a>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
-                            <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-peligro">Eliminar</a>
-                            <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
-                        </td>
+                        {% if cliente.baja.strftime('%Y-%m-%d') != "1900-01-01" %}
+                            <td style="color: crimson;" scope="row">{{ cliente.nombre }}</td>
+                            <td style="color: crimson;">{{ cliente.email }}</td>
+                            <td style="color: crimson;">{{ cliente.telefono }}</td>
+                            <td>
+                                
+                            </td>
+                            <td>
+                                <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
+                                
+                                <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
+                            </td>
+                        {% else %}
+                            <td scope="row">{{ cliente.nombre }}</td>
+                            <td>{{ cliente.email }}</td>
+                            <td>{{ cliente.telefono }}</td>
+                            <td>
+                                {% if cliente.ctacte == True %}
+                                    <a href="{{ url_for('ctactecli.lst_cta_cte_cli', id=cliente.id) }}" class="btn btn-dark">Movs.cta.cte.</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
+                                <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-peligro">Eliminar</a>
+                                <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>

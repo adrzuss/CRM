@@ -78,3 +78,5 @@ def saldoscli():
         return render_template('saldos-ctactecli.html', saldos=saldos, desde=fecha_str)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
     return render_template('saldos-ctactecli.html', desde=desde)
+
+   

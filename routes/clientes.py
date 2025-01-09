@@ -4,6 +4,7 @@ from models.clientes import Clientes
 from models.ventas import Factura
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes
 from services.clientes import save_cliente
+from services.ctactecli import saldo_ctacte
 from utils.db import db
 from utils.utils import check_session
 from sqlalchemy import and_
@@ -107,10 +108,16 @@ def update_cliente(id):
 @check_session
 def delete_cliente(id):
     cliente = Clientes.query.get(id)
-    db.session.delete(cliente)
+    if cliente.ctacte == True:
+        saldo = saldo_ctacte(id)
+        if saldo['total_debe'] > 0 or saldo['total_haber'] > 0:
+            flash('No se puede eliminar un cliente con saldo en cta. cte.')
+        return redirect(url_for('clientes.clientes'))
+    
+    cliente.baja = date.today()
     db.session.commit()
-    flash('Cliente eliminado')
-    return redirect(url_for('clientes'))
+    flash('Cliente dado de baja')
+    return redirect(url_for('clientes.clientes'))
 
 @bp_clientes.route('/facturas_cliente/<id>', methods=['GET', 'POST'])
 @check_session

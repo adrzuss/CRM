@@ -46,6 +46,10 @@
                 </div>
             </li>
 
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Ventas
+            </div>
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
                     aria-expanded="true" aria-controls="collapseVentas">
@@ -58,6 +62,23 @@
                         <h6 class="collapse-header">Ventas de artículos:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentasListados"
+                    aria-expanded="true" aria-controls="collapseVentasListados">
+                    <i class="fas fa-fw fa-cash-register"></i>
+                    <span>Listado ventas</span>
+                </a>
+                <div id="collapseVentasListados" class="collapse" aria-labelledby="headingVentas"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Ventas de artículos:</h6>
+                        <a class="collapse-item" href="#">Artículos vendidos</a>
+                        <a class="collapse-item" href="#">Ventas a clientes</a>
+                        <a class="collapse-item" href="#">Ventas por vendedor</a>
                     </div>
                 </div>
             </li>
@@ -81,11 +102,13 @@
                         <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">ABM de artículos</a>
                         <a class="collapse-item" href="{{ url_for('articulos.rubros_marcas') }}">Rubros y Marcas</a>
                         <a class="collapse-item" href="{{ url_for('articulos.ing_balance') }}">Ingreso de balance</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.remitos_sucursales') }}">Remito a sucursales</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.cambio_precio') }}">Cambios de precio</a>
                     </div>
                 </div>
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulosListados"
                     aria-expanded="true" aria-controls="collapseArticulosListados">
-                    <i class="fas fa-fw fa-boxes-stacked"></i>
+                    <i class="fas fa-fw fa-rectangle-list"></i>
                     <span>Listados</span>
                 </a>
                 <div id="collapseArticulosListados" class="collapse" aria-labelledby="headingIngresos"
@@ -96,6 +119,7 @@
                         <a class="collapse-item" href="{{ url_for('articulos.stock_art_faltantes') }}">Faltantes</a>
                         <a class="collapse-item" href="{{ url_for('articulos.stock_sucursales') }}">Stock de sucursales</a>
                         <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Precios</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.lst_compuestos') }}">Compuestos</a>
                     </div>
                 </div>
             </li>

@@ -8,7 +8,7 @@ class Factura(db.Model):
     idcliente = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
     idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
-    total = db.Column(db.Float, nullable=False)
+    total = db.Column(db.Numeric(20,6), nullable=False)
     idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
     cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
@@ -32,9 +32,9 @@ class Item(db.Model):
     idfactura = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), nullable=False)
-    cantidad = db.Column(db.Integer, nullable=False)
-    precio_unitario = db.Column(db.Float, nullable=False)
-    precio_total = db.Column(db.Float, nullable=False)
+    cantidad = db.Column(db.Numeric(20,6), nullable=False)
+    precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
+    precio_total = db.Column(db.Numeric(20,6), nullable=False)
     articulo = db.relationship('Articulo', backref=db.backref('items', lazy=True))
     factura = db.relationship('Factura', backref=db.backref('items', lazy=True))
 
@@ -43,10 +43,12 @@ class PagosFV(db.Model):
     idfactura = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)
     idpago = db.Column(db.Integer, primary_key=True)
     tipo  = db.Column(db.Integer, nullable=False)
-    total = db.Column(db.Float, nullable=False)
+    total = db.Column(db.Numeric(20,6), nullable=False)
+    entidad = db.Column(db.Integer, nullable=False)
     
-    def __init__(self, idfactura, idpago, tipo, total):
+    def __init__(self, idfactura, idpago, tipo, total, entidad):
         self.idfactura = idfactura
         self.idpago = idpago
         self.tipo = tipo
         self.total = total
+        self.entidad = entidad

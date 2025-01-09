@@ -17,6 +17,7 @@
                         <th scope="col">Marca</th>
                         <th scope="col">Detalle</th>
                         <th scope="col">Costo</th>
+                        <th scope="col">Comp.</th>
                         <th scope="col" style="width: 5%;">Imagenes</th>
                         <th scope="col" style="width: 15%;">Acciones</th>
                     </tr>
@@ -28,6 +29,7 @@
                         <th scope="col">Marca</th>
                         <th scope="col">Detalle</th>
                         <th scope="col">Costo</th>
+                        <th scope="col">Comp.</th>
                         <th scope="col">Imagenes</th>
                         <th scope="col">Acciones</th>
                     </tr>
@@ -40,6 +42,14 @@
                         <td>{{ articulo.marca }}</td>
                         <td>{{ articulo.detalle }}</td>
                         <td> {{"${:,.2f}".format(articulo.costo)}}</td>
+                        <td style="text-align: center;"> 
+                            {% if articulo.es_compuesto %}
+                                Si
+                            {% else %}
+                                No
+                            {% endif %}
+
+                        </td>
                         <td style="text-align: center;">
                             {% if articulo.imagen %}
                                 <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo" sizes="" srcset="" width="50" height="50">

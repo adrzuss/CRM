@@ -17,7 +17,15 @@
                                 <label for="fecha">Fecha:</label>
                                 <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
                             </div>    
+                            <div class="col-md-2">
+                                <label for="tipobalance">Tipo de balance:</label>
+                                <select class="form-control" name="tipobalance" id="tipobalance" required>
+                                    {% for tipo in tipoBalances %}
+                                        <option value="{{ tipo.id }}"> {{ tipo.nombre }}</option>
+                                    {% endfor %}
+                                </select>
                         </div>    
+                        
                     </div>    
                 </div>    
 

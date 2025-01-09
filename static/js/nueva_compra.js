@@ -1,0 +1,182 @@
+async function fetchProveedor(id) {
+    const response = await fetch(`/proveedor/${id}`);
+    const data = await response.json();
+    if (data.success) {
+        document.getElementById('proveedor_nombre').value = data.proveedor.nombre;
+    } else {
+        document.getElementById('proveedor_nombre').value = 'Proveedor no encontrado';
+    }
+}
+
+async function fetchArticulo(id, itemDiv) {
+    const response = await fetch(`/articulo/${id}/0`);
+    const data = await response.json();
+    if (data.success) {
+        itemDiv.querySelector('.idarticulo').value = data.articulo.id;
+        itemDiv.querySelector('.articulo_detalle').textContent = data.articulo.detalle;
+        itemDiv.querySelector('.articulo_precio').value = data.articulo.costo;
+        updateItemTotal(itemDiv);
+        updateTotalFactura();
+    } else {
+        console.log('sin precio: ');
+        itemDiv.querySelector('.articulo_detalle').textContent = 'Artículo no encontrado';
+        itemDiv.querySelector('.articulo_precio').value = '0.00';
+        updateItemTotal(itemDiv);
+        updateTotalFactura();
+    }
+}
+
+function updateItemTotal(itemDiv) {
+    const precioUnitario = parseFloat(itemDiv.querySelector('.articulo_precio').value);
+    const cantidad = parseFloat(itemDiv.querySelector('.cantidad').value);
+    const precioTotal = (precioUnitario * cantidad).toFixed(2);
+    if (isNaN(precioTotal)){
+        itemDiv.querySelector('.precio_total').value = 0.0
+    }else{
+        itemDiv.querySelector('.precio_total').value = precioTotal;
+    }
+}
+
+function updateTotalFactura() {
+    const itemDivs = document.querySelectorAll('#items .item');
+    let totalFactura = 0;
+    itemDivs.forEach(itemDiv => {
+        const precioTotal = parseFloat(itemDiv.querySelector('.precio_total').value);
+        totalFactura += precioTotal;
+    });
+    document.getElementById('total_factura').textContent = totalFactura.toFixed(2);
+    calcSaldo();
+}
+
+function removeItem(itemDiv) {
+    itemDiv.remove();
+    updateTotalFactura();
+    renumberItems();
+}
+
+function renumberItems() {
+    const itemDivs = document.querySelectorAll('#items .item');
+    itemDivs.forEach((itemDiv, index) => {
+        itemDiv.querySelector('.idarticulo').setAttribute('name', `items[${index}][idarticulo]`);
+        itemDiv.querySelector('.codigo').setAttribute('name', `items[${index}][codigo]`);
+        itemDiv.querySelector('.cantidad').setAttribute('name', `items[${index}][cantidad]`);
+        itemDiv.querySelector('.precio_articulo').setAttribute('name', `items[${index}][cantidad]`);
+    });
+}
+
+function calcSaldo(){
+    const totalFac = parseFloat(document.getElementById('total_factura').textContent);
+    const efectivo = parseFloat(document.getElementById('efectivo').value);
+    const ctacte = parseFloat(document.getElementById('ctacte').value);
+    let diferencia = (totalFac - (efectivo + ctacte));
+    let lblSaldo = document.getElementById('saldo_factura');
+    lblSaldo.textContent = diferencia;
+    if (diferencia > 0){
+        lblSaldo.className = 'negativo';
+    }
+    else if (diferencia === 0){
+        lblSaldo.className = 'neutro';
+    }
+    else{
+        lblSaldo.className = 'positivo';
+    }
+}
+
+function checkTotales() {
+    const totalFac = parseFloat(document.getElementById('total_factura').textContent);
+    const efectivo = parseFloat(document.getElementById('efectivo').value);
+    const ctacte = parseFloat(document.getElementById('ctacte').value);
+    let HayDiferencia = (totalFac == (efectivo + ctacte));
+    return HayDiferencia;
+}
+
+document.getElementById('efectivo').addEventListener('input', function(event){
+    calcSaldo();
+}
+)
+
+document.getElementById('ctacte').addEventListener('input', function(event){
+    calcSaldo();
+}
+)
+
+document.getElementById('idproveedor').addEventListener('blur', function() {
+    const idproveedor = this.value;
+    fetchProveedor(idproveedor);
+});
+
+document.getElementById('items').addEventListener('input', function(e) {
+    if (e.target.classList.contains('idarticulo') || e.target.classList.contains('cantidad') || e.target.classList.contains('articulo_precio')) {
+        const itemDiv = e.target.closest('.item');
+        updateItemTotal(itemDiv);
+        updateTotalFactura();
+    }
+});
+
+document.getElementById('add_item').addEventListener('click', function() {
+    const itemsDiv = document.getElementById('items');
+    const itemCount = itemsDiv.children.length;
+
+    const newItem = document.createElement('div');
+    newItem.classList.add('item');
+
+    newItem.innerHTML = `
+        <div class="row m-3">
+            <div class="col-1">
+                <label for="idarticulo">#:</label>
+                <input type="number" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required readonly>
+            </div>    
+            <div class="col-1">
+                <label for="codigo">Cod artículo:</label>
+                <input type="number" name="items[${itemCount}][codigo]" class="form-control codigo" required>
+            </div>    
+            <div class="col-3">
+                <label for="articulo_detalle">Detalle:</label>
+                <span class="articulo_detalle"></span>
+            </div>    
+            <div class="col-2">
+                <label for="articulo_precio">Precio Unitario:</label>
+                <input type="number" name="items[${itemCount}][articulo_precio]" class="form-control articulo_precio">
+            </div>    
+            <div class="col-1">
+                <label for="cantidad">Cantidad:</label>
+                <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control" step="0.01" min="0.01" value='1' required>
+            </div>    
+
+            <div class="col-2">
+                <label for="precio_total">Precio Total:</label>
+                <input type="text" name="precio_total" id="precio_total" class="precio_total form-control" step ="0.01" value="0.00" readonly>
+            </div>
+            <div class="col-2">
+                <button type="button" class="remove_item btn btn-danger">Eliminar</button>
+            </div>
+        </div>    
+    `;
+
+    itemsDiv.appendChild(newItem);
+
+    newItem.querySelector('.codigo').addEventListener('blur', function() {
+        const idarticulo = this.value;
+        fetchArticulo(idarticulo, newItem);
+    });
+
+    newItem.querySelector('.remove_item').addEventListener('click', function() {
+        removeItem(newItem);
+    });
+
+});
+
+document.getElementById('invoice_form').addEventListener('submit', function(event) {
+    if (document.querySelectorAll('#items .item').length === 0) {
+        event.preventDefault();
+        alert('Debe agregar al menos un item a la factura');
+    }   
+    
+    if (checkTotales() == false){
+        event.preventDefault();
+        alert('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
+    }    
+    if (confirm('¿Grabar la factura?') == false) {
+        event.preventDefault();
+    }
+});

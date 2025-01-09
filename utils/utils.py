@@ -1,6 +1,6 @@
 from flask import session, redirect, url_for
 from functools import wraps
-from routes.sessions import login
+from decimal import Decimal, InvalidOperation
 import locale
 
 
@@ -17,3 +17,21 @@ def check_session(func):
             return redirect(url_for('sesion.login'))  # Redirigir al login si no hay sesión activa
         return func(*args, **kwargs)
     return wrapper
+
+def convertir_decimal(valor):
+    if not valor:
+        raise ValueError("El valor no puede estar vacío")
+
+    # Intentar con "." como separador decimal
+    try:
+        return Decimal(valor.replace(",", "."))
+    except InvalidOperation:
+        pass
+
+    # Intentar con "," como separador decimal
+    try:
+        return Decimal(valor.replace(".", ","))
+    except InvalidOperation:
+        pass
+
+    raise ValueError(f"El valor '{valor}' no es válido como decimal")

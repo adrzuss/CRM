@@ -1,12 +1,97 @@
-from flask import session
+from flask import request
+from decimal import Decimal
 from datetime import date, timedelta
+from utils.utils import format_currency
+from services.articulos import actualizarStock
+
 from utils.utils import format_currency
 from models.ventas import Factura, Item, PagosFV
 from models.clientes import Clientes
-from models.articulos import Articulo, ListasPrecios, Stock, ArticuloCompuesto
+from models.articulos import Articulo, ListasPrecios, Stock, Precio
+from models.ctactecli import CtaCteCli
 from models.configs import PagosCobros
-from sqlalchemy import func, extract, update, and_
+from sqlalchemy import func, extract
+from sqlalchemy.exc import SQLAlchemyError
 from utils.db import db
+
+def procesar_nueva_venta(form, id_sucursal):
+    try:
+        idcliente = form['idcliente']
+        fecha = form['fecha']
+        idlista = form['idlista']
+        id_tipo_comprobante = form['id_tipo_comprobante']
+        efectivo = float(form['efectivo'])
+        tarjeta = float(form['tarjeta'])
+        entidad = form['entidad']
+        ctacte = float(form['ctacte'])
+
+        # Crear la factura
+        nueva_factura = Factura(
+            idcliente=idcliente,
+            idlista=idlista,
+            fecha=fecha,
+            total=0,  # Se calculará más adelante
+            id_tipo_comprobante=id_tipo_comprobante,
+            idsucursal=id_sucursal
+        )
+        db.session.add(nueva_factura)
+        db.session.flush()
+        idfactura = nueva_factura.id
+
+        # Procesar los items
+        total = 0
+        total = procesar_items(form, idfactura, idlista, id_sucursal)
+        nueva_factura.total = total
+        # Registrar los pagos
+        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise Exception(f"Error grabando venta: {e}")
+
+def procesar_items(form, idfactura, idlista, id_sucursal):
+    total = Decimal(0)
+    stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
+
+    for key, value in form.items():
+        if key.startswith('items') and key.endswith('[codigo]'):
+            index = key.split('[')[1].split(']')[0]
+            codigo = value
+            cantidad = Decimal(form[f'items[{index}][cantidad]'])
+
+            articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+            precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
+            precio_unitario = precio.precio if precio else Decimal(0)
+            precio_total = precio_unitario * cantidad
+
+            nuevo_item = Item(
+                idfactura=idfactura,
+                idarticulo=articulo.id,
+                cantidad=cantidad,
+                precio_unitario=precio_unitario,
+                precio_total=precio_total
+            )
+            db.session.add(nuevo_item)
+            total += precio_total
+
+            # Actualizar el stock
+            actualizarStock(stock.idstock, articulo.id, -cantidad, id_sucursal)
+    
+    return total
+
+def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte):
+    try:
+        if efectivo > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=1, tipo=1, entidad=0, total=Decimal(efectivo)))
+        if tarjeta > 0:
+            entidad = int(request.form['entidad'])
+            db.session.add(PagosFV(idfactura=idfactura, idpago=2, tipo=2, entidad=entidad, total=Decimal(tarjeta)))
+        if ctacte > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=3, tipo=3, entidad=0, total=Decimal(ctacte)))
+            db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0)))
+        #db.session.commit()
+    except SQLAlchemyError as e:
+        raise Exception(f"Error procesando pagos: {e}")
 
 def get_vta_hoy():
     hoy = date.today()
@@ -141,24 +226,3 @@ def get_factura(id):
             ).all()
     return factura[0], items, pagos
 
-def actualizarStock(idstock, idarticulo, cantidad):
-    articulo = Articulo.query.get(idarticulo)
-    stock = Stock.query.filter(and_(Stock.idstock==idstock, Stock.idsucursal==session['id_sucursal'], Stock.idarticulo==idarticulo)).first()
-    if articulo.idtipoarticulo == 2: #servico
-        cantidad = (cantidad * -1)
-    if stock:
-        db.session.execute(
-            update(Stock).
-            where(Stock.idstock == idstock, Stock.idsucursal == session['id_sucursal'], Stock.idarticulo == idarticulo).
-            values(actual= (stock.actual - cantidad))
-        )
-    else:    
-        stock = Stock(idstock=idstock, idarticulo=idarticulo, idsucursal=session['id_sucursal'], actual=-cantidad, maximo=0, deseable=0)
-        db.session.add(stock)
-    db.session.commit() 
-    compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
-                                 ArticuloCompuesto.idart_comp,
-                                 ArticuloCompuesto.cantidad,
-                                ).filter(ArticuloCompuesto.idarticulo == idarticulo).all()
-    for compuesto in compuestos:
-        actualizarStock(idstock, compuesto.idart_comp, compuesto.cantidad)

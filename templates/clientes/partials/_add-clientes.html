@@ -3,16 +3,17 @@
         <div class="card-body">
             <h3>Ingreso de clientes</h3>
             <form action="{{ url_for('clientes.add_cliente') }}" method="post">
-                <div class="mb-3"> 
-                    <label for="nombre">Nombre <span style="color: red">*</span></label>
-                    <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" required>
-                </div>
                 <div class="row">
-                    <div class="col-6 mb-3"> 
+                    <div class="col-4 mb-3"> 
+                        <label for="nombre">Nombre <span style="color: red">*</span></label>
+                        <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" required>
+                    </div>
+                
+                    <div class="col-2 mb-3"> 
                         <label for="documento">Documento<span style="color: red">*</span></label>
                         <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el documento" required>
                     </div>
-                    <div class="col-6 mb-3">
+                    <div class="col-3 mb-3">
                         <div class="mb-3">
                             <label for="tipo_doc" class="form-label">Tipo documento<span style="color: red">*</span></label>
                             <select class="form-select form-select" name="tipo_doc" id="tipo_doc" required>
@@ -26,9 +27,7 @@
                             </select>
                         </div>
                     </div>
-                </div>    
-                <div class="row">
-                    <div class="col-6 mb-3">
+                    <div class="col-3 mb-3">
                         <div class="mb-3">
                             <label for="tipo_iva" class="form-label">Tipo responsabilidad IVA<span style="color: red">*</span></label>
                             <select class="form-select form-select" name="tipo_iva" id="tipo_iva" required>
@@ -42,24 +41,26 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-6 mb-3">
+                </div>    
+                <div class="row">
+                    <div class="col-3 mb-3">
                         <label for="telefono">Teléfono</label>
                         <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono">
                     </div>
-                </div>
+                
+                    <div class="col-3 mb-3">
+                        <label for="mail">E-mail</label>
+                        <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail">
+                    </div>    
 
-                <div class="mb-3">
-                    <label for="mail">E-mail</label>
-                    <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail">
-                </div>    
-
-                <div class="mb-3">
-                    <label for="direccion">Dirección<span style="color: red">*</span></label>
-                    <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" required>
-                </div>    
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="ctacte">
-                    <label class="form-check-label" for="ctacte">Cliente con cta. cte.</label>
+                    <div class="col-4 mb-3">
+                        <label for="direccion">Dirección<span style="color: red">*</span></label>
+                        <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" required>
+                    </div>    
+                    <div class="col-2 form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="ctacte" name="ctacte">
+                        <label class="form-check-label" for="ctacte">Cliente con cta. cte.</label>
+                    </div>
                 </div>
                 <button class="btn btn-exito m-3" type="submit">Grabar</button>
                 <label class=""><span style="color: red">* Datos obligatorios</span></label>

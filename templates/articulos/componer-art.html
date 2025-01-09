@@ -84,7 +84,10 @@
                                             <td>{{ compuesto.detalle }}</td>
                                             <td>{{ compuesto.cantidad }}</td>
                                             <td style="text-align: center;">
-                                                <a href="#" class="btn btn-peligro">Eliminar</a>
+                                                <a href="{{ url_for('articulos.eliminarCompuesto', idarticulo = compuesto.idarticulo, idart_comp = compuesto.idart_comp) }}" 
+                                                   class="btn btn-peligro eliminarCompuesto" 
+                                                   data-idarticulo="{{ compuesto.idarticulo }}" 
+                                                   data-idart_comp="{{ compuesto.idart_comp }}">Eliminar</a>
                                             </td>
                                         </tr>
                                         {% endfor %}

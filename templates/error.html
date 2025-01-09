@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Error</title>
+</head>
+<body class="body-image body2">
+    <div class="m-5">
+        <div>
+            <h1 style="color: white;">Error</h1>
+            {% if tipoError == 'bd' %}
+                <p style="color: white;">{{ error }}</p>
+                <img src="{{ url_for('static', filename='img/error-base-datos.png') }}" alt="Error de base de datos">
+            {% else %}    
+                <p style="color: white;">{{ tipoError }}</p>
+                <p style="color: white;">{{ error }}</p>    
+            {% endif %}    
+            
+        </div>    
+        <div>
+            <a class="btn" href="/" style="color: white;">Regresar al inicio</a>
+        </div>
+    </div>
+</body>
+
+</html>
+

@@ -1,4 +1,5 @@
 from utils.db import db
+from datetime import date
 
 class Clientes(db.Model):
     __tablename__ = 'clientes'
@@ -9,6 +10,7 @@ class Clientes(db.Model):
     telefono  = db.Column(db.String(20))
     direccion = db.Column(db.String(100))
     ctacte = db.Column(db.Boolean(create_constraint=False))
+    baja = db.Column(db.DateTime, nullable=False)
     id_tipo_doc = db.Column(db.Integer, db.ForeignKey('tipo_doc.id'))
     id_tipo_iva = db.Column(db.Integer, db.ForeignKey('tipo_iva.id'))
     """
@@ -25,4 +27,4 @@ class Clientes(db.Model):
         self.ctacte = ctacte
         self.id_tipo_doc = id_tipo_doc
         self.id_tipo_iva = id_tipo_iva
-        
+        self.baja = date(1900, 1, 1)

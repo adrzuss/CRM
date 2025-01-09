@@ -11,6 +11,25 @@ codigo.addEventListener('blur', function() {
     fetchArticulo(idart_org, idarticulo, idlista);
 });
 
+// Seleccionar todos los botones con la clase 'eliminarCompuesto'
+document.querySelectorAll('.eliminarCompuesto').forEach(function(boton) {
+    boton.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevenir la acción por defecto del enlace
+
+        // Obtener los atributos únicos del botón
+        const idArticulo = this.dataset.idarticulo;
+        const idArtComp = this.dataset.idart_comp;
+
+        // Pedir confirmación
+        const confirmar = confirm(`¿Estás seguro de que quieres eliminar el compuesto con ID ${idArticulo} y Compuesto ID ${idArtComp}?`);
+
+        if (confirmar) {
+            // Redirigir al enlace original
+            window.location.href = this.href;
+        }
+    });
+});
+
 async function fetchArticulo(idart_org, id, idlista) {
     let response;
     if (!isNaN(id)){

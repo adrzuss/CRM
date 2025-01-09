@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from datetime import date
 from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
-from models.articulos import Articulo, Stock
+from models.articulos import Articulo
 from models.ctacteprov import CtaCteProv
+from services.articulos import actualizarStock
 from utils.utils import check_session
 from utils.db import db
 
@@ -111,14 +112,7 @@ def nueva_compra():
             db.session.add(nuevo_item)
             total += precio_total
              # Actualizar la tabla de stocks
-            stock = Stock.query.filter_by(idstock=idstock, idarticulo=idarticulo).first()
-            if stock:
-                stock.actual += cantidad
-                if stock.actual < 0:
-                    stock.actual = 0  # Para evitar cantidades negativas
-            else:
-                stock = Stock(idstock=idstock, idarticulo=idarticulo, actual=+cantidad, maximo=0, deseable=0)
-                db.session.add(stock)
+            actualizarStock(idstock, articulo.id, cantidad, session['id_sucursal'])
         
         nueva_factura = FacturaC.query.get(idfactura)
         nueva_factura.total = total

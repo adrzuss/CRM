@@ -6,6 +6,12 @@ body{
     background-color: #ececec;
 }
 
+.body-image{
+    background-image: url("../img/fondo.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
 .text-uno-bold{
     color: rgb(15, 15, 189);
     font-weight: bold;

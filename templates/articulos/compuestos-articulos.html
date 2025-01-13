@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="m-3">
+        <h2>Listado de artículos compuestos</h2>
+    </div>
+
+    <div class="card m-3">
+        <h3 class="m-3">Artículos compuestos</h3>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="display table table-bordered table-striped" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Rubro</th>
+                            <th scope="col">Marca</th>
+                            <th scope="col">Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for compuesto in listado %}
+                            <tr class="">
+                                <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=compuesto.id ) }}">{{ compuesto.codigo }}</a></td>
+                                <td>{{ compuesto.rubro }}</td>
+                                <td>{{ compuesto.marca }}</td>
+                                <td>{{ compuesto.detalle }}</td>
+                            </tr>
+                        {% endfor %}    
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/dataTables.js"></script>
+
+    <script>
+        
+        new DataTable('#dataTable', {
+            iDisplayLength: 50,
+            language: {
+                entries: {
+                    _: "entradas",
+                    1: "entrada"
+                },
+                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
+                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+                sLengthMenu: "_MENU_ _ENTRIES_ por página",
+                sSearch: 'Buscar',
+                sSearchPlaceholder: 'Buscar registros'
+            }
+        });
+    </script>
+    
+{% endblock %}    

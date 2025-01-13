@@ -94,7 +94,6 @@ let isFormSubmited = false;
 
         function asignarArticulo(articulo, itemDiv) {
             itemDiv.querySelector('.articulo_detalle').textContent = articulo.detalle;
-            itemDiv.querySelector('.articulo_precio').value = articulo.precio;
         }
 
         function mostrarModalSeleccionArticulos(articulos, itemDiv) {
@@ -134,7 +133,6 @@ let isFormSubmited = false;
             itemDivs.forEach((itemDiv, index) => {
                 itemDiv.querySelector('.idarticulo').setAttribute('name', `items[${index}][idarticulo]`);
                 itemDiv.querySelector('.cantidad').setAttribute('name', `items[${index}][cantidad]`);
-                itemDiv.querySelector('.precio_articulo').setAttribute('name', `items[${index}][cantidad]`);
             });
         }
 
@@ -152,23 +150,14 @@ let isFormSubmited = false;
                         <label for="idarticulo">Cod artículo:</label>
                         <input type="text" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
                     </div>    
-                    <div class="col-3">
+                    <div class="col-6">
                         <label for="articulo_detalle">Detalle:</label>
                         <span class="articulo_detalle text-uno-bold"></span>
                     </div>    
                     <div class="col-2">
-                        <label for="articulo_precio">Precio Unitario:</label>
-                        <input type="number" name="items[${itemCount}][articulo_precio]" class="form-control articulo_precio" readonly>
-                    </div>    
-                    <div class="col-1">
                         <label for="cantidad">Cantidad:</label>
-                        <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control" step="0.01" min="0.01" value='1' required>
+                        <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control"  step="0.01" min="0.01" value='1' required>
                     </div>    
-
-                    <div class="col-2">
-                        <label for="precio_total">Precio Total:</label>
-                        <input type="text" name="precio_total" id="precio_total" class="precio_total form-control" value="0.00" readonly>
-                    </div>
                     <div class="col-2">
                         <button type="button" class="remove_item btn btn-danger">Eliminar</button>
                     </div>
@@ -194,14 +183,20 @@ let isFormSubmited = false;
         });
 
         document.getElementById('invoice_form').addEventListener('submit', function(event) {
+            if (document.getElementById('iddestino').value === document.getElementById('id_sucursal').value){
+                alert('No puede enviar el remito a la misma sucursal');
+                event.preventDefault();
+                return false;
+            }
+
             if (document.querySelectorAll('#items .item').length === 0) {
                 event.preventDefault();
-                alert('Debe agregar al menos un item al ingreso de balance');
+                alert('Debe agregar al menos un item al remito a sucursales');
                 event.preventDefault();
                 return false;
             } 
             
-            if (confirm('¿Grabar el ingreso de balance?') == false) {
+            if (confirm('¿Grabar el ingreso de remito a sucursales?') == false) {
                 event.preventDefault();
             }
             else{

@@ -53,9 +53,26 @@
                 </div>    
 
                 <div class="card">
-                    <div class="cardbody">
-                        <div id="items" name="items">
-                            
+                    <div class="cardbody m-3">
+                        <!-- Detalles (items) -->
+                        <h4>Artículos</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless align-middle" id="tabla-items">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Precio unit.</th>
+                                        <th>Cant.</th>
+                                        <th>Precio total</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <!-- Aquí se agregarán dinámicamente las filas -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>    
@@ -82,7 +99,7 @@
                                         <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
                                     {% endfor %}
                                 </select>
-                                <label for="ctacte">Tarjeta</label>
+                                <label for="tarjeta">Tarjeta</label>
                                 <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0">
                             </div>    
                             <div class="col-3 mt-3">    
@@ -102,6 +119,5 @@
     </div>        
 
     <script src="/static/js/nueva_venta.js"></script>
-        
-    </script>
+    
 {% endblock %}

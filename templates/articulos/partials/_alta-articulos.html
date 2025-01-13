@@ -85,7 +85,7 @@
 
                             <div class="col-4 mb-3">
                                 <label for="pvp{{loop.index}}">Precio V.P.</label>
-                                <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P.">
+                                <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" min="0" placeholder="Ingrese el precio de V.P." required>
                             </div>    
 
                             <div class="col-2 mb-3">

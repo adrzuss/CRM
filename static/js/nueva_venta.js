@@ -1,4 +1,5 @@
 let isFormSubmited = false;
+let contadorFilas = 0;
 
         window.onbeforeunload = function() {
             if (!isFormSubmited) {
@@ -169,13 +170,15 @@ let isFormSubmited = false;
        }
 
         function asignarArticuloElegido(articulo, itemDiv) {
-            itemDiv.querySelector('.idarticulo').value = articulo.codigo;
-            asignarArticulo(articulo, itemDiv); 
+            itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
+            asignarArticulo(articulo, itemDiv);; 
         }
 
         function asignarArticulo(articulo, itemDiv) {
-            itemDiv.querySelector('.articulo_detalle').textContent = articulo.detalle;
-            itemDiv.querySelector('.articulo_precio').value = articulo.precio;
+            itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
+            itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
+            const precioUnitario = parseFloat(articulo.precio);
+            itemDiv.target.closest("tr").querySelector(".precio-unitario").value = (precioUnitario).toFixed(2);
             updateItemTotal(itemDiv);
             updateTotalFactura();
         }
@@ -194,7 +197,7 @@ let isFormSubmited = false;
                 const articuloOption = document.createElement('li');
                 articuloOption.classList.add('cliente-option');
                 articuloOption.classList.add('list-group-item');
-                articuloOption.innerHTML = `<strong>${articulo.detalle}</strong> - <span class="precio-normal">$${articulo.precio}</span>`;
+                articuloOption.innerHTML = `<strong>${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio).toFixed(2).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
                 articuloOption.onclick = () => {
                     asignarArticuloElegido(articulo, itemDiv);
                     $('#clienteModal').modal('hide');
@@ -207,21 +210,24 @@ let isFormSubmited = false;
         }
 
         function updateItemTotal(itemDiv) {
-            const precioUnitario = parseFloat(itemDiv.querySelector('.articulo_precio').value);
-            const cantidad = parseFloat(itemDiv.querySelector('.cantidad').value);
+            const precioUnitario = parseFloat(itemDiv.target.closest("tr").querySelector(".precio-unitario").value);
+            const cantidad = parseFloat(itemDiv.target.closest("tr").querySelector(".cantidad").value);
             const precioTotal = (precioUnitario * cantidad).toFixed(2);
             if (isNaN(precioTotal)){
                 precioTotal = 0;
             }
-            itemDiv.querySelector('.precio_total').value = precioTotal;
+            itemDiv.target.closest("tr").querySelector(".precio-total").value = precioTotal;
         }
 
         function updateTotalFactura() {
-            const itemDivs = document.querySelectorAll('#items .item');
+            const filas = document.querySelectorAll('#tabla-items tbody tr');
             let totalFactura = 0;
-            itemDivs.forEach(itemDiv => {
-                const precioTotal = parseFloat(itemDiv.querySelector('.precio_total').value);
-                totalFactura += precioTotal;
+            filas.forEach(fila => {
+                const precioTotalInput = fila.querySelector('.precio-total');
+                if (precioTotalInput) {
+                    const precioTotal = parseFloat(precioTotalInput.value) || 0;
+                    totalFactura += precioTotal;
+                }
             });
             document.getElementById('total_factura').textContent = totalFactura.toFixed(2);
             calcSaldo();
@@ -243,16 +249,20 @@ let isFormSubmited = false;
         }
 
         function checkDatosTarjeta(){
-            const tarjeta = parseFloat(document.getElementById('tarjeta').value);
-            if (tarjeta > 0){
-                const entidad = document.getElementById('entidad').value;
-             
-                if (entidad <= 0){
+            const totTarjeta = parseFloat(document.getElementById('tarjeta').value);
+            if (totTarjeta > 0){
+                const entidad = parseInt(document.getElementById('entidad').value);
+                if ((entidad <= 0) || (isNaN(entidad))){
+                    alert('Debe completar correctamente los datos de tarjeta');
                     return false;
                 }
+                alert('Datos de tarjeta correctos');
                 return true;
             }
-            return true;
+            else{
+                alert('Debe completar correctamente los datos de tarjeta'); 
+                return false;
+            }
         }
         /*FIXIT
         controlar valores nulos NaN*/
@@ -272,7 +282,7 @@ let isFormSubmited = false;
             }
             let diferencia = (totalFac - (efectivo + tarjeta + ctacte));
             let lblSaldo = document.getElementById('saldo_factura');
-            lblSaldo.textContent = diferencia;
+            lblSaldo.textContent = (diferencia).toFixed(2);
             if (diferencia > 0){
                 lblSaldo.className = 'negativo';
             }
@@ -303,17 +313,17 @@ let isFormSubmited = false;
             return HayDiferencia;
         }
 
-        document.getElementById('efectivo').addEventListener('input', function(event){
+        document.getElementById('efectivo').addEventListener('blur', function(event){
             calcSaldo();
         }
         )
 
-        document.getElementById('tarjeta').addEventListener('input', function(event){
+        document.getElementById('tarjeta').addEventListener('blur', function(event){
             calcSaldo();
         }
         )
 
-        document.getElementById('ctacte').addEventListener('input', function(event){
+        document.getElementById('ctacte').addEventListener('blur', function(event){
             calcSaldo();
         }
         )
@@ -323,89 +333,70 @@ let isFormSubmited = false;
             fetchCliente(idcliente);
         });
 
-        document.getElementById('items').addEventListener('input', function(e) {
+        document.getElementById('tabla-items').addEventListener('input', function(e) {
             if (e.target.classList.contains('idarticulo') || e.target.classList.contains('cantidad')) {
-                const itemDiv = e.target.closest('.item');
-                updateItemTotal(itemDiv);
+                updateItemTotal(e);
                 updateTotalFactura();
             }
         });
 
-        document.getElementById('agregarArticulo').addEventListener('click', function() {
-            const itemsDiv = document.getElementById('items');
-            const itemCount = itemsDiv.children.length;
+        const tablaItems = document.querySelector("#tabla-items tbody");
 
-            const newItem = document.createElement('div');
-            newItem.classList.add('item');
+        // Agregar nueva fila
+        document.getElementById('agregarArticulo').addEventListener("click", () => {
+            const nuevaFila = `
+                <tr class="items">
+                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
+                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
+                    <td class="descripcion-articulo">-</td>
+                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
+                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
+                    <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
+                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
+                </tr>`;
+            tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+            contadorFilas++;
+        });
 
-            newItem.innerHTML = `
-                <div class="row m-3">
-                    <div class="col-2">
-                        <label for="idarticulo">Cod artículo:</label>
-                        <input type="text" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
-                    </div>    
-                    <div class="col-3">
-                        <label for="articulo_detalle">Detalle:</label>
-                        <span class="articulo_detalle text-uno-bold"></span>
-                    </div>    
-                    <div class="col-2">
-                        <label for="articulo_precio">Precio Unitario:</label>
-                        <input type="number" name="items[${itemCount}][articulo_precio]" class="form-control articulo_precio" readonly>
-                    </div>    
-                    <div class="col-1">
-                        <label for="cantidad">Cantidad:</label>
-                        <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control" min="1" value='1' required>
-                    </div>    
+        tablaItems.addEventListener("blur", (itemDiv) => {
+            if (itemDiv.target.classList.contains("codigo-articulo")) {
+                const codigo = itemDiv.target.value;
+                const idlista = document.getElementById('idlista').value;
+    
+                // Simulación de una búsqueda (deberías usar una API aquí)
+                fetchArticulo(codigo, idlista, itemDiv)
+                
+            }
+            
+        }, true);
 
-                    <div class="col-2">
-                        <label for="precio_total">Precio Total:</label>
-                        <input type="text" name="precio_total" id="precio_total" class="precio_total form-control" value="0.00" readonly>
-                    </div>
-                    <div class="col-2">
-                        <button type="button" class="remove_item btn btn-danger">Eliminar</button>
-                    </div>
-                </div>    
-            `;
-
-            itemsDiv.appendChild(newItem);
-
-            // Dar foco al input de idarticulo
-            const idArticuloInput = newItem.querySelector('.idarticulo');
-            idArticuloInput.focus();
-
-            newItem.querySelector('.idarticulo').addEventListener('blur', function() {
-                const idarticulo = this.value;
-                const idlista = document.getElementById('idlista').value
-                fetchArticulo(idarticulo, idlista, newItem);
-            });
-
-            newItem.querySelector('.remove_item').addEventListener('click', function() {
-                removeItem(newItem);
-            });
-
+        // Eliminar fila
+        tablaItems.addEventListener("click", (itemDiv) => {
+            if (itemDiv.target.classList.contains("btn-eliminar")) {
+                itemDiv.target.closest("tr").remove();
+            }
         });
 
         document.getElementById('invoice_form').addEventListener('submit', function(event) {
-            if (document.querySelectorAll('#items .item').length === 0) {
+            if (document.querySelectorAll('#tabla-items tbody').length === 0) {
                 event.preventDefault();
                 alert('Debe agregar al menos un item a la factura');
                 event.preventDefault();
                 return false;
             } 
-            if (checkDatosTarjeta() == false){
-                event.preventDefault();
-                alert('Debe completar correctamente los datos de tarjeta');
+            console.log('vamos a la tarjeta')
+            if (checkDatosTarjeta() === false){
                 event.preventDefault();
                 return false;
             }
 
-            if (checkTotales() == false){
+            if (checkTotales() === false){
                 event.preventDefault();
                 alert('El total debe ser mayor a cera y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura');
                 event.preventDefault();
                 return false;
             }    
-            if (confirm('¿Grabar la factura?') == false) {
+            if (confirm('¿Grabar la factura?') === false) {
                 event.preventDefault();
             }
             else{

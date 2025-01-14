@@ -1,9 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from datetime import date
-from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
-from models.articulos import Articulo
-from models.ctacteprov import CtaCteProv
-from services.articulos import actualizarStock
+from models.proveedores import Proveedores, FacturaC
+from services.proveedores import procesar_nueva_compra
 from utils.utils import check_session
 from utils.db import db
 
@@ -80,68 +78,13 @@ def compras():
 @check_session
 def nueva_compra():
     if request.method == 'POST':
-        idproveedor = request.form['idproveedor']
-        fecha = request.form['fecha']
-        total = 0  # Esto se calculará más tarde
-        
-        efectivo = float(request.form['efectivo'])
-        ctacte = float(request.form['ctacte'])
-
-        nueva_factura = FacturaC(idproveedor=idproveedor, fecha=fecha, total=total, idsucursal=session['id_sucursal'])
-        db.session.add(nueva_factura)
-        db.session.commit()
-
-        idfactura = nueva_factura.id
-        
-        items = request.form  # Obtener todo el formulario
-        item_count = 0  # Contador de items agregados
-
-        item_count = len([key for key in items.keys() if key.startswith('items') and key.endswith('[idarticulo]')])
-        idstock = current_app.config['IDSTOCK']
-
-        for i in range(item_count):
-            idarticulo = request.form[f'items[{i}][idarticulo]']
-            cantidad = int(request.form[f'items[{i}][cantidad]'])
-            costo = float(request.form[f'items[{i}][articulo_precio]'])
-            articulo = Articulo.query.get(idarticulo)
-            articulo.costo = costo
-            precio_unitario = costo
-            precio_total = precio_unitario * cantidad
-
-            nuevo_item = ItemC(idfactura=idfactura, id=i, idarticulo=idarticulo, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
-            db.session.add(nuevo_item)
-            total += precio_total
-             # Actualizar la tabla de stocks
-            actualizarStock(idstock, articulo.id, cantidad, session['id_sucursal'])
-        
-        nueva_factura = FacturaC.query.get(idfactura)
-        nueva_factura.total = total
-        
-        if efectivo > 0:
-            pagosfc = PagosFC(idfactura, 1, 0, efectivo)
-            db.session.add(pagosfc)
-            db.session.commit()
-               
-            
-        if ctacte > 0:
-            pagosfc = PagosFC(idfactura, 3, 0, ctacte)
-            db.session.add(pagosfc)
-            db.session.commit()
-            
-            debe = ctacte
-            haber = 0
-            try:
-                ctacteprov = CtaCteProv(idproveedor, fecha, debe, haber)
-                db.session.add(ctacteprov)
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error grabado entidad crediticia: {e}')
-        
-        db.session.commit()
-        flash('Factura grabada')
-        return redirect(url_for('index'))
-
+        try:
+            procesar_nueva_compra(request.form, session['id_sucursal'])
+            flash('Factura grabada exitosamente')
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar la compra: {e}')
+            return redirect(url_for('proveedores.nueva_compra'))
     hoy = date.today()
     return render_template('nueva_compra.html', hoy=hoy)
 

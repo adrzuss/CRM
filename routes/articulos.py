@@ -321,6 +321,10 @@ def get_articulo(codigo, idlista):
             return {"error": "Precio no disponible para el artículo en la lista solicitada"}, 404
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio})
+    elif idlista == 0:
+        # Obtener el precio del artículo según la lista especificada (idlista)
+        # Si la lista es 0 es porque vengo desde las compra y en precio se pasa el costo
+        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo})
     else:    
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo})
@@ -333,12 +337,20 @@ def get_articulos():
     detalle = request.args.get('detalle', '')
     idlista = request.args.get('idlista', '')
     if detalle and idlista:
-        articulos = db.session.query(Articulo.id,
-                                     Articulo.codigo,
-                                     Articulo.detalle,
-                                     Articulo.costo,
-                                     Precio.precio
-                                     ).join(Precio, Precio.idarticulo == Articulo.id).filter(Articulo.detalle.like(f"%{detalle}%"), Precio.idlista == idlista).all()
+        if idlista != "0":
+            articulos = db.session.query(Articulo.id,
+                                         Articulo.codigo,
+                                         Articulo.detalle,
+                                         Articulo.costo,
+                                         Precio.precio
+                                         ).join(Precio, Precio.idarticulo == Articulo.id).filter(Articulo.detalle.like(f"%{detalle}%"), Precio.idlista == idlista).all()
+        else:
+            articulos = db.session.query(Articulo.id,
+                                         Articulo.codigo,
+                                         Articulo.detalle,
+                                         Articulo.costo,
+                                         Articulo.costo.label('precio'),
+                                         ).filter(Articulo.detalle.like(f"%{detalle}%")).all()    
     else:
         articulos = []
     return jsonify([{'id': a.id, 'codigo': a.codigo, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])

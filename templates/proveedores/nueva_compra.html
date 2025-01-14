@@ -7,6 +7,10 @@
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
                     <h4 class="m-2">Proveedor</h4>
+                    
+                    <!-- Modal para seleccionar cliente y articulos -->
+                    {% include 'partials/_modal-cliente.html' %}
+
                     <div class="cardbody">
                         <div class="row m-3">
                             <div class="col-md-2">
@@ -26,15 +30,32 @@
                 </div>    
 
                 <div class="card">
-                    <div class="cardbody">
-                        <div id="items" name="items">
-                            
+                    <div class="cardbody m-3">
+                        <!-- Detalles (items) -->
+                        <h4>Artículos</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless align-middle" id="tabla-items">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Precio unit.</th>
+                                        <th>Cant.</th>
+                                        <th>Precio total</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <!-- Aquí se agregarán dinámicamente las filas -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>    
 
                 <div class="row">
-                    <button class="btn btn-secondary col-2 m-2" type="button" id="add_item">Agregar Item</button>
+                    <button class="btn btn-secondary col-2 m-2" type="button" id="agregarArticulo">Agregar Item</button>
                     <h3>Total Factura: $<span id="total_factura">0.00</span></h3>
                     <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
                 </div>
@@ -58,7 +79,7 @@
                 </div>
 
                 <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarCompra">Guardar Factura</button>
                 </div>
 
             </form>

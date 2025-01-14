@@ -29,21 +29,39 @@
                     </div>    
                 </div>    
 
-                <div class="card">
-                    <div class="cardbody">
-                        <div id="items" name="items">
-                            
+                <div class="card m-3">
+                    <div class="cardbody m-3">
+                        <!-- Detalles (items) -->
+                        <h4>Artículos</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless align-middle" id="tabla-items">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Precio unit.</th>
+                                        <th>Cant.</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <!-- Aquí se agregarán dinámicamente las filas -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </div>
+
+                <div class="m-3">
+                    <div class="row">
+                        <button class="btn btn-secondary col-2 m-2" type="button" id="agregarArticulo">Agregar Item F4</button>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn btn-primary col-2 m-2" type="submit" id="grabarBalance">Guardar Balance F9</button>
+                    </div>
                 </div>    
-
-                <div class="row">
-                    <button class="btn btn-secondary col-2 m-2" type="button" id="agregarArticulo">Agregar Item F4</button>
-                </div>
-
-                <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarBalance">Guardar Balance F9</button>
-                </div>
 
             </form>
         </div>    

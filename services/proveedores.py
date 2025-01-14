@@ -17,7 +17,7 @@ def procesar_nueva_compra(form, id_sucursal):
     try:
         idproveedor = request.form['idproveedor']
         fecha = request.form['fecha']
-        # id_tipo_comprobante = form['id_tipo_comprobante']
+        id_tipo_comprobante = form['id_tipo_comprobante']
         
         efectivo = float(form['efectivo'])
         ctacte = float(form['ctacte'])
@@ -27,7 +27,7 @@ def procesar_nueva_compra(form, id_sucursal):
             idproveedor=idproveedor,
             fecha=fecha,
             total=0,  # Se calculará más adelante
-            #id_tipo_comprobante=id_tipo_comprobante,
+            idtipocomprobante=id_tipo_comprobante,
             idsucursal=id_sucursal
         )
         db.session.add(nueva_factura)

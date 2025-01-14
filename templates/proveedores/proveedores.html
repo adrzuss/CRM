@@ -9,7 +9,7 @@
                         <form action="{{ url_for('proveedores.add_proveedor') }}" method="post">
                             <div class="mb-3"> 
                                 <label for="nombre">Nombre</label>
-                                <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre">
+                                <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" required>
                             </div>
                             <div class="mb-3">
                                 <label for="mail">E-mail</label>
@@ -21,9 +21,30 @@
                             </div>    
                             <div class="mb-3">
                                 <label for="documento">Documento/CUIT/CUIL</label>
-                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el n° de documento/CUIL/CUIT">
+                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el n° de documento/CUIL/CUIT" required>
                             </div>    
-
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label for="tipoDoc">Tipo de Documento</label>
+                                    <select class="form-control" name="tipoDoc" id="tipoDoc" required>
+                                        {% for tipo in tipo_docs %}
+                                            <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                        {% endfor %}
+                                        
+                                    </select>    
+                                    
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label for="tipoIva">Tipo IVA</label>
+                                    <select class="form-control" name="tipoIva" id="tipoIva" required>
+                                        {% for tipo in tipo_ivas %}
+                                            <option value="{{ tipo.id }}">{{ tipo.descripcion }}</option>
+                                        {% endfor %}
+                                        
+                                    </select>    
+                                    
+                                </div>
+                            </div>    
                             <button class="btn btn-success" type="submit">Grabar</button>
                         </form>
                     </div>    

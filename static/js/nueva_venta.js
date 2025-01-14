@@ -121,10 +121,8 @@ function asignarCliente(cliente) {
   document.getElementById("cliente_nombre").value = cliente.nombre;
   document.getElementById("id").value = cliente.id;
   document.getElementById("ctacte").readOnly = cliente.ctacte == 0;
-  document.getElementById("tipo_comprobante").innerText =
-    "Tipo de factura: " + cliente.tipo_comprobante;
-  document.getElementById("id_tipo_comprobante").value =
-    cliente.id_tipo_comprobante;
+  document.getElementById("tipo_comprobante").innerText = "Tipo de factura: " + cliente.tipo_comprobante;
+  document.getElementById("id_tipo_comprobante").value = cliente.id_tipo_comprobante;
   if (cliente.ctacte == 0) {
     document.getElementById("label-ctacte").innerText =
       "Cta. Cte. - Cliente sin cta. cte.";

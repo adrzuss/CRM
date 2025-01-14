@@ -49,14 +49,20 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+function asignarProveedor(proveedor) {
+  document.getElementById("proveedor_nombre").value = proveedor.nombre;
+  document.getElementById("tipo_comprobante").innerText = "Tipo de factura: " + proveedor.tipo_comprobante;
+  document.getElementById("id_tipo_comprobante").value = proveedor.id_tipo_comprobante;
+  
+}
+
 async function fetchProveedor(id) {
-  const response = await fetch(`/proveedor/${id}`);
+  const response = await fetch(`/get_proveedor/${id}/${1}`);
   const data = await response.json();
   if (data.success) {
-    document.getElementById("proveedor_nombre").value = data.proveedor.nombre;
+    asignarProveedor(data.proveedor);
   } else {
-    document.getElementById("proveedor_nombre").value =
-      "Proveedor no encontrado";
+    document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
   }
 }
 

@@ -6,7 +6,11 @@
         <div class="container-fluid">
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
-                    <h4 class="m-2">Proveedor</h4>
+                    <div class="row">
+                        <h4 class="m-2 col-5">Proveedor</h4>
+                        <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                        <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+                    </div>
                     
                     <!-- Modal para seleccionar cliente y articulos -->
                     {% include 'partials/_modal-cliente.html' %}
@@ -79,7 +83,7 @@
                 </div>
 
                 <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarCompra">Guardar Factura</button>
                 </div>
 
             </form>

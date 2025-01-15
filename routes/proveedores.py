@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from datetime import date
 from models.proveedores import Proveedores, FacturaC
-from services.proveedores import procesar_nueva_compra
+from models.configs import TipoDocumento, TipoIva, TipoComprobantes
+from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto
 from utils.utils import check_session
 from utils.db import db
+from sqlalchemy import and_
 
 bp_proveedores = Blueprint('proveedores', __name__, template_folder='../templates/proveedores')
 
@@ -12,8 +14,10 @@ bp_proveedores = Blueprint('proveedores', __name__, template_folder='../template
 @bp_proveedores.route('/proveedores')
 @check_session
 def proveedores():
+    tipo_docs = TipoDocumento.query.all()
+    tipo_ivas = TipoIva.query.all()
     proveedores = Proveedores.query.all()
-    return render_template('proveedores.html', proveedores=proveedores)
+    return render_template('proveedores.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores)
 
 @bp_proveedores.route('/add_proveedor', methods=['POST'])
 @check_session
@@ -22,7 +26,9 @@ def add_proveedor():
     mail = request.form['mail']
     telefono = request.form['telefono']
     documento = request.form['documento']
-    proveedores = Proveedores(nombre, mail, telefono, documento)
+    tipo_doc = request.form['tipoDoc']
+    tipo_iva = request.form['tipoIva']
+    proveedores = Proveedores(nombre, mail, telefono, documento, tipo_doc, tipo_iva)
     db.session.add(proveedores)
     db.session.commit()
     flash('Proveedor agregado')
@@ -30,10 +36,31 @@ def add_proveedor():
 
 @bp_proveedores.route('/proveedor/<id>')
 @check_session
-def get_proveedor(id):
+def proveedor(id):
     proveedor = Proveedores.query.get(id)
     if proveedor:
         return jsonify(success=True, proveedor={"id": proveedor.id, "nombre": proveedor.nombre})
+    else:
+        return jsonify(success=False)
+
+@bp_proveedores.route('/get_proveedor/<id>/<tipo_operacion>')
+@check_session
+def get_proveedor(id, tipo_operacion):
+    proveedor = db.session.query(
+        Proveedores.id.label('id'),
+        Proveedores.nombre.label('nombre'),
+        Proveedores.documento.label('documento'),
+        Proveedores.email.label('email'),
+        Proveedores.telefono.label('telefono'),
+        Proveedores.id_tipo_doc.label('id_tipo_doc'),
+        Proveedores.id_tipo_iva.label('id_tipo_iva'),
+        TipoComprobantes.id.label('id_tipo_comprobante'),
+        TipoComprobantes.nombre.label('tipo_comprobante'))\
+        .outerjoin(TipoComprobantes, and_(Proveedores.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == 1, TipoComprobantes.id_tipo_operacion == tipo_operacion))\
+        .filter(Proveedores.id == id).first()
+    print(proveedor)  
+    if proveedor:
+        return jsonify(success=True, proveedor={'id': proveedor.id, 'nombre': proveedor.nombre, 'telefono': proveedor.telefono, 'id_tipo_comprobante': proveedor.id_tipo_comprobante, 'tipo_comprobante':proveedor.tipo_comprobante, 'tipo_doc':proveedor.id_tipo_doc, 'tipo_iva':proveedor.id_tipo_iva}) 
     else:
         return jsonify(success=False)
 
@@ -42,7 +69,9 @@ def get_proveedor(id):
 def update_proveedor(id):
     proveedor = Proveedores.query.get(id)
     if request.method == 'GET':
-        return render_template('upd-proveedor.html', proveedor = proveedor)
+        tipo_docs = TipoDocumento.query.all()
+        tipo_ivas = TipoIva.query.all()
+        return render_template('upd-proveedor.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedor = proveedor)
     if request.method == 'POST':
         proveedor.nombre = request.form['nombre']
         proveedor.email = request.form['mail']
@@ -92,15 +121,7 @@ def nueva_compra():
 @check_session
 def nuevo_gasto():
     if request.method == 'POST':
-        idproveedor = request.form['idproveedor']
-        fecha = request.form['fecha']
-        gasto = float(request.form['total'])
-
-        nueva_gasto = FacturaC(idproveedor=idproveedor, fecha=fecha, total=gasto, idsucursal=session['id_sucursal'])
-        db.session.add(nueva_gasto)
-        db.session.commit()
-
-        idfactura = nueva_gasto.id
+        procesar_nuevo_gasto(request.form, session['id_sucursal']) 
         flash('Gasto grabado')
         return redirect(url_for('index'))
     else:

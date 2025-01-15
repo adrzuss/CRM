@@ -111,8 +111,7 @@ class Balance(db.Model):
     items = db.relationship('ItemBalance', backref=db.backref('balance', lazy=True))
     sucursal = db.relationship('Sucursales', backref=db.backref('balance', lazy=True))
     
-    def __init__(self, idUsuario, fecha, idsucursal, idusuario, tipo_balance=0):
-        self.idusuario = idUsuario
+    def __init__(self, idusuario, fecha, idsucursal, tipo_balance=0):
         self.fecha = fecha
         self.idtipo_balance = tipo_balance
         self.idsucursal = idsucursal

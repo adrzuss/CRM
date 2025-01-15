@@ -17,17 +17,17 @@ def procesar_nueva_compra(form, id_sucursal):
     try:
         idproveedor = request.form['idproveedor']
         fecha = request.form['fecha']
-        # id_tipo_comprobante = form['id_tipo_comprobante']
+        id_tipo_comprobante = request.form['id_tipo_comprobante']
         
-        efectivo = float(form['efectivo'])
-        ctacte = float(form['ctacte'])
+        efectivo = float(request.form['efectivo'])
+        ctacte = float(request.form['ctacte'])
 
         # Crear la factura
         nueva_factura = FacturaC(
             idproveedor=idproveedor,
             fecha=fecha,
             total=0,  # Se calculará más adelante
-            #id_tipo_comprobante=id_tipo_comprobante,
+            idtipocomprobante=id_tipo_comprobante,
             idsucursal=id_sucursal
         )
         db.session.add(nueva_factura)
@@ -59,6 +59,7 @@ def procesar_items(form, idfactura, id_sucursal):
                 articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
                 
                 precio_total = precio_unitario * cantidad
+                total += precio_total
 
                 nuevo_item = ItemC(
                     idfactura=idfactura,
@@ -69,8 +70,6 @@ def procesar_items(form, idfactura, id_sucursal):
                     precio_total=precio_total
                 )
                 db.session.add(nuevo_item)
-                total += precio_total
-
                 # Actualizar el stock
                 actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
         return total
@@ -87,3 +86,26 @@ def procesar_pagos(idfactura, idproveedor, fecha, efectivo, ctacte):
         #db.session.commit()
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando pagos: {e}")
+
+
+def procesar_nuevo_gasto(form, idsucursal):
+    try:
+        idproveedor = request.form['idproveedor']
+        fecha = request.form['fecha']
+        id_tipo_comprobante = request.form['id_tipo_comprobante']
+        gasto = float(request.form['total'])
+        efectivo = float(form['efectivo'])
+        ctacte = float(form['ctacte'])
+        # Crear la factura
+        nueva_gasto = FacturaC(idproveedor=idproveedor, fecha=fecha, total=gasto, idsucursal=idsucursal, idtipocomprobante=id_tipo_comprobante)
+        db.session.add(nueva_gasto)
+        db.session.flush()
+        
+        idfactura = nueva_gasto.id
+
+        # Registrar los pagos
+        procesar_pagos(idfactura, idproveedor, fecha, efectivo, ctacte)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise Exception(f"Error grabando gasto: {e}")

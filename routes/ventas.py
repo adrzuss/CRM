@@ -3,12 +3,14 @@ from models.articulos import ListasPrecios
 from models.ventas import Factura
 from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
+from models.articulos import Articulo
 from models.configs import TipoComprobantes
 from services.ventas import get_factura, procesar_nueva_venta
 from utils.db import db
 from utils.utils import check_session   
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
+from sqlalchemy import text
 
 bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas')
 
@@ -69,3 +71,19 @@ def enivar_factura_vta_mail(id, idcliente):
         pdf_path = f"factura-{id}.pdf"
         enviar_factura_por_email(cliente.email, pdf_path)
     return redirect(url_for('ventas.ver_factura_vta', id=id))
+
+@bp_ventas.route('/ventasArticulos', methods=['GET', 'POST'])
+@check_session
+def ventasArticulos():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        articulos = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+
+
+    return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta)

@@ -1,5 +1,5 @@
 from flask import session
-from models.articulos import Articulo, Marca, Stock, Precio, Rubro, ArticuloCompuesto
+from models.articulos import Articulo, Marca, Stock, Precio, Rubro, ArticuloCompuesto, Balance, ItemBalance
 from models.sucursales import Sucursales
 from sqlalchemy import func, and_, case, update
 from sqlalchemy.exc import SQLAlchemyError
@@ -145,7 +145,6 @@ def actualizarPrecio(idlista, idarticulo, precio_nuevo):
     )   
     
 def obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje):
-    print('empezamos a filtrar')
     query = db.session.query(Articulo.id,
                              Articulo.codigo,
                              Articulo.detalle,
@@ -157,14 +156,9 @@ def obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje):
         query = query.filter(Articulo.idrubro == rubro)
     if lista_precio:
         query = query.filter(Precio.idlista == lista_precio)
-    print('el query es:', query)
     articulos = query.all()
-    print('Los articulos son:')
-    print(articulos)
     resultado = []
     for articulo in articulos:
-        print('articulo:', articulo)
-        print('---------------------')
         precio_actual = articulo.precio
         precio_nuevo = Decimal(precio_actual) * Decimal((1 + porcentaje / 100))
         resultado.append({
@@ -174,3 +168,43 @@ def obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje):
             'precio_nuevo': round(precio_nuevo, 2),
         })    
     return resultado    
+
+def procesar_nuevo_balance(form, id_sucursal):
+    try:
+        fecha = form['fecha']
+        idTipoBalance = form['tipobalance']
+        
+        # Crear la factura
+        nuevo_balance = Balance(idusuario=session['user_id'], fecha=fecha, tipo_balance=idTipoBalance, idsucursal=id_sucursal)
+        db.session.add(nuevo_balance)
+        db.session.flush()
+        idbalance = nuevo_balance.id
+
+        # Procesar los items
+        procesar_items(form, idbalance, id_sucursal)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise Exception(f"Error grabando venta: {e}")
+
+def procesar_items(form, idbalance, id_sucursal):
+    total = Decimal(0)
+    stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
+
+    for key, value in form.items():
+        if key.startswith('items') and key.endswith('[codigo]'):
+            index = key.split('[')[1].split(']')[0]
+            codigo = value
+            cantidad = Decimal(form[f'items[{index}][cantidad]'])
+
+            articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+            precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=1).first()
+            precio_unitario = precio.precio if precio else Decimal(0)
+            precio_total = precio_unitario * cantidad
+
+            nuevo_item = ItemBalance(idbalance=idbalance, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
+            db.session.add(nuevo_item)
+            # Actualizar el stock
+            actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
+    
+    return total

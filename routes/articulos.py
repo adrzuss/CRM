@@ -321,6 +321,10 @@ def get_articulo(codigo, idlista):
             return {"error": "Precio no disponible para el artículo en la lista solicitada"}, 404
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio})
+    elif idlista == 0:
+        # Obtener el precio del artículo según la lista especificada (idlista)
+        # Si la lista es 0 es porque vengo desde las compra y en precio se pasa el costo
+        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo})
     else:    
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "detalle": articulo.detalle, "costo": articulo.costo})

@@ -6,7 +6,11 @@
         <div class="container-fluid">
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
-                    <h4 class="m-2">Proveedor</h4>
+                    <div class="row">
+                        <h4 class="m-2 col-5">Proveedor</h4>
+                        <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                        <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+                    </div>
                     <div class="cardbody">
                         <div class="row m-3">
                             <div class="col-md-2">
@@ -76,10 +80,15 @@
     --> 
     <script>
         async function fetchProveedor(id) {
-            const response = await fetch(`/proveedor/${id}`);
+            const response = await fetch(`/get_proveedor/${id}/${1}`);
             const data = await response.json();
             if (data.success) {
+                console.log('Datos del proveedor')
+                console.log(data.proveedor);
                 document.getElementById('proveedor_nombre').value = data.proveedor.nombre;
+                document.getElementById('tipo_comprobante').textContent = `Tipo de factura: ${data.proveedor.tipo_comprobante}`;
+                document.getElementById('id_tipo_comprobante').value = data.proveedor.id_tipo_comprobante;  
+                console.log(data.proveedor.tipo_comprobante);
             } else {
                 document.getElementById('proveedor_nombre').value = 'Proveedor no encontrado';
             }

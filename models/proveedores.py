@@ -7,12 +7,16 @@ class Proveedores(db.Model):
     email = db.Column(db.String(100))
     telefono  = db.Column(db.String(20))
     documento = db.Column(db.String(13))
+    id_tipo_doc = db.Column(db.Integer, db.ForeignKey('tipo_doc.id'))
+    id_tipo_iva = db.Column(db.Integer, db.ForeignKey('tipo_iva.id'))
     
-    def __init__(self, nombre, email, telefono, documento):
+    def __init__(self, nombre, email, telefono, documento, tipo_doc, tipo_iva):
         self.nombre = nombre
         self.email = email
         self.telefono = telefono
         self.documento = documento
+        self.id_tipo_doc = tipo_doc
+        self.id_tipo_iva = tipo_iva
 
 class FacturaC(db.Model):
     __tablename__ = 'facturac'
@@ -21,14 +25,16 @@ class FacturaC(db.Model):
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Numeric(20,6), nullable=False)
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
+    idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
     proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
     pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
     
-    def __init__(self, idproveedor, fecha, total, idsucursal):
+    def __init__(self, idproveedor, fecha, total, idsucursal, idtipocomprobante):
         self.idproveedor = idproveedor
         self.fecha = fecha
         self.total = total
         self.idsucursal = idsucursal
+        self.idtipocomprobante = idtipocomprobante
         
 class ItemC(db.Model):
     __tablename__ = 'itemsc'

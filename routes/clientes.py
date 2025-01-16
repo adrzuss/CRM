@@ -75,12 +75,13 @@ def get_clientes():
         Clientes.ctacte.label('ctacte'),
         Clientes.id_tipo_doc.label('id_tipo_doc'),
         Clientes.id_tipo_iva.label('id_tipo_iva'),
+         TipoComprobantes.id.label('id_tipo_comprobante'),
         TipoComprobantes.nombre.label('tipo_comprobante'))\
         .outerjoin(TipoComprobantes, and_(Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == session['tipo_iva'], TipoComprobantes.id_tipo_operacion == tipo_operacion))\
         .filter(Clientes.nombre.like(f"{nombre}%")).all()
     else:
         clientes = []
-    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte, 'tipo_comprobante':c.tipo_comprobante, 'tipo_doc':c.id_tipo_doc, 'tipo_iva':c.id_tipo_iva} for c in clientes]) 
+    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte, 'id_tipo_comprobante': c.id_tipo_comprobante, 'tipo_comprobante':c.tipo_comprobante, 'tipo_doc':c.id_tipo_doc, 'tipo_iva':c.id_tipo_iva} for c in clientes]) 
 
 @bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
 @check_session

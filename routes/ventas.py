@@ -84,6 +84,39 @@ def ventasArticulos():
         hasta = request.form['hasta']
         articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-
-
     return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta)
+
+@bp_ventas.route('/ventasClientes', methods=['GET', 'POST'])
+@check_session
+def ventasClientes():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        ventas = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        ventas = db.session.execute(text("CALL venta_clientes(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+    return render_template('ventas-clientes.html', ventas=ventas, desde=desde, hasta=hasta)
+
+@bp_ventas.route('/ventasUnCliente', methods=['GET', 'POST'])
+@check_session
+def ventasUnCliente():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        cliente = {}
+        ventas = []
+        articulos = []
+    else:
+        id = request.form['idCliente']
+        desde = request.form['fechaDesde']
+        hasta = request.form['fechaHasta']
+        
+        cliente = Clientes.query.get(id)
+        ventas = db.session.execute(text("CALL ventas_un_cliente(:idcliente, :desde, :hasta)"),
+                         {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
+        articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
+                         {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
+    return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta)

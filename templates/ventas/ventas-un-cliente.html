@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
+{% block body %}
+    <h2 class="m-3">Ventas realizadas a: {{ cliente.nombre }}</h2>
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="card m-3">
+                <h5 class="px-5 pt-2">Cliente y periodo</h5>
+                <div class="card-body">
+                    <form action="" method="post">
+                        <div class="row justify-content-md-center">
+                            <div class="col-md-3">
+                                <label for="idcliente">Cliente</label>
+                                <input type="number" name="idcliente" id="idcliente" class="form-control" value="{{ cliente.id }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="cliente">Nombre</label>
+                                <input type="text" name="cliente" id="cliente" class="form-control" value="{{ cliente.nombre }}" readonly>  
+                            </div>
+                        </div>    
+                        <div class="row justify-content-md-center">    
+                            <div class="col-md-3">
+                                <label for="desde">Desde</label>
+                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hasta">Hasta</label>
+                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            </div>    
+                            <div class="col-md-2 m-4">
+                                <button type="submit" class="btn btn-primario">Buscar</button>
+                            </div>    
+                        </div>
+                    </form>
+                </div>    
+            </div>
+        </div>    
+    </div>
+    
+    <div class="card m-3">
+        <div class="card-body">
+            <h5 class="card-title">Ventas realizadas</h5>
+            <div class="row justify-content-center align-items-center">
+                <div class="col-11">
+                    <div class="table-responsive m-3" >
+                        <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo comp.</th>
+                                    <th>Sucursal</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for venta in ventas %}        
+                                    <tr class="table-light">
+                                        <td scope="row">{{ venta.fecha }}</td>
+                                        <td>{{ venta.tipo_comp }}</td>
+                                        <td>{{ venta.nom_sucursal }}</td>
+                                        <td style="text-align:center">{{ "${:,.2f}".format(venta.total) }}</td>
+                                        <td><a href="{{ url_for('ventas.ver_factura_vta', id=venta.id) }}" class="btn btn-secondary">Ver comp.</a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>    
+            </div>
+        </div>    
+    </div>
+
+    <div class="card m-3">
+        <div class="card-body">
+            <h5 class="card-title">Artículos vendidos</h5>
+            <div class="row justify-content-center align-items-center">
+                <div class="col-11">
+                    <div class="table-responsive m-3" >
+                        <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Detalle</th>
+                                    <th>Sucursal</th>
+                                    <th>Cantidad</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for articulo in articulos %}        
+                                    <tr class="table-light">
+                                        <td scope="row">{{ articulo.codigo }}</td>
+                                        <td>{{ articulo.detalle }}</td>
+                                        <td>{{ articulo.nom_sucursal }}</td>
+                                        <td>{{ articulo.cantidad }}</td>
+                                        <td style="text-align:center">{{ "${:,.2f}".format(articulo.total) }}</td>
+                                        <td><a href="#" class="btn btn-secondary">Ver art.</a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>    
+            </div>
+        </div>    
+    </div>
+
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/dataTables.js"></script>
+    <script src="/static/js/dataTables.js"></script>
+    
+{% endblock %}

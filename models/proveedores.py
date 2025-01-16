@@ -26,15 +26,18 @@ class FacturaC(db.Model):
     total = db.Column(db.Numeric(20,6), nullable=False)
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
     idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
+    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    usuario = db.relationship('Usuarios', backref=db.backref('facturac', lazy=True))
     proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
     pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
     
-    def __init__(self, idproveedor, fecha, total, idsucursal, idtipocomprobante):
+    def __init__(self, idproveedor, fecha, total, idsucursal, idtipocomprobante, idusuario):
         self.idproveedor = idproveedor
         self.fecha = fecha
         self.total = total
         self.idsucursal = idsucursal
         self.idtipocomprobante = idtipocomprobante
+        self.idusuario = idusuario
         
 class ItemC(db.Model):
     __tablename__ = 'itemsc'

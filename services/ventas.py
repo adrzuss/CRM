@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, session
 from decimal import Decimal
 from datetime import date, timedelta
 from utils.utils import format_currency
@@ -16,14 +16,14 @@ from utils.db import db
 
 def procesar_nueva_venta(form, id_sucursal):
     try:
-        idcliente = form['idcliente']
-        fecha = form['fecha']
-        idlista = form['idlista']
-        id_tipo_comprobante = form['id_tipo_comprobante']
-        efectivo = float(form['efectivo'])
-        tarjeta = float(form['tarjeta'])
-        entidad = form['entidad']
-        ctacte = float(form['ctacte'])
+        idcliente = request.form['idcliente']
+        fecha = request.form['fecha']
+        idlista = request.form['idlista']
+        id_tipo_comprobante = request.form['id_tipo_comprobante']
+        efectivo = float(request.form['efectivo'])
+        tarjeta = float(request.form['tarjeta'])
+        entidad = request.form['entidad']
+        ctacte = float(request.form['ctacte'])
 
         # Crear la factura
         nueva_factura = Factura(
@@ -32,7 +32,8 @@ def procesar_nueva_venta(form, id_sucursal):
             fecha=fecha,
             total=0,  # Se calculará más adelante
             id_tipo_comprobante=id_tipo_comprobante,
-            idsucursal=id_sucursal
+            idsucursal=id_sucursal,
+            idusuario=session['user_id']
         )
         db.session.add(nueva_factura)
         db.session.flush()
@@ -66,6 +67,7 @@ def procesar_items(form, idfactura, idlista, id_sucursal):
 
             nuevo_item = Item(
                 idfactura=idfactura,
+                id=index,
                 idarticulo=articulo.id,
                 cantidad=cantidad,
                 precio_unitario=precio_unitario,

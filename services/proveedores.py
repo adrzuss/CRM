@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, session
 from datetime import date, timedelta
 from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC
 from models.articulos import Articulo, Stock
@@ -28,7 +28,8 @@ def procesar_nueva_compra(form, id_sucursal):
             fecha=fecha,
             total=0,  # Se calculará más adelante
             idtipocomprobante=id_tipo_comprobante,
-            idsucursal=id_sucursal
+            idsucursal=id_sucursal,
+            idusuario=session['user_id']
         )
         db.session.add(nueva_factura)
         db.session.flush()

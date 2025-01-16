@@ -123,6 +123,8 @@ function asignarCliente(cliente) {
   document.getElementById("ctacte").readOnly = cliente.ctacte == 0;
   document.getElementById("tipo_comprobante").innerText = "Tipo de factura: " + cliente.tipo_comprobante;
   document.getElementById("id_tipo_comprobante").value = cliente.id_tipo_comprobante;
+  console.log(cliente.tipo_comprobante);
+  console.log(cliente.id_tipo_comprobante);
   if (cliente.ctacte == 0) {
     document.getElementById("label-ctacte").innerText =
       "Cta. Cte. - Cliente sin cta. cte.";
@@ -271,17 +273,20 @@ function renumberItems() {
 
 function checkDatosTarjeta() {
   const totTarjeta = parseFloat(document.getElementById("tarjeta").value);
+  const entidad = parseInt(document.getElementById("entidad").value);
   if (totTarjeta > 0) {
-    const entidad = parseInt(document.getElementById("entidad").value);
     if (entidad <= 0 || isNaN(entidad)) {
       alert("Debe completar correctamente los datos de tarjeta");
       return false;
     }
-    alert("Datos de tarjeta correctos");
     return true;
   } else {
-    alert("Debe completar correctamente los datos de tarjeta");
-    return false;
+    if ((totTarjeta > 0) || (entidad > 0)) {
+      alert("Debe completar correctamente los datos de tarjeta");
+      return false;
+    }else{
+      return true;
+    }      
   }
 }
 /*FIXIT

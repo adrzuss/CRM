@@ -1,7 +1,7 @@
 from flask import session, redirect, url_for, render_template
 from app import create_app
 from sqlalchemy.exc import OperationalError
-from services.configs import get_owner
+from services.configs import getOwner, getTareaUsuario
 from utils.db import db
 from utils.utils import check_session
 
@@ -22,11 +22,19 @@ else:
     @app.route('/')
     @check_session
     def index():
-        configuracion = get_owner()
+        configuracion = getOwner()
         session['owner'] = configuracion.nombre_propietario
         session['company'] = configuracion.nombre_fantasia
         session['tipo_iva'] = configuracion.tipo_iva
-        return redirect(url_for('tableros.tablero_inicial'))
+        tareaUsuario = getTareaUsuario()
+        match tareaUsuario:
+            case 1:
+                return redirect(url_for('tableros.tablero_inicial'))
+            case 2:
+                return redirect(url_for('tableros.tablero_administrativo'))
+            case _:
+                return redirect(url_for('tableros.tablero_basico'))
+                
 
 # Ruta para forzar un error 404
 @app.route('/404')

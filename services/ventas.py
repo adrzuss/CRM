@@ -133,6 +133,15 @@ def get_vta_desde_hasta(desde, hasta):
     except:
         return []
 
+def get_operaciones_hoy():
+    pass
+    
+def get_operaciones_semana():
+    pass
+    
+def operaciones_por_mes():
+    pass
+
 def ventas_por_mes():
     # Obtener la fecha de hoy
     fecha_hoy = date.today()

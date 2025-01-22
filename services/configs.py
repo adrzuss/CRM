@@ -1,9 +1,10 @@
 from flask import session, current_app, flash
-from sqlalchemy import text
+from sqlalchemy import text, func
 from utils.db import db
 from models.configs import Configuracion, TipoComprobantes
 from models.articulos import ListasPrecios
 from utils.db import db
+from models.sessions import TareasUsuarios
 
 def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail):
     configuracion = Configuracion.query.get(session['id_empresa'])
@@ -21,9 +22,14 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
         configuracion.mail = mail
         db.session.commit()
 
-def get_owner():
+def getOwner():
     configuracion = Configuracion.query.get(session['id_empresa'])
     return configuracion
+
+def getTareaUsuario():
+    max_id_tarea = db.session.query(func.min(TareasUsuarios.idtarea)) \
+                       .filter(TareasUsuarios.idusuario == session['user_id']) \
+                       .scalar()
 
 def get_comprobantes():
     tipo_comprobantes = TipoComprobantes.query.all()

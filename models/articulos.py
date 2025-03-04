@@ -7,23 +7,30 @@ class Articulo(db.Model):
     detalle = db.Column(db.String(200), nullable=False)
     costo = db.Column(db.Numeric(20,6), nullable=False)
     idiva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'))
+    exento = db.Column(db.Numeric(20,6), nullable=False)
+    impint = db.Column(db.Numeric(20,6), nullable=False)
+    idib = db.Column(db.Integer, db.ForeignKey('alc_ib.id'))
     idmarca = db.Column(db.Integer, db.ForeignKey('marcas.id'))
     idrubro = db.Column(db.Integer, db.ForeignKey('rubros.id'))
     idtipoarticulo = db.Column(db.Integer, db.ForeignKey('tipo_articulos.id'))
     imagen = db.Column(db.String(255))
     es_compuesto = db.Column(db.Boolean, nullable=False)
     iva = db.relationship('AlcIva', back_populates='articulos')
+    ingbto = db.relationship('AlcIB', back_populates='articulos')
     marca = db.relationship('Marca', back_populates='articulos')
     rubro = db.relationship('Rubro', back_populates='articulos')
     precios = db.relationship('Precio', backref='articulo', lazy=True)
     #tipoarticulo = db.relationship('TipoArticulos', back_populates='articulos', lazy=True)
     #stock = db.relationship('Stock', back_populates='idarticulo')
     
-    def __init__(self, codigo, detalle, costo, idiva, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto):
+    def __init__(self, codigo, detalle, costo, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto):
         self.codigo = codigo
         self.detalle = detalle
         self.costo = costo
+        self.exento = exento
+        self.impint = impint    
         self.idiva = idiva
+        self.idib = idib
         self.idmarca = idmarca
         self.idrubro = idrubro
         self.idtipoarticulo = idtipoarticulo

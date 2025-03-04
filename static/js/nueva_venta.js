@@ -221,12 +221,8 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
 }
 
 function updateItemTotal(itemDiv) {
-  const precioUnitario = parseFloat(
-    itemDiv.target.closest("tr").querySelector(".precio-unitario").value
-  );
-  const cantidad = parseFloat(
-    itemDiv.target.closest("tr").querySelector(".cantidad").value
-  );
+  const precioUnitario = parseFloat(itemDiv.target.closest("tr").querySelector(".precio-unitario").value);
+  const cantidad = parseFloat(itemDiv.target.closest("tr").querySelector(".cantidad").value);
   const precioTotal = (precioUnitario * cantidad).toFixed(2);
   if (isNaN(precioTotal)) {
     precioTotal = 0;
@@ -383,6 +379,9 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
   contadorFilas++;
+  // Enfocar el nuevo input de código
+  const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+  nuevoInputCodigo.focus();
 });
 
 tablaItems.addEventListener(

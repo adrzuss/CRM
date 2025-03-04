@@ -27,9 +27,10 @@ def getOwner():
     return configuracion
 
 def getTareaUsuario():
-    max_id_tarea = db.session.query(func.min(TareasUsuarios.idtarea)) \
+    min_id_tarea = db.session.query(func.min(TareasUsuarios.idtarea)) \
                        .filter(TareasUsuarios.idusuario == session['user_id']) \
                        .scalar()
+    return min_id_tarea
 
 def get_comprobantes():
     tipo_comprobantes = TipoComprobantes.query.all()

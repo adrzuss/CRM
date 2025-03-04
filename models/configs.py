@@ -38,8 +38,19 @@ class AlcIva(db.Model):
     __tablename__ = 'alc_iva'
     id = db.Column(db.Integer, primary_key=True)
     descripcion = db.Column(db.String(100), nullable=False)
-    alicuota = db.Column(db.Float, nullable=False)
+    alicuota = db.Column(db.Numeric(20,6), nullable=False)
     articulos = db.relationship('Articulo', back_populates='iva')
+    
+    def __init__(self, descripcion, alicuota):
+        self.descripcion = descripcion
+        self.alicuota = alicuota
+
+class AlcIB(db.Model):
+    __tablename__ = 'alc_ib'
+    id = db.Column(db.Integer, primary_key=True)
+    descripcion = db.Column(db.String(100), nullable=False)
+    alicuota = db.Column(db.Numeric(20,6), nullable=False)
+    articulos = db.relationship('Articulo', back_populates='ingbto')
     
     def __init__(self, descripcion, alicuota):
         self.descripcion = descripcion

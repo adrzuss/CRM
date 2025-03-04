@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
-from models.configs import Configuracion, AlcIva, TipoIva, TipoDocumento
+from models.configs import Configuracion, AlcIva, TipoIva, TipoDocumento, AlcIB
 from models.sessions import Tareas
 from models.articulos import ListasPrecios
 from models.sucursales import Sucursales
@@ -18,7 +18,8 @@ def configuraciones():
     tipo_ivas = TipoIva.query.all()
     tipo_docs = TipoDocumento.query.all()
     tareas = Tareas.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas)
+    alcIB = AlcIB.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB)
 
 """
 @bp_configuraciones.route('/alc_iva')
@@ -50,6 +51,17 @@ def add_alc_iva():
     db.session.add(alciva)
     db.session.commit()
     flash('Alicuota de IVA grabada')
+    return redirect('configuraciones')
+
+@bp_configuraciones.route('/add_alc_ib', methods=['POST'])
+@check_session
+def add_alc_ib():
+    descripcion = request.form['descripcionib']
+    alicuota = request.form['alicuotaib']
+    alcib = AlcIB(descripcion, alicuota)
+    db.session.add(alcib)
+    db.session.commit()
+    flash('Alicuota de Ingreso Bruto grabada')
     return redirect('configuraciones')
 
 @bp_configuraciones.route('/add_lista_precio', methods=['POST'])

@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from datetime import date
-from models.proveedores import Proveedores, FacturaC
+from models.proveedores import Proveedores, FacturaC, RemitoC
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes
-from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto
+from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto, get_factura, actualizar_precios_por_compras, \
+    procesar_nuevo_remito, get_remito   
 from utils.utils import check_session
 from utils.db import db
 from sqlalchemy import and_
@@ -58,7 +59,6 @@ def get_proveedor(id, tipo_operacion):
         TipoComprobantes.nombre.label('tipo_comprobante'))\
         .outerjoin(TipoComprobantes, and_(Proveedores.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == 1, TipoComprobantes.id_tipo_operacion == tipo_operacion))\
         .filter(Proveedores.id == id).first()
-    print(proveedor)  
     if proveedor:
         return jsonify(success=True, proveedor={'id': proveedor.id, 'nombre': proveedor.nombre, 'telefono': proveedor.telefono, 'id_tipo_comprobante': proveedor.id_tipo_comprobante, 'tipo_comprobante':proveedor.tipo_comprobante, 'tipo_doc':proveedor.id_tipo_doc, 'tipo_iva':proveedor.id_tipo_iva}) 
     else:
@@ -108,8 +108,10 @@ def compras():
 def nueva_compra():
     if request.method == 'POST':
         try:
-            procesar_nueva_compra(request.form, session['id_sucursal'])
+            actualizoCostos = procesar_nueva_compra(request.form, session['id_sucursal'])
             flash('Factura grabada exitosamente')
+            if actualizoCostos:
+                flash('Se actualizaron los costos de los artículos')
             return redirect(url_for('index'))
         except Exception as e:
             flash(f'Ocurrió un error al procesar la compra: {e}')
@@ -126,5 +128,52 @@ def nuevo_gasto():
         return redirect(url_for('index'))
     else:
         return render_template('nuevo_gasto.html')
+    
+@bp_proveedores.route('/ver_factura_comp/<id>') 
+@check_session
+def ver_factura_comp(id):
+    factura, items, pagos = get_factura(id)
+    return render_template('factura-comp.html', factura=factura, items=items, pagos=pagos)
         
+@bp_proveedores.route('/actualizar_precios_porcompras/<id>') 
+@check_session
+def actualizar_precios_porcompras(id):
+    try:
+        actualizar_precios_por_compras(id)
+        flash('Precios actualizados')
+        return redirect(url_for('proveedores.ver_factura_comp', id=id))
+    except Exception as e:
+        flash(str(e), 'error')
+        return redirect(url_for('proveedores.ver_factura_comp', id=id))
         
+@bp_proveedores.route('/remitos')
+@check_session
+def remitosComp():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+    remitos = RemitoC.query.filter(RemitoC.fecha >= desde, RemitoC.fecha <= hasta)
+    return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta)
+
+@bp_proveedores.route('/nuevo_remitoComp', methods=['GET', 'POST'])
+@check_session
+def nuevo_remitoComp():
+    if request.method == 'POST':
+        try:
+            procesar_nuevo_remito(request.form, session['id_sucursal'])
+            flash('Remito grabado exitosamente')
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar el remito: {e}')
+            return redirect(url_for('proveedores.nuevo_remitoComp'))
+    hoy = date.today()
+    return render_template('nuevo_remitocomp.html', hoy=hoy)
+                       
+@bp_proveedores.route('/ver_remito_comp/<id>') 
+@check_session
+def ver_remito_comp(id):
+    remito, items = get_remito(id)
+    return render_template('remito-compras.html', remito=remito, items=items)

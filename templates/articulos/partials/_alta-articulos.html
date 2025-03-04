@@ -17,9 +17,18 @@
                 <div class="row">
                     <div class="col-3 mb-3">
                         <label for="costo">Costo</label>
-                        <input class="form-control" type="text" name="costo" id="costo" placeholder="Ingrese el costo">
+                        <input class="form-control" type="number" step="0.01" min="0" name="costo" id="costo" placeholder="Ingrese el costo">
                     </div>    
-
+                    <div class="col-3 mb-3">
+                        <label for="impint">Imp. int.</label>
+                        <input class="form-control" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese el costo">
+                    </div>    
+                    <div class="col-3 mb-3">
+                        <label for="exento">Exento</label>
+                        <input class="form-control" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese el costo">
+                    </div>    
+                </div>
+                <div class="row">
                     <div class="col-2 mb-3">
                         <label for="idiva">IVA:</label>
                         <select class="form-control" id="idiva" name="idiva" required>
@@ -28,6 +37,16 @@
                         {% endfor %}
                         </select>
                     </div>    
+                    <div class="col-3 mb-3">
+                        <label for="idib">Ing. brutos.:</label>
+                        <select class="form-control" id="idib" name="idib" required>
+                        {% for ib in ibs %}
+                            <option value="{{ ib.id }}">{{ ib.descripcion }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>    
+                </div>    
+                <div>
                     <div class="col-7 mb-3">
                         <label for="idmarca">Marca:</label>
                         <select class="form-select" id="idmarca" name="idmarca" required>

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h2 class="m-3">Facturas de compra</h2>
+    <h2 class="m-3">Remitos de compra</h2>
     <div class="m-3">
-        <a href="{{ url_for('proveedores.nueva_compra') }}" class="btn btn-primario">Nueva compra</a>
+        <a href="{{ url_for('proveedores.nuevo_remitoComp') }}" class="btn btn-primario">Nueva remito</a>
     </div>    
 
     <div class="row justify-content-center align-items-center">
@@ -37,22 +37,20 @@
                 <table class="table table-striped table-hover table-borderless align-middle" >
                     <thead class="table-light">
                         <caption>
-                            Facturas de compra
+                            Remitos de compra
                         </caption>
                         <tr>
                             <th>Proveedor</th>
                             <th>Fecha</th>
-                            <th>Total</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        {% for factura in facturas %}        
+                        {% for remito in remitos %}        
                             <tr class="table-dark">
-                                <td scope="row">{{ factura.proveedor.nombre }}</td>
-                                <td>{{ factura.fecha.strftime('%d-%m-%Y') }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
-                                <td><a href="{{ url_for('proveedores.ver_factura_comp', id=factura.id) }}" class="btn btn-primario">Ver</a></td>
+                                <td scope="row">{{ remito.proveedor.nombre }}</td>
+                                <td>{{ remito.fecha.strftime('%d-%m-%Y') }}</td>
+                                <td><a href="{{ url_for('proveedores.ver_remito_comp', id=remito.id) }}" class="btn btn-primario">Ver remito</a></td>
                             </tr>
                         {% endfor %}
                     </tbody>

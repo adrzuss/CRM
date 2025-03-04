@@ -3,11 +3,10 @@ from models.articulos import ListasPrecios
 from models.ventas import Factura
 from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
-from models.articulos import Articulo
 from models.configs import TipoComprobantes
 from services.ventas import get_factura, procesar_nueva_venta
 from utils.db import db
-from utils.utils import check_session   
+from utils.utils import check_session, format_currency
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
 from sqlalchemy import text
@@ -120,3 +119,33 @@ def ventasUnCliente():
         articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
                          {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
     return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta)
+
+@bp_ventas.route('/get_vta_sucursales/<desde>/<hasta>')
+@check_session
+def get_vta_sucursales(desde, hasta):
+    ventas = db.session.execute(text("CALL get_vta_sucursales(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+    ventas_list = []
+    for venta in ventas:
+        ventas_list.append({
+            'col1': venta[0],
+            'col2': format_currency(venta[1]),
+            'col3': venta[2],
+            'col4': format_currency(venta[3])
+        })
+    return jsonify(success=True, ventas=ventas_list) 
+
+@bp_ventas.route('/get_vta_vendedores/<desde>/<hasta>')
+@check_session
+def get_vta_vendedores(desde, hasta):
+    ventas = db.session.execute(text("CALL get_vta_vendedores(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+    ventas_list = []
+    for venta in ventas:
+        ventas_list.append({
+            'col1': venta[0],
+            'col2': format_currency(venta[1]),
+            'col3': venta[2],
+            'col4': format_currency(venta[3])
+        })
+    return jsonify(success=True, ventas=ventas_list) 

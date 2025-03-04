@@ -2,11 +2,11 @@
 
 
 {% block body %}
-<h3 class="m-3">Comprobante de venta</h3>
+<h3 class="m-3">Comprobante de compra</h3>
 
 <div class="m-3 card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Factura de ventas</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Factura de compras</h6>
     </div>
     <div class="card-body">
         <div class='input-group mb-3'>
@@ -14,20 +14,17 @@
                 <div class="row">
                     <div class="col-2">
                         <label for="id">#id</label>
-                        <input type="number" class="form-control" name="id" id="id" value="{{ factura.id }}">
+                        <input type="number" class="form-control" name="id" id="id" value="{{ factura.id }}" readonly>
                     </div>
                     <div class="col-5">
-                        <label for="cliente">Cliente</label>
+                        <label for="cliente">Proveedor</label>
                         <input type="text" class="form-control" name="cliente" id="cliente" value="{{ factura.nombre }}">
                     </div>    
                     <div class="col-2">
                         <label for="fecha">Fecha</label>
                         <input type="date" class="form-control" name="fecha" id="fecha" value="{{ factura.fecha }}">
                     </div>        
-                    <div class="col-3">
-                        <label for="lista">Lista</label>
-                        <input type="text" class="form-control" name="lista" id="lista" value="{{ factura.lista }}">
-                    </div>        
+                            
                 </div>
                 <div class="row">
                     <div class="col-3">
@@ -68,6 +65,7 @@
                                 <th>Cantiad</th>
                                 <th>Precio U.</th>
                                 <th>Precio F.</th>
+                                <th>Iva</th>
                             </tr>
                         </thead>
                         <tbody class="table-group-divider">
@@ -78,6 +76,7 @@
                                     <td>{{ item.cantidad }}</td>
                                     <td>{{ item.precio_unitario }}</td>
                                     <td>{{ item.precio_total }}</td>
+                                    <td>{{ item.iva }}</td>
                                 </tr>
                                 {% endfor %}    
                         </tbody>
@@ -109,8 +108,7 @@
             </div>
         </div>
 
-        <a href="{{ url_for('ventas.imprimir_factura_vta', id=factura.id) }}" class="btn btn-primary"> Imprimir </a>
-        <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=factura.id, idcliente=factura.idcliente) }}" class="btn btn-success"> Enviar al mail </a>
+        <a href="{{ url_for('proveedores.actualizar_precios_porcompras', id=factura.id) }}" class="btn btn-success"> Actualizar precios </a>
     </div>
 
 

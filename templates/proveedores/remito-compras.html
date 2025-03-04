@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+<h3 class="m-3">Comprobante de compra</h3>
+
+<div class="m-3 card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Factura de compras</h6>
+    </div>
+    <div class="card-body">
+        <div class='input-group mb-3'>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-2">
+                        <label for="id">#id</label>
+                        <input type="number" class="form-control" name="id" id="id" value="{{ remito.id }}" readonly>
+                    </div>
+                    <div class="col-5">
+                        <label for="cliente">Proveedor</label>
+                        <input type="text" class="form-control" name="cliente" id="cliente" value="{{ remito.nombre }}">
+                    </div>    
+                    <div class="col-2">
+                        <label for="fecha">Fecha</label>
+                        <input type="date" class="form-control" name="fecha" id="fecha" value="{{ remito.fecha }}">
+                    </div>        
+                            
+                </div>
+            </div>    
+        </div>
+
+        <div class="m-3 card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Artículos remitidos</h6>
+            </div>
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-borderless table-dark align-middle">
+                        <thead class="table-light">
+                            <caption>
+                                Artículos
+                            </caption>
+                            <tr>
+                                <th>Código</th>
+                                <th>Detalle</th>
+                                <th>Cantiad</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for item in items %}    
+                                <tr class="table-light">
+                                    <td scope="row">{{ item.codigo }}</td>
+                                    <td>{{ item.detalle }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                </tr>
+                                {% endfor %}    
+                        </tbody>
+                        <tfoot>
+                            
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}

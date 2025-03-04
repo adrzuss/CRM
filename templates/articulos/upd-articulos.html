@@ -1,13 +1,21 @@
 {% extends 'base.html' %}
 {% block body %}
-    <form action="{{ url_for('articulos.update_articulo', id=articulo.id) }}" id="articulo_form" method="post" enctype="multipart/form-data" >
+    {% if articulo.id %}
+        <form action="{{ url_for('articulos.update_articulo', id=articulo.id) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" >
+    {% else %}
+        <form action="{{ url_for('articulos.update_articulo', id=0) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" >
+    {% endif %}
     <div class="row justify-content-md-center m-3">
         <div class="row">
             <div class="col-8">
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <h3 class="m-3">Modificacion de artículos</h3>
+                            {% if articulo.id %}
+                                <h3 class="m-3">Modificacion de artículos</h3>
+                            {% else %}
+                                <h3 class="m-3 text-uno-bold">Nuevo artículos</h3>
+                            {% endif %}
                             <div class="card-body">
                                 <div class="row">
                                     <div class="mb-3 col-2"> 
@@ -15,26 +23,44 @@
                                         <input class="form-control" type="text" name="id" id="id" value="{{ articulo.id }}" readonly>
                                     </div>
                                     <div class="mb-3 col-2"> 
-                                        <label for="codigo">Código</label>
+                                        <label for="codigo">Código<span style="color: red">*</span></label>
                                         <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}">
                                     </div>
                                     <div class="mb-3 col-8">
-                                        <label for="detalle">Detalle</label>
+                                        <label for="detalle">Detalle<span style="color: red">*</span></label>
                                         <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle" value="{{ articulo.detalle }}">
                                     </div>    
                                 </div>    
                                 
                                 <div class="row">
                                     <div class="mb-3 col-3">
-                                        <label for="precio">Costo</label>
-                                        <input class="form-control" type="text" name="costo" id="costo" placeholder="Ingrese el precio" value="{{ articulo.costo }}">
+                                        <label for="precio">Costo<span style="color: red">*</span></label>
+                                        <input class="form-control precio" type="number" step="0.01" min="0" name="costo" id="costo" placeholder="Ingrese el precio" value="{{ articulo.costo }}" required>
+                                    </div>
+                                    
+                                    <div class="col-3 mb-3">
+                                        <label for="impint">Imp. int.<span style="color: red">*</span></label>
+                                        <input class="form-control precio" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese imp. internos" value="{{ articulo.impint }}" required >
                                     </div>    
-                            
+                                    <div class="col-3 mb-3">
+                                        <label for="exento">% Exento<span style="color: red">*</span></label>
+                                        <input class="form-control precio" type="number" step="0.01" min="0" name="exento" id="exento" placeholder="Ingrese % exento" value="{{ articulo.exento }}" required >
+                                    </div>    
+                                </div>
+                                <div class="row">
                                     <div class="mb-3 col-2">
-                                        <label for="idiva">IVA:</label>
+                                        <label for="idiva">IVA:<span style="color: red">*</span></label>
                                         <select class="form-control" id="idiva" name="idiva" required value="{{ articulo.idiva }}">
                                         {% for iva in ivas %}
                                             <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
+                                        {% endfor %}
+                                        </select>
+                                    </div>    
+                                    <div class="mb-3 col-2">
+                                        <label for="idib">Ing brutos:<span style="color: red">*</span></label>
+                                        <select class="form-control" id="idib" name="idib" required value="{{ articulo.idib }}">
+                                        {% for ib in ibs %}
+                                            <option value="{{ ib.id }}">{{ ib.descripcion }}</option>
                                         {% endfor %}
                                         </select>
                                     </div>    
@@ -53,7 +79,7 @@
                                 </div>    
                                 <div class="row">
                                     <div class="col-6 mb-3">
-                                        <label for="idtipoarticulo">Tipo de articulo:</label>
+                                        <label for="idtipoarticulo">Tipo de articulo:<span style="color: red">*</span></label>
                                         <select class="form-select" id="idtipoarticulo" name="idtipoarticulo" required>
                                         {% for tipoarticulo in tipoarticulos %}
                                             {% if articulo.idtipoarticulo == tipoarticulo.id %}
@@ -77,7 +103,7 @@
                                 <div class="row">
                                     
                                     <div class="col-7 mb-3">
-                                        <label for="idrubro">Rubro:</label>
+                                        <label for="idrubro">Rubro:<span style="color: red">*</span></label>
                                         <select class="form-control" id="idrubro" name="idrubro" required>
                                         {% for rubro in rubros %}
                                             {% if rubro.id == articulo.idrubro %}
@@ -90,6 +116,7 @@
                                     </div>    
                                     
                                 </div>
+                                <label class="text-dos-bold">Datos obligatorios <span style="color: red">*</span></label>
                             </div>  
                         </div>
                     </div>    
@@ -121,20 +148,20 @@
                             {% for lista in listas_precio %}
                                 <div class="row" id="precio">
                                     <div class="col-md-1 mb-3">
-                                        <label for="idlista{{loop.index}}">#Lista</label>
+                                        <label for="idlista{{loop.index}}">#Lista<span style="color: red">*</span></label>
                                         <input class="form-control" type="text" name="precio[{{loop.index}}][idlista]" id="precio[{{loop.index}}][idlista]" value="{{ lista.id }}" readonly>
                                     </div> 
                                     <div class="col-md-3 mb-3">
-                                        <label for="lista{{loop.index}}">Lista</label>
+                                        <label for="lista{{loop.index}}">Lista<span style="color: red">*</span></label>
                                         <input class="form-control" type="text" name="precio[{{loop.index}}][lista]" id="precio[{{loop.index}}][lista]" value="{{ lista.nombre }}" readonly>
                                     </div>    
 
                                     <div class="col-md-3 mb-3">
-                                        <label for="pvp{{loop.index}}">Precio V.P.</label>
-                                        <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}">
+                                        <label for="pvp{{loop.index}}">Precio V.P.<span style="color: red">*</span></label>
+                                        <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}" required >
                                     </div>    
                                     <div class="col-md-2 mb-3">
-                                        <label for="markaup{{loop.index}}">Markup</label>
+                                        <label for="markaup{{loop.index}}">Markup<span style="color: red">*</span></label>
                                         <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup }}">
                                     </div>    
                                     <div class="col-md-3 mb-3">
@@ -162,7 +189,11 @@
                                     </div>
                                     <div class="col-2">
                                         <label for="stock">Stock</label>
-                                        <input type="text" class="form-control" value="{{ stock.stock_actual }}" readonly>
+                                        {% if stock.stock_actual < 0 %}
+                                            <input type="text" class="form-control" value="{{ stock.stock_actual }}" readonly style="color: red">
+                                        {% else %}
+                                            <input type="text" class="form-control" value="{{ stock.stock_actual }}" readonly>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="row">
@@ -186,12 +217,18 @@
         <div class="card-body">
             <div class="row">
                 <button class="btn btn-exito col-2 m-3" type="submit">Grabar</button>
-                <a class="btn btn-primario col-2 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
+                <a class="btn btn-peligro col-2 m-3" href="{{ url_for('articulos.articulos') }}">Cancelar</button>
+                {% if articulo.id %}
+                    <a class="btn btn-primario col-2 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
+                {% else %}
+                    <a class="btn btn-primario col-2 m-3" href="#" enabled="false">Componer</a>
+                {% endif %}
             </div>
         </div>
     </div>      
     </form>
     <script src="/static/js/upd_articulos.js"></script>
+    <script src="/static/js/utilidades.js"></script>
     
 {% endblock %}
 

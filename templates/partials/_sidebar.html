@@ -99,7 +99,8 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Artículos</h6>
-                        <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">ABM de artículos</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.update_articulo', id=0) }}">Alta de artículos</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">Listado de artículos</a>
                         <a class="collapse-item" href="{{ url_for('articulos.rubros_marcas') }}">Rubros y Marcas</a>
                         <a class="collapse-item" href="{{ url_for('articulos.ing_balance') }}">Ingreso de balance</a>
                         <a class="collapse-item" href="{{ url_for('articulos.remitos_sucursales') }}">Remito a sucursales</a>
@@ -157,6 +158,8 @@
                         <h6 class="collapse-header">Compras</h6>
                         <a class="collapse-item" href="{{ url_for('proveedores.compras') }}">Listado de compras</a>
                         <a class="collapse-item" href="{{ url_for('proveedores.nueva_compra') }}">Nueva compra</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.remitosComp') }}">Listado de remitos</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.nuevo_remitoComp') }}">Nuevo remito</a>
                     </div>
                     
                 </div>

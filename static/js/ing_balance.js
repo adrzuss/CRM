@@ -86,7 +86,7 @@ let contadorFilas = 0;
                     alert("No se encontraron articulos con ese detalle.");
                 }
             }
-       }
+        }
 
         function asignarArticuloElegido(articulo, itemDiv) {
             itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
@@ -155,6 +155,9 @@ let contadorFilas = 0;
                 </tr>`;
             tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
             contadorFilas++;
+            // Enfocar el nuevo input de código
+            const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+            nuevoInputCodigo.focus();
         });
 
         tablaItems.addEventListener("blur", (itemDiv) => {

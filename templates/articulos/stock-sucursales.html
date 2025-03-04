@@ -20,7 +20,15 @@
                         {% for articulo in listado %}
                             <tr class="">
                                 {% for campo in articulo %}
-                                    <td>{{ campo }}</td>
+                                    {% if (loop.index0 == 0)or(loop.index0 == 1) %}
+                                        <td>{{ campo }}</td>
+                                    {% else %} 
+                                        {% if campo < 0 %} 
+                                            <td style="color: red;text-align:center">{{ "{:,.2f}".format(campo) }}</td>
+                                        {% else %}
+                                            <td style="text-align: center;">{{ "{:,.2f}".format(campo) }}</td>
+                                        {% endif %}
+                                    {% endif %}    
                                 {% endfor %}
                             </tr>
                         {% endfor %}    

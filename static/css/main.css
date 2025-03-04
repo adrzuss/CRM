@@ -124,7 +124,15 @@ body{
 .precio-normal {
     color: blue;
     font-weight: bold;
+    text-align: right;
   }
+
+.precio-destacado {
+    color: magenta;
+    font-weight: bold;
+    text-align: right;
+  }
+
 
 .precio-danger {
     color: red;

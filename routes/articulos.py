@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from werkzeug.utils import secure_filename
 import os
 from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, Balance, ItemBalance, ArticuloCompuesto, RemitoSucursales, ItemRemitoSucs, CambioPrecios, CambioPreciosItem
-from models.configs import AlcIva, TipoArticulos, TipoBalances
+from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB
 from models.sucursales import Sucursales
 from services.articulos import get_listado_precios, obtenerStockSucursales, update_insert_articulo_compuesto, actualizarPrecio
 from services.articulos import actualizarStock, eliminarComp, obtenerArticulosMarcaRubro
@@ -52,7 +52,10 @@ def add_articulo():
     codigo = request.form['codigo']
     detalle = request.form['detalle']
     costo = request.form['costo']
+    impint = request.form['impint']
+    exento = request.form['exento']
     idiva = request.form['idiva']
+    idib = request.form['idib']
     idmarca = request.form['idmarca']
     idTipoArticulo = request.form['idtipoarticulo']
     esCompuesto = request.form.get("es_compuesto") != None
@@ -77,7 +80,7 @@ def add_articulo():
             return redirect('/articulos') 
     else:
         filename = ''    
-    articulo = Articulo(codigo, detalle, costo, idiva, idrubro, idmarca, idTipoArticulo, filename, esCompuesto)
+    articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idTipoArticulo=idTipoArticulo, filename=filename, esCompuesto=esCompuesto)
     db.session.add(articulo)
     db.session.commit()
     idarticulo = articulo.id
@@ -106,49 +109,89 @@ def add_articulo():
 def update_articulo(id):
     marcas = Marca.query.all()
     ivas = AlcIva.query.all()
+    ibs = AlcIB.query.all()
     rubros = Rubro.query.all()
     tipoarticulos = TipoArticulos.query.all()
-    articulo = Articulo.query.get(id)
-    listas_precios = db.session.query(
-                ListasPrecios.id.label('id'),
-                ListasPrecios.nombre.label('nombre'),
-                ListasPrecios.markup.label('markup'),
-                func.coalesce(Precio.precio, 0).label('precio'),
-                Precio.ult_modificacion.label('ult_modificacion')
-                ).outerjoin(
-                    Precio, and_(ListasPrecios.id == Precio.idlista, Precio.idarticulo == articulo.id)
-                ).filter(
-                    Articulo.id == articulo.id
-                ).order_by(
-                    ListasPrecios.id
-                ).all()
-    #stocks = db.session.query(Stock).join(Articulo, Stock.idarticulo == Articulo.id).filter(Articulo.id == articulo.id)
-    # Consulta para obtener el stock discriminado por sucursales
-    stocks = (
-        db.session.query(
-            Stock.actual.label("stock_actual"),
-            Stock.maximo.label("stock_maximo"),
-            Stock.deseable.label("stock_deseable"),
-            Stock.idsucursal.label("idsucursal"),
-            Sucursales.nombre.label("nombre_sucursal")
-        )
-        .join(Articulo, Stock.idarticulo == Articulo.id)  # Vincular Stock con Articulo
-        .join(Sucursales, Stock.idsucursal == Sucursales.id)  # Vincular Stock con Sucursales
-        .filter(Articulo.id == articulo.id)  # Filtrar por el ID del artículo
-        .all()  # Obtener los resultados
-    )
+    
     if request.method == 'GET':
-        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks)
+        if int(id) == 0:
+            print('nuevo articulo')
+            articulo = []
+            listas_precios = ListasPrecios.query.all()
+            stocks = []
+        else:    
+            print('actualizar articulo')
+            articulo = Articulo.query.get(id)
+            listas_precios = db.session.query(
+                        ListasPrecios.id.label('id'),
+                        ListasPrecios.nombre.label('nombre'),
+                        ListasPrecios.markup.label('markup'),
+                        func.coalesce(Precio.precio, 0).label('precio'),
+                        Precio.ult_modificacion.label('ult_modificacion')
+                        ).outerjoin(
+                            Precio, and_(ListasPrecios.id == Precio.idlista, Precio.idarticulo == articulo.id)
+                        ).filter(
+                            Articulo.id == articulo.id
+                        ).order_by(
+                            ListasPrecios.id
+                        ).all()
+            #stocks = db.session.query(Stock).join(Articulo, Stock.idarticulo == Articulo.id).filter(Articulo.id == articulo.id)
+            # Consulta para obtener el stock discriminado por sucursales
+            stocks = (
+                db.session.query(
+                    Stock.actual.label("stock_actual"),
+                    Stock.maximo.label("stock_maximo"),
+                    Stock.deseable.label("stock_deseable"),
+                    Stock.idsucursal.label("idsucursal"),
+                    Sucursales.nombre.label("nombre_sucursal")
+                )
+                .join(Articulo, Stock.idarticulo == Articulo.id)  # Vincular Stock con Articulo
+                .join(Sucursales, Stock.idsucursal == Sucursales.id)  # Vincular Stock con Sucursales
+                .filter(Articulo.id == articulo.id)  # Filtrar por el ID del artículo
+                .all()  # Obtener los resultados
+            )
+        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks)
+    
     if request.method == 'POST':
-        articulo.codigo = request.form['codigo']
-        articulo.detalle = request.form['detalle']
-        articulo.costo = request.form['costo']
-        articulo.idiva = request.form['idiva']
-        articulo.idtipoarticulo = request.form['idtipoarticulo']
-        articulo.es_compuesto = request.form.get("es_compuesto") != None
-        articulo.idmarca = request.form['idmarca']
-        articulo.idrubro = request.form['idrubro']
         
+        if (id == '0'):
+            try:
+                codigo=request.form['codigo']
+                detalle=request.form['detalle']
+                costo=request.form['costo']
+                exento=request.form['exento']
+                impint=request.form['impint']
+                idiva=request.form['idiva']
+                idib=request.form['idib']
+                idrubro=request.form['idrubro']
+                idmarca=request.form['idmarca']
+                idTipoArticulo=request.form['idtipoarticulo']
+                esCompuesto=request.form.get("es_compuesto") != None
+                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto) 
+                db.session.add(articulo)
+                
+            except Exception as e:
+                flash(f'Error grabando articulo nuevo: {e}', 'error')
+                return redirect('/articulos')
+        else:
+            try:
+                articulo = Articulo.query.get(id)
+                articulo.codigo = request.form['codigo']
+                articulo.detalle = request.form['detalle']
+                articulo.costo = request.form['costo']
+                articulo.exento = request.form['exento']
+                articulo.impint = request.form['impint']
+                articulo.idiva = request.form['idiva']
+                articulo.idib = request.form['idib']
+                articulo.idtipoarticulo = request.form['idtipoarticulo']
+                articulo.es_compuesto = request.form.get("es_compuesto") != None
+                articulo.idmarca = request.form['idmarca']
+                articulo.idrubro = request.form['idrubro']
+            except Exception as e: 
+                flash(f'Error grabando articulo modificado: {e}', 'error')
+                return redirect('/articulos')
+            
+        db.session.flush()
         # Manejar la imagen
         if 'imagen' not in request.files:
             flash('No file part')
@@ -160,7 +203,6 @@ def update_articulo(id):
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)  # Asegura que el nombre del archivo sea seguro para el sistema de archivos
                 file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))  # Guarda el archivo en la carpeta de subida
-                    
                 #imagen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)  # Guarda la ruta del archivo en la base de datos
                 imagen_path = filename
                 articulo.imagen = imagen_path
@@ -168,7 +210,7 @@ def update_articulo(id):
                 flash('Tipo de archivo inválido')
                 return redirect('/articulos')    
         
-        db.session.commit()
+        
             
         items = request.form  # Obtener todo el formulario
         item_count = 0  # Contador de items agregados
@@ -189,14 +231,7 @@ def update_articulo(id):
                     db.session.commit()
             except Exception as e:
                 flash(f'Error grabando precios {e}', 'error')
-        """
-        if 'deseable' in items:        
-            stock_deseable = convertir_decimal(request.form['deseable'])
-            stock_maximo = convertir_decimal(request.form['maximo'])
-            stocks[0].deseable = stock_deseable
-            stocks[0].maximo = stock_maximo
-            db.session.commit()
-        """        
+        
         flash('Articulo grabado')
         return redirect('/articulos')
 
@@ -242,8 +277,6 @@ def eliminarCompuesto(idarticulo, idart_comp):
 @bp_articulos.route('/cambio_precio', methods=['GET', 'POST'])
 @check_session
 def cambio_precio():
-    print(f'cambio de precio')
-    print(request.method)
     if request.method == 'POST':
         #---------------------
         fecha = request.form['fecha']
@@ -378,7 +411,6 @@ def lst_compuestos():
         
         # Procesar los resultados
         listado = resultado.fetchall()
-        print(listado)
         # Cerrar el resultado
         resultado.close()
         
@@ -527,8 +559,6 @@ def ing_balance():
         return redirect(url_for('index'))
     else:
         tipoBalances = TipoBalances.query.all()
-        for tipo in tipoBalances:
-            print(tipo.nombre)
         return render_template('ing-balance.html', tipoBalances=tipoBalances)
 
 # -------------------- Remitos a sucursales --------------------
@@ -541,9 +571,9 @@ def remitos_sucursales():
         iddestino = request.form['iddestino']
         fecha = request.form['fecha']
                 
-        nuevo_remito = RemitoSucursales(idsucursal=idsucursal, iddestino=iddestino, fecha=fecha, idusuario=session['idusuario'])
+        nuevo_remito = RemitoSucursales(idsucursal=idsucursal, iddestino=iddestino, fecha=fecha, idusuario=session['user_id'])
         db.session.add(nuevo_remito)
-        db.session.commit()
+        db.session.flush()
 
         idremito = nuevo_remito.id
         

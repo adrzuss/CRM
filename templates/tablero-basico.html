@@ -28,8 +28,8 @@
                                     Ventas </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800"></div>
                                 <hr>
-                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de hoy: {{ vta_hoy }} </div>
-                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de esta semana: {{ vta_semana }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de hoy: {{ op_hoy }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Ventas de esta semana: {{ op_semana }} </div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -48,11 +48,12 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Cta. cte. clientes
+                                    Operaciones en el mer
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800"> </div>
                                 <hr>
-                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo {{ saldo_clientes }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Op. este mes: {{ op_este_mes }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Op. este mes año ant: {{ op_este_mes_anterior }} </div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-address-book fa-2x text-gray-300"></i>
@@ -121,7 +122,7 @@
                     <!-- Card Header - Dropdown -->
                     <div
                         class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Ventas de los últimos 6 meses</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Los 10 productos mas vendidos</h6>
                         <div class="dropdown no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -140,11 +141,10 @@
                     <!-- Card Body -->
                     <div class="card-body">
                         <div class="chart-area">
-                            <canvas id="barrasEventos"></canvas>
-                            
+                            <canvas id="barrasMasVendidos"></canvas>
                             <script>
-                                mesess = {{ meses|tojson }};
-                                eventoss = {{ operaciones|tojson }};
+                                det_art = {{ detalles|tojson }};
+                                vtas_art = {{ cantidades|tojson }};
                             </script>
                             
                         </div>
@@ -152,13 +152,13 @@
                 </div>
             </div>
 
-            <!-- Pie Chart -->
+            
             <div class="col-xl-4 col-lg-5">
                 <div class="card shadow mb-4">
                     <!-- Card Header - Dropdown -->
                     <div
                         class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Cobranzas de hoy</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Últimas ventas de esta sucursal</h6>
                         <div class="dropdown no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -176,176 +176,34 @@
                     </div>
                     <!-- Card Body -->
                     <div class="card-body">
-                        <div class="chart-pie pt-4 pb-2">
-                            <canvas id="myPieChart"></canvas>
-                            <script>
-                                tipoPagos = {{ tipoPagoss|tojson }};
-                                cantPagos = {{ cantPagoss|tojson }};
-                            </script>    
-                        </div>
-                        <div class="mt-4 text-center small" id="coloresPie">
-                            
-                            <!--
-                            las leyendas y colores se establecen en chart-pie-demo.js    
-                            -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Content Row -->
-        <div class="row">
-
-            
-
-            <!-- tarjetas con información del lado derecho de la grilla -->
-            <div class="col-lg-12 mb-4">
-                <!-- Color System -->
-                <div class="row">
-                    
-                    <div class="col-lg-3 mb-4">
-                        {% for evento in proximosEventos %}
-                            <div class="card bg-primary text-white shadow">
-                                <div class="card-body">
-                                    Evento: {{ evento[1] }}
-                                    <hr class="sidebar-divider">
-                                    <!-- e.id, e.nombre_evento, e.lugar_evento, e.fecha, c.apellido, c.nombret, e.tipo_evento -->
-                                    <div class="text-white-50 small">Tipo: {{ evento[6] }}</div>
-                                    <div class="text-white-50 small">Fecha: {{ evento[3] }}</div>
-                                    <div class="text-white-50 small">Lugar: {{ evento[2] }}</div>
-                                    <div class="text-white-50 small">Cliente: {{ evento[4] }}, {{ evento[5] }}</div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="col-lg-3 mb-4">
-                        <!-- ct.id, ct.dia, ct.hora, ct.lugar_evento, c.apellido, c.nombre -->
-                        {% for cita in proximasCitas %}
-                            <div class="card bg-success text-white shadow">
-                                <div class="card-body">
-                                    Cita: {{cita[4]}}, {{cita[5]}}
-                                    <hr class="sidebar-divider">
-                                    <div class="text-white-50 small">Dia: {{ cita[1] }}</div>
-                                    <div class="text-white-50 small">Hora: {{ cita[2] }}</div>
-                                    <div class="text-white-50 small">Lugar evento: {{ cita[3] }}</div>
+                        <div class="table-responsive"                        >
+                            <table class="table display table-striped table-hover table-borderless align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Cliente</th>
+                                        <th scope="col">Vendedor</th>
+                                        <th scope="col">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for ultima_op in ultimas_op %}
+                                    <tr>
+                                        <td scope="row"> <a href="{{ url_for('ventas.ver_factura_vta', id=ultima_op[0]) }}">{{ ultima_op[1] }}</a></td>
+                                        <td>{{ ultima_op[3] }}</td>
+                                        <td>{{ "${:,.2f}".format(ultima_op[2]) }}</td>
+                                    </tr>
+                                    {% endfor %}
                                     
-                                </div>
-                            </div>
-                        {% endfor %}    
-                    </div>
-                    <div class="col-lg-3 mb-4">
-                        <!-- cc.id, cc.cuota, cc.vto_cuota, cc.importe, e.nombre_evento, c.apellido, c.nombre -->
-                        {% for cuota in proximasCuotas %}
-                            <div class="card bg-info text-white shadow">
-                                <div class="card-body">
-                                    Evento {{ cuota[4] }}
-                                    <hr class="sidebar-divider">
-                                    <div class="text-white-50 small">Cuota N°: {{ cuota[1] }}</div>
-                                    <div class="text-white-50 small">Vencimiento: {{ cuota[2] }}</div>
-                                    <div class="text-white-50 ">Importe: {{ cuota[3] }}</div>
-                                </div>
-                            </div>
-                        {% endfor %}    
-                    </div>
-                    <div class="col-lg-3 mb-4">
-                        {% for vencida in cuotasVencidas %}
-                        <div class="card bg-danger text-white shadow">
-                            <div class="card-body">
-                                Evento: {{ vencida[4] }}
-                                <hr class="sidebar-divider">
-                                <div class="text-white-50 small">Cuota N°: {{ vencida[1] }}</div>
-                                <div class="text-white-50 small">Vencimiento: {{vencida[2]}}</div>
-                                <div class="text-white-50">Importe: {{vencida[3]}}</div>
-                            </div>
+                                </tbody>
+                            </table>
                         </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <!--
-                    <div class="col-lg-6 mb-4">
-                        <div class="card bg-warning text-white shadow">
-                            <div class="card-body">
-                                Warning
-                                <div class="text-white-50 small">#f6c23e</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card bg-danger text-white shadow">
-                            <div class="card-body">
-                                Danger
-                                <div class="text-white-50 small">#e74a3b</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card bg-secondary text-white shadow">
-                            <div class="card-body">
-                                Secondary
-                                <div class="text-white-50 small">#858796</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card bg-light text-black shadow">
-                            <div class="card-body">
-                                Light
-                                <div class="text-black-50 small">#f8f9fc</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <div class="card bg-dark text-white shadow">
-                            <div class="card-body">
-                                Dark
-                                <div class="text-white-50 small">#5a5c69</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>    
-            -->    
-            <!-- 
-            <div class="col-lg-6 mb-4">
-
-                <!-- Illustrations ->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Illustrations</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center">
-                            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
-                                src="img/undraw_posting_photo.svg" alt="...">
-                        </div>
-                        <p>Add some quality, svg illustrations to your project courtesy of <a
-                                target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>, a
-                            constantly updated collection of beautiful svg images that you can use
-                            completely free and without attribution!</p>
-                        <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on
-                            unDraw &rarr;</a>
+                        
                     </div>
                 </div>
-
-                <!-- Approach ->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
-                    </div>
-                    <div class="card-body">
-                        <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce
-                            CSS bloat and poor page performance. Custom CSS classes are used to create
-                            custom components and custom utility classes.</p>
-                        <p class="mb-0">Before working with this theme, you should become familiar with the
-                            Bootstrap framework, especially the utility classes.</p>
-                    </div>
-                </div>
-
             </div>
-        -->
         </div>
+
+        
 
     </div>
     <!-- /.container-fluid -->
@@ -357,19 +215,7 @@
     <script src="/static/vendor/chart.js/Chart.min.js"></script>
 
     <!-- Page level custom scripts-->
-    <script src="/static/js/demo/chart-bar-demo.js"></script>
-
-    <script src="/static/js/demo/chart-pie-demo.js"></script>
+    <script src="/static/js/demo/chart-bar-tab-basico.js"></script>
 
 {% endblock %}
 
-<!-- 
-<script>
-    mesess = {{ meses|tojson }};
-    eventoss = {{ eventos|tojson }};
-</script>
-<script>
-    tipoEvento = {{ tipoEventos|tojson }};
-    cantTipoEvento = {{ cantTipoEventos|tojson }};
-</script>
--->

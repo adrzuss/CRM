@@ -58,6 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>`;
         tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
         contadorFilas++;
+        // Enfocar el nuevo input de código
+        const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+        nuevoInputCodigo.focus();
     });
 
     // Eliminar fila

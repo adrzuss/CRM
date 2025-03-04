@@ -38,7 +38,6 @@ def add_cliente():
 @check_session
 def get_cliente(id, tipo_operacion):
     #cliente = Clientes.query.get(id)
-    print(f'tipo iva owner: {session["tipo_iva"]}')
     cliente = db.session.query(
         Clientes.id.label('id'),
         Clientes.nombre.label('nombre'),

@@ -35,3 +35,38 @@ def convertir_decimal(valor):
         pass
 
     raise ValueError(f"El valor '{valor}' no es válido como decimal")
+
+def precio(PFinal, ImpInt, Exento, PrcBonif, Recargo, CoefIva, CoefIB):
+    Resultado = {}
+    AlicuotaIva = CoefIva - ((CoefIva * Exento) / 100)
+    PN = (PFinal - ImpInt)/(1+(AlicuotaIva / 100))
+    if (PrcBonif > 0):
+        Descuento = ((PN * PrcBonif) / 100)
+    else:
+        Descuento = Decimal(0)
+    PN = PN - Descuento
+    if (Recargo > 0):
+        MtoRecargo = ((PN * Recargo) / 100)
+    else:
+        MtoRecargo = Decimal(0)
+    PN = PN + MtoRecargo
+
+    AuxExento = PFinal * Exento / 100
+    Iva = PN * AlicuotaIva / 100
+
+    Resultado['Neto'] = Decimal(PN)
+    Resultado['Iva'] = Decimal(Iva)
+    Resultado['Exento'] = Decimal(AuxExento)
+    Resultado['PFinal'] = Decimal(PN + Iva + ImpInt)
+    if (Descuento > 0):
+        Resultado['Descuento'] = Decimal(PFinal - (PN + Iva + ImpInt))
+    else:
+        Resultado['Descuento'] = Decimal(0)
+    if (Recargo > 0):
+        Resultado['Recargo'] = Decimal(PFinal - (PN + Iva + ImpInt))
+    Resultado['ImpInt'] = Decimal(ImpInt)
+    if (CoefIB > 0):
+        Resultado['IngBto'] = Decimal(((PN + ImpInt)*CoefIB)/100)
+    else:
+        Resultado['IngBto'] = Decimal(0)
+    return Resultado

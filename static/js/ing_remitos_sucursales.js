@@ -1,4 +1,5 @@
 let isFormSubmited = false;
+let contadorFilas = 0;
 
         window.onbeforeunload = function() {
             if (!isFormSubmited) {
@@ -10,7 +11,7 @@ let isFormSubmited = false;
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('invoice_form');
             const btnAgregar = document.getElementById('agregarArticulo');
-            const btnGrabar = document.getElementById('grabarBalance');
+            const btnGrabar = document.getElementById('grabarRemSucursales');
         
             // Detectar tecla Enter en los inputs del formulario
             form.addEventListener('keydown', function(event) {
@@ -85,15 +86,17 @@ let isFormSubmited = false;
                     alert("No se encontraron articulos con ese detalle.");
                 }
             }
-       }
-
-        function asignarArticuloElegido(articulo, itemDiv) {
-            itemDiv.querySelector('.idarticulo').value = articulo.codigo;
-            asignarArticulo(articulo, itemDiv); 
         }
 
+        function asignarArticuloElegido(articulo, itemDiv) {
+            itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
+            asignarArticulo(articulo, itemDiv);; 
+        }
+
+
         function asignarArticulo(articulo, itemDiv) {
-            itemDiv.querySelector('.articulo_detalle').textContent = articulo.detalle;
+            itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
+            itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
         }
 
         function mostrarModalSeleccionArticulos(articulos, itemDiv) {
@@ -137,66 +140,52 @@ let isFormSubmited = false;
         }
 
 
-        document.getElementById('agregarArticulo').addEventListener('click', function() {
-            const itemsDiv = document.getElementById('items');
-            const itemCount = itemsDiv.children.length;
+        const tablaItems = document.querySelector("#tabla-items tbody");
 
-            const newItem = document.createElement('div');
-            newItem.classList.add('item');
+        // Agregar nueva fila
+        document.getElementById('agregarArticulo').addEventListener("click", () => {
+            const nuevaFila = `
+                <tr class="items">
+                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
+                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
+                    <td class="descripcion-articulo">-</td>
+                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
+                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
+                </tr>`;
+            tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+            contadorFilas++;
+            // Enfocar el nuevo input de código
+            const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+            nuevoInputCodigo.focus();
+        });
 
-            newItem.innerHTML = `
-                <div class="row m-3">
-                    <div class="col-2">
-                        <label for="idarticulo">Cod artículo:</label>
-                        <input type="text" name="items[${itemCount}][idarticulo]" class="form-control idarticulo" required>
-                    </div>    
-                    <div class="col-6">
-                        <label for="articulo_detalle">Detalle:</label>
-                        <span class="articulo_detalle text-uno-bold"></span>
-                    </div>    
-                    <div class="col-2">
-                        <label for="cantidad">Cantidad:</label>
-                        <input type="number" name="items[${itemCount}][cantidad]" class="cantidad form-control"  step="0.01" min="0.01" value='1' required>
-                    </div>    
-                    <div class="col-2">
-                        <button type="button" class="remove_item btn btn-danger">Eliminar</button>
-                    </div>
-                </div>    
-            `;
+        
+        tablaItems.addEventListener("blur", (itemDiv) => {
+            if (itemDiv.target.classList.contains("codigo-articulo")) {
+                const codigo = itemDiv.target.value;
+                const idlista = 1;
+                // Simulación de una búsqueda (deberías usar una API aquí)
+                fetchArticulo(codigo, idlista, itemDiv)
+            }
+            
+        }, true);
 
-            itemsDiv.appendChild(newItem);
-
-            // Dar foco al input de idarticulo
-            const idArticuloInput = newItem.querySelector('.idarticulo');
-            idArticuloInput.focus();
-
-            newItem.querySelector('.idarticulo').addEventListener('blur', function() {
-                const idarticulo = this.value;
-                const idlista = 1
-                fetchArticulo(idarticulo, idlista, newItem);
-            });
-
-            newItem.querySelector('.remove_item').addEventListener('click', function() {
-                removeItem(newItem);
-            });
-
+        // Eliminar fila
+        tablaItems.addEventListener("click", (itemDiv) => {
+            if (itemDiv.target.classList.contains("btn-eliminar")) {
+                itemDiv.target.closest("tr").remove();
+            }
         });
 
         document.getElementById('invoice_form').addEventListener('submit', function(event) {
-            if (document.getElementById('iddestino').value === document.getElementById('id_sucursal').value){
-                alert('No puede enviar el remito a la misma sucursal');
+            if (document.querySelectorAll('#tabla-items tbody').length === 0) {
                 event.preventDefault();
-                return false;
-            }
-
-            if (document.querySelectorAll('#items .item').length === 0) {
-                event.preventDefault();
-                alert('Debe agregar al menos un item al remito a sucursales');
+                alert('Debe agregar al menos un item al remito');
                 event.preventDefault();
                 return false;
             } 
             
-            if (confirm('¿Grabar el ingreso de remito a sucursales?') == false) {
+            if (confirm('¿Grabar el remito a sucursal?') == false) {
                 event.preventDefault();
             }
             else{

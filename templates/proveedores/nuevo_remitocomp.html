@@ -1,32 +1,32 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h1 class="m-3">Remito a sucursales</h1>
+    <h1 class="m-3">Nuevo remito de compra</h1>
     <div class="m-2">
         <div class="container-fluid">
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
-                    <h4 class="m-2">Ingreso de artículos de sucursal</h4>
-                    <label for="id_sucursal" class="m-2"> <span class="sucursal_span"> {{ session['nombre_sucursal'] }} </span> </label>
-                    <input type="text" name="id_sucursal" id="id_sucursal" class="form-control" value="{{ session['id_sucursal'] }}" readonly hidden>  
-
+                    <div class="row">
+                        <h4 class="m-2 col-5">Proveedor</h4>
+                    </div>
+                    
                     <!-- Modal para seleccionar cliente y articulos -->
-                    {% include 'partials/_modal-articulos.html' %}
+                    {% include 'partials/_modal-proveedor.html' %}
 
                     <div class="cardbody">
                         <div class="row m-3">
                             <div class="col-md-2">
+                                <label for="idproveedor">Proveedor:</label>
+                                <input class="form-control" type="text" name="idproveedor" id="idproveedor" required>
+                            </div>    
+                            <div class="col-md-5">
+                                <label for="proveedor_nombre">Nombre del Proveedor:</label>
+                                <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+                            </div>    
+                            <div class="col-md-5">
                                 <label for="fecha">Fecha:</label>
                                 <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
                             </div>    
-                            <div class="col-7 mb-3">
-                                <label for="iddestino">Destino:</label>
-                                <select class="form-control" id="iddestino" name="iddestino" required>
-                                {% for sucursal in sucursales %}
-                                    <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
-                                {% endfor %}
-                                </select>
-                            </div>   
                         </div>    
                     </div>    
                 </div>    
@@ -52,14 +52,14 @@
                             </table>
                         </div>
                     </div>
-                </div>
+                </div>    
 
                 <div class="row">
                     <button class="btn btn-secondary col-2 m-2" type="button" id="agregarArticulo">Agregar Item F4</button>
                 </div>
 
                 <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarRemSucursales">Guardar Remito F9</button>
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarCompra">Guardar Factura F9</button>
                 </div>
 
             </form>
@@ -72,5 +72,6 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <script src="/static/js/ing_remitos_sucursales.js"></script>
+    <script src="/static/js/nuevo_remito.js"></script>
+        
 {% endblock %}

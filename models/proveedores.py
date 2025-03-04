@@ -7,6 +7,7 @@ class Proveedores(db.Model):
     email = db.Column(db.String(100))
     telefono  = db.Column(db.String(20))
     documento = db.Column(db.String(13))
+    direccion = db.Column(db.String(80))
     id_tipo_doc = db.Column(db.Integer, db.ForeignKey('tipo_doc.id'))
     id_tipo_iva = db.Column(db.Integer, db.ForeignKey('tipo_iva.id'))
     
@@ -24,6 +25,9 @@ class FacturaC(db.Model):
     idproveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Numeric(20,6), nullable=False)
+    iva = db.Column(db.Numeric(20,6), nullable=False)
+    exento = db.Column(db.Numeric(20,6), nullable=False)
+    impint = db.Column(db.Numeric(20,6), nullable=False)
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
     idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
     idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
@@ -31,10 +35,13 @@ class FacturaC(db.Model):
     proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
     pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
     
-    def __init__(self, idproveedor, fecha, total, idsucursal, idtipocomprobante, idusuario):
+    def __init__(self, idproveedor, fecha, total, iva=0, exento=0, impint=0, idsucursal=0, idtipocomprobante=0, idusuario=0):
         self.idproveedor = idproveedor
         self.fecha = fecha
         self.total = total
+        self.iva = iva
+        self.exento = exento    
+        self.impint = impint
         self.idsucursal = idsucursal
         self.idtipocomprobante = idtipocomprobante
         self.idusuario = idusuario
@@ -47,16 +54,24 @@ class ItemC(db.Model):
     cantidad = db.Column(db.Numeric(20,6), nullable=False)
     precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
     precio_total = db.Column(db.Numeric(20,6), nullable=False)
+    iva = db.Column(db.Numeric(20,6), nullable=False)
+    idalciva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'), nullable=False)   
+    exento = db.Column(db.Numeric(20,6), nullable=False)
+    impint = db.Column(db.Numeric(20,6), nullable=False)
     articulo = db.relationship('Articulo', backref=db.backref('itemsc', lazy=True))
     factura = db.relationship('FacturaC', backref=db.backref('itemsc', lazy=True))
     
-    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total):
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, iva=0, idalciva=0, exento=0, impint=0):
         self.idfactura = idfactura
         self.id = id
         self.idarticulo = idarticulo
         self.cantidad = cantidad
         self.precio_unitario = precio_unitario    
         self.precio_total = precio_total
+        self.iva = iva
+        self.idalciva = idalciva
+        self.exento = exento
+        self.impint = impint
     
 class PagosFC(db.Model):
     __tablename__ = 'pagos_fc'
@@ -70,3 +85,35 @@ class PagosFC(db.Model):
         self.idpago = idpago
         self.tipo = tipo
         self.total = total
+        
+class RemitoC(db.Model):
+    __tablename__ = 'remitoc'
+    id = db.Column(db.Integer, primary_key=True)
+    idproveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=False)
+    fecha = db.Column(db.Date, nullable=False)
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
+    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    usuario = db.relationship('Usuarios', backref=db.backref('remitoc', lazy=True))
+    proveedor = db.relationship('Proveedores', backref=db.backref('remitoc', lazy=True))
+        
+    def __init__(self, idproveedor, fecha, idsucursal=0, idusuario=0):
+        self.idproveedor = idproveedor
+        self.fecha = fecha
+        self.idsucursal = idsucursal
+        self.idusuario = idusuario
+        
+class ItemRC(db.Model):
+    __tablename__ = 'itemsrc'
+    idremito = db.Column(db.Integer, db.ForeignKey('remitoc.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), nullable=False)
+    cantidad = db.Column(db.Numeric(20,6), nullable=False)
+    articulo = db.relationship('Articulo', backref=db.backref('itemsrc', lazy=True))
+    remito = db.relationship('RemitoC', backref=db.backref('itemsrc', lazy=True))
+    
+    def __init__(self, idremito, id, idarticulo, cantidad ):
+        self.idremito = idremito
+        self.id = id
+        self.idarticulo = idarticulo
+        self.cantidad = cantidad
+        

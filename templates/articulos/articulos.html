@@ -10,10 +10,17 @@
      ver la posibilidd de al menos mostrar el precio de la primer lista de precios
      -->
     <div class="m-2">
+            <!--
             <div class="row justify-content-center align-items-center">
                 <div class="col-sm-10 m-3">
                     {% include 'partials/_alta-articulos.html' %}
                 </div>
+            </div>
+            -->
+            <div class="row ml-3">
+                <div class="col-sm-3">
+                    <a href="{{ url_for('articulos.update_articulo', id=0) }}" class="btn btn-primario">Nuevo artículo</a>
+                </div>    
             </div>
             <div class="row justify-content-center align-items-center">
                 <div class="col-12 m-3">

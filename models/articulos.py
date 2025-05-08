@@ -2,7 +2,7 @@ from utils.db import db
 
 class Articulo(db.Model):
     __tablename__ = 'articulos'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     codigo = db.Column(db.String(50), nullable=False)
     detalle = db.Column(db.String(200), nullable=False)
     costo = db.Column(db.Numeric(20,6), nullable=False)
@@ -70,7 +70,7 @@ class Precio(db.Model):
     idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), primary_key=True)
     idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
     precio = db.Column(db.Numeric(20,6), nullable=False)
-    ult_modificacion = db.Column(db.DateTime, nullable=False)
+    ult_modificacion = db.Column(db.Date, nullable=False)
     
     def __init__(self, idlista, idarticulo, precio, ult_modificacion):
         self.idlista = idlista
@@ -80,7 +80,7 @@ class Precio(db.Model):
 
 class Marca(db.Model):
     __tablename__ = 'marcas'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(100), nullable=False)
     articulos = db.relationship('Articulo', back_populates='marca')
     
@@ -89,7 +89,7 @@ class Marca(db.Model):
 
 class Rubro(db.Model):
     __tablename__ = 'rubros'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(100), nullable=False)
     articulos = db.relationship('Articulo', back_populates='rubro')
     
@@ -98,7 +98,7 @@ class Rubro(db.Model):
         
 class ListasPrecios(db.Model):
     __tablename__ = 'listas_precio'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(100), nullable=False)
     markup = db.Column(db.Numeric(20,6), nullable=False)
     
@@ -108,7 +108,7 @@ class ListasPrecios(db.Model):
         
 class Balance(db.Model):
     __tablename__ = 'balance'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     fecha = db.Column(db.Date, nullable=False)
     idtipo_balance = db.Column(db.Integer, db.ForeignKey('tipo_balances.id'))
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
@@ -142,12 +142,11 @@ class ItemBalance(db.Model):
         
 class RemitoSucursales(db.Model):
     __tablename__ = 'remito_sucursales'
-    id = db.Column(db.Integer, primary_key=True)
-    idusursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
-    iddestino = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
-    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'), nullable=False)
+    iddestino = db.Column(db.Integer, db.ForeignKey('sucursales.id'), nullable=False)
+    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     fecha = db.Column(db.DateTime)
-    
     usuario = db.relationship('Usuarios', backref=db.backref('remito_sucursales', lazy=True))
     
     def __init__(self, idsucursal, iddestino, idusuario, fecha):
@@ -163,14 +162,15 @@ class ItemRemitoSucs(db.Model):
     idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
     cantidad = db.Column(db.Numeric(20,6))
     
-    def __init__(self, idarticulo, idremito, cantidad):
+    def __init__(self, id, idarticulo, idremito, cantidad):
+        self.id = id
         self.idarticulo = idarticulo
         self.idremito = idremito
         self.cantidad = cantidad
         
 class CambioPrecios(db.Model):
     __tablename__ = 'cambio_precios'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     fecha = db.Column(db.Date, nullable=False)
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
     idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
@@ -190,8 +190,9 @@ class CambioPreciosItem(db.Model):
     precio_de = db.Column(db.Numeric(20,6), nullable=False)
     precio_a = db.Column(db.Numeric(20,6), nullable=False)
     
-    def __init__(self, idcambioprecio, idarticulo, precio_de, precio_a):
+    def __init__(self, idcambioprecio, id, idarticulo, precio_de, precio_a):
         self.idcambioprecio = idcambioprecio
+        self.id = id
         self.idarticulo = idarticulo
         self.precio_de = precio_de
         self.precio_a = precio_a

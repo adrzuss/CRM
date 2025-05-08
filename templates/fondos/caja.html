@@ -14,6 +14,17 @@
                                 <input type="date" class="form-control" name="fecha" id="fecha" aria-describedby="helpId"  placeholder="Fecha de la caja" value="{{ fecha }}"/>
                                 <small id="helpId" class="form-text text-muted">Ingrese la fecha de la caja a consultar</small>
                             </div>
+                            <div class="mb-3 col-4">
+                                <label for="usuario" class="form-label">Usuario</label>
+                                <select class="form-select" name="usuario" id="usuario" aria-label="Seleccione un usuario">
+                                    <option value="">Seleccione un usuario</option>
+                                    {% for usuario in usuarios %}
+                                        <option value="{{ usuario['id'] }}">{{ usuario['nombre'] }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small id="helpId" class="form-text text-muted">Seleccione el usuario de la caja</small>
+
+                            </div>
                             <div class="col-4 mt-4">
                                 <button type="submit" class="btn btn-exito ">Consultar</button>
                             </div>    

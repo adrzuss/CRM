@@ -40,7 +40,7 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de clientes:</h6>
-                        <a class="collapse-item" href="{{ url_for('clientes.clientes') }}">ABM de clientes</a>
+                        <a class="collapse-item" href="{{ url_for('clientes.clientes', id=0) }}">ABM de clientes</a>
                         <a class="collapse-item" href="{{ url_for('ctactecli.saldoscli') }}">Cta. cte. de clientes</a>
                     </div>
                 </div>
@@ -61,7 +61,9 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Ventas de artículos:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.nuevo_remito') }}">Nuevo remito</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
+
                     </div>
                 </div>
             </li>
@@ -209,9 +211,9 @@
 
             <!-- Sidebar Message -->
             <div class="sidebar-card d-none d-lg-flex">         
-                <img class="sidebar-card-illustration mb-2" src="/static/img/softtechweb.png" alt="...">
+                <img class="sidebar-card-illustration mb-2" src="{{ url_for('static', filename='img/softtechweb.png')}}" alt="...">
                 <p class="text-center mb-2"><strong>Desarrollador por</strong> SoftTech Web</p>
-                <a class="btn btn-primary btn-sm" href="https://soft-tech-solutions-git.github.io/">Visite nuestra página</a>
+                <a class="btn btn-primary btn-sm" href="https://softtech-system.com">Visite nuestra página</a>
             </div>
 
         </ul>

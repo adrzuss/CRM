@@ -57,6 +57,12 @@
                         </div>
                         <div class="row">
                             <div class="col-3 mb-3"> 
+                                <label for="dias_vto_cc">Días de vencimiento CTA CTE (0 a 90)</label>
+                                <input class="form-range" type="range" min="0" max="90" name="dias_vto_cc" id="dias_vto_cc" value="{{ configuracion.dias_vto_cta_cte }}" required>
+                                <label id="valor">{{ configuracion.dias_vto_cta_cte }}</label>
+                            </div>
+                            
+                            <div class="col-3 mb-3"> 
                                 <label for="iva">Vencimiento</label>
                                 <input class="form-control" type="text" name="vencimiento" id="vencimiento" value="{{ configuracion.vencimiento }} " readonly>
                             </div>

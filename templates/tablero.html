@@ -52,7 +52,8 @@
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800"> </div>
                                 <hr>
-                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo {{ saldo_clientes }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo {{ saldo_clientes_actual }} </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800"> Saldo vencido {{ saldo_clientes_vencido }} </div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-address-book fa-2x text-gray-300"></i>
@@ -399,12 +400,12 @@
                                     </tr>
                                 </thead>
                                 <tbody class="table-group-divider">
-                                    {% for venta in ventas %}
+                                    {% for venta in ventasSucursales %}
                                         <tr class="table-light">
-                                            <td scope="row">{{ venta[0] }}</td>
-                                            <td>{{ "${:,.2f}".format(venta[1]) }}</td>
-                                            <td>{{ venta[2] }}</td>
-                                            <td>{{ "${:,.2f}".format(venta[3]) }}</td>
+                                            <td scope="row">{{ venta.sucursal }}</td>
+                                            <td>{{ venta.total }}</td>
+                                            <td>{{ venta.cantidad }}</td>
+                                            <td>{{ venta.tktProm }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -466,12 +467,12 @@
                                     </tr>
                                 </thead>
                                 <tbody class="table-group-divider">
-                                    {% for venta in ventas %}
+                                    {% for venta in ventasVendedores %}
                                         <tr class="table-light">
-                                            <td scope="row">{{ venta[0] }}</td>
-                                            <td>{{ "${:,.2f}".format(venta[1]) }}</td>
-                                            <td>{{ venta[2] }}</td>
-                                            <td>{{ "${:,.2f}".format(venta[3]) }}</td>
+                                            <td scope="row">{{ venta.vendedor }}</td>
+                                            <td>{{ venta.total }}</td>
+                                            <td>{{ venta.cantidad }}</td>
+                                            <td>{{ venta.tktProm }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -491,13 +492,13 @@
 
 {% block js_script %}
     <!-- Page level plugins -->
-    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js')}}"></script>
 
     <!-- Page level custom scripts-->
-    <script src="/static/js/demo/chart-bar-demo.js"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-bar-demo.js')}}"></script>
 
-    <script src="/static/js/demo/chart-pie-demo.js"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js')}}"></script>
 
-    <script src="/static/js/tablero_gerencial.js"></script>
+    <script src="{{ url_for('static', filename='js/tablero_gerencial.js')}}"></script>
 {% endblock %}
 

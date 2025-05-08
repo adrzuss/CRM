@@ -1,0 +1,45 @@
+{% extends 'base.html'%}
+
+{% block body %}
+<div class="m-3">
+    <h2>Puntos de venta</h2>
+</div>
+<div class="m-2">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-sm-10 m-3">
+            {% include 'partials/_alta-punto-venta.html' %}
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center">
+        <div class="col-12 m-3">
+            {% include 'partials/_lst-puntos-ventas.html' %}
+        </div>     
+    </div>    
+     
+</div>   
+
+<script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js')}}"></script>
+<script src="{{ url_for('static', filename='vendor/datatable/dataTables.js')}}"></script>
+
+<script>q
+
+new DataTable('#dataTable', {
+    iDisplayLength: 50,
+    language: {
+        entries: {
+            _: "entradas",
+            1: "entrada"
+        },
+        sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
+        sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+        sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+        sLengthMenu: "_MENU_ _ENTRIES_ por página",
+        sSearch: 'Buscar',
+        sSearchPlaceholder: 'Buscar registros'
+    }
+});
+
+</script>
+
+
+{% endblock %}

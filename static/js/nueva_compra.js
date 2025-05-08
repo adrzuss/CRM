@@ -49,22 +49,107 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+
 function asignarProveedor(proveedor) {
+  document.getElementById("idproveedor").value = proveedor.id;
   document.getElementById("proveedor_nombre").value = proveedor.nombre;
-  document.getElementById("tipo_comprobante").innerHTML = "Tipo de factura: <span style='color: red; font-weight: bold'>" + proveedor.tipo_comprobante + "</span>";
-  document.getElementById("id_tipo_comprobante").value = proveedor.id_tipo_comprobante;
-  
+  obtener_remitos(proveedor.id); // Llamar a la función para obtener remitos
 }
 
-async function fetchProveedor(id) {
-  const response = await fetch(`/get_proveedor/${id}/${1}`);
+async function obtener_remitos(idproveedor) {
+  const response = await fetch(`/get_remitos/${idproveedor}`);
+  const data = await response.json();
+  if (data.length > 0) {
+      const remitosSelect = document.getElementById("remitos_select");
+      remitosSelect.innerHTML = `<ul class='list-group'></ul>`; // Limpiar el select de remitos
+      data.forEach((remito, index) => {
+          const fecha = new Date(remito.fecha); // Convertir la fecha a un objeto Date
+          const dia = String(fecha.getDate()).padStart(2, '0'); // Obtener el día con dos dígitos
+          const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // Obtener el mes (0-indexado, por eso +1)
+          const anio = fecha.getFullYear();
+          const option = document.createElement("li");
+          option.className = "list-group-item ml-2"; 
+          option.value = remito.id;
+          option.innerHTML = `<input class="form-check-input me-1" type="checkbox" id="checkbox${index}" name="remito[${index}][check]">
+                              <label class="form-check-label" for="firstCheckbox">${dia}/${mes}/${anio} - ${remito.nro_comprobante}</label>
+                              <input type="hidden" name="remito[${index}][id]" value="${remito.id}">`;
+          remitosSelect.appendChild(option);
+      });
+      remitosSelect.style.display = "block"; // Mostrar el select de remitos
+  }
+}
+
+function limpiarDatosProveedor() {
+  inputIdProveedor = document.getElementById("idproveedor");
+  inputIdProveedor.value = "";
+  inputIdProveedor.focus();
+}
+
+
+async function fetchProveedor(input) {
+  let response;
+  if (!isNaN(input)) {
+    // Si es un número, buscar por ID
+    response = await fetch(`/get_proveedor/${input}`); //1 venta
+  } else {
+    // Si es un nombre parcial, buscar por nombre
+    response = await fetch(
+      `/get_proveedores?nombre=${input}`
+    );
+  }
+
+  if (!response.ok) {
+    limpiarDatosProveedor();
+    console.error("Error en la búsqueda del proveedor");
+    return;
+  }
   const data = await response.json();
   if (data.success) {
     asignarProveedor(data.proveedor);
   } else {
-    document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
+    if (data.length > 1) {
+      // Si hay más de un resultado, mostrar un modal para seleccionar
+      mostrarModalSeleccionProveedores(data);
+    } else if (data.length === 1) {
+      // Si hay un solo resultado, asignar directamente
+      asignarProveedor(data[0]);
+    } else {
+      limpiarDatosProveedor();
+      alert("No se encontraron proveedores con ese nombre.");
+    }
+    //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
   }
 }
+
+function mostrarModalSeleccionProveedores(proveedores) {
+  // Crear el contenido del modal con las opciones de proveedor
+  const tituloModal = document.getElementById("clienteModalLabel");
+  tituloModal.textContent = "Seleccione un Proveedor";
+  const modalContent = document.getElementById("modalContent");
+  modalContent.innerHTML = "";
+  const listaClientes = document.createElement("ul");
+  listaClientes.classList.add("list-group");
+  modalContent.appendChild(listaClientes);
+
+  proveedores.forEach((proveedor) => {
+    const clienteOption = document.createElement("li");
+    clienteOption.classList.add("cliente-option");
+    clienteOption.classList.add("list-group-item");
+    clienteOption.textContent = `${proveedor.nombre} - Tel/Cel: ${proveedor.telefono}`;
+    clienteOption.onclick = () => {
+      asignarProveedor(proveedor);
+      $("#clienteModal").modal("hide");
+      // Enfocar el nuevo input de código
+      const proveedorInput = document.getElementById("idproveedor");
+      proveedorInput.focus();
+    };
+    listaClientes.appendChild(clienteOption);
+  });
+
+  // Mostrar el modal
+  $("#clienteModal").modal("show");
+} 
+
 
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
@@ -85,17 +170,18 @@ async function fetchArticulo(id, idlista, itemDiv) {
     if (data.articulo) {
       // Si se encuentra un articulo por ID, asignarlo directamente
       asignarArticulo(data.articulo, itemDiv);
+      
     } else {
       alert("No se encontraron articulos con ese ID.");
     }
   } else {
-    console.log(data);
     if (data.length > 1) {
       // Si hay más de un resultado, mostrar un modal para seleccionar
       mostrarModalSeleccionArticulos(data, itemDiv);
     } else if (data.length === 1) {
       // Si hay un solo resultado, asignar directamente
       asignarArticuloElegido(data[0], itemDiv);
+      
     } else {
       alert("No se encontraron articulos con ese detalle.");
     }
@@ -105,6 +191,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
 function asignarArticuloElegido(articulo, itemDiv) {
   itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
   asignarArticulo(articulo, itemDiv);
+  
 }
 
 function asignarArticulo(articulo, itemDiv) {
@@ -114,6 +201,7 @@ function asignarArticulo(articulo, itemDiv) {
   itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
   updateItemTotal(itemDiv);
   updateTotalFactura();
+  
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
@@ -258,7 +346,7 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
             <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
             <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
             <td class="descripcion-articulo">-</td>
-            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00"></td>
+            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00" step="0.01" min="0.01" required></td>
             <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
             <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
             <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>

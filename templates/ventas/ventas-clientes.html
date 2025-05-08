@@ -40,7 +40,7 @@
                         <tr>
                             <th>#ID Cliente</th>
                             <th>Nombre</th>
-                            <th>Fecha</th>
+                            <th>Operaciones</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -50,8 +50,8 @@
                             <tr class="table-light">
                                 <td scope="row">{{ venta.id }}</td>
                                 <td>{{ venta.nombre }}</td>
-                                <td>{{ venta.fecha }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(venta.total) }}</td>
+                                <td style="text-align:center">{{ venta.cantidad_total }}</td>
+                                <td style="text-align:center"> {{ venta.total_ventas|round(2) }}</td>
                                 <td>
                                     <form method="POST" action="{{ url_for('ventas.ventasUnCliente') }}">
                                         <input type="hidden" name="idCliente" value="{{ venta.id }}">

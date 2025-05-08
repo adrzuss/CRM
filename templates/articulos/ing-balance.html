@@ -6,7 +6,7 @@
         <div class="container-fluid">
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
-                    <h4 class="m-2">Ingreso de balance</h4>
+                    <h4 class="m-2">Ingreso de balance: {{ session['nombre_sucursal'] }}</h4>
 
                     <!-- Modal para seleccionar cliente y articulos -->
                     {% include 'partials/_modal-articulos.html' %}
@@ -73,5 +73,6 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <script src="/static/js/ing_balance.js"></script>
+    <script type="module" src="/static/js/utilidades.js"></script> 
+    <script type="module" src="/static/js/ing_balance.js"></script>
 {% endblock %}

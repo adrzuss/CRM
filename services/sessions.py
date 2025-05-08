@@ -41,14 +41,14 @@ def new_user(nombre, documento, telefono, mail, direccion, usuario, clave):
         return jsonify(success=False, error=str(e)), 404    
    
 def update_usuario(id, nombre, documento, telefono, mail, direccion, usuario, clave):
-    usuario = Usuarios.query.get(id)
-    usuario.nombre = nombre
-    usuario.documento = documento
-    usuario.telefono = telefono
-    usuario.mail = mail
-    usuario.direccion = direccion
-    usuario.usuario = usuario
-    usuario.clave = clave
+    user = Usuarios.query.get(id)
+    user.nombre = nombre
+    user.documento = documento
+    user.telefono = telefono
+    user.email = mail
+    user.direccion = direccion
+    user.usuario = usuario
+    user.clave = clave
     db.session.commit()
     
    

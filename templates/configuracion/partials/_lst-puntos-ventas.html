@@ -1,0 +1,89 @@
+<div class="m-3 card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Listado de puntos de ventas por sucursales</h6>
+    </div>
+    <div class="card-body">
+        <div class='input-group mb-3'>
+            
+        </div>
+        <div class="table-responsive">
+            
+            <table class="display table table-bordered table-striped" id="dataTable" width="100%">
+                
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Pto vta.</th>
+                        <th scope="col">Sucursal</th>
+                        {% if session['tipo_iva'] == 1 %}
+                            <th scope="col">Ult. F A</th>
+                            <th scope="col">Ult. NC A</th>
+                            <th scope="col">Ult. ND A</th>
+                            <th scope="col">Ult. F B</th>
+                            <th scope="col">Ult. NC B</th>
+                            <th scope="col">Ult. ND B</th>
+                        {% else %}
+                            <th scope="col">Ult. F C</th>
+                            <th scope="col">Ult. NC C</th>
+                            <th scope="col">Ult. ND C</th>
+                        {% endif %}
+                        <th scope="col">Ult. Rem X</th>
+                        <th scope="col">Ult. Rec X</th>
+                        <th scope="col" style="width: 15%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tfoot class="thead-dark">
+                    <tr>
+                        <th scope="col">#Id</th>
+                        <th scope="col">Pto vta.</th>
+                        <th scope="col">Sucursal</th>
+                        {% if session['tipo_iva'] == 1 %}
+                            <th scope="col">Ult. F A</th>
+                            <th scope="col">Ult. NC A</th>
+                            <th scope="col">Ult. ND A</th>
+                            <th scope="col">Ult. F B</th>
+                            <th scope="col">Ult. NC B</th>
+                            <th scope="col">Ult. ND B</th>
+                        {% else %}
+                            <th scope="col">Ult. F C</th>
+                            <th scope="col">Ult. NC C</th>
+                            <th scope="col">Ult. ND C</th>
+                        {% endif %}
+                        <th scope="col">Ult. Rem X</th>
+                        <th scope="col">Ult. Rec X</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for punto in puntos_venta %}
+                    <tr class="">
+                        <td scope="row">{{ punto.id }}</td>
+                        <td>{{ punto.punto_vta }}</td>
+                        <td>{{ punto.sucursal.nombre }}</td>
+                        {% if session['tipo_iva'] == 1 %}
+                            <td>{{ punto.ultima_fac_a }}</td>
+                            <td>{{ punto.ultima_nc_a }}</td>
+                            <td>{{ punto.ultima_deb_a }}</td>
+                            <td>{{ punto.ultima_fac_b }}</td>
+                            <td>{{ punto.ultima_nc_b }}</td>
+                            <td>{{ punto.ultima_deb_b }}</td>
+                        {% else %}
+                            <td>{{ punto.ultima_fac_c }}</td>
+                            <td>{{ punto.ultima_nc_c }}</td>
+                            <td>{{ punto.ultima_deb_c }}</td>
+                        {% endif %}
+                        <td>{{ punto.ultimo_rem_x }}</td>
+                        <td>{{ punto.ultimo_rec_x }}</td>
+                        <td>
+                            <a href="{{ url_for('configuraciones.puntos_venta', id=punto.id) }}" class="btn btn-primary">Editar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+

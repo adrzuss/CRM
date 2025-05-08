@@ -1,14 +1,51 @@
-from flask import session, redirect, url_for, render_template
-from app import create_app
+from flask import Flask, session, redirect, url_for, render_template
 from sqlalchemy.exc import OperationalError
 from services.configs import getOwner, getTareaUsuario
 from utils.db import db
 from utils.utils import check_session
 
+from utils.config import Config
+from routes.sessions import bp_sesiones
+from routes.tableros import bp_tableros
+from routes.clientes import bp_clientes
+from routes.ctactecli import bp_ctactecli
+from routes.articulos import bp_articulos
+from routes.ventas import bp_ventas
+from routes.proveedores import bp_proveedores
+from routes.ctacteprov import bp_ctacteprov
+from routes.configs import bp_configuraciones
+from routes.entidades_cred import bp_entidades
+from routes.fondos import bp_fondos
+
+def create_app():
+    app = Flask(__name__)
+    
+    app.config.from_object(Config)
+    #app.config['APPLICATION_ROOT'] = Config.APPLICATION_ROOT
+    #print(f"Session path: {app.config['SESSION_COOKIE_PATH']}")
+    app.register_blueprint(bp_sesiones)
+    app.register_blueprint(bp_tableros)
+    app.register_blueprint(bp_clientes)
+    app.register_blueprint(bp_ctactecli)
+    app.register_blueprint(bp_articulos)
+    app.register_blueprint(bp_ventas)
+    app.register_blueprint(bp_proveedores)
+    app.register_blueprint(bp_ctacteprov)
+    app.register_blueprint(bp_configuraciones)
+    app.register_blueprint(bp_entidades)
+    app.register_blueprint(bp_fondos)
+    
+    @app.before_request
+    def make_session_permanent():
+        session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
+        if not ('id_empresa' in session):
+            session['id_empresa'] = 1
+    return app
+
 try:
     app = create_app()
-except:
-    print("No se pudo iniciar la aplicación 1")
+except Exception as e:
+    print("No se pudo iniciar la aplicación 1:", str(e))
 
 try:
     with app.app_context():
@@ -17,7 +54,11 @@ try:
 except OperationalError:
     @app.route('/')
     def error_db():
-        return render_template("error.html", error="No se pudo iniciar la aplicación. Error de conexión a la base de datos.")
+        return render_template("error.html", error=f"No se pudo iniciar la aplicación. Error de conexión a la base de datos. {OperationalError}")
+except Exception as e:
+    @app.route('/')
+    def error_extra():
+        return render_template("error.html", error=f"No se pudo iniciar la aplicación. {str(e)}")   
 else:
     @app.route('/')
     @check_session
@@ -61,12 +102,12 @@ def page_not_found(e):
 # Manejador para error 500
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template("500.html", error="Error interno del servidor"), 500
+    return render_template("500.html", error=f"Error interno del servidor: {e}"), 500
 
 # Manejador para errores de base de datos
 @app.errorhandler(OperationalError)
 def database_error(e):
-    return render_template("error.html", tipoError="bd", error="No se pudo conectar a la base de datos"), 500
+    return render_template("error.html", tipoError="bd", error=f"No se pudo conectar a la base de datos: {e}"), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -38,6 +38,13 @@
     </div>
 
     <div class="card m-3">
+        <h4 class="m-3">Plan de cuentas</h4>
+        <div class="card-body">
+            {% include '/partials/_plan-ctas.html' %}
+        </div>
+    </div>
+
+    <div class="card m-3">
         <div class="row">
             <div class="col-5">
                 <h4 class="m-3">Tipo IVAs</h4>
@@ -54,4 +61,17 @@
         </div>
     </div>
 
+    <script>
+        var slider = document.getElementById("dias_vto_cc");
+        var output = document.getElementById("valor");
+        document.onload = function() {
+            
+            output.innerHTML = slider.value; // Display the default slider value
+        }    
+
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+            output.innerHTML = this.value;
+        }
+    </script>
 {% endblock %}

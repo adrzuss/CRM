@@ -21,10 +21,10 @@ document.getElementById('calcular_sucs').addEventListener('click', async functio
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
             var cell4 = row.insertCell(3);
-            cell1.textContent = venta.col1;
-            cell2.textContent = venta.col2;
-            cell3.textContent = venta.col3;
-            cell4.textContent = venta.col4;
+            cell1.textContent = venta.sucursal;
+            cell2.textContent = venta.total;
+            cell3.textContent = venta.cantidad;
+            cell4.textContent = venta.tktProm;
         });
     }    
 });
@@ -52,10 +52,10 @@ document.getElementById('calcular_vend').addEventListener('click', async functio
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
             var cell4 = row.insertCell(3);
-            cell1.textContent = venta.col1;
-            cell2.textContent = venta.col2;
-            cell3.textContent = venta.col3;
-            cell4.textContent = venta.col4;
+            cell1.textContent = venta.vendedor;
+            cell2.textContent = venta.total;
+            cell3.textContent = venta.cantidad;
+            cell4.textContent = venta.tktProm;
         });
     }    
 });

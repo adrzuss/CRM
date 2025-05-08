@@ -44,7 +44,9 @@
                             <th>Cliente</th>
                             <th>Fecha</th>
                             <th>Tipo</th>
+                            <th>Número</th>
                             <th>Total</th>
+                            <th>CAE</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -54,7 +56,14 @@
                                 <td scope="row">{{ factura.cliente }}</td>
                                 <td>{{ factura.fecha.strftime("%d-%m-%Y") }}</td>
                                 <td>{{ factura.tipo_comprobante }}</td>
+                                <td>{{ factura.nro_comprobante }}</td>
                                 <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
+                                {% if factura.cae == None %}
+                                    <td style="text-align:center">No aplica</td>
+                                {% else %}
+                                    <td style="text-align:center">{{ factura.cae }}</td>
+                                {% endif %}
+                                
                                 <td><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secondary">Ver factura</a></td>
                             </tr>
                         {% endfor %}

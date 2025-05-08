@@ -4,8 +4,13 @@
 
 
     <h1 class="m-3">Nueva factura de venta</h1>
+    <h2 id="punto_vta" class="m-3">Punto de venta: </h2>
     <div class="m-2">
         <div class="container-fluid">
+            <!-- Modal para seleccionar cliente y articulos -->
+            {% include 'partials/_modal-cliente.html' %}
+            {% include 'partials/_modal-seleccion-ptovta.html' %}
+
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
                 
@@ -15,10 +20,7 @@
                         <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
                     </div>
 
-                    <!-- Modal para seleccionar cliente y articulos -->
-                    {% include 'partials/_modal-cliente.html' %}
                     
-
                     <div class="cardbody">
                         <div class="row m-3">
                             <div class="col-md-1">
@@ -118,6 +120,7 @@
         </div>
     </div>        
 
-    <script src="/static/js/nueva_venta.js"></script>
+    
+    <script src="{{ url_for('static', filename='js/nueva_venta.js')}}"></script>
     
 {% endblock %}

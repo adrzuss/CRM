@@ -42,7 +42,7 @@ var myBarChart = new Chart(ctx, {
   data: {
     labels: mesess,
     datasets: [{
-      label: "Eventos",
+      label: "Cant. op.",
       backgroundColor: coloresBarras,
       hoverBackgroundColor: "#2e59d9",
       borderColor: "#4e73df",
@@ -111,7 +111,7 @@ var myBarChart = new Chart(ctx, {
       callbacks: {
         label: function(tooltipItem, chart) {
           var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-          return datasetLabel + ' ' + number_format(tooltipItem.yLabel) + ' evento/s ';
+          return datasetLabel + ' ' + number_format(tooltipItem.yLabel) + ' operaciones ';
         }
       }
     },

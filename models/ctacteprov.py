@@ -3,7 +3,7 @@ from utils.db import db
 
 class CtaCteProv(db.Model):
     __tablename__ = 'cta_cte_prov'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     idproveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=False)
     fecha = db.Column(db.Date, nullable = False)
     debe = db.Column(db.Numeric(20,6), nullable = False)

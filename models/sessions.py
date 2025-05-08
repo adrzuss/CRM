@@ -2,7 +2,7 @@ from utils.db import db
 
 class Usuarios(db.Model):
     __tablename__ = 'usuarios'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(80))
     usuario = db.Column(db.String(80))
     clave = db.Column(db.String(200))
@@ -22,7 +22,7 @@ class Usuarios(db.Model):
         
 class Tareas(db.Model):
     __tablename__ = 'tareas'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     tarea = db.Column(db.String(50))
     
     def __init__(self, tarea):

@@ -1,3 +1,11 @@
+let isFormSubmited = false;
+
+window.onbeforeunload = function () {
+    if (!isFormSubmited) {
+      return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
+    }
+  };
+  
 // JavaScript para manejar la interacción
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-cambio-precios');
@@ -70,18 +78,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Validar y guardar
-    document.querySelector("#guardar-cambio").addEventListener("click", () => {
-        if (tablaItems.children.length === 0) {
-            alert("Debe agregar al menos un artículo.");
-            return;
-        }
+ // Validar y guardar
+ document.getElementById("form-cambio-precios").addEventListener("submit", function (event) {
+    console.log("Formulario enviado");
+    if (document.querySelectorAll("#tabla-items tbody").length === 0) {
+      event.preventDefault();
+      alert("Debe agregar al menos un item a la factura");
+      event.preventDefault();
+      return false;
+    }
+    
+    if (confirm("¿Grabar el cambio de precios?") === false) {
+      event.preventDefault();
+    } else {
+      isFormSubmited = true;
+    }
+ });
 
-        if (confirm("¿Está seguro de guardar los cambios?")) {
-            console.log("voy a grabar");
-            document.querySelector("#form-cambio-precios").submit();
-        }
-    });
 
     // Validar salida sin guardar
     
@@ -93,26 +106,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cargar artículos en tabla de acuerdo a los filtros
     document.querySelector('#cargarRubroMarca').addEventListener('click', async (e) => {
         e.preventDefault();
-        console.log('click cargar');
         const marca = document.getElementById('marca').value;
         const rubro = document.getElementById('rubro').value;
+        console.log('Marca:', marca, 'Rubro: ', rubro);
         const listaPrecio = document.getElementById('lista_precio').value;
         const porcentaje = document.getElementById('porcentaje').value;
-        console.log('click cargar 2');
         if (!listaPrecio) {
             alert('Seleccione una lista de precios');
+            return;
+        }else if (!marca && !rubro) {
+            alert('Seleccione una marca y un rubro');
             return;
         }
     
         try {
             let response;
             response = await fetch(`/filtrar_articulos/${marca}/${rubro}/${listaPrecio}/${porcentaje}`);
-            console.log('ya tengo la respuesta:', response);
             if (!response.ok) throw new Error('Error al cargar los artículos');
-            console.log('voy a cargar los datos de los articulos');
             const data = await response.json();
+            console.log(data);
             if (data.success) {
-                console.log('data', data);
                 cargarArticulosEnTabla(data.articulos);
             }
             else {
@@ -129,15 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
         tablaItems.innerHTML = ''; // Limpiar tabla
     
         articulos.forEach((articulo) => {
-            console.log('articulo', articulo);
             const nuevaFila = `
                 <tr>
-                    <td>${articulo.codigo}</td>
-                    <td>${articulo.descripcion}</td>
-                    <td><input type="number" class="form-control precio-actual" value="${articulo.precio_actual}" readonly></td>
-                    <td><input type="number" class="form-control precio-nuevo" value="${articulo.precio_nuevo}"></td>
+                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" value="${articulo.codigo}" required></td>
+                    <td class="descripcion-articulo">${articulo.descripcion}</td>
+                    <td><input type="number" class="form-control precio-actual" name="items[${contadorFilas}][precio_actual]" value="${articulo.precio_actual}" readonly></td>
+                    <td><input type="number" class="form-control precio-nuevo" name="items[${contadorFilas}][precio_nuevo]" step="0.01" min="0" value="${articulo.precio_nuevo}" required></td>
                     <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
                 </tr>`;
+            contadorFilas++;
             tablaItems.insertAdjacentHTML('beforeend', nuevaFila);
         });
     }
@@ -149,7 +162,10 @@ document.addEventListener("DOMContentLoaded", () => {
             response = await fetch(`/articulo/${id}/${idlista}`);
         }
         else{
-            response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+            response = await fetch(`/articulo/${id}/${idlista}`);
+            if (!response.ok) {
+                response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+            } 
         }    
         if (!response.ok) {
             console.error("Error en la búsqueda de artículos");
@@ -221,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const idlista = document.getElementById('lista_precio').value;
 
             // Simulación de una búsqueda (deberías usar una API aquí)
-            fetchArticulo(codigo, idlista, itemDiv)
+            fetchArticulo(codigo, 0, itemDiv)
             
         }
     }, true);

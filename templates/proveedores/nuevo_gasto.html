@@ -4,33 +4,80 @@
     <h1 class="m-3">Nueva factura de gasto</h1>
     <div class="m-2">
         <div class="container-fluid">
+            {% include 'partials/_modal-proveedor.html' %}
             <form id="invoice_form" method="post">
-                <div class="card mb-3">
-                    <div class="row">
-                        <h4 class="m-2 col-5">Proveedor</h4>
-                        <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
-                        <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
-                    </div>
-                    <div class="cardbody">
-                        <div class="row m-3">
-                            <div class="col-md-2">
-                                <label for="idproveedor">Proveedor:</label>
-                                <input class="form-control" type="number" name="idproveedor" id="idproveedor" required>
+                <div class="row justify-content-center align-items-center">
+                    
+                    <div class="card mb-3 ml-2 col-8">    
+                        <div class="card-header">
+                            <h3 class="m-2">Datos de la factura</h3>
+                        </div>
+                        <div class="row">
+                            <h4 class="m-2 col-5">Proveedor</h4>
+                            <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                        </div>
+                        <div class="cardbody">
+                            <div class="row m-3">
+                                <div class="col-md-2">
+                                    <label for="idproveedor">Proveedor:</label>
+                                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" required>
+                                </div>    
+                                <div class="col-md-5">
+                                    <label for="proveedor_nombre">Nombre del Proveedor:</label>
+                                    <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+                                </div>   
+                                <div class="col-md-2">
+                                    <label for="id_tipo_comprobante">Tipo de factura: <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="id_tipo_comprobante" name="id_tipo_comprobante" required>
+                                        {% for tipo in tiposComp %}
+                                            <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                        {% endfor %}
+                                    </select>    
+                                </div> 
+                                <div class="col-md-2">
+                                    <label for="periodo">Periodo:<span class="text-danger">*</span></label>
+                                    <input class="form-control" type="month" name="periodo" value="{{ hoy }}" required>
+                                    <small id="helpId" class="form-text text-muted">Periodo de imputación</small>
+                                </div>
                             </div>    
-                            <div class="col-md-5">
-                                <label for="proveedor_nombre">Nombre del Proveedor:</label>
-                                <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+                            <div class="row m-3">    
+                                <div class="col-md-3">
+                                    <label for="fecha">Fecha:</label>
+                                    <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                                </div>    
+                                <div class="col-md-3">
+                                    <label for="nro_factura">Nro. de factura:</label>
+                                    <input class="form-control" type="text" name="nro_factura" id="nro_factura" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="total">Total:</label>
+                                    <input class="form-control" type="text" name="total" id="total" step="0.01" min="0.01" required>
+                                </div>    
+                                <div class="col-md-3">
+                                    <label for="id_plan_cuenta">Cuenta:</label>
+                                    <select class="form-control" name="id_plan_cuenta" id="id_plan_cuenta" required>
+                                        <option value="">Seleccione una cuenta</option>
+                                        {% for cuenta in planesCtas %}
+                                            <option value="{{ cuenta.id }}">{{ cuenta.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
                             </div>    
-                            <div class="col-md-3">
-                                <label for="fecha">Fecha:</label>
-                                <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
-                            </div>    
-                            <div class="col-md-2">
-                                <label for="total">Total:</label>
-                                <input class="form-control" type="text" name="total" id="total" step="0.01" min="0.01" required>
-                            </div>    
-                        </div>    
-                    </div>    
+                        </div>
+                    </div>        
+
+                    <div class="card mb-3 ml-2 col-3">    
+                        <div class="card-header">
+                            <h5 class="m-2">Remitos pendientes</h3>
+                        </div>
+                        <div class="row">
+                            <div id="remitos_select" class="col-12 m-2" style="display: none;"></div>
+                            
+                        </div>
+                        <div class="cardbody">
+                        </div>
+                    </div>        
                 </div>    
 
                 <div class="card">
@@ -65,7 +112,7 @@
                 </div>
 
                 <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit">Guardar Factura</button>
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarGasto">Guardar Factura</button>
                 </div>
 
             </form>
@@ -78,78 +125,6 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <script>
-        async function fetchProveedor(id) {
-            const response = await fetch(`/get_proveedor/${id}/${1}`);
-            const data = await response.json();
-            if (data.success) {
-                console.log('Datos del proveedor')
-                console.log(data.proveedor);
-                document.getElementById('proveedor_nombre').value = data.proveedor.nombre;
-                document.getElementById('tipo_comprobante').textContent = `Tipo de factura: ${data.proveedor.tipo_comprobante}`;
-                document.getElementById('id_tipo_comprobante').value = data.proveedor.id_tipo_comprobante;  
-                console.log(data.proveedor.tipo_comprobante);
-            } else {
-                document.getElementById('proveedor_nombre').value = 'Proveedor no encontrado';
-            }
-        }
-
-        function calcSaldo(){
-            const totalFac = parseFloat(document.getElementById('total').value);
-            const efectivo = parseFloat(document.getElementById('efectivo').value);
-            const ctacte = parseFloat(document.getElementById('ctacte').value);
-            let diferencia = (totalFac - (efectivo + ctacte));
-            let lblSaldo = document.getElementById('saldo_factura');
-            lblSaldo.textContent = diferencia;
-            if (diferencia > 0){
-                lblSaldo.className = 'negativo';
-            }
-            else if (diferencia === 0){
-                lblSaldo.className = 'neutro';
-            }
-            else{
-                lblSaldo.className = 'positivo';
-            }
-        }
-
-        function checkTotales() {
-            const totalFac = parseFloat(document.getElementById('total').value);
-            const efectivo = parseFloat(document.getElementById('efectivo').value);
-            const ctacte = parseFloat(document.getElementById('ctacte').value);
-            let HayDiferencia = (totalFac == (efectivo + ctacte));
-            return HayDiferencia;
-        }
-
-        document.getElementById('efectivo').addEventListener('input', function(event){
-            calcSaldo();
-        }
-        )
-
-        document.getElementById('ctacte').addEventListener('input', function(event){
-            calcSaldo();
-        }
-        )
-
-        document.getElementById('idproveedor').addEventListener('blur', function() {
-            const idproveedor = this.value;
-            fetchProveedor(idproveedor);
-        });
-
-        document.getElementById('invoice_form').addEventListener('submit', function(event) {
-            const totalFac = parseFloat(document.getElementById('total').value);
-            if (totalFac <= 0) {
-                event.preventDefault();
-                alert('El total debe ser mayor a 0');
-            }   
-            
-            if (checkTotales() == false){
-                event.preventDefault();
-                alert('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
-            }    
-            if (confirm('¿Grabar la factura?') == false) {
-                event.preventDefault();
-            }
-        });
-
-    </script>
+    <script src="{{ url_for('static', filename='js/nuevo_gasto.js')}}"></script>
+    
 {% endblock %}

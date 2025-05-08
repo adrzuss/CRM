@@ -5,20 +5,41 @@
             <div class="card m-3">
                 <h5 class="ml-3 mt-3">Agregar Marcas</h5>
                 <form action="{{ url_for('articulos.add_marca') }}" method="post">
-                    <div class="m-3">
-                        <label for="marca" class="form-label">Marca</label>
-                        <input type="text" class="form-control" name="marca" id="marca" aria-describedby="helpId" placeholder="Ingrese la marca"/>
-                        <small id="helpId" class="form-text text-muted">Marca</small>
-                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    <div class="row">
+                        {% if idmarca %}
+                            <div class="m-3 col-2">
+                                <label for="idmarca" class="form-label"># Marca</label>
+                                <input type="text" class="form-control" name="idmarca" id="idmarca" value="{{ idmarca }}" aria-describedby="helpId" readonly/>
+                                <small id="helpId" class="form-text text-muted">#ID de la Marca</small>
+                            </div>
+                            <div class="m-3 col-8">    
+                                <label for="marca" class="form-label">Marca</label>
+                                <input type="text" class="form-control" name="marca" id="marca" value="{{ nombre_marca }}" aria-describedby="helpId" placeholder="Ingrese la marca"/>
+                                <small id="helpId" class="form-text text-muted">Marca</small>
+                            </div>    
+                        {% else %}
+                            <div class="m-3 col-2">
+                                <label for="idmarca" class="form-label"># Marca</label>
+                                <input type="text" class="form-control" name="idmarca" id="idmarca" aria-describedby="helpId" readonly/>
+                                <small id="helpId" class="form-text text-muted">#ID de la Marca</small>
+                            </div>
+                            <div class="m-3 col-8">    
+                                <label for="marca" class="form-label">Marca</label>
+                                <input type="text" class="form-control" name="marca" id="marca" aria-describedby="helpId" placeholder="Ingrese la marca"/>
+                                <small id="helpId" class="form-text text-muted">Marca</small>
+                            </div>      
+                        {% endif %}      
+                        <div class="m-3 col-12">
+                            <button class="btn btn-exito" type="submit">Grabar</button>
+                        </div>
                     </div>
-                    
                 </form>
             </div>    
             <div class="card">
                 <h5 class="ml-3 mt-3">Listado de Marcas</h5>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-dark">
+                        <table class="table table-dark display" id="marcasTable">
                             <thead>
                                 <tr>
                                     <th scope="col">#Id</th>
@@ -32,7 +53,7 @@
                                         <td scope="row">{{ marca.id }}</td>
                                         <td style="width: 50%;">{{ marca.nombre }}</td>
                                         <td>
-                                            <a href="#" class="btn btn-primario">Actualizar</a>
+                                            <a href="{{ url_for('articulos.rubros_marcas', id=marca.id, tipo='marca') }}" class="btn btn-primario">Actualizar</a>
                                             <a href="#" class="btn btn-peligro">Eliminar</a>
                                         </td>
                                     </tr>

@@ -18,11 +18,11 @@
                             {% endif %}
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="mb-3 col-2"> 
+                                    <div class="mb-3 col-1"> 
                                         <label for="id">#</label>
                                         <input class="form-control" type="text" name="id" id="id" value="{{ articulo.id }}" readonly>
                                     </div>
-                                    <div class="mb-3 col-2"> 
+                                    <div class="mb-3 col-3"> 
                                         <label for="codigo">Código<span style="color: red">*</span></label>
                                         <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}">
                                     </div>
@@ -40,11 +40,19 @@
                                     
                                     <div class="col-3 mb-3">
                                         <label for="impint">Imp. int.<span style="color: red">*</span></label>
-                                        <input class="form-control precio" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese imp. internos" value="{{ articulo.impint }}" required >
+                                        {% if articulo.impint %}
+                                            <input class="form-control precio" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese imp. internos" value="{{ articulo.impint }}" readonly>
+                                        {% else %}
+                                            <input class="form-control precio" type="number" step="0.01" min="0" name="impint" id="impint" placeholder="Ingrese imp. internos" value="0" required >
+                                        {% endif %}
                                     </div>    
                                     <div class="col-3 mb-3">
                                         <label for="exento">% Exento<span style="color: red">*</span></label>
-                                        <input class="form-control precio" type="number" step="0.01" min="0" name="exento" id="exento" placeholder="Ingrese % exento" value="{{ articulo.exento }}" required >
+                                        {% if articulo.exento %}
+                                            <input class="form-control precio" type="number" step="0.01" min="0" name="exento" id="exento" placeholder="Ingrese % exento" value="{{ articulo.exento }}" readonly>
+                                        {% else %}
+                                            <input class="form-control precio" type="number" step="0.01" min="0" name="exento" id="exento" placeholder="Ingrese % exento" value="0" required >
+                                        {% endif %}
                                     </div>    
                                 </div>
                                 <div class="row">
@@ -126,7 +134,7 @@
                 <div class="card">
                     <div class="card-body">
                         {% if articulo.imagen %}
-                            <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo">
+                            <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo" class="img-fluid">
                         {% else %}    
                             <label>Artículo sin imagen</label>
                         {% endif %}
@@ -158,11 +166,11 @@
 
                                     <div class="col-md-3 mb-3">
                                         <label for="pvp{{loop.index}}">Precio V.P.<span style="color: red">*</span></label>
-                                        <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P." value="{{ lista.precio }}" required >
+                                        <input class="form-control precio" type="number" name="precio[{{loop.index}}][precio]" id="precio[{{loop.index}}][precio]" step="0.01" placeholder="Ingrese el precio de V.P." value="{{ lista.precio | default(0)| round(2) }}" required >
                                     </div>    
                                     <div class="col-md-2 mb-3">
                                         <label for="markaup{{loop.index}}">Markup<span style="color: red">*</span></label>
-                                        <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup }}">
+                                        <input class="form-control markup" type="number" name="precio[{{loop.index}}[markup]" id="precio[{{loop.index}}][markup]" value="{{ lista.markup | round(2) }}">
                                     </div>    
                                     <div class="col-md-3 mb-3">
                                         <label for="ult_modif{{loop.index}}">Ult. mod.</label>
@@ -183,6 +191,10 @@
                         <div class="card-body">
                             {% for stock in stocks %}
                                 <div class="row">
+                                    <div class="col-2">
+                                        <label for="idstock">#Id</label>
+                                        <input type="text" class="form-control" value="{{ stock.id }}" name="stock[{{loop.index}}][id]" readonly>
+                                    </div>
                                     <div class="col-6">
                                         <label for="stock">Stock</label>
                                         <input type="text" class="form-control" value="{{ stock.nombre_sucursal }}" readonly>
@@ -190,20 +202,20 @@
                                     <div class="col-2">
                                         <label for="stock">Stock</label>
                                         {% if stock.stock_actual < 0 %}
-                                            <input type="text" class="form-control" value="{{ stock.stock_actual }}" readonly style="color: red">
+                                            <input type="text" class="form-control" value="{{ stock.stock_actual | round(2) }}" readonly style="color: red">
                                         {% else %}
-                                            <input type="text" class="form-control" value="{{ stock.stock_actual }}" readonly>
+                                            <input type="text" class="form-control" value="{{ stock.stock_actual | round(2) }}" readonly>
                                         {% endif %}
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-6">
                                         <label for="stock">Stock deseable</label>
-                                        <input type="text" class="form-control" id="deseable" name="deseable" value="{{ stock.stock_deseable }}">
+                                        <input type="text" class="form-control" id="deseable" name="stock[{{loop.index}}][deseable]" value="{{ stock.stock_deseable | round(2) }}">
                                     </div>
                                     <div class="col-6">
                                         <label for="stock">Stock maximo</label>
-                                        <input type="text" class="form-control" id="maximo" name="maximo" value="{{ stock.stock_maximo }}">
+                                        <input type="text" class="form-control" id="maximo" name="stock[{{loop.index}}][maximo]" value="{{ stock.stock_maximo | round(2) }}">
                                     </div>
                                 </div>
                             {% endfor %}
@@ -227,8 +239,9 @@
         </div>
     </div>      
     </form>
-    <script src="/static/js/upd_articulos.js"></script>
-    <script src="/static/js/utilidades.js"></script>
+    <script src="{{ url_for('static', filename='js/upd_articulos.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/utilidades.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/articulos.js')}}"></script>
     
 {% endblock %}
 

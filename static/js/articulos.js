@@ -3,13 +3,14 @@ document.getElementById('costo').addEventListener('input', function(e) {
     const itemDivs = document.querySelectorAll('.precios #precio');
     itemDivs.forEach((itemDiv, index) => {
         const markup = parseFloat(itemDiv.querySelector('.markup').value);
-        itemDiv.querySelector('.precio').value = markup.toFixed(2) * costo.toFixed(2);
+        itemDiv.querySelector('.precio').value = (markup.toFixed(2) * costo.toFixed(2)).toFixed(2);
     });
     
 });
 
 async function checkArt(e){
     e.preventDefault();
+    const id = document.getElementById('id').value;
     const codigo = document.getElementById('codigo').value;
     const respuesta = await fetch(`/articulo/${codigo}/0`);
     const data = await respuesta.json();
@@ -18,7 +19,18 @@ async function checkArt(e){
         form_articulos.submit();
     }
     else{
-        alert('El código ya figura en otro artículo')
+        console.log(data);
+        console.log(id);
+        if (data.articulo.id != id){
+            alert('El código ya figura en otro artículo')
+            preventDefault();
+            return false;
+        }
+        else{
+            form_articulos.removeEventListener('submit', checkArt)
+            form_articulos.submit();
+        }
+        
     }
 }
 

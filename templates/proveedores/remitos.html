@@ -11,7 +11,7 @@
             <div class="card m-3">
                 <h5 class="px-5 pt-2">Periodo</h5>
                 <div class="card-body">
-                    <form action="" method="post">
+                    <form action="{{ url_for('proveedores.remitosComp') }}" method="post">
                         <div class="row justify-content-md-center">
                             <div class="col-md-3">
                                 <label for="desde">Desde</label>
@@ -42,14 +42,26 @@
                         <tr>
                             <th>Proveedor</th>
                             <th>Fecha</th>
+                            <th>Nro. remito</th>
+                            <th>Nro. factura</th>
+                            <th>Fecha factura</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
                         {% for remito in remitos %}        
                             <tr class="table-dark">
-                                <td scope="row">{{ remito.proveedor.nombre }}</td>
+                                <td scope="row">{{ remito.proveedor }}</td>
                                 <td>{{ remito.fecha.strftime('%d-%m-%Y') }}</td>
+                                <td>{{ remito.nro_comprobante }}</td>
+                                {% if remito.idfactura != None %}
+                                    <td>{{ remito.nro_comprobante_factura }}</td>
+                                    <td>{{ remito.fecha_factura.strftime('%d-%m-%Y') }}</td>
+                                {% else %}    
+                                    <td></td>
+                                    <td></td>
+                                {% endif %}
+                                
                                 <td><a href="{{ url_for('proveedores.ver_remito_comp', id=remito.id) }}" class="btn btn-primario">Ver remito</a></td>
                             </tr>
                         {% endfor %}

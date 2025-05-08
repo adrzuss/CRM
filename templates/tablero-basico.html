@@ -48,7 +48,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Operaciones en el mer
+                                    Operaciones en el mes
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800"> </div>
                                 <hr>
@@ -122,7 +122,7 @@
                     <!-- Card Header - Dropdown -->
                     <div
                         class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Los 10 productos mas vendidos</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Los 10 productos mas vendidos en los últimos 6 meses</h6>
                         <div class="dropdown no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -203,6 +203,108 @@
             </div>
         </div>
 
+        <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-6 col-lg-4">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Productos con stock en negativo</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                aria-labelledby="dropdownMenuLink">
+                                <div class="dropdown-header">Opciones del grafico:</div>
+                                <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                                <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Opciones</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="table-responsive"                        >
+                            <table class="table display table-striped table-hover table-borderless align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Codigo</th>
+                                        <th scope="col">Detalle</th>
+                                        <th scope="col">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for stock in stock_negativos %}
+                                    <tr>
+                                        <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=stock['id']) }}"> {{ stock['codigo'] }}</a></td>
+                                        <td>{{ stock['detalle'] }}</td>
+                                        <td>{{ stock['cantidad']|round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="col-xl-6 col-lg-4">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div
+                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Productos con stock faltante</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                aria-labelledby="dropdownMenuLink">
+                                <div class="dropdown-header">Dropdown Header:</div>
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <div class="table-responsive"                        >
+                            <table class="table display table-striped table-hover table-borderless align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Codigo</th>
+                                        <th scope="col">Detalle</th>
+                                        <th scope="col">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for stock in stock_faltantes %}
+                                    <tr>
+                                        <td scope="row"> <a href="#">{{ stock['codigo'] }}</a></td>
+                                        <td>{{ stock['detalle'] }}</td>
+                                        <td>{{ stock['cantidad'] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
         
 
     </div>
@@ -212,10 +314,10 @@
 
 {% block js_script %}
     <!-- Page level plugins -->
-    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js')}}"></script>
 
     <!-- Page level custom scripts-->
-    <script src="/static/js/demo/chart-bar-tab-basico.js"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-bar-tab-basico.js')}}"></script>
 
 {% endblock %}
 

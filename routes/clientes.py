@@ -1,37 +1,59 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
+from flask import g
 from datetime import datetime, date
 from models.clientes import Clientes
 from models.ventas import Factura
-from models.configs import TipoDocumento, TipoIva, TipoComprobantes
+from models.configs import TipoDocumento, TipoIva, TipoComprobantes, TipoCompAplica
 from services.clientes import save_cliente
 from services.ctactecli import saldo_ctacte
+from services.configs import validar_cuit
 from utils.db import db
-from utils.utils import check_session
+from utils.utils import check_session, alertas_mensajes
 from sqlalchemy import and_
 
 bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
 
-@bp_clientes.route('/clientes')
+@bp_clientes.route('/clientes/<id>', methods=['GET', 'POST'])
 @check_session
-def clientes():
+@alertas_mensajes
+def clientes(id):
+    if request.method == 'POST':
+        cliente = []
+    else:
+        cliente = Clientes.query.get(id)
     clientes = Clientes.query.all()
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
-    return render_template('clientes.html', clientes=clientes, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas)
+    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
 @bp_clientes.route('/new_cliente', methods=['POST'])
 @check_session
 def add_cliente():
-    nombre = request.form['nombre']
-    documento = request.form['documento']
-    mail = request.form['mail']
-    telefono = request.form['telefono']
-    direccion = request.form['direccion']
-    ctacte = request.form.get("ctacte") != None
-    id_tipo_doc = request.form['tipo_doc']
-    id_tipo_iva = request.form['tipo_iva']
-    id_cliente = save_cliente(nombre, documento, mail, telefono, direccion, ctacte, id_tipo_doc, id_tipo_iva)
-    flash(f'Cliente agregado: {id_cliente}')
+    id_cliente = request.form['idcliente']
+    if id_cliente:
+        cliente = Clientes.query.get(id_cliente)
+        ctacte = request.form.get("ctacte") != None
+        cliente.nombre = request.form['nombre']
+        cliente.documento = request.form['documento']
+        cliente.email = request.form['mail']
+        cliente.telefono = request.form['telefono']
+        cliente.direccion = request.form['direccion']
+        cliente.id_tipo_doc = request.form['tipo_doc']
+        cliente.id_tipo_iva = request.form['tipo_iva']
+        cliente.ctacte = ctacte
+        db.session.commit()
+        flash(f'Cliente actualizado: {id_cliente}: {cliente.nombre}')
+    else:     
+        nombre = request.form['nombre']
+        documento = request.form['documento']
+        mail = request.form['mail']
+        telefono = request.form['telefono']
+        direccion = request.form['direccion']
+        ctacte = request.form.get("ctacte") != None
+        id_tipo_doc = request.form['tipo_doc']
+        id_tipo_iva = request.form['tipo_iva']
+        id_cliente = save_cliente(nombre, documento, mail, telefono, direccion, ctacte, id_tipo_doc, id_tipo_iva)
+        flash(f'Cliente agregado: {id_cliente}: {nombre}')
     return redirect('/')
 
 @bp_clientes.route('/get_cliente/<id>/<tipo_operacion>')
@@ -48,13 +70,18 @@ def get_cliente(id, tipo_operacion):
         Clientes.ctacte.label('ctacte'),
         Clientes.id_tipo_doc.label('id_tipo_doc'),
         Clientes.id_tipo_iva.label('id_tipo_iva'),
+        Clientes.baja.label('baja'),
         TipoComprobantes.id.label('id_tipo_comprobante'),
         TipoComprobantes.nombre.label('tipo_comprobante'))\
-        .outerjoin(TipoComprobantes, and_(Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == session['tipo_iva'], TipoComprobantes.id_tipo_operacion == tipo_operacion))\
+        .join(TipoCompAplica, and_(Clientes.id_tipo_iva == TipoCompAplica.id_iva_entidad, TipoCompAplica.id_iva_owner == session['tipo_iva'], TipoCompAplica.id_tipo_oper == tipo_operacion))\
+        .join(TipoComprobantes, (TipoCompAplica.id_tipo_comp == TipoComprobantes.id))\
         .filter(Clientes.id == id).first()
-      
     if cliente:
-        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte, 'id_tipo_comprobante': cliente.id_tipo_comprobante, 'tipo_comprobante':cliente.tipo_comprobante, 'tipo_doc':cliente.id_tipo_doc, 'tipo_iva':cliente.id_tipo_iva}) 
+        if (cliente.baja == datetime(1900,1,1).date()):
+            baja = False
+        else:
+            baja = True
+        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte, 'id_tipo_comprobante': cliente.id_tipo_comprobante, 'tipo_comprobante':cliente.tipo_comprobante, 'tipo_doc':cliente.id_tipo_doc, 'tipo_iva':cliente.id_tipo_iva, 'baja': baja}) 
     else:
         return jsonify(success=False)
 
@@ -74,9 +101,10 @@ def get_clientes():
         Clientes.ctacte.label('ctacte'),
         Clientes.id_tipo_doc.label('id_tipo_doc'),
         Clientes.id_tipo_iva.label('id_tipo_iva'),
-         TipoComprobantes.id.label('id_tipo_comprobante'),
+        TipoComprobantes.id.label('id_tipo_comprobante'),
         TipoComprobantes.nombre.label('tipo_comprobante'))\
-        .outerjoin(TipoComprobantes, and_(Clientes.id_tipo_iva == TipoComprobantes.id_tipo_iva, TipoComprobantes.id_tipo_iva_owner == session['tipo_iva'], TipoComprobantes.id_tipo_operacion == tipo_operacion))\
+        .join(TipoCompAplica, and_(Clientes.id_tipo_iva == TipoCompAplica.id_iva_entidad, TipoCompAplica.id_iva_owner == session['tipo_iva'], TipoCompAplica.id_tipo_oper == tipo_operacion))\
+        .join(TipoComprobantes, (TipoCompAplica.id_tipo_comp == TipoComprobantes.id))\
         .filter(Clientes.nombre.like(f"{nombre}%")).all()
     else:
         clientes = []
@@ -84,12 +112,13 @@ def get_clientes():
 
 @bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
 @check_session
+@alertas_mensajes
 def update_cliente(id):
     cliente = Clientes.query.get(id)
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
     if request.method == 'GET':
-        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas)
+        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
     if request.method == 'POST':
         ctacte = request.form.get("ctacte") != None
         cliente.nombre = request.form['nombre']
@@ -101,6 +130,7 @@ def update_cliente(id):
         cliente.id_tipo_iva = request.form['tipo_iva']
         cliente.ctacte = ctacte
         db.session.commit()
+        
         flash('Cliente grabado')
         return redirect(url_for('clientes.clientes'))
 
@@ -121,6 +151,7 @@ def delete_cliente(id):
 
 @bp_clientes.route('/facturas_cliente/<id>', methods=['GET', 'POST'])
 @check_session
+@alertas_mensajes
 def facturas_cliente(id):
     cliente = Clientes.query.get(id)
     if request.method == 'POST':
@@ -140,7 +171,7 @@ def facturas_cliente(id):
         ).all()
         
         # Pasar los resultados a la plantilla
-        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str)
+        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
     desde = date.today()
     hasta = date.today()
     facturas = db.session.query(Factura).join(Clientes).filter(
@@ -148,4 +179,4 @@ def facturas_cliente(id):
             Factura.fecha >= desde,
             Factura.fecha <= hasta
         ).all()
-    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta)
+    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta, alertas=g.alertas)

@@ -4,7 +4,7 @@ from models.sucursales import Sucursales
 
 class Factura(db.Model):
     __tablename__ = 'facturav'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     idcliente = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
     idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
@@ -15,6 +15,12 @@ class Factura(db.Model):
     idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
     idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    nro_comprobante = db.Column(db.String(13), nullable=False)
+    punto_vta = db.Column(db.Integer, nullable=False)
+    cae = db.Column(db.String(20))
+    cae_vto = db.Column(db.Date)
+    fecha_emision = db.Column(db.Date)
+    # Relación con otras tablas
     usuario = db.relationship('Usuarios', backref=db.backref('facturav', lazy=True))
     cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
     lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
@@ -24,7 +30,7 @@ class Factura(db.Model):
     lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
     tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
     
-    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, idsucursal, idusuario, total=0, iva=0, exento=0, impint=0):
+    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, idsucursal, idusuario, total=0, iva=0, exento=0, impint=0, nro_comprobante=None, punto_vta=1):
         self.idcliente = idcliente
         self.idlista = idlista
         self.fecha = fecha
@@ -35,6 +41,8 @@ class Factura(db.Model):
         self.idtipocomprobante = id_tipo_comprobante
         self.idsucursal = idsucursal
         self.idusuario = idusuario
+        self.nro_comprobante = nro_comprobante
+        self.punto_vta = punto_vta
 
 class Item(db.Model):
     __tablename__ = 'itemsv'

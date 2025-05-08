@@ -30,11 +30,11 @@
 
                             
                                     <label for="codigo">Código</label>
-                                    <input type="text" class="form-control" name="codigo" id="codigo" placeholder="Código">
+                                    <input type="text" class="form-control" name="codigo" id="codigo" placeholder="Código" required>
                                     <label for="detalle">Detalle</label>
-                                    <input type="text" class="form-control" name="detalle" id="detalle" placeholder="Detalle">
+                                    <input type="text" class="form-control" name="detalle" id="detalle" placeholder="Detalle" required>
                                     <label for="cantidad">Cantidad</label>
-                                    <input type="text" class="form-control" name="cantidad" id="cantidad" placeholder="Cantidad">
+                                    <input type="number" class="form-control" name="cantidad" id="cantidad" step="0.01" min="1" placeholder="Cantidad" required>
                                     
                             
                             <div class="row">
@@ -102,6 +102,6 @@
         </div>    
     </div>    
 
-<script src="/static/js/componer-art.js"></script>
+<script src="{{ url_for('static', filename='js/componer-art.js')}}"></script>
 
 {% endblock %}

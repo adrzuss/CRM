@@ -70,13 +70,136 @@
         </div>
     </div>    
 
+    <div class="row justify-content-center align-items-center m-3">
+
+        <!-- Area Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Ingresos vs egresos</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Opciones del grafico:</div>
+                            <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                            <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Opciones</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="pieChartIngEgr"></canvas>
+                        <script>
+                            tipoPagos = {{ detalleVtasCompras|tojson }};
+                            cantPagos = {{ valoresVtasCompras|tojson }};
+                        </script>    
+                    </div>
+                </div>
+                <div class="mt-4 text-center small" id="ingresosEgresos">
+                            
+                    <!--
+                    las leyendas y colores se establecen en chart-pie-demo.js    
+                    -->
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Estado de cuentas corrientes</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Opciones del grafico:</div>
+                            <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                            <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Opciones</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="pieChartCtaCtes"></canvas>
+                        
+                        
+                        
+                    </div>
+                    <div class="mt-4 text-center small" id="ctaCtes">
+                            
+                        <!--
+                        las leyendas y colores se establecen en chart-pie-demo.js    
+                        -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+    <!-- Detalle gastos -->
+    <div class="row justify-content-center align-items-center m-3">
+
+        <!-- Area Chart -->
+        <div class="col-xl-10 col-lg-10">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalle de gastos</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Opciones del grafico:</div>
+                            <a class="dropdown-item" href="#">Analizar otro periodo</a>
+                            <a class="dropdown-item" href="#">Analizar una sucursal</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Opciones</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="barrasDetalleGastos"></canvas>
+                        <script>
+                            det_gastos = {{ detalleGastosLeyendas|tojson }};
+                            total_gastos = {{ detalleGastosValores|tojson }};
+                        </script>    
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>    
+
 {% endblock %}
 
 {% block js_script %}
     <!-- Page level plugins -->
-    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js')}}"></script>
 
     <!-- Page level custom scripts-->
-    <script src="/static/js/demo/chart-bar-flujo-fondos.js"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-bar-flujo-fondos.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-pie-flujo-fondos.js')}}"></script>
 
 {% endblock %}

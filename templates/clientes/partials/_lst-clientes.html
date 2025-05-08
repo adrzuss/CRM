@@ -4,6 +4,7 @@
         <table class="table table-striped table-hover table-borderless align-middle" id="dataTable">
             <thead class="thead-dark">
                 <tr>
+                    <th scope="col">#ID</th>
                     <th scope="col">Nombre</th>
                     <th scope="col">Mail</th>
                     <th scope="col">Telefono</th>
@@ -15,18 +16,20 @@
                 {% for cliente in clientes %}
                     <tr class="">
                         {% if cliente.baja.strftime('%Y-%m-%d') != "1900-01-01" %}
+                            <td style="color: crimson;" scope="row">{{ cliente.id }}</td>
                             <td style="color: crimson;" scope="row">{{ cliente.nombre }}</td>
                             <td style="color: crimson;">{{ cliente.email }}</td>
                             <td style="color: crimson;">{{ cliente.telefono }}</td>
                             <td>
                                 
                             </td>
-                            <td>
-                                <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
+                            <td> 
+                                <a href="{{ url_for('clientes.clientes', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
                                 
                                 <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
                             </td>
                         {% else %}
+                            <td scope="row">{{ cliente.id }}</td>
                             <td scope="row">{{ cliente.nombre }}</td>
                             <td>{{ cliente.email }}</td>
                             <td>{{ cliente.telefono }}</td>
@@ -36,7 +39,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('clientes.update_cliente', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
+                                <a href="{{ url_for('clientes.clientes', id=cliente.id) }}" class="btn btn-exito">Actualizar</a>
                                 <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" class="btn btn-peligro">Eliminar</a>
                                 <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" class="btn btn-cuidado">Facturas</a>
                             </td>

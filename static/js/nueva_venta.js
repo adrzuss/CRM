@@ -7,6 +7,101 @@ window.onbeforeunload = function () {
   }
 };
 
+document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    // Realizar la solicitud a la API
+    const response = await fetch('/get_punto_vta');
+    const data = await response.json(); 
+    console.log("data:", data.punto_vta);
+    // Verificar el valor de punto_vta
+    if (!data.punto_vta) {
+      // Si punto_vta es null o no está definido, mostrar el modal
+      const ptosVtasSucursal = await fetch('/get_puntos_vta_sucursal');
+      const datos = await ptosVtasSucursal.json(); 
+      console.log("los datos datos:", datos);
+      if (datos.length == 1) {
+        console.log("datos[0].id:", datos[0].id);
+        asignarPuntoVenta(datos[0].id);
+      }
+      else{
+        const modalContent = document.getElementById("modalContentPtoVta");
+        
+        const listaPtosVtasSucursal = document.createElement("select");
+        listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
+        listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
+        
+        // Agregar una opción por defecto
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Seleccione un punto de venta";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        listaPtosVtasSucursal.appendChild(defaultOption);
+
+        // Recorrer los puntos de venta y agregarlos como opciones
+        datos.forEach((ptovta) => {
+          const ptoVtaOption = document.createElement("option");
+          ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
+          ptoVtaOption.textContent = "Punto de venta:" + ptovta.puntoVta; // Mostrar el nombre del punto de venta
+          listaPtosVtasSucursal.appendChild(ptoVtaOption);
+        });
+        
+        // Agregar el <select> al modal
+        modalContent.appendChild(listaPtosVtasSucursal);
+
+        // Agregar un botón para confirmar la selección
+        const confirmButton = document.createElement("button");
+        confirmButton.classList.add("btn", "btn-primary", "mt-3");
+        confirmButton.textContent = "Confirmar";
+        confirmButton.onclick = async function () {
+          const selectedPtoVta = listaPtosVtasSucursal.value;
+          if (selectedPtoVta) {
+            asignarPuntoVenta(selectedPtoVta);
+          } else {
+            alert("Debe seleccionar un punto de venta.");
+          }
+        };
+        modalContent.appendChild(confirmButton);
+        //---------
+        $("#ptovtaModal").modal("show");
+      }  
+    }
+    else{
+      // Si punto_vta tiene un valor, asignarlo al input
+      console.log("punto_vta:", data.punto_vta);
+      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + data.punto_vta;
+    }
+  } catch (error) {
+    console.error("Error al obtener el punto de venta:", error);
+  }
+});
+
+async function asignarPuntoVenta(idPuntoVenta) {
+  try {
+    // Llamar a la API para asignar el punto de venta a la sesión
+    const response = await fetch('/set_punto_vta', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ punto_vta_id: idPuntoVenta }),
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      $("#ptovtaModal").modal("hide");
+      // Actualizar el texto en la página con el punto de venta seleccionado
+      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
+      document.getElementById("idcliente").focus();
+    } else {
+      alert('Error al asignar el punto de venta: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error al llamar a la API:', error);
+    alert('Ocurrió un error al asignar el punto de venta.');
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("invoice_form");
   const btnAgregar = document.getElementById("agregarArticulo");
@@ -49,45 +144,58 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+function limpiarDatosCliente() {
+  inputIdCliente = document.getElementById("idcliente");
+  inputIdCliente.value = "";
+  inputIdCliente.focus();
+}
+
 async function fetchCliente(input) {
   let response;
 
   // Determinar si la entrada es un ID numérico o un nombre
-  if (!isNaN(input)) {
-    // Si es un número, buscar por ID
-    response = await fetch(`/get_cliente/${input}/${1}`); //1 venta
-  } else {
-    // Si es un nombre parcial, buscar por nombre
-    response = await fetch(
-      `/get_clientes?nombre=${input}&&tipo_operacion=${1}`
-    );
-  }
-
-  if (!response.ok) {
-    console.error("Error en la búsqueda del cliente");
-    return;
-  }
-
-  const data = await response.json();
-
-  if (data.success) {
-    if (data.cliente) {
-      // Si se encuentra un cliente por ID, asignarlo directamente
-      asignarCliente(data.cliente);
+  if (input != ""){
+    if (!isNaN(input)) {
+      // Si es un número, buscar por ID
+      response = await fetch(`/get_cliente/${input}/${1}`); //1 venta
     } else {
-      alert("No se encontraron clientes con ese ID.");
+      // Si es un nombre parcial, buscar por nombre
+      response = await fetch(
+        `/get_clientes?nombre=${input}&&tipo_operacion=${1}`
+      );
     }
-  } else {
-    if (data.length > 1) {
-      // Si hay más de un resultado, mostrar un modal para seleccionar
-      mostrarModalSeleccionClientes(data);
-    } else if (data.length === 1) {
-      // Si hay un solo resultado, asignar directamente
-      asignarCliente(data[0]);
+
+    if (!response.ok) {
+      console.error("Error en la búsqueda del cliente");
+      return;
+    }
+    const data = await response.json();
+
+    if (data.success) {
+      if (data.cliente) {
+        // Si se encuentra un cliente por ID, asignarlo directamente
+        if (data.cliente.baja == true) {
+          limpiarDatosCliente();
+          alert("Cliente dado de baja. No puedes facturar a este cliente.");
+          return;
+        }
+        asignarCliente(data.cliente);
+      } else {
+        alert("No se encontraron clientes con ese ID.");
+      }
     } else {
-      alert("No se encontraron clientes con ese nombre.");
+      if (data.length > 1) {
+        // Si hay más de un resultado, mostrar un modal para seleccionar
+        mostrarModalSeleccionClientes(data);
+      } else if (data.length === 1) {
+        // Si hay un solo resultado, asignar directamente
+        asignarCliente(data[0]);
+      } else {
+        limpiarDatosCliente
+        alert("No se encontraron clientes con ese nombre.");
+      }
     }
-  }
+  }  
 }
 
 function mostrarModalSeleccionClientes(clientes) {
@@ -108,6 +216,9 @@ function mostrarModalSeleccionClientes(clientes) {
     clienteOption.onclick = () => {
       asignarCliente(cliente);
       $("#clienteModal").modal("hide");
+      // Enfocar el nuevo input de código
+      const clienteInput = document.getElementById("idcliente");
+      clienteInput.focus();
     };
     listaClientes.appendChild(clienteOption);
   });
@@ -123,8 +234,6 @@ function asignarCliente(cliente) {
   document.getElementById("ctacte").readOnly = cliente.ctacte == 0;
   document.getElementById("tipo_comprobante").innerText = "Tipo de factura: " + cliente.tipo_comprobante;
   document.getElementById("id_tipo_comprobante").value = cliente.id_tipo_comprobante;
-  console.log(cliente.tipo_comprobante);
-  console.log(cliente.id_tipo_comprobante);
   if (cliente.ctacte == 0) {
     document.getElementById("label-ctacte").innerText =
       "Cta. Cte. - Cliente sin cta. cte.";
@@ -138,7 +247,10 @@ async function fetchArticulo(id, idlista, itemDiv) {
   if (!isNaN(id)) {
     response = await fetch(`/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+    response = await fetch(`/articulo/${id}/${idlista}`);
+    if (!response.ok) {
+        response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+    }    
   }
 
   if (!response.ok) {
@@ -201,9 +313,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
     const articuloOption = document.createElement("li");
     articuloOption.classList.add("cliente-option");
     articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${
-      articulo.detalle
-    }</strong> - <span class="precio-normal">$${parseFloat(articulo.precio)
+    articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio)
       .toFixed(2)
       .toLocaleString("es-AR", {
         minimumFractionDigits: 2,
@@ -212,6 +322,9 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
     articuloOption.onclick = () => {
       asignarArticuloElegido(articulo, itemDiv);
       $("#clienteModal").modal("hide");
+      // Enfocar el nuevo input de código
+      const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+      nuevoInputCodigo.focus();
     };
     listaArticulos.appendChild(articuloOption);
   });

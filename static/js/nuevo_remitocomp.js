@@ -51,15 +51,76 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function asignarProveedor(proveedor) {
   document.getElementById("proveedor_nombre").value = proveedor.nombre;
+  document.getElementById("idproveedor").value = proveedor.id;
 }
 
-async function fetchProveedor(id) {
-  const response = await fetch(`/get_proveedor/${id}/${1}`);
+function mostrarModalSeleccionProveedores(proveedores) {
+  // Crear el contenido del modal con las opciones de proveedor
+  const tituloModal = document.getElementById("clienteModalLabel");
+  tituloModal.textContent = "Seleccione un Proveedor";
+  const modalContent = document.getElementById("modalContent");
+  modalContent.innerHTML = "";
+  const listaClientes = document.createElement("ul");
+  listaClientes.classList.add("list-group");
+  modalContent.appendChild(listaClientes);
+
+  proveedores.forEach((proveedor) => {
+    const clienteOption = document.createElement("li");
+    clienteOption.classList.add("cliente-option");
+    clienteOption.classList.add("list-group-item");
+    clienteOption.textContent = `${proveedor.nombre} - Tel/Cel: ${proveedor.telefono}`;
+    clienteOption.onclick = () => {
+      asignarProveedor(proveedor);
+      $("#clienteModal").modal("hide");
+      // Enfocar el nuevo input de código
+      const proveedorInput = document.getElementById("idproveedor");
+      proveedorInput.focus();
+    };
+    listaClientes.appendChild(clienteOption);
+  });
+
+  // Mostrar el modal
+  $("#clienteModal").modal("show");
+} 
+
+function limpiarDatosProveedor() {
+  inputIdProveedor = document.getElementById("idproveedor");
+  inputIdProveedor.value = "";
+  inputIdProveedor.focus();
+}
+
+async function fetchProveedor(input) {
+  let response;
+  if (!isNaN(input)) {
+    // Si es un número, buscar por ID
+    response = await fetch(`/get_proveedor/${input}`); //1 venta
+  } else {
+    // Si es un nombre parcial, buscar por nombre
+    response = await fetch(
+      `/get_proveedores?nombre=${input}`
+    );
+  }
+
+  if (!response.ok) {
+    limpiarDatosProveedor();
+    console.error("Error en la búsqueda del proveedor");
+    return;
+  }
   const data = await response.json();
   if (data.success) {
     asignarProveedor(data.proveedor);
   } else {
-    document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
+    if (data.length > 1) {
+      // Si hay más de un resultado, mostrar un modal para seleccionar
+      mostrarModalSeleccionProveedores(data);
+    } else if (data.length === 1) {
+      // Si hay un solo resultado, asignar directamente
+      asignarProveedor(data[0]);
+    } else {
+      limpiarDatosProveedor();
+      alert("No se encontraron proveedores con ese nombre.");
+    }
+    //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
   }
 }
 
@@ -86,7 +147,6 @@ async function fetchArticulo(id, idlista, itemDiv) {
       alert("No se encontraron articulos con ese ID.");
     }
   } else {
-    console.log(data);
     if (data.length > 1) {
       // Si hay más de un resultado, mostrar un modal para seleccionar
       mostrarModalSeleccionArticulos(data, itemDiv);
@@ -123,9 +183,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
     const articuloOption = document.createElement("li");
     articuloOption.classList.add("cliente-option");
     articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${
-      articulo.detalle
-    }</strong> - <span class="precio-normal">$${parseFloat(articulo.costo)
+    articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.costo)
       .toFixed(2)
       .toLocaleString("es-AR", {
         minimumFractionDigits: 2,
@@ -134,6 +192,8 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
     articuloOption.onclick = () => {
       asignarArticuloElegido(articulo, itemDiv);
       $("#clienteModal").modal("hide");
+      const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+      nuevoInputCodigo.focus();
     };
     listaArticulos.appendChild(articuloOption);
   });
@@ -185,6 +245,7 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
   contadorFilas++;
   // Enfocar el nuevo input de código
   const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+  console.log('voy al focus');
   nuevoInputCodigo.focus();
 });
 

@@ -24,24 +24,27 @@
                         <label for="fecha">Fecha</label>
                         <input type="date" class="form-control" name="fecha" id="fecha" value="{{ factura.fecha }}">
                     </div>        
-                            
+                    <div class="col-2">
+                        <label for="periodo">Periodo {{ factura.periodo }}</label>
+                        <input type="month" class="form-control" name="periodo" id="periodo" value="{{ factura.periodo }}">
+                    </div>                
                 </div>
                 <div class="row">
                     <div class="col-3">
                         <label for="total">Total</label>
-                        <input type="number" class="form-control precio-normal" name="total" id="total" step="0.01" value="{{ factura.total }}">
+                        <input type="number" class="form-control precio-normal" name="total" id="total" step="0.01" value="{{ factura.total|round(2) }}">
                     </div>    
                     <div class="col-3">
                         <label for="iva">IVA</label>
-                        <input type="number" class="form-control precio-normal" name="iva" id="iva" step="0.01" value="{{ factura.iva }}">
+                        <input type="number" class="form-control precio-normal" name="iva" id="iva" step="0.01" value="{{ factura.iva|round(2) }}">
                     </div>    
                     <div class="col-3">
                         <label for="exento">Exento</label>
-                        <input type="number" class="form-control precio-normal" name="exento" id="exento" step="0.01" value="{{ factura.exento }}">
+                        <input type="number" class="form-control precio-normal" name="exento" id="exento" step="0.01" value="{{ factura.exento|round(2) }}">
                     </div>    
                     <div class="col-3">
                         <label for="impint">Imp. int.</label>
-                        <input type="number" class="form-control precio-normal" name="impint" id="impint" step="0.01" value="{{ factura.impint }}">   
+                        <input type="number" class="form-control precio-normal" name="impint" id="impint" step="0.01" value="{{ factura.impint|round(2) }}">   
                     </div>    
                 </div>    
             </div>    
@@ -73,10 +76,10 @@
                                 <tr class="table-light">
                                     <td scope="row">{{ item.codigo }}</td>
                                     <td>{{ item.detalle }}</td>
-                                    <td>{{ item.cantidad }}</td>
-                                    <td>{{ item.precio_unitario }}</td>
-                                    <td>{{ item.precio_total }}</td>
-                                    <td>{{ item.iva }}</td>
+                                    <td>{{ item.cantidad|round(2) }}</td>
+                                    <td>{{ item.precio_unitario|round(2) }}</td>
+                                    <td>{{ item.precio_total|round(2) }}</td>
+                                    <td>{{ item.iva|round(2) }}</td>
                                 </tr>
                                 {% endfor %}    
                         </tbody>
@@ -101,7 +104,7 @@
                     </div>
                     <div class="col-3">
                         <label for="total_pago">Importe del pago</label>
-                        <input type="number" class="form-control precio-destacado" name="total_pago" id="total_pago" step="0.01" value="{{ pago.total }}">
+                        <input type="number" class="form-control precio-destacado" name="total_pago" id="total_pago" step="0.01" value="{{ pago.total|round(2) }}">
                     </div>
                 </div>    
                 {% endfor %}

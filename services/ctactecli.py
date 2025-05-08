@@ -1,5 +1,4 @@
-from sqlalchemy import func
-from utils.utils import format_currency
+from sqlalchemy import func, text
 from models.ctactecli import CtaCteCli
 from utils.db import db
 
@@ -18,8 +17,16 @@ def saldo_ctacte(idcliente):
 
 def get_saldo_clientes():
     try:
-        saldos_cta_cte = db.session.query(func.sum(CtaCteCli.debe).label('debe'), func.sum(CtaCteCli.haber).label('haber')).all()
-        saldos =  format_currency( float(saldos_cta_cte[0][0] - saldos_cta_cte[0][1]))
-        return saldos
+        saldos_cta_cte = db.session.execute(text("CALL get_saldos_cc_cli(:empresa)"), {'empresa': 1}).fetchall()
+        saldoActual = float(saldos_cta_cte[0][0])
+        saldoVencido = float(saldos_cta_cte[0][1])
+        return saldoActual, saldoVencido
     except:
-        return format_currency(0.0)
+        return 0.0, 0.0
+    
+def ctacte_vencida():
+    cantidad = db.session.execute(text("CALL get_clientes_cc_vencidas(:empresa)"), {'empresa': 1}).fetchall()
+    if cantidad > 0:            
+        return cantidad, {'titulo': 'Ctas ctes vencidas', 'subtitulo': f'Hay {cantidad} de clientes con ctas. ctes. vencidas', 'tipo': 'peligro', 'url': 'articulos.stock_faltantes'}
+    else:
+        return cantidad, {}

@@ -41,6 +41,8 @@
                         </caption>
                         <tr>
                             <th>Proveedor</th>
+                            <th>Tipo</th>
+                            <th>Comprobante</th>
                             <th>Fecha</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -49,7 +51,9 @@
                     <tbody class="table-group-divider">
                         {% for factura in facturas %}        
                             <tr class="table-dark">
-                                <td scope="row">{{ factura.proveedor.nombre }}</td>
+                                <td scope="row">{{ factura.proveedor}}</td>
+                                <td>{{ factura.tipo_comprobante }}</td>
+                                <td>{{ factura.nro_comprobante }}</td>
                                 <td>{{ factura.fecha.strftime('%d-%m-%Y') }}</td>
                                 <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
                                 <td><a href="{{ url_for('proveedores.ver_factura_comp', id=factura.id) }}" class="btn btn-primario">Ver</a></td>

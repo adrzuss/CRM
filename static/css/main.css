@@ -13,18 +13,24 @@ body{
 }
 
 .text-uno-bold{
-    color: rgb(15, 15, 189);
-    font-weight: bold;
+    color: rgb(15, 15, 189)!important;
+    font-weight: bold!important;
 }
 
 .text-dos-bold{
-    color: rgb(189, 15, 15);
-    font-weight: bold;
+    color: rgb(189, 15, 15)!important;
+    font-weight: bold!important;
+    ;
 }
 
 .text-tres-bold{
-    color: rgb(15, 189, 15);
-    font-weight: bold;
+    color: rgb(15, 189, 15)!important;
+    font-weight: bold!important;
+}
+
+.text-cuatro-bold{
+    color: rgb(208, 122, 4)!important;
+    font-weight: bold!important;
 }
 
 

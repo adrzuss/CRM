@@ -5,20 +5,41 @@
             <div class="card m-3">
                 <h5 class="ml-3 mt-3">Agregar Rubros</h5>
                 <form action="{{ url_for('articulos.add_rubro') }}" method="post">
-                    <div class="m-3">
-                        <label for="rubro" class="form-label">Rubro</label>
-                        <input type="text" class="form-control" name="rubro" id="rubro" aria-describedby="helpId" placeholder="Ingrese el rubro"/>
-                        <small id="helpId" class="form-text text-muted">Rubro</small>
-                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    <div class="row">
+                        {% if idrubro %}
+                            <div class="m-3 col-2">
+                                <label for="idrubro" class="form-label"># Rubro</label>
+                                <input type="text" class="form-control" name="idrubro" id="idrubro" value="{{ idrubro }}" aria-describedby="helpId" readonly/>
+                                <small id="helpId" class="form-text text-muted">#ID del Rubro</small>
+                            </div>
+                            <div class="m-3 col-8">
+                                <label for="rubro" class="form-label">Rubro</label>
+                                <input type="text" class="form-control" name="rubro" id="rubro" value="{{ nombre_rubro }}" aria-describedby="helpId" placeholder="Ingrese el rubro"/>
+                                <small id="helpId" class="form-text text-muted">Rubro</small>
+                            </div>
+                        {% else %}
+                            <div class="m-3 col-2">
+                                <label for="idrubro" class="form-label"># Rubro</label>
+                                <input type="text" class="form-control" name="idrubro" id="idrubro" aria-describedby="helpId" readonly />
+                                <small id="helpId" class="form-text text-muted">#ID del Rubro</small>
+                            </div>
+                            <div class="m-3 col-8">
+                                <label for="rubro" class="form-label">Rubro</label>
+                                <input type="text" class="form-control" name="rubro" id="rubro" aria-describedby="helpId" placeholder="Ingrese el rubro"/>
+                                <small id="helpId" class="form-text text-muted">Rubro</small>
+                            </div>
+                        {% endif %}    
+                        <div class="m-3 col-12">    
+                            <button class="btn btn-exito" type="submit">Grabar</button>
+                        </div>
                     </div>
-                    
                 </form>
             </div>    
             <div class="card">
                 <h5 class="ml-3 mt-3">Listado de Rubros</h5>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-dark">
+                        <table class="table table-dark display" id="rubrosTable">
                             <thead>
                                 <tr>
                                     <th scope="col">#Id</th>
@@ -32,7 +53,7 @@
                                         <td scope="row">{{ rubro.id }}</td>
                                         <td style="width: 50%;">{{ rubro.nombre }}</td>
                                         <td>
-                                            <a href="#" class="btn btn-primario">Actualizar</a>
+                                            <a href="{{ url_for('articulos.rubros_marcas', id=rubro.id, tipo='rubro') }}" class="btn btn-primario">Actualizar</a>  
                                             <a href="#" class="btn btn-peligro">Eliminar</a>
                                         </td>
                                     </tr>    

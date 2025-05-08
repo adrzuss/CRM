@@ -6,7 +6,7 @@ from models.proveedores import Proveedores
 from models.ctacteprov import CtaCteProv
 from services.ctacteprov import saldo_ctacte
 from utils.db import db
-from utils.utils import check_session
+from utils.utils import check_session, alertas_mensajes
 
 bp_ctacteprov = Blueprint('ctacteprov', __name__, template_folder='../templates/ctacteprov')
 
@@ -40,15 +40,17 @@ def add_cta_cte_prov():
 
 @bp_ctacteprov.route('/lstctacteprov/<id>)')
 @check_session
+@alertas_mensajes
 def lst_cta_cte_prov(id):
     proveedor = Proveedores.query.get_or_404(id)
     movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
     saldo_total = saldo_ctacte(proveedor.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal)
+    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
 @bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
 @check_session
+@alertas_mensajes
 def saldosprov():
     if request.method == 'POST':
         # Obtener la fecha del formulario
@@ -73,6 +75,6 @@ def saldosprov():
         ).all()
 
         # Pasar los resultados a la plantilla
-        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str)
+        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
-    return render_template('saldos-ctacteprov.html', desde=desde)
+    return render_template('saldos-ctacteprov.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)

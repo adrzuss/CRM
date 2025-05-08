@@ -5,24 +5,38 @@
         <h2>Listado de precios</h2>
     </div>
     <div class="row justify-content-center align-items-center">
-        <div class="card m-3 col-6">
+        <div class="card m-3 col-10">
             <h3 class="m-3">Precios de artículos</h3>
             <div class="card-body">
-                <form action="{{ url_for('articulos.lst_precios') }}" method="post">
-                    <div class="row">
-                        <div class="col-4 mb-3">
-                            <label for="idlista" class="form-label">Lista</label>
-                            <select class="form-select form-select" name="idlista" id="idlista">
-                                {% for lista in listas_precios %}
-                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="col-2 m-4 btn btn-exito">Consultar</button>
+                
+                <div class="row">
+                    <div class="col-4 mb-3">
+                        <label for="idlista" class="form-label">Lista</label>
+                        <select class="form-select form-select" name="idlista" id="idlista">
+                        {% for lista in listas_precios %}
+                                <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label for="idmarca" class="form-label">Marca</label>
+                        <select class="form-select form-select" name="idmarca" id="idmarca">
+                        {% for lista in lista_marcas %}
+                                <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label for="idrubro" class="form-label">Rubro</label>
+                        <select class="form-select form-select" name="idrubro" id="idrubro">
+                        {% for lista in lista_rubros %}
+                                <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                        <button id="btnFiltrar" class="col-2 m-4 btn btn-exito">Consultar</button>
                     </div>    
-                </form>    
-            </div>
+                </div>    
         </div>
     </div>    
 
@@ -30,7 +44,7 @@
         <h3 class="m-3">Precios de artículos</h3>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="display table table-bordered table-striped" id="dataTable">
+                <table class="display table table-bordered table-striped" id="preciosTable">
                     <thead>
                         <tr>
                             <th scope="col">Código</th>
@@ -42,16 +56,7 @@
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        {% for precio in listado %}
-                            <tr class="">
-                                <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=precio.id ) }}">{{ precio.codigo }}</a></td>
-                                <td>{{ precio.rubro }}</td>
-                                <td>{{ precio.marca }}</td>
-                                <td>{{ precio.detalle }}</td>
-                                <td>{{ "${:,.2f}".format(precio.costo) }}</td>
-                                <td>{{ "${:,.2f}".format(precio.precio) }}</td>
-                            </tr>
-                        {% endfor %}    
+                    
                     </tbody>
                 </table>
             </div>
@@ -59,25 +64,65 @@
         </div>
     </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/dataTables.js"></script>
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
     <script>
-        
-        new DataTable('#dataTable', {
-            iDisplayLength: 50,
-            language: {
-                entries: {
-                    _: "entradas",
-                    1: "entrada"
+        $(document).ready(function () {
+            // Inicializar DataTables
+            const table = new DataTable('#preciosTable', {
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ url_for('articulos.api_lst_precios') }}",
+                    type: 'GET',
+                    data: function (d) {
+                        d.idlista = $('#idlista').val(); // Pasar el ID de la lista seleccionada
+                        d.idmarca = $('#idmarca').val(); // Pasar el ID de la marca seleccionada
+                        d.idrubro = $('#idrubro').val(); // Pasar el ID del rubro seleccionado
+                    },
+                    error: function (xhr, error, thrown) {
+                        alert('Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.');
+                    }
                 },
-                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
-                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
-                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
-                sLengthMenu: "_MENU_ _ENTRIES_ por página",
-                sSearch: 'Buscar',
-                sSearchPlaceholder: 'Buscar registros'
-            }
+                columns: [
+                    { data: 'codigo' ,
+                    render: function (data, type, row) {
+                        return `
+                            <a href="update_articulo/${row.id}" >${data}</a>
+                        `;
+                    }},
+                    { data: 'rubro' },
+                    { data: 'marca' },
+                    { data: 'detalle'},
+                    { data: 'costo' ,
+                    render: function (data, type, row) {
+                        return `$${parseFloat(data).toFixed(2)}`; // Formatear como moneda
+                    }},
+                    { data: 'precio' ,
+                    render: function (data, type, row) {
+                        return `$${parseFloat(data).toFixed(2)}`; // Formatear como moneda
+                    }}
+                    
+                    
+                ],
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                },
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100]
+            });
+        
+            // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"
+            $('#btnFiltrar').click(function () {
+                const idlista = $('#idlista').val();
+                if (!idlista) {
+                    alert('Por favor, selecciona una lista de precios.');
+                    return;
+                }
+                table.ajax.reload(); // Recargar la tabla con los nuevos filtros
+            });
         });
     </script>
     

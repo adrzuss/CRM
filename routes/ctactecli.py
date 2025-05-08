@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, url_for, g
 from datetime import datetime
 from sqlalchemy import func
 from utils.utils import format_currency
@@ -6,12 +6,13 @@ from models.clientes import Clientes
 from models.ctactecli import CtaCteCli
 from services.ctactecli import saldo_ctacte
 from utils.db import db
-from utils.utils import check_session
+from utils.utils import check_session, alertas_mensajes
 
 bp_ctactecli = Blueprint('ctactecli', __name__, template_folder='../templates/ctactecli')
 
 @bp_ctactecli.route('/addCtaCteCli', methods = ['POST','GET'])
 @check_session
+@alertas_mensajes
 def add_cta_cte_cli():
     if request.method == 'POST':
         idcliente = request.form['idcliente']
@@ -36,21 +37,23 @@ def add_cta_cte_cli():
             return redirect(url_for('ctactecli.lst_cta_cte_cli', id=idcliente))
     
     if request.method == 'GET':
-        return render_template('ctacte-cli.html')
+        return render_template('ctacte-cli.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
 @bp_ctactecli.route('/lstctactecli/<id>)')
 @check_session
+@alertas_mensajes
 def lst_cta_cte_cli(id):
     cliente = Clientes.query.get_or_404(id)
     movimientos = CtaCteCli.query.filter_by(idcliente=cliente.id).all()
     saldo_total = saldo_ctacte(cliente.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    return render_template('lst-ctactecli.html', movimientos=movimientos, idCliente=cliente.id, nomCliente=cliente.nombre, saldoTotal=saldoTotal )
+    return render_template('lst-ctactecli.html', movimientos=movimientos, idCliente=cliente.id, nomCliente=cliente.nombre, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
 
 # Obtiene el detalle de los saldos de lac cta cte de los clientes
 @bp_ctactecli.route('/saldoscli', methods=['GET', 'POST'])
 @check_session
+@alertas_mensajes
 def saldoscli():
     if request.method == 'POST':
         # Obtener la fecha del formulario
@@ -75,8 +78,8 @@ def saldoscli():
         ).all()
 
         # Pasar los resultados a la plantilla
-        return render_template('saldos-ctactecli.html', saldos=saldos, desde=fecha_str)
+        return render_template('saldos-ctactecli.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
-    return render_template('saldos-ctactecli.html', desde=desde)
+    return render_template('saldos-ctactecli.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
    

@@ -10,18 +10,45 @@
      ver la posibilidd de al menos mostrar el precio de la primer lista de precios
      -->
     <div class="m-2">
-            <!--
-            <div class="row justify-content-center align-items-center">
-                <div class="col-sm-10 m-3">
-                    {% include 'partials/_alta-articulos.html' %}
-                </div>
-            </div>
-            -->
+            
             <div class="row ml-3">
                 <div class="col-sm-3">
                     <a href="{{ url_for('articulos.update_articulo', id=0) }}" class="btn btn-primario">Nuevo artículo</a>
                 </div>    
             </div>
+
+            <div class="row justify-content-center align-items-center m-3">
+                
+                    <h3>Filtros</h3>
+                        <div class="row">
+                            <h4>Seleccione un rubro y/o una marca para filtrar</h4>
+                        </div>    
+                        <div class="row">
+                            <div class="col-sm-2 m-3">
+                                <label for="idrubro" class="form-label">Rubro</label>
+                                <select class="form-select" name="idrubro" id="idrubro">
+                                    <option value="">TODOS</option>
+                                    {% for lista in rubros %}
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>    
+                            <div class="col-sm-2 m-3">
+                                <label for="idmarca" class="form-label">Marca</label>
+                                <select class="form-select" name="idmarca" id="idmarca">
+                                    <option value="">TODOS</option>
+                                    {% for lista in marcas %}
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>    
+                            <div>
+                                <button id="btnFiltrar" class="col-1 m-3 btn btn-exito">Filtrar</button>
+                            </div>
+                        </div>    
+                
+            </div>    
+
             <div class="row justify-content-center align-items-center">
                 <div class="col-12 m-3">
                     {% include 'partials/_lst-articulos.html' %}
@@ -30,10 +57,81 @@
              
     </div>   
         
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/dataTables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
-    <script src="/static/js/articulos.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
+    <script>
+        const tabla = new DataTable('#articulosTable', {
+            processing: true, // Muestra un indicador de carga
+            serverSide: true, // Habilita el procesamiento en el servidor
+            ajax: {
+                url: "{{ url_for('articulos.api_articulos') }}", // Ruta de la API
+                type: 'GET',
+                data: function (d) {
+                    d.idmarca = $('#idmarca').val(); // Pasar el ID de la marca seleccionada
+                    d.idrubro = $('#idrubro').val(); // Pasar el ID del rubro seleccionado
+                },
+                error: function (xhr, error, thrown) {
+                    alert('Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.');
+                }
+            },
+            columns: [
+                
+                { data: 'codigo' },
+                { data: 'rubro' },
+                { data: 'marca' },
+                { data: 'detalle' },
+                { data: 'costo',
+                render: function (data, type, row) {
+                    return `$${parseFloat(data).toFixed(2)}`; // Formatear como moneda
+                } },
+                { data: 'es_compuesto' },
+                { data: 'imagen',
+                render: function (data, type, row) {
+                    if (data) {
+                        return `<img src="/static/img/articulos/${data}" alt="Imagen del artículo" width="50" height="50">`;
+                    } else {
+                        return 'Sin imagen';
+                    }
+                } },
+                { data: 'id',
+                ordereable: false,
+                render: function (data, type, row) {
+                    return `
+                        <div style="text-align: center;">
+                            <a href="update_articulo/${data}" class="btn btn-primary btn-sm">Actualizar</a>
+                            <a href="#" onclick="eliminarArticulo(${data})" class="btn btn-danger btn-sm">Eliminar</a>
+                        </div>
+                    `;
+                } }
+            ],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Traducción al español
+            },
+            pageLength: 50, // Número de registros por página
+            lengthMenu: [10, 25, 50, 100], // Opciones de paginación
+            iDisplayLength: 50,
+            language: {
+                entries: {
+                    _: "entradas",
+                    1: "entrada"
+                },
+                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ ",
+                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+                sLengthMenu: "_MENU_ por página",
+                sSearch: 'Buscar por detalle',
+                sSearchPlaceholder: 'Buscar registros'
+            }
+        });
+
+        // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"
+        $('#btnFiltrar').click(function () {
+            tabla.ajax.reload(); // Recargar la tabla con los nuevos filtros
+        });
+    </script>
+
 {% endblock %}    
 
 

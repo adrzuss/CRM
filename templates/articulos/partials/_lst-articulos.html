@@ -8,7 +8,7 @@
         </div>
         <div class="table-responsive">
             
-            <table class="display table table-bordered table-striped" id="dataTable" width="100%">
+            <table class="display table table-bordered table-striped" id="articulosTable" width="100%">
                 
                 <thead class="thead-dark">
                     <tr>
@@ -35,38 +35,10 @@
                     </tr>
                 </tfoot>
                 <tbody>
-                    {% for articulo in articulos %}
-                    <tr class="">
-                        <td scope="row">{{ articulo.codigo }}</td>
-                        <td>{{ articulo.rubro }}</td>
-                        <td>{{ articulo.marca }}</td>
-                        <td>{{ articulo.detalle }}</td>
-                        <td> {{"${:,.2f}".format(articulo.costo)}}</td>
-                        <td style="text-align: center;"> 
-                            {% if articulo.es_compuesto %}
-                                Si
-                            {% else %}
-                                No
-                            {% endif %}
-
-                        </td>
-                        <td style="text-align: center;">
-                            {% if articulo.imagen %}
-                                <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo" sizes="" srcset="" width="50" height="50">
-                            {% else %}    
-                                Sin imagen  
-                            {% endif %}
-                        </td>
-                        <td style="text-align: center;">
-                            <a href="{{ url_for('articulos.update_articulo', id=articulo.id) }}" class="btn btn-primario">Actualizar</a>
-                            <a href="#" class="btn btn-peligro">Eliminar</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                    
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
 

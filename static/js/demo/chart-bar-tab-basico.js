@@ -37,7 +37,7 @@ var det_art;
 var vtas_art;
 
 var myHorizontalBarChart = new Chart(ctx_art, {
-    type: 'horizontalBar', // Cambiar a 'horizontalBar' para barras horizontales
+    type: 'bar', // Cambiar a 'horizontalBar' para barras horizontales
     data: {
       labels: det_art,
       datasets: [{
@@ -75,7 +75,7 @@ var myHorizontalBarChart = new Chart(ctx_art, {
             maxTicksLimit: 5,
             padding: 10,
             callback: function(value, index, values) {
-              return number_format(value);
+              return number_format(value, 2, '.', '.');
             }
           },
           gridLines: {

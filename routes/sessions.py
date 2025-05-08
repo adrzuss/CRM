@@ -1,8 +1,9 @@
-from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, jsonify
+from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 from models.sucursales import Sucursales
+from utils.utils import alertas_mensajes, check_session
 
-bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions')
+bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions', static_folder='../static')
 
 @bp_sesiones.route('/login', methods=['GET', 'POST'])
 def login():
@@ -32,13 +33,15 @@ def logout():
     return redirect(url_for('index'))
 
 @bp_sesiones.route('/usuarios')
+@check_session
+@alertas_mensajes
 def usuarios():
     datos, status_code = get_usuarios()
     if status_code == 200:
-        return render_template('usuarios.html', usuarios=datos)
+        return render_template('usuarios.html', usuarios=datos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
     else:
         usuarios = []
-        return render_template('usuarios.html', usuarios=usuarios)
+        return render_template('usuarios.html', usuarios=usuarios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
 
 @bp_sesiones.route('/registro')
 def registro():
@@ -67,6 +70,7 @@ def add_user():
             flash('Las claves no coinciden', 'error')    
     
 @bp_sesiones.route('/update_user/<id>', methods=['GET', 'POST'])
+@alertas_mensajes
 def update_user(id):
     if request.method == 'GET':
         usuario, status_code = get_usuario(id)
@@ -83,19 +87,18 @@ def update_user(id):
         telefono = request.form['telefono']
         mail = request.form['mail']
         direccion = request.form['direccion']
-        nom_usuario = request.form['usuario']
+        usuario = request.form['usuario']
         clave = request.form['clave']
         
         tareas_seleccionadas = request.form.getlist('tareas')
 
         # Limpiar las asignaciones actuales del usuario
         limpiar_tareas(id)
-
         # Asignar las nuevas tareas seleccionadas
         for id_tarea in tareas_seleccionadas:
             update_tareas_usuario(id_tarea, id)
-        update_usuario(id, nombre, documento, telefono, mail, direccion, nom_usuario, clave)
+        update_usuario(id, nombre, documento, telefono, mail, direccion, usuario, clave)
         
-        flash('Tareas asignadas correctamente.')
+        flash('Usuario y tareas asignadas correctamente.')
         return redirect(url_for('index'))    
-    return render_template('upd-usuario.html', usuario=usuario, tareas=tareas, tareas_asignadas=tareas_asignadas)
+    return render_template('upd-usuario.html', usuario=usuario, tareas=tareas, tareas_asignadas=tareas_asignadas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)

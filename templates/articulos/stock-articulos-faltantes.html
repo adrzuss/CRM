@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="m-3">
+        <h2>Listado de stock: {{ nombre_sucursal }}</h2>
+    </div>
+    <div class="row justify-content-center align-items-center">
+        <div class="card m-3 col-10">
+            <h3 class="m-3">Stock de artículos</h3>
+            <div class="card-body">
+                
+                <div class="row">
+                    
+                    <div class="col-4 mb-3">
+                        <label for="idmarca" class="form-label">Marca</label>
+                        <select class="form-select form-select" name="idmarca" id="idmarca">
+                            <option >TODOS</option>    
+                            {% for lista in lista_marcas %}
+                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label for="idrubro" class="form-label">Rubro</label>
+                        <select class="form-select form-select" name="idrubro" id="idrubro">
+                            <option >TODOS</option>    
+                            {% for lista in lista_rubros %}
+                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                        <button id="btnFiltrar" class="col-2 m-4 btn btn-exito">Consultar</button>
+                    </div>    
+                </div>    
+        </div>
+    </div>    
+    <div class="card m-3"  >
+        <h3 class="m-3">Stock de artículos</h3>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="display table table-bordered table-striped" id="stockTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Rubro</th>
+                            <th scope="col">Marca</th>
+                            <th scope="col">Detalle</th>
+                            <th scope="col">Actual</th>
+                            <th scope="col">Máximo</th>
+                            <th scope="col">Deseable</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for articulo in listado %}
+                            <tr >
+                                <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=articulo.id ) }}">{{ articulo.codigo }}</a></td>
+                                <td>{{ articulo.detalle }}</td>
+                                {% if articulo.actual < 0 %}
+                                    <td class="text-dos-bold" style="text-align: center;">{{ articulo.actual|default(0)|round(2) }}</td>
+                                {% elif articulo.actual < articulo.deseable %}
+                                    <td class="text-cuatro-bold" style="text-align: center;">{{ articulo.actual|default(0)|round(2) }}</td>
+                                {% else %}
+                                    <td class="text-tres-bold" style="text-align: center;">{{ articulo.actual|default(0)|round(2) }}</td>
+                                {% endif %}
+                                <td style="text-align: center;">{{ articulo.maximo|default(0)|round(2) }}</td>
+                                <td style="text-align: center;">{{ articulo.deseable|default(0)|round(2) }}</td>
+                            </tr>
+                        {% endfor %}    
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            // Inicializar DataTables
+            const table = new DataTable('#stockTable', {
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ url_for('articulos.api_lst_stock_faltantes') }}",
+                    type: 'GET',
+                    data: function (d) {
+                        d.idmarca = $('#idmarca').val(); // Pasar el ID de la marca seleccionada
+                        d.idrubro = $('#idrubro').val(); // Pasar el ID del rubro seleccionado
+                    },
+                    error: function (xhr, error, thrown) {
+                        alert('Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.');
+                    }
+                },
+                columns: [
+                    { data: 'codigo' ,
+                    render: function (data, type, row) {
+                        return `
+                            <a href="update_articulo/${row.id}" >${data}</a>
+                        `;
+                    }},
+                    { data: 'rubro'},
+                    { data: 'marca'},
+                    { data: 'detalle'},
+                    { data: 'actual' ,
+                      className: 'text-center',
+                      render: function (data, type, row) {
+                        if (data < 0) {
+                            return `<span class="text-danger font-weight-bold">${parseFloat(data).toFixed(2)}</span>`; // Formatear como moneda
+                        } else if (data < row.deseable) {
+                            return `<span class="text-warning font-weight-bold">${parseFloat(data).toFixed(2)}</span>`; // Formatear como moneda
+                        } else {
+                            return `<span class="text-success font-weight-bold">${parseFloat(data).toFixed(2)}</span>`; // Formatear como moneda
+                        }
+                    }},
+                    { data: 'maximo' ,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        return `${parseFloat(data).toFixed(2)}`; // Formatear como moneda
+                    }},
+                    { data: 'deseable' ,
+                    className: 'text-center',
+                    render: function (data, type, row) {
+                        return `${parseFloat(data).toFixed(2)}`; // Formatear como moneda
+                    }}
+                    
+                ],
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                },
+                pageLength: 25,
+                lengthMenu: [10, 25, 50, 100]
+            });
+        
+            // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"
+            $('#btnFiltrar').click(function () {
+                const idmarca = $('#idmarca').val();
+                const idrubro = $('#idrubro').val();
+                if ((!idmarca) || (!idrubro)) {
+                    alert('Por favor, selecciona una marca y/o un rubro.');
+                    return;
+                }
+                table.ajax.reload(); // Recargar la tabla con los nuevos filtros
+            });
+        });
+    </script>
+    
+{% endblock %}    

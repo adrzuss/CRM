@@ -46,12 +46,10 @@ async function fetchProveedor(input) {
     let response;
     if (!isNaN(input)) {
       // Si es un número, buscar por ID
-      response = await fetch(`/get_proveedor/${input}`); //1 venta
+      response = await fetch(`${BASE_URL}/get_proveedor/${input}`); //1 venta
     } else {
       // Si es un nombre parcial, buscar por nombre
-      response = await fetch(
-        `/get_proveedores?nombre=${input}`
-      );
+      response = await fetch(`${BASE_URL}/get_proveedores?nombre=${input}`);
     }
   
     if (!response.ok) {
@@ -90,7 +88,7 @@ function asignarProveedor(proveedor) {
 }
   
 async function obtener_remitos(idproveedor) {
-    const response = await fetch(`/get_remitos/${idproveedor}`);
+    const response = await fetch(`${BASE_URL}/get_remitos/${idproveedor}`);
     const data = await response.json();
     if (data.length > 0) {
         const remitosSelect = document.getElementById("remitos_select");

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <h1 class="m-3">Nueva orden de pago</h1>
+    <div class="m-2">
+        <div class="container-fluid">
+            {% include 'partials/_modal-proveedor.html' %}
+            <form id="invoice_form" method="post">
+                <div class="row justify-content-center align-items-center">
+                    
+                    <div class="card mb-3 ml-2 col-8">    
+                        <div class="card-header">
+                            <h3 class="m-2">Datos de la orden</h3>
+                        </div>
+                        <div class="row">
+                            <h4 class="m-2 col-5">Proveedor</h4>
+                            <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                        </div>
+                        <div class="cardbody">
+                            <div class="row m-3">
+                                <div class="col-md-2">
+                                    <label for="idproveedor">Proveedor:</label>
+                                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" required>
+                                </div>    
+                                <div class="col-md-5">
+                                    <label for="proveedor_nombre">Nombre del Proveedor:</label>
+                                    <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+                                </div>   
+                                
+                            </div>    
+                            <div class="row m-3">    
+                                <div class="col-md-3">
+                                    <label for="fecha">Fecha:</label>
+                                    <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                                </div>    
+                                <div class="col-md-3">
+                                    <label for="nro_factura">Nro. de op:</label>
+                                    <input class="form-control" type="text" name="nro_factura" id="nro_factura" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="total">Total:</label>
+                                    <input class="form-control" type="text" name="total" id="total" step="0.01" min="0.01" required>
+                                </div>    
+                                
+                            </div>    
+                        </div>
+                    </div>        
+
+                    <div class="card mb-3 ml-2 col-3">    
+                        <div class="card-header">
+                            <h5 class="m-2">Remitos pendientes</h3>
+                        </div>
+                        <div class="row">
+                            <div id="remitos_select" class="col-12 m-2" style="display: none;"></div>
+                            
+                        </div>
+                        <div class="cardbody">
+                        </div>
+                    </div>        
+                </div>    
+
+                <div class="card">
+                    <div class="cardbody">
+                        <div id="items" name="items">
+                            
+                        </div>
+                    </div>
+                </div>    
+
+                <div class="row">
+                    <h3>Total op: $<span id="total_factura">0.00</span></h3>
+                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
+                </div>
+
+                <div class="card">
+                    <h4 class="m-3">Formas de pago</h4>
+                    <div class="card-body">
+                        <div class="row justify-content-md-center">
+                            <div class="col-3 mt-3">
+                                <label for="efectivo">Efectivo</label>
+                                <input type="number" name="efectivo" id="efectivo" class="form-control" value="0">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="row">
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarGasto">Guardar Factura</button>
+                </div>
+
+            </form>
+        </div>    
+    </div>    
+
+    <!-- TODO
+     Mover todos los scripts a archivos separados y/o a un blocke de scripts
+    -->
+    <!-- FIXIT
+     si el campo de precio tiene un valor no actualizarlo
+    --> 
+    <script src="{{ url_for('static', filename='js/nuevo_gasto.js')}}"></script>
+    
+{% endblock %}

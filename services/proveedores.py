@@ -4,7 +4,7 @@ from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC, RemitoFact
 from models.articulos import Articulo, Stock
 from models.ctacteprov import CtaCteProv
 from models.configs import AlcIva
-from services.articulos import actualizarStock
+from services.articulos import actualizarStock, get_articulo_by_codigo
 from utils.db import db
 from decimal import Decimal
 from services.articulos import actualizarStock
@@ -69,36 +69,38 @@ def procesar_items(form, idfactura, id_sucursal, actualizoCostos=False):
         impint = Decimal(0)
         exento = Decimal(0)
         for key, value in form.items():
-            if key.startswith('items') and key.endswith('[codigo]'):
-                index = key.split('[')[1].split(']')[0]
-                codigo = value
-                cantidad = Decimal(form[f'items[{index}][cantidad]'])
-                precio_unitario = Decimal(form[f'items[{index}][precio_unitario]'])
-                articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-                precio_total = precio_unitario * cantidad
-                alcIva = AlcIva.query.get(articulo.idiva)
-                iva += Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100))
-                impint += Decimal(Decimal(articulo.impint) * precio_total / Decimal(100))
-                exento += Decimal(Decimal(articulo.exento) * precio_total / Decimal(100))
-                total += precio_total
-                nuevo_item = ItemC(
-                    idfactura=idfactura,
-                    id=index, 
-                    idarticulo=articulo.id,
-                    cantidad=cantidad,
-                    precio_unitario=precio_unitario,
-                    precio_total=precio_total,
-                    idalciva=articulo.idiva,
-                    iva=Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100)),
-                    exento=articulo.exento * cantidad,
-                    impint=articulo.impint * cantidad
-                )
-                db.session.add(nuevo_item)
-                if articulo.costo != precio_unitario:
-                    actualizoCostos = True
-                    articulo.costo = precio_unitario
-                # Actualizar el stock
-                actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
+            response = get_articulo_by_codigo(value)
+            if response['success'] == True:
+                if key.startswith('items') and key.endswith('[codigo]'):
+                    index = key.split('[')[1].split(']')[0]
+                    codigo = value
+                    cantidad = Decimal(form[f'items[{index}][cantidad]'])
+                    precio_unitario = Decimal(form[f'items[{index}][precio_unitario]'])
+                    articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                    precio_total = precio_unitario * cantidad
+                    alcIva = AlcIva.query.get(articulo.idiva)
+                    iva += Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100))
+                    impint += Decimal(Decimal(articulo.impint) * precio_total / Decimal(100))
+                    exento += Decimal(Decimal(articulo.exento) * precio_total / Decimal(100))
+                    total += precio_total
+                    nuevo_item = ItemC(
+                        idfactura=idfactura,
+                        id=index, 
+                        idarticulo=articulo.id,
+                        cantidad=cantidad,
+                        precio_unitario=precio_unitario,
+                        precio_total=precio_total,
+                        idalciva=articulo.idiva,
+                        iva=Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100)),
+                        exento=articulo.exento * cantidad,
+                        impint=articulo.impint * cantidad
+                    )
+                    db.session.add(nuevo_item)
+                    if articulo.costo != precio_unitario:
+                        actualizoCostos = True
+                        articulo.costo = precio_unitario
+                    # Actualizar el stock
+                    actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
         return total, actualizoCostos
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")
@@ -250,21 +252,23 @@ def procesar_itemsR(form, idremito, id_sucursal):
     try:
         stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
         for key, value in form.items():
-            if key.startswith('items') and key.endswith('[codigo]'):
-                index = key.split('[')[1].split(']')[0]
-                codigo = value
-                cantidad = Decimal(form[f'items[{index}][cantidad]'])
-                articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-                nuevo_item = ItemC(
-                    idfactura=idremito,
-                    id=index, 
-                    idarticulo=articulo.id,
-                    cantidad=cantidad,
-                    precio_unitario=0,
-                    precio_total=0,
-                )
-                db.session.add(nuevo_item)
-                # Actualizar el stock
-                actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
+            response = get_articulo_by_codigo(value)
+            if response['success'] == True:
+                if key.startswith('items') and key.endswith('[codigo]'):
+                    index = key.split('[')[1].split(']')[0]
+                    codigo = value
+                    cantidad = Decimal(form[f'items[{index}][cantidad]'])
+                    articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                    nuevo_item = ItemC(
+                        idfactura=idremito,
+                        id=index, 
+                        idarticulo=articulo.id,
+                        cantidad=cantidad,
+                        precio_unitario=0,
+                        precio_total=0,
+                    )
+                    db.session.add(nuevo_item)
+                    # Actualizar el stock
+                    actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")

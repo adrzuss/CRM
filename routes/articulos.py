@@ -8,12 +8,13 @@ from models.sucursales import Sucursales
 from services.articulos import get_listado_precios, obtener_stock_sucursales, update_insert_articulo_compuesto, \
                                eliminarComp, obtenerArticulosMarcaRubro, procesar_nuevo_balance, \
                                procesar_articulo, procesar_cambio_precio, procesar_remito_a_sucursal, get_listado_articulos, \
-                               get_listado_stock
-from sqlalchemy import func, and_, case
+                               get_listado_stock, get_listado_stock_faltantes
+from sqlalchemy import func, and_, or_
 from sqlalchemy.sql import text
 from utils.db import db
 from utils.config import allowed_file
-from utils.utils import check_session, convertir_decimal, alertas_mensajes
+from utils.utils import check_session, convertir_decimal
+from utils.msg_alertas import alertas_mensajes
 from datetime import datetime
 
 bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/articulos')
@@ -24,7 +25,7 @@ bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/ar
 def articulos():
     marcas = Marca.query.order_by(Marca.nombre).all()
     rubros = Rubro.query.order_by(Rubro.nombre).all()
-    return render_template('articulos.html', rubros=rubros, marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('articulos.html', rubros=rubros, marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 #Esta funcion devulve los datos de los articulos paginados
 #para asi poder manejar grandes cantidades de datos
@@ -106,7 +107,7 @@ def update_articulo(id):
                 .filter(Articulo.id == articulo.id)  # Filtrar por el ID del artículo
                 .all()  # Obtener los resultados
             )
-        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
     if request.method == 'POST':
         
@@ -115,6 +116,7 @@ def update_articulo(id):
                 codigo=request.form['codigo']
                 detalle=request.form['detalle']
                 costo=request.form['costo']
+                costo_total=request.form['costo_total']
                 exento=request.form['exento']
                 impint=request.form['impint']
                 idiva=request.form['idiva']
@@ -123,7 +125,7 @@ def update_articulo(id):
                 idmarca=request.form['idmarca']
                 idTipoArticulo=request.form['idtipoarticulo']
                 esCompuesto=request.form.get("es_compuesto") != None
-                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto) 
+                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto) 
                 db.session.add(articulo)
                 
             except Exception as e:
@@ -135,6 +137,7 @@ def update_articulo(id):
                 articulo.codigo = request.form['codigo']
                 articulo.detalle = request.form['detalle']
                 articulo.costo = request.form['costo']
+                articulo.costo_total = request.form['costo_total']
                 articulo.exento = request.form['exento']
                 articulo.impint = request.form['impint']
                 articulo.idiva = request.form['idiva']
@@ -242,7 +245,7 @@ def componer_art(id):
                                 ).join(Marca, Articulo.idmarca == Marca.id
                                 ).join(Rubro, Articulo.idrubro == Rubro.id
                                 ).filter(ArticuloCompuesto.idarticulo == articulo.id).all()
-    return render_template('componer-art.html', articulo=articulo, compuestos=compuestos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('componer-art.html', articulo=articulo, compuestos=compuestos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/eliminarCompuesto/<int:idarticulo>/<int:idart_comp>')
 @check_session
@@ -268,7 +271,7 @@ def cambio_precio():
         listas_precios = ListasPrecios.query.all()
         rubros = Rubro.query.all()
         marcas = Marca.query.all()
-        return render_template('cambio-precio.html', listaRubros = rubros, listaMarcas = marcas, listas_precios=listas_precios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('cambio-precio.html', listaRubros = rubros, listaMarcas = marcas, listas_precios=listas_precios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 
 """
@@ -281,8 +284,9 @@ def filtrar_articulos(marca, rubro, lista_precio, porcentaje):
     return jsonify(success=True, articulos=resultado)
 
     
-@bp_articulos.route('/articulo/<string:codigo>/<int:idlista>')
-@check_session
+@bp_articulos.route('/articulo/<string:codigo>/<int:idlista>', methods=['GET'])
+#@check_session
+#busqueda de datos de articulos
 def get_articulo(codigo, idlista):
     # Buscar el artículo por código
     articulo = db.session.query(Articulo.id,
@@ -291,7 +295,7 @@ def get_articulo(codigo, idlista):
                                 Articulo.costo,
                                 Marca.nombre.label('marca')
                                 ).outerjoin(Marca, Marca.id == Articulo.idmarca
-                                ).filter(Articulo.codigo ==codigo).first()
+                                ).filter(Articulo.codigo == codigo).first()
     
     if not articulo:
         return jsonify(success=False, articulo={}), 404
@@ -330,8 +334,8 @@ def get_articulos():
                                          Marca.nombre.label('marca'),
                                          Precio.precio
                                         ).join(Precio, Precio.idarticulo == Articulo.id
-                                        ).outerjoin(Marca, Marca.id == Articulo.idmarca
-                                        ).filter(Articulo.detalle.like(f"%{detalle}%"), Precio.idlista == idlista).all()
+                                        ).join(Marca, Marca.id == Articulo.idmarca
+                                        ).filter(and_(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%")), Precio.idlista == idlista)).all()
         else:
             articulos = db.session.query(Articulo.id,
                                          Articulo.codigo,
@@ -339,8 +343,8 @@ def get_articulos():
                                          Articulo.costo,
                                          Marca.nombre.label('marca'),
                                          Articulo.costo.label('precio'),
-                                         ).outerjoin(Marca, Marca.id == Articulo.idmarca
-                                         ).filter(Articulo.detalle.like(f"%{detalle}%")).all()    
+                                         ).join(Marca, Marca.id == Articulo.idmarca
+                                         ).filter(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"{detalle}"))).all()    
     else:
         articulos = []
     return jsonify([{'id': a.id, 'codigo': a.codigo, 'marca': a.marca, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])
@@ -352,12 +356,12 @@ def lst_precios():
     listas_precios = ListasPrecios.query.all()
     lista_marcas = Marca.query.all()
     lista_rubros = Rubro.query.all()
-    return render_template('precios-articulos.html', listas_precios=listas_precios, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('precios-articulos.html', listas_precios=listas_precios, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/api/lst_precios', methods=['GET']) 
 @check_session
 def api_lst_precios():
-    # Obtener parámetros de DataTables aca_2
+    # Obtener parámetros de DataTables 
     draw = request.args.get('draw', type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
@@ -402,7 +406,7 @@ def lst_compuestos():
         resultado.close()
         
         # Retornar los datos procesados
-        return render_template('compuestos-articulos.html', listado=listado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('compuestos-articulos.html', listado=listado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -414,12 +418,12 @@ def lst_compuestos():
 def stock_art():
     lista_marcas = Marca.query.all()
     lista_rubros = Rubro.query.all()
-    return render_template('stock-articulos.html', nombre_sucursal=session['nombre_sucursal'], lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('stock-articulos.html', nombre_sucursal=session['nombre_sucursal'], lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/api/lst_stock', methods=['GET']) 
 @check_session
 def api_lst_stock():
-    # Obtener parámetros de DataTables aca_2
+    # Obtener parámetros de DataTables 
     
     draw = request.args.get('draw', type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
@@ -449,11 +453,46 @@ def api_lst_stock():
     }    
     return jsonify(resposne)
 
+@bp_articulos.route('/api/lst_stock_faltantes', methods=['GET']) 
+@check_session
+def api_lst_stock_faltantes():
+    # Obtener parámetros de DataTables 
+    
+    draw = request.args.get('draw', type=int)
+    start = request.args.get('start', 0, type=int)  # Índice del primer registro
+    length = request.args.get('length', 25, type=int)  # Número de registros por página
+    search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
+    idmarca = request.args.get('idmarca', type=int)
+    idrubro = request.args.get('idrubro', type=int)
+    
+    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
+
+    # Construir la consulta
+    if (not idmarca)or(not idrubro) :
+        response = {
+            'draw': draw,
+            'recordsTotal': 0,
+            'recordsFiltered': 0,  # Cambiar si aplicas filtros
+            'data': []
+        }
+    draw, total_records, total_filtered, data = get_listado_stock_faltantes(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)    
+    resposne = {
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': total_filtered,  # Cambiar si aplicas filtros
+        'data': data
+    }    
+    return jsonify(resposne)
+
 
 @bp_articulos.route('/stock_art_faltantes') 
 @check_session
 @alertas_mensajes
 def stock_art_faltantes():
+    lista_marcas = Marca.query.all()
+    lista_rubros = Rubro.query.all()
+    """
     listado = db.session.query(
         Articulo.id,
         Articulo.codigo,
@@ -466,25 +505,9 @@ def stock_art_faltantes():
     ).filter(
         Stock.actual <= 0     
     ).all()  
-    return render_template('stock-articulos.html', listado=listado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
-
-
-@bp_articulos.route('/stock_faltantes') 
-@check_session
-@alertas_mensajes
-def stock_faltantes():
-    listado = db.session.query(
-        Articulo.id,
-        Articulo.codigo,
-        Articulo.detalle,
-        Stock.actual,
-        Stock.maximo,
-        Stock.deseable
-    ).join(
-        Stock, Articulo.id == Stock.idarticulo
-    ).filter(Stock.actual <= 0
-    ).all()  
-    return render_template('stock-articulos.html', listado=listado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    """
+    listado = []
+    return render_template('stock-articulos-faltantes.html', listado=listado, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/stock_sucursales') 
 @check_session
@@ -496,14 +519,14 @@ def stock_sucursales():
     columnas = ['codigo', 'marca', 'rubro', 'detalle']
     for sucursal in sucursales:
         columnas.append(sucursal.nombre)
-    return render_template('stock-sucursales.html', columnas=columnas, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('stock-sucursales.html', columnas=columnas, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
                           
 @bp_articulos.route('/api/lst_stock_sucursales', methods=['GET']) 
 @check_session
 @alertas_mensajes
 def api_lst_stock_sucursales():
-    # Obtener parámetros de DataTables aca_2
+    # Obtener parámetros de DataTables
     draw = request.args.get('draw', type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
@@ -537,6 +560,21 @@ def api_lst_stock_sucursales():
         current_app.logger.error(f"Error en api_lst_stock_sucursales: {e}")
         return jsonify({'error': str(e)}), 500
     
+@bp_articulos.route('/api/precioVP/<costo>/<impInt>/<exento>/<idIva>')    
+def api_precioVP(costo, impInt, exento, idIva):
+    # aca
+    try:
+        from utils.utils import precio_VP
+        costo = convertir_decimal(costo)
+        impInt = convertir_decimal(impInt)
+        exento = convertir_decimal(exento)
+        idIva = int(idIva)
+        precioVP = precio_VP(costo, impInt, exento, idIva)
+        response = {"success": True, "precio": precioVP}    
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    
 #------------- Marcas y Rubros ---------------------        
 @bp_articulos.route('/rubros_marcas/<int:id>/<string:tipo>', methods=['GET'])    
 @bp_articulos.route('/rubros_marcas', methods=['GET'])        
@@ -565,7 +603,7 @@ def rubros_marcas(id=None, tipo=None):
         nombre_marca = None
         idrubro = None
         nombre_rubro = None            
-    return render_template('rubros-marcas.html', rubros=rubros, idrubro=idrubro, nombre_rubro=nombre_rubro, marcas=marcas, idmarca=idmarca, nombre_marca=nombre_marca, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('rubros-marcas.html', rubros=rubros, idrubro=idrubro, nombre_rubro=nombre_rubro, marcas=marcas, idmarca=idmarca, nombre_marca=nombre_marca, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 #------------- Marcas ---------------------    
 @bp_articulos.route('/marcas')    
@@ -573,7 +611,7 @@ def rubros_marcas(id=None, tipo=None):
 @alertas_mensajes
 def marcas():
     marcas = Marca.query.all()
-    return render_template('marcas.html', marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('marcas.html', marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/add_marca', methods=['POST'])
 @check_session
@@ -601,7 +639,7 @@ def add_marca():
 @check_session
 def rubros():
     rubro = Rubro.query.all()
-    return render_template('rubros.html', rubro=rubro, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('rubros.html', rubro=rubro, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_articulos.route('/add_rubro', methods=['POST'])
 @check_session
@@ -636,7 +674,7 @@ def ing_balance():
         return redirect(url_for('index'))
     else:
         tipoBalances = TipoBalances.query.all()
-        return render_template('ing-balance.html', tipoBalances=tipoBalances, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('ing-balance.html', tipoBalances=tipoBalances, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 # -------------------- Remitos a sucursales --------------------
 
@@ -652,5 +690,5 @@ def remitos_sucursales():
         return redirect(url_for('index'))
     else:
         sucursales = Sucursales.query.all()
-        return render_template('ing-remitos-sucursales.html', sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('ing-remitos-sucursales.html', sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
         

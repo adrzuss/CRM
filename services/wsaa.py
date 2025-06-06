@@ -3,6 +3,8 @@
     <destination>cn=wsaa,o=AFIP,c=ar,serialNumber=CUIT 33693450239</destination>
     
 """
+import logging
+from flask import current_app
 import base64
 import subprocess
 from datetime import datetime, timedelta
@@ -32,13 +34,15 @@ class LoginTicket:
             unique_id = int(now.timestamp())
             gen_time = (now - timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%S-03:00")
             exp_time = (now + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%S-03:00")
-
+            current_app.logger.info(f"Generación del XML")
+            current_app.logger.info(f"desde: {gen_time}, hasta: {exp_time}")
             xml = self.xml_template.format(
                 uniqueId=unique_id,
                 generationTime=gen_time,
                 expirationTime=exp_time,
                 service=servicio
             )
+            current_app.logger.info(f"XML generado: {xml}")
             # Crear archivos temporales
             with tempfile.TemporaryDirectory() as tmpdir:
                 xml_path = os.path.join(tmpdir, "request.xml")
@@ -86,7 +90,7 @@ class LoginTicket:
 
             # Parsear XML de respuesta
             xml_resp = ET.fromstring(response)
-            print('la respuesta es:', xml_resp)
+            current_app.logger.info(f"La respuestas del loginCms es: {xml_resp}")
             return {
                 'token': xml_resp.find(".//token").text,
                 'sign': xml_resp.find(".//sign").text,
@@ -95,9 +99,11 @@ class LoginTicket:
             }
 
         except subprocess.CalledProcessError as e:
-            return {'error': f"OpenSSL error: {e}"}
+            current_app.logger.error(f"Error al ejecutar OpenSSL(1): {e}")
+            return {'success': False,'error': f"OpenSSL error: {e}"}
         except Exception as e:
-            return {'error': str(e)}
+            current_app.logger.error(f"Error al ejecutar OpenSSL(2): {e}")
+            return {'success': False,'error': str(e)}
     
 
 # Configuración Flask

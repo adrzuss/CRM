@@ -1,8 +1,9 @@
-from flask import request, session, jsonify, json
+from flask import session, jsonify, json, Response
+import os
+import tempfile
 from decimal import Decimal
-from datetime import date, timedelta
-from utils.utils import format_currency
-from services.articulos import actualizarStock
+from datetime import date, timedelta, datetime
+from services.articulos import actualizarStock, get_articulo_by_codigo
 from services.configs import discrimina_iva
 
 from utils.utils import format_currency, precio
@@ -10,12 +11,13 @@ from models.ventas import Factura, Item, PagosFV
 from models.clientes import Clientes
 from models.articulos import Articulo, ListasPrecios, Stock
 from models.ctactecli import CtaCteCli
-from models.configs import PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes
+from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva
 from sqlalchemy import func, extract, text, and_
 from sqlalchemy.exc import SQLAlchemyError
 from utils.db import db
 from utils.config import Config
 from services.facturador import Facturador
+from services.generar_factura import generar_factura_pdf
 
 def get_certificado_clave_fe(id_punto_vta):
     try:
@@ -23,6 +25,9 @@ def get_certificado_clave_fe(id_punto_vta):
         if punto_vta.fac_electronica == True:
             #cert_file = os.path.join(os.getcwd(), Config.FE_FILES_FOLDER, punto_vta.certificado_p12)
             cert_file =  Config.FE_FILES_FOLDER + '/' + punto_vta.certificado_p12
+            if not os.path.exists(cert_file):
+                msg = f'El certificado {punto_vta.certificado_p12} no existe'
+                return None, None, msg
             msg = ''
             return cert_file, punto_vta.clave_certificado, msg
         else:
@@ -94,19 +99,19 @@ def facturar_fe(ptovta, idfactura):
         return jsonify({'success': False, 'error': msg}), 400
     try:
         # 1. Obtener datos de la factura desde la DB
-        print('1- Obtener datos de la factura desde la DB')
+        #print('1- Obtener datos de la factura desde la DB')
         result_proxy = db.session.execute(text("CALL get_datosfac_fe(:id)"), {'id': idfactura})
         result = result_proxy.fetchall()
         result_proxy.close
-        print('2- Obtener datos de la factura desde la DB')
+        #print('2- Obtener datos de la factura desde la DB')
         if not result:
             return jsonify({"error": "Factura no encontrada"}), 404
         # 2. Parsear el JSON
         
-        print('2- Parsear el JSON')
+        #print('2- Parsear el JSON')
         factura_db = json.loads(result[0][0])  # Asume que el SP devuelve JSON como cadena
         # 3. Mapear a la estructura esperada por Facturador
-        print('3- Mapear a la estructura esperada por Facturador')
+        #print('3- Mapear a la estructura esperada por Facturador')
         datos_factura = {
             "cliente": {
                 "tipo_doc": factura_db["cliente"]["tipo_doc"],
@@ -132,14 +137,14 @@ def facturar_fe(ptovta, idfactura):
         if not datos_factura["items"]:
             return jsonify({"error": "La factura no tiene items"}), 400
         # Crear facturador
-        print('4- Crear facturador')
+        #print('4- Crear facturador')
         facturador = Facturador({
             'cert_path': AFIP_CERT_PATH,
             'cert_password': AFIP_CERT_PASSWORD,
             'punto_venta': datos_factura["punto_venta"]
         })
         
-        print('5- Emitir factura')
+        #print('5- Emitir factura')
         # Emitir factura
         resultado = facturador.emitir_factura(
             cliente=datos_factura["cliente"],
@@ -148,7 +153,7 @@ def facturar_fe(ptovta, idfactura):
             punto_venta=datos_factura["punto_venta"])
         
         # 6. Actualizar la factura en DB con el CAE
-        print('6- Actualizar la factura en DB con el CAE')
+        #print('6- Actualizar la factura en DB con el CAE')
         try:
             db.session.execute(
                 text("""
@@ -167,7 +172,7 @@ def facturar_fe(ptovta, idfactura):
                 }
             )
             db.session.commit()
-            print('7- Actualizado')
+            #print('7- Actualizado')
             return jsonify({
                 'success': True,
                 'result': resultado
@@ -185,16 +190,106 @@ def facturar_fe(ptovta, idfactura):
             'error': str(e)
         }), 500
         
+def generar_factura(id_factura):
+    # Simulación de datos (reemplazar con consulta a la BD)
+    config = db.session.query(
+                            Configuracion.nombre_fantasia,
+                            Configuracion.documento,
+                            Configuracion.direccion,
+                            Configuracion.localidad,                            
+                            Configuracion.provincia,
+                            TipoIva.descripcion.label('condicion_iva'),
+                            ).join(TipoIva, TipoIva.id == Configuracion.tipo_iva) \
+                            .first()
+    cabecera = db.session.query(
+                            Factura.fecha,
+                            Factura.nro_comprobante,
+                            Factura.total,
+                            Factura.iva,
+                            Factura.exento, 
+                            Factura.impint,
+                            Factura.cae,
+                            Factura.cae_vto,
+                            Clientes.nombre,
+                            Clientes.documento,
+                            Clientes.direccion,
+                            Clientes.localidad,
+                            Clientes.provincia,
+                            TipoIva.descripcion.label('condicion_iva')) \
+                            .join(Clientes, Clientes.id == Factura.idcliente) \
+                            .join(TipoIva, TipoIva.id == Clientes.id_tipo_iva) \
+                            .filter(Factura.id == id_factura) \
+                            .first()        
+                            
+    
+    datos_factura = {
+        "tipo_comprobante": "Factura C",
+        "emisor_nombre": config.nombre_fantasia,
+        "emisor_cuit": config.documento,
+        "emisor_condicion_iva": config.condicion_iva,
+        "emisor_domicilio": f"{config.direccion} - {config.localidad}, {config.provincia}",
+        "receptor_nombre": cabecera.nombre,
+        "receptor_cuit": cabecera.documento,
+        "receptor_condicion_iva": cabecera.condicion_iva,
+        "receptor_domicilio": f"{cabecera.direccion} - {cabecera.localidad}, {cabecera.provincia}",
+        "subtotal": round(cabecera.total - cabecera.iva - cabecera.exento - cabecera.impint, 2),
+        "total":  round(cabecera.total, 2),
+        "cae": cabecera.cae,
+        "vencimiento_cae": cabecera.cae_vto
+    }
+    
+    items_fac = db.session.query(
+                            Item.cantidad,
+                            Item.precio_unitario,
+                            Item.precio_total,
+                            Item.iva,
+                            Item.exento,
+                            Item.impint,
+                            Articulo.codigo,
+                            Articulo.detalle) \
+                            .join(Articulo, Articulo.id == Item.idarticulo) \
+                            .filter(Item.idfactura == id_factura) \
+                            .all()
+    items = []                        
+    for item in items_fac:
+        items.append({"codigo": item.codigo,
+                      "descripcion": item.detalle,
+                      "cantidad": round(item.cantidad, 2),
+                      "unidad_medida": "unidad",
+                      "precio_unitario": round(item.precio_unitario, 2),
+                      "subtotal": round(item.precio_total - item.iva - item.exento - item.impint, 2)})                            
+  
+    # Generar el PDF
+    #archivo = Config.INVOICES_FOLDER + f"/factura_{datos_factura['tipo']}_{datos_factura['punto_venta']}_{datos_factura['nro_comprobante']}.pdf"
+    #print(archivo)
+    
+    with tempfile.TemporaryDirectory() as tempdir:
+        pdf_path = os.path.join(tempdir, f"Factura.pdf")
+        print(pdf_path)
+        generar_factura_pdf(pdf_path, datos_factura, items)
+        print('Vamos a enviar PDF en:', pdf_path)
+        # ✅ — Enviamos el archivo
+        with open(pdf_path, 'rb') as f:
+            response = Response(f.read(), mimetype='application/pdf')
+            response.headers['Content-Disposition'] = f'attachment; filename=Factura.pdf'
+            print('La respuesta es:', response)
+            return response
+
+    
+    
+    #archivo = generar_pdf(datos_factura, articulos)
+        
+        
 def procesar_nueva_venta(form, id_sucursal):
     try:
-        idcliente = request.form['idcliente']
-        fecha = request.form['fecha']
-        idlista = request.form['idlista']
-        id_tipo_comprobante = request.form['id_tipo_comprobante']
-        efectivo = float(request.form['efectivo'])
-        tarjeta = float(request.form['tarjeta'])
-        entidad = request.form['entidad']
-        ctacte = float(request.form['ctacte'])
+        idcliente = form['idcliente']
+        fecha = form['fecha']
+        idlista = form['idlista']
+        id_tipo_comprobante = form['id_tipo_comprobante']
+        efectivo = float(form['efectivo'])
+        tarjeta = float(form['tarjeta'])
+        entidad = form['entidad']
+        ctacte = float(form['ctacte'])
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
         discrimina = discrimina_iva(id_tipo_comprobante)
@@ -239,51 +334,56 @@ def procesar_items(form, idfactura, discrimina, id_sucursal):
     total_impint = Decimal(0)
     
     #stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
-    for key, value in form.items():
-        if key.startswith('items') and key.endswith('[codigo]'):
-            precio_total = Decimal(0)
-            index = key.split('[')[1].split(']')[0]
-            codigo = value
-            cantidad = Decimal(form[f'items[{index}][cantidad]'])
-            precioUnit = Decimal(form[f'items[{index}][precio_unitario]'])
-            articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-            iva = AlcIva.query.get(articulo.idiva)
-            ingbto = AlcIB.query.get(articulo.idib)
-            precios = precio(precioUnit, articulo.impint, articulo.exento, Decimal(0), Decimal(0), Decimal(iva.alicuota), Decimal(ingbto.alicuota))
-            #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
-            #precio_unitario = precio.precio if precio else Decimal(0)
-            precio_total = precios['PFinal'] * cantidad
-            if not discrimina:
-                idalciva = 0
-                iva = 0
-            else:    
-                idalciva = articulo.idiva
-                iva = precios['Iva'] * cantidad
-            exento = precios['Exento'] * cantidad
-            impint = precios['ImpInt'] * cantidad
-            ingbrutos = precios['IngBto'] * cantidad
-            nuevo_item = Item(
-                idfactura=idfactura,
-                id=index,
-                idarticulo=articulo.id,
-                cantidad=cantidad,
-                precio_unitario=precios['PFinal'],
-                precio_total=precio_total,
-                iva=iva,
-                idalciva=idalciva,
-                ingbto=ingbrutos,
-                idingbto=ingbto.id,
-                exento=exento,  
-                impint=impint
-            )
-            db.session.add(nuevo_item)
-            total += precio_total
-            total_iva += iva
-            total_exento += exento
-            total_impint += impint
+    try:
+        for key, value in form.items():
+            response = get_articulo_by_codigo(value)
+            if response['success'] == True:
+                if key.startswith('items') and key.endswith('[codigo]'):
+                    precio_total = Decimal(0)
+                    index = key.split('[')[1].split(']')[0]
+                    codigo = value
+                    cantidad = Decimal(form[f'items[{index}][cantidad]'])
+                    precioUnit = Decimal(form[f'items[{index}][precio_unitario]'])
+                    articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                    iva = AlcIva.query.get(articulo.idiva)
+                    ingbto = AlcIB.query.get(articulo.idib)
+                    precios = precio(precioUnit, articulo.impint, articulo.exento, Decimal(0), Decimal(0), Decimal(iva.alicuota), Decimal(ingbto.alicuota))
+                    #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
+                    #precio_unitario = precio.precio if precio else Decimal(0)
+                    precio_total = precios['PFinal'] * cantidad
+                    if not discrimina:
+                        idalciva = 0
+                        iva = 0
+                    else:    
+                        idalciva = articulo.idiva
+                        iva = precios['Iva'] * cantidad
+                    exento = precios['Exento'] * cantidad
+                    impint = precios['ImpInt'] * cantidad
+                    ingbrutos = precios['IngBto'] * cantidad
+                    nuevo_item = Item(
+                        idfactura=idfactura,
+                        id=index,
+                        idarticulo=articulo.id,
+                        cantidad=cantidad,
+                        precio_unitario=precios['PFinal'],
+                        precio_total=precio_total,
+                        iva=iva,
+                        idalciva=idalciva,
+                        ingbto=ingbrutos,
+                        idingbto=ingbto.id,
+                        exento=exento,  
+                        impint=impint
+                    )
+                    db.session.add(nuevo_item)
+                    total += precio_total
+                    total_iva += iva
+                    total_exento += exento
+                    total_impint += impint
 
-            # Actualizar el stock
-            actualizarStock(id_sucursal, articulo.id, -cantidad, id_sucursal)
+                    # Actualizar el stock
+                    actualizarStock(id_sucursal, articulo.id, -cantidad, id_sucursal)
+    except SQLAlchemyError as e:
+        print(f"Error procesando items: {e}")            
     
     return total, total_iva, total_exento, total_impint
 
@@ -292,21 +392,25 @@ def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctac
         if efectivo > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=1, tipo=1, entidad=0, total=Decimal(efectivo)))
         if tarjeta > 0:
-            entidad = int(request.form['entidad'])
+            entidad = int(entidad)
             db.session.add(PagosFV(idfactura=idfactura, idpago=2, tipo=2, entidad=entidad, total=Decimal(tarjeta)))
         if ctacte > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=3, tipo=3, entidad=0, total=Decimal(ctacte)))
-            db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0)), idcomp=idfactura)
+            db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0), idcomp=idfactura))
         #db.session.commit()
     except SQLAlchemyError as e:
+        print(f"Error de base de datos procesando pagos: {e}")
+        raise Exception(f"Error de base de datos procesando pagos: {e}")
+    except Exception as e:
+        print(f"Error procesando pagos: {e}")
         raise Exception(f"Error procesando pagos: {e}")
 
 def procesar_nuevo_remito(form, id_sucursal):
     try:
-        idcliente = request.form['idcliente']
-        fecha = request.form['fecha']
+        idcliente = form['idcliente']
+        fecha = form['fecha']
         idlista = 0
-        id_tipo_comprobante = request.form['id_tipo_comprobante']
+        id_tipo_comprobante = form['id_tipo_comprobante']
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
         
@@ -341,30 +445,32 @@ def procesar_nuevo_remito(form, id_sucursal):
 def procesar_items_remito(form, idremito, id_sucursal):
     stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
     for key, value in form.items():
-        if key.startswith('items') and key.endswith('[codigo]'):
-            index = key.split('[')[1].split(']')[0]
-            codigo = value
-            cantidad = Decimal(form[f'items[{index}][cantidad]'])
-            articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-            #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
-            #precio_unitario = precio.precio if precio else Decimal(0)
-            nuevo_item = Item(
-                idfactura=idremito,
-                id=index,
-                idarticulo=articulo.id,
-                cantidad=cantidad,
-                precio_unitario=0,
-                precio_total=0,
-                iva=0,
-                idalciva=0,
-                ingbto=0,
-                idingbto=0,
-                exento=0,  
-                impint=0
-            )
-            db.session.add(nuevo_item)
-            # Actualizar el stock
-            actualizarStock(stock.idstock, articulo.id, -cantidad, id_sucursal)
+        response = get_articulo_by_codigo(value)
+        if response['success'] == True:
+            if key.startswith('items') and key.endswith('[codigo]'):
+                index = key.split('[')[1].split(']')[0]
+                codigo = value
+                cantidad = Decimal(form[f'items[{index}][cantidad]'])
+                articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
+                #precio_unitario = precio.precio if precio else Decimal(0)
+                nuevo_item = Item(
+                    idfactura=idremito,
+                    id=index,
+                    idarticulo=articulo.id,
+                    cantidad=cantidad,
+                    precio_unitario=0,
+                    precio_total=0,
+                    iva=0,
+                    idalciva=0,
+                    ingbto=0,
+                    idingbto=0,
+                    exento=0,  
+                    impint=0
+                )
+                db.session.add(nuevo_item)
+                # Actualizar el stock
+                actualizarStock(stock.idstock, articulo.id, -cantidad, id_sucursal)
     
     return True
 
@@ -604,6 +710,21 @@ def ventas_por_mes():
             'operaciones': cantidades_operaciones
         }
         
+def get_vta_rubros(desde_vend, hasta_vend):
+    nombres_rubros = []
+    ventas_rubros = []
+    db.session.execute(text("SET lc_time_names = 'es_ES'"))
+    resultados = db.session.execute(text("CALL venta_rubros(:desde, :hasta)"),
+                         {'desde': desde_vend, 'hasta': hasta_vend}).fetchall()
+    for resultado in resultados:
+        nombres_rubros.append(resultado.rubro)
+        ventas_rubros.append(resultado.vtaRubro)
+    print('Resultados de venta_rubros:', resultados)
+    return {
+            'rubros': nombres_rubros,
+            'vtaRubros': ventas_rubros
+        }
+        
 def pagos_hoy():
     fecha = date.today()
     try:
@@ -703,3 +824,37 @@ def get_vta_vendedores_data(desde, hasta):
             'tktProm': format_currency(venta[3])
         })
     return ventas_list
+#---------------- recibos de cta cte ------------------#
+
+def procesar_recibo_cta_cte(form, ctactecli):
+    efectivo = float(form['efectivo'])
+    tarjeta = float(form['tarjeta'])
+    entidad = form['entidad']
+    try:
+        recibo = Factura(
+            idsucursal=session['id_sucursal'],
+            idusuario=session['user_id'],
+            idcliente=ctactecli.idcliente,
+            idlista=1,
+            id_tipo_comprobante=12, #Recibo
+            fecha=form['fecha'],
+            total= Decimal(ctactecli.debe) - Decimal(ctactecli.haber),
+            iva=0,
+            exento=0,
+            impint=0,
+            nro_comprobante=getNroComprobante(12),
+            punto_vta=session['idPuntoVenta']
+        )
+        db.session.add(recibo)
+        db.session.flush()
+        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, efectivo, tarjeta, entidad, 0)
+        return recibo
+    except SQLAlchemyError as e:
+        recibo = []
+        print(f"Error procesando recibo de cta cte: {e}")
+        raise Exception(f"Error procesando recibo de cta cte: {e}")
+    except Exception as e:
+        recibo = []
+        print(f"Error procesando recibo de cta cte: {e}")
+        raise Exception(f"Error procesando recibo de cta cte: {e}")
+    

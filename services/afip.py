@@ -1,4 +1,5 @@
-from flask import session
+import logging
+from flask import session, current_app
 from datetime import datetime
 from zeep import Client, Transport
 from requests import Session
@@ -59,7 +60,9 @@ class AFIP:
             else:
                 """Obtiene ticket de autenticación (TA)"""
                 print('Servicio:', self.service)
+                current_app.logger.debug(f"Servicio: {self.service}")
                 login = LoginTicket(self._get_cuit_from_certificate(), verbose=self.verbose)
+                current_app.logger.info(f"Obtener TA y respuesta")
                 ta = login.obtener_login_ticket_response(
                     servicio=self.service,
                     url_wsaa=self.wsaa_url,
@@ -72,7 +75,9 @@ class AFIP:
                     print('TA:', ta)
                     print('------------------------------------------------')
                 print('vamos a ver si el TA tiene error')    
+                current_app.logger.info(f"vamos a ver si el TA tiene error")
                 print('Error TA:', ta)
+                current_app.logger.info(f"Error TA:: {ta}")
                 if ta.get('error') == None:
                     print('sin error obteniendo TA')
                     try:
@@ -83,7 +88,8 @@ class AFIP:
                             'Cuit': self._get_cuit_from_certificate()
                         }
                     except Exception as e:
-                        print(f"Error al obtener datos de autenticación: {str(e)}")
+                        print(f"Error al obtener datos del CUIT: {str(e)}")
+                        return {'success': False, 'error': f'Error obteniendo datos del CUIT:{e}'}
                     print('Auth:', self.auth)
                     self.save_auth_data()    
                     if self.verbose:
@@ -95,7 +101,9 @@ class AFIP:
                 else:
                     print('Error al obtener datos de autenticación')
                     print('Error:', ta.error)
-                    return {'success': False, 'error': ta.error}
+                    current_app.logger.error('Error al obtener datos de autenticación')
+                    current_app.logger.error(f'Error:', ta.error)
+                    return {'success': False, 'error': f'Error obteniendo ta:{ta.error}'}
         else:
             print('No existe punto de venta con ese ID')    
             return {'success': False, 'error': 'No existe punto de venta con ese ID'}

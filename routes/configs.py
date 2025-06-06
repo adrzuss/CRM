@@ -6,7 +6,8 @@ from models.articulos import ListasPrecios
 from models.sucursales import Sucursales
 from services.configs import grabar_configuracion, save_and_update_lista_precios, grabarDatosPtoVta, validar_cuit
 from utils.db import db
-from utils.utils import check_session, alertas_mensajes
+from utils.utils import check_session
+from utils.msg_alertas import alertas_mensajes
 
 bp_configuraciones = Blueprint('configuraciones', __name__, template_folder='../templates/configuracion')
 
@@ -22,14 +23,7 @@ def configuraciones():
     tareas = Tareas.query.all()
     alcIB = AlcIB.query.all()
     planCtas = PlanCtas.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
-
-"""
-@bp_configuraciones.route('/alc_iva')
-def alc_iva():
-    alcIva = AlcIva.query.all()
-    return render_template('alicuotas-iva.html', alicuotas=alcIva)
-"""    
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -135,7 +129,7 @@ def abm_sucursales():
             flash('Datos de sucursal grabados')
     sucursal = None    
     sucursales = Sucursales.query.all()
-    return render_template('abm-sucursales.html', sucursal=sucursal, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('abm-sucursales.html', sucursal=sucursal, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/update_sucursal/<int:id>', methods=['GET'])
 @check_session
@@ -143,7 +137,7 @@ def abm_sucursales():
 def update_sucursal(id):
     sucursal = Sucursales.query.get(id)
     sucursales = Sucursales.query.all()
-    return render_template('abm-sucursales.html', sucursales=sucursales, sucursal=sucursal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('abm-sucursales.html', sucursales=sucursales, sucursal=sucursal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/abm-sucursales/<int:id>/delete', methods=['GET', 'POST'])
 @check_session
@@ -164,7 +158,7 @@ def puntos_venta(id=0):
             puntoVenta = None    
     sucursales = Sucursales.query.all()    
     puntos_venta = PuntosVenta.query.all()
-    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/get_tipos_comprobantes/<id_tipo_iva>/<aplica>')
 @check_session

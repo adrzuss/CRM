@@ -112,19 +112,8 @@
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
 
     <script>
-        //document.onload(cargaAlertas());
-
-        function cargaAlertas() {
-            var alertas = document.getElementById('alertas');
-            var cantidadAlertas = document.getElementById('alertasCount');
-
-            function formatDate(dateStr) {
-                let date = new Date(dateStr);
-                return date.toISOString().split('T')[0];
-            }
-            
-                
-        }
+        window.BASE_URL = "{{ request.script_root }}";
+        
     </script>
     {% block js_script %}
         

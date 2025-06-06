@@ -57,7 +57,7 @@ function asignarProveedor(proveedor) {
 }
 
 async function obtener_remitos(idproveedor) {
-  const response = await fetch(`/get_remitos/${idproveedor}`);
+  const response = await fetch(`${BASE_URL}/proveedores/get_remitos/${idproveedor}`);
   const data = await response.json();
   if (data.length > 0) {
       const remitosSelect = document.getElementById("remitos_select");
@@ -90,12 +90,10 @@ async function fetchProveedor(input) {
   let response;
   if (!isNaN(input)) {
     // Si es un número, buscar por ID
-    response = await fetch(`/get_proveedor/${input}`); //1 venta
+    response = await fetch(`${BASE_URL}/proveedores/get_proveedor/${input}`); //1 venta
   } else {
     // Si es un nombre parcial, buscar por nombre
-    response = await fetch(
-      `/get_proveedores?nombre=${input}`
-    );
+    response = await fetch(`${BASE_URL}/proveedores/get_proveedores?nombre=${input}`);
   }
 
   if (!response.ok) {
@@ -154,9 +152,9 @@ function mostrarModalSeleccionProveedores(proveedores) {
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
   if (!isNaN(id)) {
-    response = await fetch(`/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
   }
 
   if (!response.ok) {

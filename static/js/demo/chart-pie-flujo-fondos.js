@@ -45,59 +45,18 @@ let myPieChart = new Chart(ctx, {
   },
 });
 
-
-let ctxCC = document.getElementById("pieChartCtaCtes");
-let tipoCtaCtes;
-let totCtaCtes;
-totCtaCtes = [100, 200];
-tipoCtaCtes = ['Cta ctes clientes', 'Cta cte proeveedores'];
 /*coloresPie = ['#4e73df', '#1cc88a', '#36b9cc', '#731d56', '#c81b90', '#277540'];*/
 coloresPie = ['#1150af', '#008060', '#bb1133', '#a95943', '#f6a22d', '#4f3844'];
 coloresPieHover = ['#1870F5','#00EDB2', '#FF1746'];
 
 window.onload = () => {
-  const titulosCtaCtes = document.getElementById('ctaCtes');
-  for(let i = 0; i < tipoCtaCtes.length; i++){
-    titulosCtaCtes.innerHTML += '<span class="mr-2">  <i class="fas fa-circle" style="color:' + coloresPie[i] + '"></i> ' + tipoCtaCtes[i] + ' </span>';
-  }
-
+  
   const titulosIngresosEgresos = document.getElementById('ingresosEgresos');
   for(let i = 0; i < tipoPagos.length; i++){
     titulosIngresosEgresos.innerHTML += '<span class="mr-2">  <i class="fas fa-circle" style="color:' + coloresVtasCompras[i] + '"></i> ' + tipoPagos[i] + ' </span>';
   }
   
 }
-
-let myPieChartCC = new Chart(ctxCC, {
-  type: 'doughnut', // Pie Chart
-  data: {
-    labels: tipoCtaCtes,
-    datasets: [{
-      data: totCtaCtes,
-      backgroundColor: coloresPie,
-      hoverBackgroundColor: coloresPieHover,
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: false
-    },
-    cutoutPercentage: 30,
-  },
-});
-
 
 function number_format(number, decimals, dec_point, thousands_sep) {
   // *     example: number_format(1234.56, 2, ',', ' ');

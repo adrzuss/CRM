@@ -1,5 +1,5 @@
 from utils.db import db
-from datetime import timedelta
+from datetime import timedelta, date, datetime
 
 class EntidadesCred(db.Model):
     __tablename__ = 'entidades'
@@ -11,4 +11,4 @@ class EntidadesCred(db.Model):
     def __init__(self, entidad, telefono):
         self.entidad = entidad
         self.telefono = telefono
-        self.baja = timedelta(0)
+        self.baja = datetime(1900, 1, 1)

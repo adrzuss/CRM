@@ -10,17 +10,16 @@ window.onbeforeunload = function () {
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     // Realizar la solicitud a la API
-    const response = await fetch('/get_punto_vta');
+    const response = await fetch(`${BASE_URL}/get_punto_vta`);	
     const data = await response.json(); 
-    console.log("data:", data.punto_vta);
     // Verificar el valor de punto_vta
     if (!data.punto_vta) {
       // Si punto_vta es null o no está definido, mostrar el modal
-      const ptosVtasSucursal = await fetch('/get_puntos_vta_sucursal');
+      const ptosVtasSucursal = await fetch(`${BASE_URL}/get_puntos_vta_sucursal`);
       const datos = await ptosVtasSucursal.json(); 
-      console.log("los datos datos:", datos);
+      
       if (datos.length == 1) {
-        console.log("datos[0].id:", datos[0].id);
+      
         asignarPuntoVenta(datos[0].id);
       }
       else{
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
     // Llamar a la API para asignar el punto de venta a la sesión
-    const response = await fetch('/set_punto_vta', {
+    const response = await fetch(`${BASE_URL}/set_punto_vta`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -157,12 +156,10 @@ async function fetchCliente(input) {
   if (input != ""){
     if (!isNaN(input)) {
       // Si es un número, buscar por ID
-      response = await fetch(`/get_cliente/${input}/${4}`); //4 remito
+      response = await fetch(`${BASE_URL}/get_cliente/${input}/${4}`); //4 remito
     } else {
       // Si es un nombre parcial, buscar por nombre
-      response = await fetch(
-        `/get_clientes?nombre=${input}&&tipo_operacion=${4}`
-      );
+      response = await fetch(`${BASE_URL}/get_clientes?nombre=${input}&&tipo_operacion=${4}`);
     }
 
     if (!response.ok) {
@@ -237,9 +234,9 @@ function asignarCliente(cliente) {
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
   if (!isNaN(id)) {
-    response = await fetch(`/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+    response = await fetch(`${BASE_URL}/get_articulos?detalle=${id}&idlista=${idlista}`);
   }
 
   if (!response.ok) {

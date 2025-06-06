@@ -1,6 +1,7 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
+
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
     return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
@@ -10,76 +11,91 @@ window.onbeforeunload = function () {
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     // Realizar la solicitud a la API
-    const response = await fetch('/get_punto_vta');
+    const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);	
     const data = await response.json(); 
-    console.log("data:", data.punto_vta);
     // Verificar el valor de punto_vta
-    if (!data.punto_vta) {
+    if (data.success == false) {
+      console.log("Error al obtener el punto de venta:", data.message);
+      return;
+    }  
+    if (!data.punto_vta || data.punto_vta == 0) {
       // Si punto_vta es null o no está definido, mostrar el modal
-      const ptosVtasSucursal = await fetch('/get_puntos_vta_sucursal');
+      const ptosVtasSucursal = await fetch(`${BASE_URL}/ventas/get_puntos_vta_sucursal`);
       const datos = await ptosVtasSucursal.json(); 
-      console.log("los datos datos:", datos);
       if (datos.length == 1) {
-        console.log("datos[0].id:", datos[0].id);
         asignarPuntoVenta(datos[0].id);
       }
       else{
-        const modalContent = document.getElementById("modalContentPtoVta");
-        
-        const listaPtosVtasSucursal = document.createElement("select");
-        listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
-        listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
-        
-        // Agregar una opción por defecto
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = "Seleccione un punto de venta";
-        defaultOption.disabled = true;
-        defaultOption.selected = true;
-        listaPtosVtasSucursal.appendChild(defaultOption);
-
-        // Recorrer los puntos de venta y agregarlos como opciones
-        datos.forEach((ptovta) => {
-          const ptoVtaOption = document.createElement("option");
-          ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
-          ptoVtaOption.textContent = "Punto de venta:" + ptovta.puntoVta; // Mostrar el nombre del punto de venta
-          listaPtosVtasSucursal.appendChild(ptoVtaOption);
-        });
-        
-        // Agregar el <select> al modal
-        modalContent.appendChild(listaPtosVtasSucursal);
-
-        // Agregar un botón para confirmar la selección
-        const confirmButton = document.createElement("button");
-        confirmButton.classList.add("btn", "btn-primary", "mt-3");
-        confirmButton.textContent = "Confirmar";
-        confirmButton.onclick = async function () {
-          const selectedPtoVta = listaPtosVtasSucursal.value;
-          if (selectedPtoVta) {
-            asignarPuntoVenta(selectedPtoVta);
-          } else {
-            alert("Debe seleccionar un punto de venta.");
-          }
-        };
-        modalContent.appendChild(confirmButton);
-        //---------
-        $("#ptovtaModal").modal("show");
+        saleccionarPtoVta(datos);
       }  
     }
     else{
       // Si punto_vta tiene un valor, asignarlo al input
-      console.log("punto_vta:", data.punto_vta);
       document.getElementById("punto_vta").textContent = 'Punto de venta: ' + data.punto_vta;
     }
   } catch (error) {
-    console.error("Error al obtener el punto de venta:", error);
+    console.log("Error al obtener el punto de venta:", error);
   }
 });
+
+document.getElementById("cambiar_pto_vta").addEventListener("click", async function () {
+  const ptosVtasSucursal = await fetch(`${BASE_URL}/ventas/get_puntos_vta_sucursal`);
+  const datos = await ptosVtasSucursal.json(); 
+  if (datos.length == 1) {
+    asignarPuntoVenta(datos[0].id);
+  }
+  else{
+    saleccionarPtoVta(datos);
+  }    
+});
+
+function saleccionarPtoVta(datos) {
+  const modalContent = document.getElementById("modalContentPtoVta");
+        
+  const listaPtosVtasSucursal = document.createElement("select");
+  listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
+  listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
+  
+  // Agregar una opción por defecto
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Seleccione un punto de venta";
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  listaPtosVtasSucursal.appendChild(defaultOption);
+
+  // Recorrer los puntos de venta y agregarlos como opciones
+  datos.forEach((ptovta) => {
+    const ptoVtaOption = document.createElement("option");
+    ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
+    ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica; // Mostrar el nombre del punto de venta
+    listaPtosVtasSucursal.appendChild(ptoVtaOption);
+  });
+  
+  // Agregar el <select> al modal
+  modalContent.appendChild(listaPtosVtasSucursal);
+
+  // Agregar un botón para confirmar la selección
+  const confirmButton = document.createElement("button");
+  confirmButton.classList.add("btn", "btn-primary", "mt-3");
+  confirmButton.textContent = "Confirmar";
+  confirmButton.onclick = async function () {
+    const selectedPtoVta = listaPtosVtasSucursal.value;
+    if (selectedPtoVta) {
+      asignarPuntoVenta(selectedPtoVta);
+    } else {
+      alert("Debe seleccionar un punto de venta.");
+    }
+  };
+  modalContent.appendChild(confirmButton);
+  //---------
+  $("#ptovtaModal").modal("show");
+}
 
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
     // Llamar a la API para asignar el punto de venta a la sesión
-    const response = await fetch('/set_punto_vta', {
+    const response = await fetch(`${BASE_URL}/ventas/set_punto_vta`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -157,12 +173,10 @@ async function fetchCliente(input) {
   if (input != ""){
     if (!isNaN(input)) {
       // Si es un número, buscar por ID
-      response = await fetch(`/get_cliente/${input}/${1}`); //1 venta
+      response = await fetch(`${BASE_URL}/clientes/get_cliente/${input}/${1}`); //1 venta
     } else {
       // Si es un nombre parcial, buscar por nombre
-      response = await fetch(
-        `/get_clientes?nombre=${input}&&tipo_operacion=${1}`
-      );
+      response = await fetch(`${BASE_URL}/clientes/get_clientes?nombre=${input}&&tipo_operacion=${1}`);
     }
 
     if (!response.ok) {
@@ -245,11 +259,11 @@ function asignarCliente(cliente) {
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
   if (!isNaN(id)) {
-    response = await fetch(`/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
     if (!response.ok) {
-        response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+        response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
     }    
   }
 
@@ -281,20 +295,17 @@ async function fetchArticulo(id, idlista, itemDiv) {
 }
 
 function asignarArticuloElegido(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value =
-    articulo.codigo;
+  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
   asignarArticulo(articulo, itemDiv);
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent =
-    articulo.id;
+  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
   itemDiv.target
     .closest("tr")
     .querySelector(".descripcion-articulo").textContent = articulo.detalle;
   const precioUnitario = parseFloat(articulo.precio);
-  itemDiv.target.closest("tr").querySelector(".precio-unitario").value =
-    precioUnitario.toFixed(2);
+  itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
   updateItemTotal(itemDiv);
   updateTotalFactura();
 }

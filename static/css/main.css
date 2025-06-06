@@ -139,8 +139,22 @@ body{
     text-align: right;
   }
 
-
 .precio-danger {
     color: red;
     font-weight: bold;
   }
+
+.bg-uno {
+    background-color: rgba(15, 189, 160, 0.149);
+    color: black;
+}  
+
+.bg-dos {
+    background-color: rgba(15, 177, 189, 0.149);
+    color: black;
+}  
+
+.bg-tres {
+    background-color: rgba(15, 96, 189, 0.149);
+    color: black;
+}  

@@ -1,10 +1,9 @@
-from flask import session, redirect, url_for, current_app
-from flask import g
+from flask import session, redirect, url_for
+
 from functools import wraps
 from decimal import Decimal, InvalidOperation
+from models.configs import AlcIva
 import locale
-from services.articulos import alerta_stocks_faltante, alerta_stocks_limite, alerta_precios_nuevos, remitos_mercaderia
-from services.ctactecli import ctacte_vencida
 
 # Set the locale to default 'C' locale
 locale.setlocale(locale.LC_ALL, '')
@@ -17,58 +16,6 @@ def check_session(func):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('sesion.login'))  # Redirigir al login si no hay sesión activa
-        return func(*args, **kwargs)
-    return wrapper
-
-def obtener_alertas_y_mensajes():
-    try:
-        alertas = []
-        cantidadAlertas = 0
-        cantidad, mensaje = alerta_stocks_faltante()
-        if cantidad > 0:
-            cantidadAlertas += 1
-            alertas.append(mensaje)
-        cantidad, mensaje = alerta_stocks_limite()
-        if cantidad > 0:
-            cantidadAlertas += 1
-            alertas.append(mensaje)
-        cantidad, mensaje = alerta_precios_nuevos()
-        
-        if cantidad > 0:
-            cantidadAlertas += 1
-            alertas.append(mensaje)
-    except Exception as e:  
-        print(f"Error al obtener alertas: {str(e)}")
-        cantidad = 1
-        cantidadAlertas = 1        
-        alertas.append({'titulo': 'Error obteniendo alertas', 'subtitulo': f'{str(e)}', 'tipo': 'peligro', 'url': ''})
-    return alertas, cantidadAlertas
-
-def obtener_mensajes():
-    try:
-        mensajes = []
-        cantidadMensajes = 0
-        cantidad, mensaje = remitos_mercaderia()
-        if cantidad > 0:
-            cantidadMensajes += 1
-            mensajes.append(mensaje)
-        cantidad, mensaje = ctacte_vencida()
-        if cantidad > 0:
-            cantidadMensajes += 1
-            mensajes.append(mensaje)
-        
-    except Exception as e:  
-        print(f"Error al obtener mensajes: {str(e)}")
-        cantidad = 1
-        cantidadAlertas = 1        
-        mensajes.append({'titulo': 'Error obteniendo mensajes', 'subtitulo': f'{str(e)}', 'tipo': 'peligro', 'url': ''})
-    return mensajes, cantidadAlertas 
-
-def alertas_mensajes(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        g.alertas, g.cantidadAlertas = obtener_alertas_y_mensajes()
-        g.mensajes, g.cantidadMensajes = obtener_mensajes()
         return func(*args, **kwargs)
     return wrapper
 
@@ -124,3 +71,13 @@ def precio(PFinal, ImpInt, Exento, PrcBonif, Recargo, CoefIva, CoefIB):
     else:
         Resultado['IngBto'] = Decimal(0)
     return Resultado
+
+def precio_VP(costo, impInt, exento, idIva):
+    impuestosInternos = costo * impInt / 100
+    baseImponible = costo + impuestosInternos
+    baseImponible = baseImponible * (1 - exento / 100)
+    alcIva = AlcIva.query.get(idIva)
+    iva = baseImponible * alcIva.alicuota / 100
+    costoTotal = costo + iva + impuestosInternos
+    return costoTotal
+    

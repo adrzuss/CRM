@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for
+from flask import Blueprint, render_template, request, redirect, flash, url_for, g
 from sqlalchemy import func
 from datetime import datetime
 from utils.utils import format_currency
@@ -6,7 +6,8 @@ from models.proveedores import Proveedores
 from models.ctacteprov import CtaCteProv
 from services.ctacteprov import saldo_ctacte
 from utils.db import db
-from utils.utils import check_session, alertas_mensajes
+from utils.utils import check_session
+from utils.msg_alertas import alertas_mensajes
 
 bp_ctacteprov = Blueprint('ctacteprov', __name__, template_folder='../templates/ctacteprov')
 
@@ -36,7 +37,7 @@ def add_cta_cte_prov():
             return redirect(url_for('ctacteprov.lst_cta_cte_prov', id=idproveedor))
     
     if request.method == 'GET':
-        return render_template('ctacte-prov.html')
+        return render_template('ctacte-prov.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ctacteprov.route('/lstctacteprov/<id>)')
 @check_session
@@ -46,7 +47,7 @@ def lst_cta_cte_prov(id):
     movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
     saldo_total = saldo_ctacte(proveedor.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
 @check_session
@@ -75,6 +76,6 @@ def saldosprov():
         ).all()
 
         # Pasar los resultados a la plantilla
-        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
-    return render_template('saldos-ctacteprov.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('saldos-ctacteprov.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

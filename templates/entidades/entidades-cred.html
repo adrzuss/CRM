@@ -11,13 +11,19 @@
                 <div class="card-body">
                     <h3>Ingreso de entidades</h3>
                     <form action="{{ url_for('entidades.add_entidad') }}" method="post">
-                        <div class="mb-3"> 
-                            <label for="entidad">Entidad</label>
-                            <input class="form-control" type="text" name="entidad" id="entidad" placeholder="Ingrese el nombre de la entidad">
-                        </div>
+                        <div class="row">
+                            <div class="mb-3 col-2"> 
+                                <label for="id"># Id</label>
+                                <input class="form-control" type="text" name="id" id="id" readonly value="{{ entidad.id }}">
+                            </div>    
+                            <div class="mb-3 col-10"> 
+                                <label for="entidad">Entidad</label>
+                                <input class="form-control" type="text" name="entidad" id="entidad" placeholder="Ingrese el nombre de la entidad" value="{{ entidad.entidad }}">
+                            </div>
+                        </div>    
                         <div class="mb-3">
                             <label for="telefono">Teléfono</label>
-                            <input class="form-control" type="text" name="telefono" id="detalle" placeholder="Ingrese el teléfono">
+                            <input class="form-control" type="text" name="telefono" id="detalle" placeholder="Ingrese el teléfono" value="{{ entidad.telefono }}">  
                         </div>    
                         
                         <button class="btn btn-success" type="submit">Grabar</button>

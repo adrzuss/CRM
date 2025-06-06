@@ -41,7 +41,24 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de clientes:</h6>
                         <a class="collapse-item" href="{{ url_for('clientes.clientes', id=0) }}">ABM de clientes</a>
-                        <a class="collapse-item" href="{{ url_for('ctactecli.saldoscli') }}">Cta. cte. de clientes</a>
+                        <a class="collapse-item" href="#">ABC clientes</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCtaCteCli"
+                    aria-expanded="true" aria-controls="collapseCtaCteCli">
+                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                    <span>Cta. Cte.</span>
+                </a>
+                <div id="collapseCtaCteCli" class="collapse" aria-labelledby="headingClientes"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Opciones de cta. cte.:</h6>
+                        <a class="collapse-item" href="{{ url_for('ctactecli.saldosctactecli') }}">Saldos Cta. cte.</a>
+                        <a class="collapse-item" href="{{ url_for('ctactecli.movsctactecli') }}">Movimientos Cta. cte.</a>
+                        <a class="collapse-item" href="{{ url_for('ctactecli.lst_cc_cli_vencidas') }}">Cta. cte. vencidas</a>
                     </div>
                 </div>
             </li>
@@ -62,8 +79,6 @@
                         <h6 class="collapse-header">Ventas de artículos:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
                         <a class="collapse-item" href="{{ url_for('ventas.nuevo_remito') }}">Nuevo remito</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
-
                     </div>
                 </div>
             </li>
@@ -78,6 +93,7 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Ventas de artículos:</h6>
+                        <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasArticulos') }}">Artículos vendidos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasClientes') }}">Ventas a clientes</a>
                         <a class="collapse-item" href="#">Ventas por vendedor</a>
@@ -126,6 +142,43 @@
                     </div>
                 </div>
             </li>
+            <!-- Entidades Credito -->
+            <div class="sidebar-heading">
+                Créditos
+            </div>
+            <!-- Nav Item - Utilities Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEntCredito"
+                    aria-expanded="true" aria-controls="collapseEntCredito">
+                    <i class="fas fa-folid fa-credit-card"></i>
+                    <span>Tarjetas</span>
+                </a>
+                <div id="collapseEntCredito" class="collapse" aria-labelledby="headingEntCredito"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Entidades</h6>
+                        <a class="collapse-item" href="{{ url_for('entidades.entidades') }}">ABM Entidades</a>
+                        <a class="collapse-item" href="{{ url_for('entidades.listado_movimientos') }}">Listado movimientos</a>
+                    </div>
+                    
+                </div>
+            </li>     
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCreditoPropio"
+                    aria-expanded="true" aria-controls="collapseCreditoPropio">
+                    <i class="fas fa-folid fa-money-check-dollar"></i>
+                    <span>Crédito propio</span>
+                </a>
+                <div id="collapseCreditoPropio" class="collapse" aria-labelledby="headingCreditoPropio"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Entidades</h6>
+                        <a class="collapse-item" href="#">Planes</a>
+                        <a class="collapse-item" href="#">Otorgamiento</a>
+                    </div>
+                    
+                </div>
+            </li>     
             <!-- Divider -->
             <!-- Heading -->
             <div class="sidebar-heading">
@@ -144,6 +197,7 @@
                         <h6 class="collapse-header">Proveedores</h6>
                         <a class="collapse-item" href="{{ url_for('proveedores.proveedores') }}">ABM Proveedores</a>
                         <a class="collapse-item" href="{{ url_for('ctacteprov.saldosprov') }}">Cta. cte. de proveedores</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.ordenpago') }}">Orden de pago</a>
                     </div>
                     
                 </div>

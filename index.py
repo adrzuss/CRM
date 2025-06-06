@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, session, redirect, url_for, render_template
 from sqlalchemy.exc import OperationalError
 from services.configs import getOwner, getTareaUsuario
@@ -18,23 +19,28 @@ from routes.entidades_cred import bp_entidades
 from routes.fondos import bp_fondos
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=Config.STATIC_FOLDER, template_folder=Config.TEMPLATES_FOLDER)
+    
+    logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler("app.log"), # Guarda los logs en un archivo
+                        logging.StreamHandler()          # Muestra los logs en la consola (útil para systemd/journalctl)
+                    ])
     
     app.config.from_object(Config)
-    #app.config['APPLICATION_ROOT'] = Config.APPLICATION_ROOT
-    #print(f"Session path: {app.config['SESSION_COOKIE_PATH']}")
-    app.register_blueprint(bp_sesiones)
-    app.register_blueprint(bp_tableros)
-    app.register_blueprint(bp_clientes)
-    app.register_blueprint(bp_ctactecli)
-    app.register_blueprint(bp_articulos)
-    app.register_blueprint(bp_ventas)
-    app.register_blueprint(bp_proveedores)
-    app.register_blueprint(bp_ctacteprov)
-    app.register_blueprint(bp_configuraciones)
-    app.register_blueprint(bp_entidades)
-    app.register_blueprint(bp_fondos)
-    
+    app.register_blueprint(bp_sesiones, url_prefix= '/sesions')
+    app.register_blueprint(bp_tableros, url_prefix='/')
+    app.register_blueprint(bp_clientes, url_prefix='/clientes')
+    app.register_blueprint(bp_ctactecli, url_prefix='/ctactecli')
+    app.register_blueprint(bp_articulos, url_prefix='/articulos')
+    app.register_blueprint(bp_ventas, url_prefix='/ventas')
+    app.register_blueprint(bp_proveedores, url_prefix='/proveedores')
+    app.register_blueprint(bp_ctacteprov, url_prefix='/ctacteprov')
+    app.register_blueprint(bp_configuraciones, url_prefix='/configuracion')
+    app.register_blueprint(bp_entidades, url_prefix='/entidades')
+    app.register_blueprint(bp_fondos, url_prefix='/fondos')
+
     @app.before_request
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
@@ -44,6 +50,7 @@ def create_app():
 
 try:
     app = create_app()
+    
 except Exception as e:
     print("No se pudo iniciar la aplicación 1:", str(e))
 
@@ -97,7 +104,7 @@ def trigger_db_error():
 # Manejador para error 404
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template("404.html", error="Página no encontrada"), 404
+    return render_template("404.html", error=f"Página no encontrada: {e}"), 404
 
 # Manejador para error 500
 @app.errorhandler(500)

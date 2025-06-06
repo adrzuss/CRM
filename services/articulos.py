@@ -11,11 +11,20 @@ from utils.db import db
 from datetime import datetime, date
 from decimal import Decimal
 
+def get_articulo_by_codigo(codigo):
+    articulo = Articulo.query.filter_by(codigo=codigo).first()
+    if articulo:
+        return {'success': True, 'articulo': articulo}
+    else:
+        return {'success':False, 'articulo':{}}
+
+
 def procesar_articulo(form, idarticulo):
     #FIXME al agregar articulo insertar stcok en cero
     codigo = form['codigo']
     detalle = form['detalle']
     costo = form['costo']
+    costo_total = form['costo_total']
     impint = form['impint']
     exento = form['exento']
     idiva = form['idiva']
@@ -44,7 +53,7 @@ def procesar_articulo(form, idarticulo):
             return redirect('/articulos') 
     else:
         filename = ''    
-    articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idTipoArticulo=idTipoArticulo, filename=filename, esCompuesto=esCompuesto)
+    articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idTipoArticulo=idTipoArticulo, filename=filename, esCompuesto=esCompuesto)
     db.session.add(articulo)
     db.session.commit()
     idarticulo = articulo.id
@@ -87,17 +96,18 @@ def get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, o
 
     # Aplicar búsqueda
     if search_value:
-        query = query.filter(
-            Articulo.detalle.ilike(f"%{search_value}%")
-        )
+        if search_value[0:2] == '//':
+            query = query.filter(Articulo.codigo.ilike(f"{search_value[2:]}%"))
+        else:
+            query = query.filter(Articulo.detalle.ilike(f"%{search_value}%"))
 
     # Aplicar ordenamiento
     if order_dir == 'desc':
         query = query.order_by(desc(order_by))
     else:
         query = query.order_by(order_by)
-        
     # Total de registros sin filtrar
+    
     total_records = query.count()
 
     # Aplicar paginación
@@ -182,7 +192,7 @@ def alerta_stocks_faltante():
                 .join(Stock, (Stock.idarticulo == Articulo.id)&(Stock.idsucursal==session['id_sucursal']))\
                 .filter(Stock.actual <= 0).scalar()
     if cantidad > 0:            
-        return cantidad, {'titulo': 'Stock', 'subtitulo': f'Hay {cantidad} artículos con stock en 0 o negativo', 'tipo': 'peligro', 'url': 'articulos.stock_faltantes'}
+        return cantidad, {'titulo': 'Stock', 'subtitulo': f'Hay {cantidad} artículos con stock en 0 o negativo', 'tipo': 'peligro', 'url': 'articulos.stock_art_faltantes'}
     else:
         return cantidad, {}
     
@@ -275,6 +285,77 @@ def get_listado_stock(idmarca, idrubro, draw, search_value, start, length, order
     ]
     # Respuesta para DataTables
     return draw, total_records, total_records, data
+
+def get_listado_stock_faltantes(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir):
+    
+    # Mapear el índice de la columna al nombre de la columna en la base de datos
+    columns = ['codigo', 'rubro', 'marca', 'detalle', 'actual', 'maximo', 'deseable']
+    order_by = columns[order_column] if order_column < len(columns) else 'codigo'
+    query = db.session.query(
+        Articulo.id.label('id'),
+        Articulo.codigo.label('codigo'),
+        Articulo.detalle.label('detalle'),
+        Stock.actual.label('actual'),
+        Stock.maximo.label('maximo'),
+        Stock.deseable.label('deseable'),
+        Rubro.nombre.label('rubro'),
+        Marca.nombre.label('marca'),
+            ).join(
+                Stock, (Articulo.id == Stock.idarticulo)&(Stock.idsucursal==session['id_sucursal'])
+            ).outerjoin(
+                Rubro, (Articulo.idrubro == Rubro.id)
+            ).outerjoin(
+                Marca, (Articulo.idmarca == Marca.id)
+            )
+    # Aplicar búsqueda
+    if search_value:
+        if idmarca != None and idrubro != None:
+            query = query.filter(Stock.actual <= 0, Articulo.detalle.ilike(f"%{search_value}%", Articulo.idmarca == idmarca, Articulo.idrubro == idrubro))
+        elif idmarca != None or idrubro != None:
+            if idmarca != None:
+                query = query.filter(Stock.actual <= 0, Articulo.detalle.ilike(f"%{search_value}%", Articulo.idmarca == idmarca))
+            else:
+                query = query.filter(Stock.actual <= 0, Articulo.detalle.ilike(f"%{search_value}%",Articulo.idrubro == idrubro))
+        else:
+            query = query.filter(Stock.actual <= 0, Articulo.detalle.ilike(f"%{search_value}%"))        
+    else:
+        if idmarca != None and idrubro != None:
+            query = query.filter(Stock.actual <= 0, Articulo.idmarca == idmarca, Articulo.idrubro == idrubro)
+        elif idmarca != None or idrubro != None:
+            if idmarca != None:
+                query = query.filter(Stock.actual <= 0, Articulo.idmarca == idmarca)
+            else:
+                query = query.filter(Stock.actual <= 0, Articulo.idrubro == idrubro)
+        else:        
+            query = query.filter(Stock.actual <= 0)
+    # Total de registros sin filtrar
+    # Aplicar ordenamiento
+    if order_dir == 'desc':
+        query = query.order_by(desc(order_by))
+    else:
+        query = query.order_by(order_by)
+    # Total de registros sin filtrar
+    total_records = query.count()
+    
+    # Aplicar paginación
+    paginated_query = query.offset(start).limit(length).all()
+    # Formatear los datos para DataTables
+    data = [
+        {
+            'id': articulo.id,
+            'codigo': articulo.codigo,
+            'rubro': articulo.rubro,
+            'marca': articulo.marca,
+            'detalle': articulo.detalle,
+            'actual': articulo.actual,
+            'deseable': articulo.deseable,
+            'maximo': articulo.maximo
+        }
+        for articulo in paginated_query
+    ]
+    # Respuesta para DataTables
+    return draw, total_records, total_records, data
+
 
 def obtener_stock_sucursales(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir):
     # Obtener la lista de sucursales
@@ -435,8 +516,9 @@ def actualizarStock(idstock, idarticulo, cantidad, idsucursal):
             else:
                 actualizarStock(idstock, compuesto.idart_comp, -1*compuesto.cantidad, idsucursal)
     except SQLAlchemyError as e:
+        print(f"Error procesando stock: {e}")
         raise Exception(f"Error al actualizar el stock ({tipoActualizacion}): {e}")
-            
+          
             
 def actualizarPrecio(idlista, idarticulo, precio_nuevo):
     #El commit se raliza en el proceso principal de grabación de precios
@@ -496,20 +578,22 @@ def procesar_items_balance(form, idbalance, id_sucursal):
     total = Decimal(0)
 
     for key, value in form.items():
-        if key.startswith('items') and key.endswith('[codigo]'):
-            index = key.split('[')[1].split(']')[0]
-            codigo = value
-            cantidad = Decimal(form[f'items[{index}][cantidad]'])
+        response = get_articulo_by_codigo(value)
+        if response['success'] == True:
+            if key.startswith('items') and key.endswith('[codigo]'):
+                index = key.split('[')[1].split(']')[0]
+                codigo = value
+                cantidad = Decimal(form[f'items[{index}][cantidad]'])
 
-            articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-            precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=1).first()
-            precio_unitario = precio.precio if precio else Decimal(0)
-            precio_total = precio_unitario * cantidad
+                articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=1).first()
+                precio_unitario = precio.precio if precio else Decimal(0)
+                precio_total = precio_unitario * cantidad
 
-            nuevo_item = ItemBalance(idbalance=idbalance, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
-            db.session.add(nuevo_item)
-            # Actualizar el stock
-            actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
+                nuevo_item = ItemBalance(idbalance=idbalance, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
+                db.session.add(nuevo_item)
+                # Actualizar el stock
+                actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
     
     return total
 
@@ -607,4 +691,10 @@ def procesar_remito_a_sucursal(form):
     db.session.commit()
     
 def remitos_mercaderia():    
-    pass
+    cantidad = db.session.query(func.count(RemitoSucursales.id))\
+               .filter(and_(RemitoSucursales.iddestino == session['id_sucursal'], RemitoSucursales.fecha == date.today())).scalar()
+    print(f"Cantidad de remitos: {cantidad}")           
+    if cantidad > 0:            
+        return cantidad, {'titulo': 'Remitos', 'subtitulo': f'Hay {cantidad} remitos', 'tipo': 'peligro', 'entidad': 'sistema', 'url': '#'}
+    else:
+        return cantidad, {}

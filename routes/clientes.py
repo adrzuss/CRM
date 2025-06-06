@@ -8,7 +8,8 @@ from services.clientes import save_cliente
 from services.ctactecli import saldo_ctacte
 from services.configs import validar_cuit
 from utils.db import db
-from utils.utils import check_session, alertas_mensajes
+from utils.utils import check_session
+from utils.msg_alertas import alertas_mensajes
 from sqlalchemy import and_
 
 bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
@@ -24,7 +25,7 @@ def clientes(id):
     clientes = Clientes.query.all()
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
-    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_clientes.route('/new_cliente', methods=['POST'])
 @check_session
@@ -118,7 +119,7 @@ def update_cliente(id):
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
     if request.method == 'GET':
-        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     if request.method == 'POST':
         ctacte = request.form.get("ctacte") != None
         cliente.nombre = request.form['nombre']
@@ -171,7 +172,7 @@ def facturas_cliente(id):
         ).all()
         
         # Pasar los resultados a la plantilla
-        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     desde = date.today()
     hasta = date.today()
     facturas = db.session.query(Factura).join(Clientes).filter(
@@ -179,4 +180,4 @@ def facturas_cliente(id):
             Factura.fecha >= desde,
             Factura.fecha <= hasta
         ).all()
-    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta, alertas=g.alertas)
+    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)   

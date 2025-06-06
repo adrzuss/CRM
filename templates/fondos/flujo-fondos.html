@@ -137,8 +137,11 @@
                 <!-- Card Body -->
                 <div class="card-body">
                     <div class="chart-area">
-                        <canvas id="pieChartCtaCtes"></canvas>
-                        
+                        <canvas id="polarChartCtaCtes"></canvas>
+                        <script>
+                            detCtasCtes = {{ detallesCtasCtes|tojson }};
+                            saldosCtasCtes = {{ valoresCtasCtes|tojson }};
+                        </script>
                         
                         
                     </div>
@@ -192,6 +195,51 @@
         </div>
     </div>    
 
+    <div class="card shadow m-4">
+        <div class="card-title">
+            <h5 class="card-title mt-2 ml-3">Estado de resultado</h5>
+        </div>
+        <div class="card-body">
+            <div class="row justify-content-center align-items-center m-3">
+                <div class="table-responsive">
+                    <table class="display table table-bordered table-striped" id="articulosTable" width="100%">
+                        
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Detalle</th>
+                                <th scope="col">Monto</th>
+                                <th scope="col">Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for estado in estadoResultado %}
+                                <tr class="">
+                                    <td scope="row">{{ estado[0] }}</td>
+                                    <td style="font-weight:bold ;text-align: right">{{ estado[1] }}</td>
+                                    {% if estado[2] == 'Compra/Gasto' %}
+                                        <td style="color:crimson;">{{ estado[2] }}</td>
+                                    {% elif estado[2] == 'Venta' %}
+                                        <td style="color:green">{{ estado[2] }}</td>
+                                    {% elif estado[2] == 'Impuesto' %}
+                                        <td style="color:darkmagenta">{{ estado[2] }}</td>
+                                    {% elif estado[2] == 'Costo de mercadería vendida' %}
+                                        <td style="color:blue">{{ estado[2] }}</td>
+                                    {% elif estado[2] == 'Cobranzas ctas ctes' %}   
+                                        <td style="color:green">{{ estado[2] }}</td>
+                                    {% else %}
+                                        <td>{{ estado[2] }}</td>
+                                    {% endif %}
+
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>        
+    </div>    
+
 {% endblock %}
 
 {% block js_script %}
@@ -201,5 +249,6 @@
     <!-- Page level custom scripts-->
     <script src="{{ url_for('static', filename='js/demo/chart-bar-flujo-fondos.js')}}"></script>
     <script src="{{ url_for('static', filename='js/demo/chart-pie-flujo-fondos.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/demo/chart-polar-flujo-fondos.js')}}"></script>
 
 {% endblock %}

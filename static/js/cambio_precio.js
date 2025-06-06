@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         try {
             let response;
-            response = await fetch(`/filtrar_articulos/${marca}/${rubro}/${listaPrecio}/${porcentaje}`);
+            response = await fetch(`${BASE_URL}/articulos/filtrar_articulos/${marca}/${rubro}/${listaPrecio}/${porcentaje}`);
             if (!response.ok) throw new Error('Error al cargar los artículos');
             const data = await response.json();
             console.log(data);
@@ -159,16 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchArticulo(id, idlista, itemDiv) {
         let response;
         if (!isNaN(id)){
-            response = await fetch(`/articulo/${id}/${idlista}`);
+            response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
         }
         else{
-            response = await fetch(`/articulo/${id}/${idlista}`);
+            response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
             if (!response.ok) {
-                response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+                response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
             } 
         }    
         if (!response.ok) {
-            console.error("Error en la búsqueda de artículos");
+            alert("No se encontraron articulos con ese código/descripción.");
             return;
         }
         //const data = await response.json();
@@ -227,7 +227,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function asignarArticulo(articulo, itemDiv) {
         itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
-        itemDiv.target.closest("tr").querySelector(".precio-actual").value = articulo.precio;
+        const precio = parseFloat(articulo.precio).toFixed(2);
+        itemDiv.target.closest("tr").querySelector(".precio-actual").value = precio;
     }
 
 

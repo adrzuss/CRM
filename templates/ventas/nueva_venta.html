@@ -4,7 +4,15 @@
 
 
     <h1 class="m-3">Nueva factura de venta</h1>
-    <h2 id="punto_vta" class="m-3">Punto de venta: </h2>
+    <div class="row">
+        <h2 id="punto_vta" class="m-3 col-3">Punto de venta: </h2>
+        <div class="col-7">
+            <div class="row">
+                <label class="col-md-1"></label>
+                <button class="btn btn-primario col-md-2" id="cambiar_pto_vta">Cambiar Pto. Vta.</button>
+            </div>
+        </div>    
+    </div>
     <div class="m-2">
         <div class="container-fluid">
             <!-- Modal para seleccionar cliente y articulos -->
@@ -21,7 +29,7 @@
                     </div>
 
                     
-                    <div class="cardbody">
+                    <div class="cardbody bg-dos">
                         <div class="row m-3">
                             <div class="col-md-1">
                                 <label for="id">#Cli</label>
@@ -54,7 +62,7 @@
                     </div>    
                 </div>    
 
-                <div class="card">
+                <div class="card bg-tres">
                     <div class="cardbody m-3">
                         <!-- Detalles (items) -->
                         <h4>Artículos</h4>
@@ -80,12 +88,12 @@
                 </div>    
 
                 <div class="row">
-                    <button class="btn btn-success col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
+                    <button class="btn btn-exito col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
                     <h3 class="m-3">Total Factura: $<span id="total_factura">0.00</span></h3>
                     <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
                 </div>
 
-                <div class="card">
+                <div class="card bg-uno m-3">
                     <h4 class="m-3">Formas de pago</h4>
                     <div class="card-body">
                         <div class="row justify-content-md-center">

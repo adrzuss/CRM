@@ -6,6 +6,7 @@ class Articulo(db.Model):
     codigo = db.Column(db.String(50), nullable=False)
     detalle = db.Column(db.String(200), nullable=False)
     costo = db.Column(db.Numeric(20,6), nullable=False)
+    costo_total = db.Column(db.Numeric(20,6), nullable=False)
     idiva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'))
     exento = db.Column(db.Numeric(20,6), nullable=False)
     impint = db.Column(db.Numeric(20,6), nullable=False)
@@ -23,10 +24,11 @@ class Articulo(db.Model):
     #tipoarticulo = db.relationship('TipoArticulos', back_populates='articulos', lazy=True)
     #stock = db.relationship('Stock', back_populates='idarticulo')
     
-    def __init__(self, codigo, detalle, costo, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto):
+    def __init__(self, codigo, detalle, costo, costo_total, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto):
         self.codigo = codigo
         self.detalle = detalle
         self.costo = costo
+        self.costo_total = costo_total
         self.exento = exento
         self.impint = impint    
         self.idiva = idiva

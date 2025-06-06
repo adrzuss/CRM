@@ -14,11 +14,15 @@ resultado = load_dotenv(override=True)
 #print('Resultado: ', resultado)
 
 class Config:
+    # Debo configurar estas variables con el directorio donde se encuentra la app
     #APPLICATION_ROOT = '/demo_erp'
     #SESSION_COOKIE_PATH = '/demo_erp'
     SECRET_KEY = os.getenv('MY_SECRET_KEY')
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    STATIC_FOLDER = 'static'
+    TEMPLATES_FOLDER = 'templates'
+    COMPANY_FOLDER = os.getenv('COMPANY_FOLDER', '')  # Carpeta de la empresa
     IDSTOCK = 1  # El valor de idstock
     LOGO_PATH = os.getenv('LOGO_PATH')
     UPLOAD_FOLDER = 'static/img/articulos'

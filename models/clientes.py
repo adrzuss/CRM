@@ -9,6 +9,8 @@ class Clientes(db.Model):
     email = db.Column(db.String(100))
     telefono  = db.Column(db.String(20))
     direccion = db.Column(db.String(100))
+    localidad = db.Column(db.String(100))
+    provincia = db.Column(db.String(100))
     ctacte = db.Column(db.Boolean(create_constraint=False))
     baja = db.Column(db.Date, nullable=False)
     id_tipo_doc = db.Column(db.Integer, db.ForeignKey('tipo_doc.id'))

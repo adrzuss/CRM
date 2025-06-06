@@ -67,16 +67,14 @@ function formatDecimal(input) {
 
 async function fetchArticulo(id, idlista, itemDiv) {
     let response;
-    if (!isNaN(id)){
-        response = await fetch(`/articulo/${id}/${idlista}`);
-    }
-    else{
-        response = await fetch(`/articulo/${id}/${idlista}`);
+    if (!isNaN(id)) {
+        response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
+    } else {
+        response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
         if (!response.ok) {
-            response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
+            response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
         }    
-        //response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
-    }    
+    }
     if (!response.ok) {
         console.error("Error en la búsqueda de artículos");
         return;
@@ -129,7 +127,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
         const articuloOption = document.createElement('li');
         articuloOption.classList.add('cliente-option');
         articuloOption.classList.add('list-group-item');
-        articuloOption.innerHTML = `<strong>${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio).toFixed(2).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+        articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio).toFixed(2).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
         articuloOption.onclick = () => {
             asignarArticuloElegido(articulo, itemDiv);
             $('#clienteModal').modal('hide');

@@ -90,7 +90,7 @@
                 { data: 'imagen',
                 render: function (data, type, row) {
                     if (data) {
-                        return `<img src="/static/img/articulos/${data}" alt="Imagen del artículo" width="50" height="50">`;
+                        return `<img src="${BASE_URL}/static/img/articulos/${data}" alt="Imagen del artículo" width="50" height="50">`;
                     } else {
                         return 'Sin imagen';
                     }
@@ -121,7 +121,7 @@
                 sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
                 sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
                 sLengthMenu: "_MENU_ por página",
-                sSearch: 'Buscar por detalle',
+                sSearch: 'Buscar por detalle (// busca por código)',
                 sSearchPlaceholder: 'Buscar registros'
             }
         });

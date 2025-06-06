@@ -4,7 +4,8 @@ from models.proveedores import Proveedores, FacturaC, RemitoFacturas
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica
 from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto, get_factura, actualizar_precios_por_compras, \
     procesar_nuevo_remito, get_remito   
-from utils.utils import check_session, alertas_mensajes
+from utils.utils import check_session
+from utils.msg_alertas import alertas_mensajes
 from utils.db import db
 from sqlalchemy.orm import aliased
 from sqlalchemy import and_
@@ -20,7 +21,7 @@ def proveedores():
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
     proveedores = Proveedores.query.all()
-    return render_template('proveedores.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('proveedores.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_proveedores.route('/add_proveedor', methods=['POST'])
 @check_session
@@ -91,7 +92,7 @@ def update_proveedor(id):
     if request.method == 'GET':
         tipo_docs = TipoDocumento.query.all()
         tipo_ivas = TipoIva.query.all()
-        return render_template('upd-proveedor.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedor = proveedor, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('upd-proveedor.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedor = proveedor, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     if request.method == 'POST':
         proveedor.nombre = request.form['nombre']
         proveedor.email = request.form['mail']
@@ -131,7 +132,7 @@ def compras():
                                 .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
                                 .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante != 11) \
                                 .order_by(FacturaC.fecha.desc()).all()
-    return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_proveedores.route('/nueva_compra', methods=['GET', 'POST'])
 @check_session
@@ -152,7 +153,7 @@ def nueva_compra():
                                 TipoComprobantes.nombre) \
                                 .join(TipoCompAplica, and_(TipoComprobantes.id == TipoCompAplica.id_tipo_comp,  TipoCompAplica.id_tipo_oper == 2)).all()  
     hoy = date.today()
-    return render_template('nueva_compra.html', hoy=hoy, planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('nueva_compra.html', hoy=hoy, planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_proveedores.route('/nuevo_gasto', methods=['GET', 'POST'])
 @check_session
@@ -167,14 +168,14 @@ def nuevo_gasto():
         tiposComp = db.session.query(TipoComprobantes.id,
                                 TipoComprobantes.nombre) \
                                 .join(TipoCompAplica, and_(TipoComprobantes.id == TipoCompAplica.id_tipo_comp,  TipoCompAplica.id_tipo_oper == 2)).all()
-        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_proveedores.route('/ver_factura_comp/<id>') 
 @check_session
 @alertas_mensajes
 def ver_factura_comp(id):
     factura, items, pagos = get_factura(id)
-    return render_template('factura-comp.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('factura-comp.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
         
 @bp_proveedores.route('/actualizar_precios_porcompras/<id>') 
 @check_session
@@ -230,7 +231,7 @@ def remitosComp():
                                .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante == 11) \
                                .order_by(FacturaC.fecha.desc()).all()
     print(remitos)                           
-    return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_proveedores.route('/nuevo_remitoComp', methods=['GET', 'POST'])
 @check_session
@@ -245,11 +246,19 @@ def nuevo_remitoComp():
             flash(f'Ocurrió un error al procesar el remito: {e}')
             return redirect(url_for('proveedores.nuevo_remitoComp'))
     hoy = date.today()
-    return render_template('nuevo_remitocomp.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('nuevo_remitocomp.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
                        
 @bp_proveedores.route('/ver_remito_comp/<id>') 
 @check_session
 @alertas_mensajes
 def ver_remito_comp(id):
     remito, items = get_remito(id)
-    return render_template('remito-compras.html', remito=remito, items=items, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('remito-compras.html', remito=remito, items=items, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+#--------- ordenes de pago --------------
+                       
+@bp_proveedores.route('/ordenpago') 
+@check_session
+@alertas_mensajes
+def ordenpago():
+    return render_template('nueva_op.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

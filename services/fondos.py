@@ -46,19 +46,41 @@ def get_ventas_compras(desde, hasta):
         valores.append(resultado.total)
         detalle.append('Ingresos (Ventas)')
         #Compras
-        sql = "SELECT SUM(total) as total FROM facturac WHERE fecha BETWEEN :desde AND :hasta and idplancuenta=0"
-        params = {'desde': desde, 'hasta': hasta}
-        resultado = db.session.execute(text(sql), params)
-        resultado = resultado.fetchone()
-        valores.append(resultado.total)
-        detalle.append('Egresos (Compras)')
+        try:
+            sql = "SELECT SUM(f.total) as total, COUNT(ic.idarticulo) as articulos " \
+                "FROM facturac f " \
+                "JOIN itemsc ic ON f.id = ic.idfactura " \
+                "WHERE f.fecha BETWEEN :desde AND :hasta and " \
+                "f.idtipocomprobante IN (SELECT id_tipo_comp FROM tipo_comp_aplica WHERE id_tipo_oper = 2)" \
+                "having COUNT(ic.idarticulo) > 0"
+            params = {'desde': desde, 'hasta': hasta}
+            resultado = db.session.execute(text(sql), params)
+            resultado = resultado.fetchone()
+            if resultado :
+                valores.append(resultado.total)
+                detalle.append('Egresos (Compras)')
+        except Exception as e:
+            valores.append(100)
+            detalle.append(f'Compras error: {e}')
+            print(f'Error obteniendo egresos de compras: {e}')
         #Gastos
-        sql = "SELECT SUM(total) as total FROM facturac WHERE fecha BETWEEN :desde AND :hasta and idplancuenta>0"
-        params = {'desde': desde, 'hasta': hasta}
-        resultado = db.session.execute(text(sql), params)
-        resultado = resultado.fetchone()
-        valores.append(resultado.total)
-        detalle.append('Egresos (Gastos)')
+        try:
+            sql = "SELECT SUM(f.total) as total " \
+                "FROM facturac f " \
+                "LEFT JOIN itemsc ic ON f.id = ic.idfactura " \
+                "WHERE f.fecha BETWEEN :desde AND :hasta and " \
+                "f.idtipocomprobante IN (SELECT id_tipo_comp FROM tipo_comp_aplica WHERE id_tipo_oper = 2) and " \
+                "f.id NOT IN (SELECT DISTINCT idfactura FROM itemsc)"
+            params = {'desde': desde, 'hasta': hasta}
+            resultado = db.session.execute(text(sql), params)
+            resultado = resultado.fetchone()
+            if resultado :
+                valores.append(resultado.total)
+                detalle.append('Egresos (Gastos)')
+        except Exception as e:
+            valores.append(100)
+            detalle.append(f'Gastos error: {e}')
+            print(f'Error obteniendo egresos de gastos: {e}')
         return {
             'valores': valores,
             'detalle': detalle
@@ -100,4 +122,46 @@ def get_detalle_gastos(desde, hasta):
             'detalle': detalle
         }
             
-    
+def get_saldo_ctas_ctes_cli():
+    try:
+        saldos_cta_cte = db.session.execute(text("CALL get_saldos_cc_cli(:empresa)"), {'empresa': 1}).fetchall()
+        saldoActual = float(saldos_cta_cte[0][0])
+        saldoVencido = float(saldos_cta_cte[0][1])
+        return saldoActual, saldoVencido
+    except Exception as e:
+        print(f"Error obteniendo saldo ctas ctes clientes: {e}")
+        return 0.0, 0.0    
+
+def get_saldo_ctas_ctes_prov():
+    try:
+        saldos_cta_cte = db.session.execute(text("CALL get_saldos_cc_prov(:empresa)"), {'empresa': 1}).fetchall()
+        saldoActual = float(saldos_cta_cte[0][0]) * -1
+        saldoVencido = float(saldos_cta_cte[0][1]) * -1
+        return saldoActual, saldoVencido
+    except Exception as e:
+        print(f"Error obteniendo saldo ctas ctes proveedores: {e}")
+        return 0.0, 0.0    
+
+def get_estado_resultado(desde, hasta):
+    try:
+        # Obtener la conexión y el cursor nativo
+        connection = db.engine.raw_connection()
+        try:
+            cursor = connection.cursor()
+            cursor.callproc('estado_resultado', [desde, hasta])
+
+            # Primer resultset
+            detalleVentas = cursor.fetchall()
+                
+            # Tercer resultset
+            detalleCompras = []
+            if cursor.nextset():
+                detalleCompras = cursor.fetchall()
+
+            return detalleVentas, detalleCompras
+        finally:
+            cursor.close()
+            connection.close()
+    except Exception as e:
+        print(f"Error obteniendo estado resultado: {e}")
+        return [], []

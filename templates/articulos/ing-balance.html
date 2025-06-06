@@ -4,7 +4,7 @@
     <h1 class="m-3">Ingreso de balance</h1>
     <div class="m-2">
         <div class="container-fluid">
-            <form id="invoice_form" method="post">
+            <form id="invoice_form" method="post" action="{{ url_for('articulos.ing_balance') }}">
                 <div class="card mb-3">
                     <h4 class="m-2">Ingreso de balance: {{ session['nombre_sucursal'] }}</h4>
 

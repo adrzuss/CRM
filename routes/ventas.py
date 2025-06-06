@@ -4,13 +4,13 @@ from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
 from models.configs import PuntosVenta
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
-                            ventas_desde_hasta, facturar_fe
+                            ventas_desde_hasta, facturar_fe, generar_factura
 from utils.db import db
-from utils.utils import check_session, format_currency, alertas_mensajes
+from utils.utils import check_session
+from utils.msg_alertas import alertas_mensajes
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
 from sqlalchemy import text
-import requests
 
 bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas', static_folder='../static')
 
@@ -20,26 +20,37 @@ bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas',
 @alertas_mensajes
 def ventas():
     if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
+        desde = request.args.get('desde', date.today())
+        hasta = request.args.get('hasta', date.today())
+        facturas = ventas_desde_hasta(desde, hasta)
+        return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-    facturas = ventas_desde_hasta(desde, hasta)
-    #facturas =  Factura.query.filter(Factura.fecha >= desde, Factura.fecha <= hasta)
-    return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+        return redirect(url_for('ventas.ventas', desde=desde, hasta=hasta))
 
-@bp_ventas.route('/get_punto_vta', methods=['GET'])
-@check_session
+@bp_ventas.route('/get_punto_vta')
+#@check_session
 def get_punto_vta():
-    punto_vta = session.get('idPuntoVenta', None)
-    return jsonify({'punto_vta': punto_vta})
+    try:
+        
+        if not ('idPuntoVenta' in session):
+            punto_vta = None
+        else:    
+            punto_vta = session['idPuntoVenta']
+        
+        #punto_vta = 1    
+        return jsonify({'success': True, 'punto_vta': punto_vta})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
-@bp_ventas.route('/get_puntos_vta_sucursal', methods=['GET'])
+@bp_ventas.route('/get_puntos_vta_sucursal')
 @check_session
 def get_puntos_vta_sucursal():
-    puntosVtaSucursal = db.session.query(PuntosVenta.id, PuntosVenta.punto_vta).filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
-    return jsonify([{'id': pv.id, 'puntoVta': pv.punto_vta} for pv in puntosVtaSucursal])
+    puntosVtaSucursal = db.session.query(PuntosVenta.id, 
+                                         PuntosVenta.punto_vta, 
+                                         PuntosVenta.fac_electronica).filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
+    return jsonify([{'id': pv.id, 'puntoVta': pv.punto_vta, 'facElectronica': 'Si' if pv.fac_electronica else 'No'} for pv in puntosVtaSucursal])
 
 @bp_ventas.route('/set_punto_vta', methods=['POST'])
 @check_session
@@ -67,12 +78,12 @@ def nueva_venta():
             flash(f'Factura grabada exitosamente: {nro_comprobante}')
             return redirect(url_for('ventas.nueva_venta'))
         except Exception as e:
-            flash(f'Ocurrió un error al procesar la venta: {e}')
+            flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
             return redirect(url_for('ventas.nueva_venta'))
     hoy = date.today()
     entidades = EntidadesCred.query.all()
     listas_precio = ListasPrecios.query.all()
-    return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ventas.route('/nuevo_remito', methods=['GET', 'POST'])
 @check_session
@@ -84,17 +95,17 @@ def nuevo_remito():
             flash(f'Remito grabado exitosamente: {nro_comprobante}')
             return redirect(url_for('ventas.nuevo_remito'))
         except Exception as e:
-            flash(f'Ocurrió un error al procesar el remito: {e}')
+            flash(f'Ocurrió un error al procesar el remito: {e}', 'error')
             return redirect(url_for('ventas.nuevo_remito'))
     hoy = date.today()
-    return render_template('nuevo_remito.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('nuevo_remito.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
 @check_session
 @alertas_mensajes
 def ver_factura_vta(id):
     factura, items, pagos = get_factura(id)
-    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 #----------------- factura electronica ------------------#
 
@@ -102,10 +113,7 @@ def ver_factura_vta(id):
 def facturar(ptovta, idfactura):
     try:
         response, statuscode = facturar_fe(ptovta, idfactura)  
-        print(response)
-        print(statuscode)
         data = response.get_json()
-        print(data)
         if data.get('success') == True:
             cae = data.get('result', {}).get('cae')
             nro_cbte = data.get('result', {}).get('nro_cbte')
@@ -113,7 +121,7 @@ def facturar(ptovta, idfactura):
             # Generar PDF
             return redirect(url_for('ventas.ver_factura_vta', id=idfactura))
         else:
-            flash(f'Ocurrió un error al procesar la venta: {data.get("error")}', 'error')
+            flash(f'Ocurrió un error al procesar la venta (1): {data.get("error")}. Status: {statuscode}', 'error')
             return redirect(url_for('ventas.ver_factura_vta', id=idfactura))
     except Exception as e:
         print(f'Error al generar factura electrónica: {e}')
@@ -124,8 +132,7 @@ def facturar(ptovta, idfactura):
 @bp_ventas.route('/imprimir_factura_vta/<id>') 
 @check_session
 def imprimir_factura_vta(id):
-    generar_factura_pdf(id, footer_text="")
-    return redirect(url_for('ventas.ver_factura_vta', id=id))
+    return generar_factura(id)
 
 @bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
 @check_session
@@ -150,7 +157,7 @@ def ventasArticulos():
         hasta = request.form['hasta']
         articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ventas.route('/ventasClientes', methods=['GET', 'POST'])
 @check_session
@@ -165,7 +172,7 @@ def ventasClientes():
         hasta = request.form['hasta']
         ventas = db.session.execute(text("CALL venta_clientes(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-clientes.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('ventas-clientes.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ventas.route('/ventasUnCliente', methods=['GET', 'POST'])
 @check_session
@@ -187,7 +194,7 @@ def ventasUnCliente():
                          {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
         articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
                          {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas)
+    return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 
 @bp_ventas.route('/get_vta_sucursales/<desde>/<hasta>')

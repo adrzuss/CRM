@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<div class="row justify-content-center align-items-center g-2 m-3">
+    <div class="col-4">
+        <div class="card">
+            <h5 class="m-3">Movimientos Cta Cte desde fecha</h5>
+            <div class="card-body">
+                <form action="{{ url_for('ctactecli.movsctactecli') }}" method="POST">
+                    <label for="fecha">Movimientos desde:</label>
+                    <input class="form-control" type="date" id="fecha" name="fecha" value="{{ desde }}" required><br>
+
+                    <button class="btn btn-primario" type="submit">Consultar</button>
+                </form>
+            </div>    
+        </div>    
+
+    </div>
+    
+</div>
+
+<div class="row justify-content-center align-items-center g-2 m-3">
+    <div class="col-8">
+        <div class="card">
+            <h3 class="m-3">Movimientos de cta cte de clientes</h3>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-borderless table-dark align-middle">
+                        <thead class="table-light">
+                            <caption>
+                                Saldos de cuenta corriente
+                            </caption>
+                            <tr>
+                                <th>ID Cliente</th>
+                                <th>Cliente</th>
+                                <th>Total Debe</th>
+                                <th>Total Haber</th>
+                                <th>Saldo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for saldo in saldos %}
+                                <tr class="table-light">
+                                    <td scope="row">{{ saldo.idcliente }}</td>
+                                    <td>{{ saldo.nombre }}</td>
+                                    <td>{{ "${:,.2f}".format(saldo.total_debe) }}</td>
+                                    <td>{{ "${:,.2f}".format(saldo.total_haber) }}</td>
+                                    <td>{{ "${:,.2f}".format(saldo.total_debe - saldo.total_haber) }}</td>
+                                    <td> <a class="btn btn-dark" href="{{ url_for('ctactecli.lst_cta_cte_cli', id=saldo.idcliente )}}"> Cta. cte. cliente </a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            
+                        </tfoot>
+                    </table>
+                </div>
+            </div>    
+        </div>          
+
+    </div>            
+</div>
+
+{% endblock %}

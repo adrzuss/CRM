@@ -33,12 +33,12 @@ document.querySelectorAll('.eliminarCompuesto').forEach(function(boton) {
 async function fetchArticulo(idart_org, id, idlista) {
     let response;
     if (!isNaN(id)){
-        response = await fetch(`/articulo/${id}/${idlista}`);
+        response = await fetch(`${BASE_URL}/articulo/${id}/${idlista}`);
         
     }
     else{
-        response = await fetch(`/get_articulos?detalle=${id}&idlista=${idlista}`);
-    }    
+        response = await fetch(`${BASE_URL}/get_articulos?detalle=${id}&idlista=${idlista}`);
+    }
 
     if (!response.ok) {
         console.error("Error en la búsqueda de artículos");

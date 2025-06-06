@@ -155,7 +155,12 @@
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-envelope fa-fw"></i>
                 <!-- Counter - Messages -->
-                <span class="badge badge-danger badge-counter">7</span>
+                {% if cantidadMensajes > 0 %}
+                    <span class="badge badge-danger badge-counter" id="mensajesCount">{{cantidadMensajes}}</span>
+                {% else %}
+                    <span class="badge badge-success badge-counter" id="mensajesCount">0</span>
+                {% endif %}
+                   
             </a>
             <!-- Dropdown - Messages -->
             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -163,6 +168,44 @@
                 <h6 class="dropdown-header">
                     Centro de Mensajes
                 </h6>
+                {% for mensaje in mensajes %}
+                    {% if mensaje['url'] != '#'%}
+                        <a class="dropdown-item d-flex align-items-center" href="{{ url_for(mensaje['url']) }}">
+                    {% else %}
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                    {% endif %}
+                    {% if mensaje['entidad'] == 'sistema' %}
+                        <div class="dropdown-list-image mr-3">
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_posting_photo.svg')}}"
+                                alt="...">
+                            {% if mensaje['tipo'] == 'peligro' %}   
+                                <div class="status-indicator bg-danger"></div>
+                            {% elif mensaje['tipo'] == 'cuidado' %}    
+                                <div class="status-indicator bg-warning"></div>
+                            {% elif mensaje['tipo'] == 'bien' %}
+                                <div class="status-indicator bg-success"></div>
+                            {% else %}
+                                <div class="status-indicator bg-primary"></div>
+                            {% endif %}
+
+                        </div>
+                    {% else %}
+                        <div class="dropdown-list-image mr-3">
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/' + mensaje['avatar'])}}"
+                                alt="...">
+                            <div class="status-indicator bg-success"></div>
+                        </div>
+                    {% endif %}    
+
+                    <div class="font-weight-bold">
+                        <div class="text-truncate">{{ mensaje['titulo'] }}</div>
+                        <div class="small text-gray-500">{{ mensaje['subtitulo'] }}</div>
+                    </div>
+                    </a>
+
+                {% endfor %}    
+
+                <!--
                 <a class="dropdown-item d-flex align-items-center" href="#">
                     <div class="dropdown-list-image mr-3">
                         <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile_1.svg')}}"
@@ -198,7 +241,7 @@
                 </a>
                 <a class="dropdown-item d-flex align-items-center" href="#">
                     <div class="dropdown-list-image mr-3">
-                        <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60"
+                        <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_posting_photo.svg')}}"
                             alt="...">
                         <div class="status-indicator bg-success"></div>
                     </div>
@@ -207,7 +250,8 @@
                         <div class="small text-gray-500">Usuario 4 · Dias/semanas del mensaje</div>
                     </div>
                 </a>
-                <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
+                -->
+                <a class="dropdown-item text-center small text-gray-500" href="{{ url_for('sesion.centro_mensajes') }}">Enviar y ver mensajes</a>
             </div>
         </li>
 

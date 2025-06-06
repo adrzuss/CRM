@@ -7,9 +7,11 @@ class CtaCteCli(db.Model):
     fecha = db.Column(db.Date, nullable = False)
     debe = db.Column(db.Numeric(20,6), default=0.0)
     haber = db.Column(db.Numeric(20,6), default=0.0)
+    idcomp = db.Column(db.Integer)
     
-    def __init__(self, idcliente, fecha, debe = 0, haber = 0):
+    def __init__(self, idcliente, fecha, debe = 0, haber = 0, idcomp = 0):
         self.idcliente = idcliente
         self.fecha = fecha
         self.debe = debe
         self.haber = haber
+        self.idcomp = idcomp

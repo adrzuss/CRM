@@ -5,6 +5,7 @@ from models.configs import Configuracion, TipoComprobantes, PuntosVenta
 from models.articulos import ListasPrecios
 from utils.db import db
 from models.sessions import TareasUsuarios
+from models.sucursales import Sucursales
 
 def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte):
     configuracion = Configuracion.query.get(session['id_empresa'])
@@ -140,3 +141,7 @@ def validar_cuit(cuit: str) -> bool:
         verificador = 9  # Según norma AFIP
 
     return verificador == int(cuit[10])
+
+def get_sucursales():
+    sucursales = Sucursales.query.all()
+    return sucursales

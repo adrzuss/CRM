@@ -45,7 +45,7 @@ async function checkArt(e){
     e.preventDefault();
     const id = document.getElementById('id').value;
     const codigo = document.getElementById('codigo').value;
-    const respuesta = await fetch(`${BASE_URL}/articulo/${codigo}/0`);
+    const respuesta = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/0`);
     const data = await respuesta.json();
     if (data.success == false){
         form_articulos.removeEventListener('submit', checkArt)

@@ -1,19 +1,76 @@
 {% extends 'base.html'%}
 {% block body %}
-
-    <div class="row m-3">
+    <h3 class="m-3">Centro de mensajes</h3>
+    <div class="row m-3 justify-content-center">
         <div class="col-md-5">
             <div class="card">
+                <div class="car-header">
+                    <h3 class="m-3">Enviar mensaje a usuarios</h3>
+                </div>
                 <div class="card-body">
-                    <h3>Centro de mensajes</h3>
-                    
+                    <form action="{{ url_for('sesion.grabar_mensaje_usuario') }}" method="post">
+                        <div class="mb-3">
+                            <label for="tituloUsuario">Titulo</label>
+                            <input type="text" class="form-control" name="tituloUsuario" id="tituloUsuario" placeholder="Titulo del mensaje">
+                        </div>
+                        <div class="mb-3">
+                            <label for="subtituloUsuario">Subtitulo</label>
+                            <input type="text" class="form-control" name="subtituloUsuario" id="subtituloUsuario" placeholder="Subtitulo del mensaje">
+                        </div>
+                        <div class="mb-3">
+                            <label for="usuario">Usuario</label>
+                            <select class="form-control" name="usuario" id="usuario">
+                                <option value="">Seleccione un usuario</option>
+                                <option value="0">Todos</option>
+                                {% for user in usuarios %}
+                                    <option value="{{ user.id }}">{{ user.nombre }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="mensajeUsuario">Mensaje</label>
+                            <textarea class="form-control" id="mensajeUsuario" name="mensajeUsuario" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
                 </div>    
             </div>   
         </div>    
         
-        <div class="col-md-7">
-            {% include 'partials/_lst-mensajes.html' %}
-        </div>     
-        
+        <div class="col-md-5">
+            <div class="card">
+                <div class="car-header">
+                    <h3 class="m-3">Enviar mensaje a sucursales</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('sesion.grabar_mensaje_sucursal') }}" method="post">
+                        <div class="mb-3">
+                            <label for="tituloSucursal">Titulo</label>
+                            <input type="text" class="form-control" name="tituloSucursal" id="tituloSucursal" placeholder="Titulo del mensaje">
+                        </div>
+                        <div class="mb-3">
+                            <label for="subtituloSucursal">Subtitulo</label>
+                            <input type="text" class="form-control" name="subtituloSucursal" id="subtituloSucursal" placeholder="Subtitulo del mensaje">
+                        </div>
+                        <div class="mb-3">    
+                            <label for="sucursal">Sucursal</label>
+                            <select class="form-control" name="sucursal" id="sucursal">
+                                <option value="">Seleccione una sucursal</option>
+                                <option value="0">Todas</option>
+                                {% for sucursal in sucursales %}
+                                    <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="mensajeSucursal">Nuevo mensaje</label>
+                            <textarea class="form-control" id="mensajeSucursal" name="mensajeSucursal" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
     </div>      
+    <div class="mt-3">
+        {% include 'partials/_lst-mensajes.html' %}
+    </div>     
 {% endblock %}    

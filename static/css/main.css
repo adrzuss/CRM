@@ -124,7 +124,8 @@ body{
 
 .sucursal_span{
     font-weight: bold;
-    color:rgb(1, 153, 102)
+    color:rgb(1, 153, 102);
+    text-align: right;
 }
 
 .precio-normal {

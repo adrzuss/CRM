@@ -39,7 +39,17 @@
                                 <label for="fecha">Fecha:</label>
                                 <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
                             </div>    
-                            
+                            <div class="col-md-2">
+                                <label for="idlista" class="form-label">Lista de precios:</label>
+                                <select class="form-select form-select-md" name="idlista" id="idlista">
+                                    {% for lista in listas_precio %}
+                                        {% if lista.id == 1 %}
+                                            <option value="{{ lista.id }}" selected>{{ lista.nombre }}</option>
+                                        {% endif %}    
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}    
+                                </select>
+                            </div>
                         </div>    
                     </div>    
                 </div>    

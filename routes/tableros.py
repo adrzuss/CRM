@@ -1,6 +1,6 @@
 from flask import render_template, request, Blueprint
 from flask import g
-from datetime import date
+from datetime import date, timedelta
 from services.ventas import get_vta_hoy, get_vta_semana, ventas_por_mes, pagos_hoy, get_operaciones_hoy, get_operaciones_semana, get_ultimas_operaciones, get_10_mas_vendidos, \
                             get_op_este_mes, get_op_este_mes_anterior, get_vta_sucursales_data, get_vta_vendedores_data, get_vta_rubros
 
@@ -16,29 +16,35 @@ bp_tableros = Blueprint('tableros', __name__, template_folder='../templates/tabl
 @check_session
 @alertas_mensajes
 def tablero_inicial():
+    # fechas hoy y 6 meses atrás
+    fecha_hoy = date.today()
+    fecha_inicio = fecha_hoy - timedelta(days=180)
+    
     desde_sucs = request.args.get('desde_sucs')
     if desde_sucs == None:
         desde_sucs = date.today()
     hasta_sucs = request.args.get('hasta_sucs')
     if hasta_sucs == None:
         hasta_sucs = date.today()
+        
     desde_vend = request.args.get('desde_vend')
     if desde_vend == None:
         desde_vend = date.today()
     hasta_vend = request.args.get('hasta_vend')
     if hasta_vend == None:
         hasta_vend = date.today()    
+        
     vta_hoy = get_vta_hoy()
     vta_semana = get_vta_semana()
     vta_6_meses = ventas_por_mes()
     saldo_clientes_actual, saldo_clientes_vencido = get_saldo_clientes()
     saldo_proveedores = get_saldo_proveedores()
     pagosHoy = pagos_hoy()
-    vta_rubros = get_vta_rubros(date.today(), date.today())
+    vta_rubros = get_vta_rubros(fecha_inicio, fecha_hoy)
     ventasSucursales = get_vta_sucursales_data(desde_sucs, hasta_sucs)
     ventasVendedores = get_vta_vendedores_data(desde_vend, hasta_vend)
-    print(vta_rubros['rubros'], vta_rubros['vtaRubros'])
     return render_template('tablero.html', tituloTablero='Gerencia', desde_sucs=desde_sucs, hasta_sucs=hasta_sucs, desde_vend=desde_vend, hasta_vend=hasta_vend, vta_hoy=vta_hoy, vta_semana=vta_semana, saldo_clientes_actual=format_currency(saldo_clientes_actual), saldo_clientes_vencido=format_currency(saldo_clientes_vencido), saldo_proveedores=saldo_proveedores, meses=vta_6_meses['meses'], operaciones=vta_6_meses['operaciones'], tipoPagoss=pagosHoy['tipo_pago'], cantPagoss=pagosHoy['total_pago'], rubros=vta_rubros['rubros'], vtaRubros=vta_rubros['vtaRubros'], ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
 @bp_tableros.route('/tablero-gerencial')    
 
 @bp_tableros.route('/tablero-administrativo')

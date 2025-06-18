@@ -199,7 +199,6 @@ def get_factura(id):
             ).join(PagosCobros, PagosCobros.id == PagosFC.idpago
             ).filter(PagosFC.idfactura == id
             ).all()
-    print('El periodo: ', factura[0].periodo)
     # Formatear el periodo a "YYYY-MM"        
     print(factura[0])
     return factura[0], items, pagos

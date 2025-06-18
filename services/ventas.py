@@ -409,7 +409,7 @@ def procesar_nuevo_remito(form, id_sucursal):
     try:
         idcliente = form['idcliente']
         fecha = form['fecha']
-        idlista = 0
+        idlista = form['idlista']
         id_tipo_comprobante = form['id_tipo_comprobante']
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
@@ -719,7 +719,6 @@ def get_vta_rubros(desde_vend, hasta_vend):
     for resultado in resultados:
         nombres_rubros.append(resultado.rubro)
         ventas_rubros.append(resultado.vtaRubro)
-    print('Resultados de venta_rubros:', resultados)
     return {
             'rubros': nombres_rubros,
             'vtaRubros': ventas_rubros

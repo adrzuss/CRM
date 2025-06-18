@@ -3,6 +3,8 @@ from services.sessions import check_user, new_user, get_usuarios, get_usuario, g
 from models.sucursales import Sucursales
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
+from services.configs import get_sucursales
+from services.sessions import save_msg_user, save_msg_branch, get_mensajes_mios, get_mensajes_para_mi, get_mensaje
 
 bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions', static_folder='../static')
 
@@ -71,6 +73,7 @@ def add_user():
             flash('Las claves no coinciden', 'error')    
     
 @bp_sesiones.route('/update_user/<id>', methods=['GET', 'POST'])
+@check_session
 @alertas_mensajes
 def update_user(id):
     if request.method == 'GET':
@@ -108,6 +111,55 @@ def update_user(id):
 @check_session
 @alertas_mensajes
 def centro_mensajes():
+    usuarios = get_usuarios()
+    sucursales = get_sucursales()
+    mensajesMios = []
+    mensajesMios = get_mensajes_mios(session['user_id'])[0]
+    mensajesParaMi = []
+    mensajesParaMi = get_mensajes_para_mi(session['user_id'], session['id_sucursal'])[0]
+    return render_template('centro_mensajes.html', mensajesMios=mensajesMios, mensajesParaMi=mensajesParaMi, usuarios=usuarios[0], sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_sesiones.route('/grabar_mensaje_usuario', methods=['POST'])
+@check_session
+@alertas_mensajes
+def grabar_mensaje_usuario():
+    if request.method == 'POST':
+        titulo = request.form['tituloUsuario']
+        subtitulo = request.form['subtituloUsuario']
+        mensaje = request.form['mensajeUsuario']
+        usuarioDestino = request.form['usuario']
+        # Aquí puedes agregar la lógica para guardar el mensaje en la base de datos
+        resultado = save_msg_user(titulo, subtitulo, mensaje, usuarioDestino)
+        if resultado[0]['success']==True:
+            flash('Mensaje enviado correctamente', 'success')
+        else:
+            flash(f'Error al enviar el mensaje: {resultado[0]["error"]}', 'error')
+        return redirect(url_for('sesion.centro_mensajes'))
+
+@bp_sesiones.route('/grabar_mensaje_sucursal', methods=['POST'])
+@check_session
+@alertas_mensajes
+def grabar_mensaje_sucursal():
+    if request.method == 'POST':
+        titulo = request.form['tituloSucursal']
+        subtitulo = request.form['subtituloSucursal']
+        mensaje = request.form['mensajeSucursal']
+        sucursalDestino = request.form['sucursal']
+        # Aquí puedes agregar la lógica para guardar el mensaje en la base de datos
+        resultado = save_msg_branch(titulo, subtitulo, mensaje, sucursalDestino)
+        if resultado[0]['success']==True:
+            flash('Mensaje enviado correctamente', 'success')
+        else:
+            flash(f'Error al enviar el mensaje: {resultado[0]["error"]}', 'error')
+        return redirect(url_for('sesion.centro_mensajes'))
     
-    mensajesTodos = []
-    return render_template('centro_mensajes.html', mensajesTodos=mensajesTodos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+@bp_sesiones.route('/view_mensaje/<id>', methods=['GET'])
+@check_session
+@alertas_mensajes
+def view_mensaje(id):
+    mensaje, status_code = get_mensaje(id)
+    if status_code == 200:
+        return render_template('view_msg.html', mensaje=mensaje, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    else:
+        flash(f'Error al obtener el mensaje: {mensaje}', 'error')
+        return redirect(url_for('sesion.centro_mensajes'))

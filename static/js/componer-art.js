@@ -33,7 +33,7 @@ document.querySelectorAll('.eliminarCompuesto').forEach(function(boton) {
 async function fetchArticulo(idart_org, id, idlista) {
     let response;
     if (!isNaN(id)){
-        response = await fetch(`${BASE_URL}/articulo/${id}/${idlista}`);
+        response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
         
     }
     else{

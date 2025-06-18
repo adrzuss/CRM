@@ -45,12 +45,12 @@ document.getElementById('movCtaCte').addEventListener('submit', function(event){
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     // Realizar la solicitud a la API
-    const response = await fetch(`${BASE_URL}/get_punto_vta`);
+    const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);
     const data = await response.json(); 
     // Verificar el valor de punto_vta
     if (!data.punto_vta) {
       // Si punto_vta es null o no está definido, mostrar el modal
-      const ptosVtasSucursal = await fetch(`${BASE_URL}/get_puntos_vta_sucursal`);
+      const ptosVtasSucursal = await fetch(`${BASE_URL}/ventas/get_puntos_vta_sucursal`);
       const datos = await ptosVtasSucursal.json(); 
       if (datos.length == 1) {
         asignarPuntoVenta(datos[0].id);
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
     // Llamar a la API para asignar el punto de venta a la sesión
-    const response = await fetch(`${BASE_URL}/set_punto_vta}`, {
+    const response = await fetch(`${BASE_URL}/ventas/set_punto_vta`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

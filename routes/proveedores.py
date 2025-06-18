@@ -14,29 +14,50 @@ bp_proveedores = Blueprint('proveedores', __name__, template_folder='../template
 
 #------------------ proveedores --------------
 
-@bp_proveedores.route('/proveedores')
+@bp_proveedores.route('/proveedores/<id>', methods=['GET'])
 @check_session
 @alertas_mensajes
-def proveedores():
+def proveedores(id):
+    print(request.method)
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
     proveedores = Proveedores.query.all()
-    return render_template('proveedores.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    proveedor = []  
+    if id != 0:
+        proveedor = Proveedores.query.get(id)
+    return render_template('proveedores.html', proveedor=proveedor, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
-@bp_proveedores.route('/add_proveedor', methods=['POST'])
+@bp_proveedores.route('/add_proveedor', methods=['GET', 'POST'])
 @check_session
+@alertas_mensajes
 def add_proveedor():
-    nombre = request.form['nombre']
-    mail = request.form['mail']
-    telefono = request.form['telefono']
-    documento = request.form['documento']
-    tipo_doc = request.form['tipoDoc']
-    tipo_iva = request.form['tipoIva']
-    proveedores = Proveedores(nombre, mail, telefono, documento, tipo_doc, tipo_iva)
-    db.session.add(proveedores)
-    db.session.commit()
-    flash('Proveedor agregado')
-    return redirect(url_for('proveedores.proveedores'))
+    id = request.form['id']
+    if id:
+        proveedor = Proveedores.query.get(id)
+        proveedor.nombre = request.form['nombre']
+        proveedor.fantasia = request.form['fantasia']
+        proveedor.direccion = request.form['direccion']
+        proveedor.email = request.form['mail']
+        proveedor.telefono = request.form['telefono']
+        proveedor.documento = request.form['documento']
+        proveedor.id_tipo_doc = request.form['tipoDoc']
+        proveedor.id_tipo_iva = request.form['tipoIva']
+        db.session.commit()
+        flash('Proveedor actualizado')
+    else:      
+        nombre = request.form['nombre']
+        fantasia = request.form['fantasia']
+        direccion = request.form['direccion']
+        mail = request.form['mail']
+        telefono = request.form['telefono']
+        documento = request.form['documento']
+        tipo_doc = request.form['tipoDoc']
+        tipo_iva = request.form['tipoIva']
+        proveedores = Proveedores(nombre, fantasia=fantasia, email=mail, telefono=telefono, documento=documento, direccion=direccion, tipo_doc=tipo_doc, tipo_iva=tipo_iva)
+        db.session.add(proveedores)
+        db.session.commit()
+        flash('Proveedor agregado')
+    return redirect(url_for('proveedores.proveedores', id=0))
 
 @bp_proveedores.route('/proveedor/<id>')
 @check_session
@@ -83,25 +104,6 @@ def get_proveedores():
         proveedores = []
     return jsonify([{'id': p.id, 'nombre': p.nombre, 'telefono': p.telefono, 'tipo_doc':p.id_tipo_doc, 'tipo_iva':p.id_tipo_iva} for p in proveedores]) 
 
-
-@bp_proveedores.route('/update_proveedor/<id>', methods=['GET', 'POST'])
-@check_session
-@alertas_mensajes
-def update_proveedor(id):
-    proveedor = Proveedores.query.get(id)
-    if request.method == 'GET':
-        tipo_docs = TipoDocumento.query.all()
-        tipo_ivas = TipoIva.query.all()
-        return render_template('upd-proveedor.html', tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedor = proveedor, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-    if request.method == 'POST':
-        proveedor.nombre = request.form['nombre']
-        proveedor.email = request.form['mail']
-        proveedor.telefono = request.form['telefono']
-        proveedor.docuemto = request.form['documento']
-        db.session.commit()
-        flash('Proveedor grabado')
-        return redirect(url_for('proveedores.proveedores'))
-
 @bp_proveedores.route('/delete_proveedor/<id>')
 @check_session
 def delete_proveedor(id):
@@ -116,23 +118,28 @@ def delete_proveedor(id):
 @check_session
 @alertas_mensajes
 def compras():
-    if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-    facturas = db.session.query(FacturaC.id,
-                                FacturaC.fecha,
-                                FacturaC.nro_comprobante,
-                                FacturaC.total,
-                                TipoComprobantes.nombre.label('tipo_comprobante'),
-                                Proveedores.nombre.label('proveedor')) \
-                                .join(Proveedores, FacturaC.idproveedor == Proveedores.id) \
-                                .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
-                                .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante != 11) \
-                                .order_by(FacturaC.fecha.desc()).all()
-    return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return redirect(url_for('proveedores.compras', desde=desde, hasta=hasta))
+    if request.method == 'GET':
+        desde = request.args.get('desde')
+        hasta = request.args.get('hasta')
+        if desde == None:
+            desde = date.today()
+        if hasta == None:    
+            hasta = date.today()
+        facturas = db.session.query(FacturaC.id,
+                                    FacturaC.fecha,
+                                    FacturaC.nro_comprobante,
+                                    FacturaC.total,
+                                    TipoComprobantes.nombre.label('tipo_comprobante'),
+                                    Proveedores.nombre.label('proveedor')) \
+                                    .join(Proveedores, FacturaC.idproveedor == Proveedores.id) \
+                                    .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
+                                    .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante != 11) \
+                                    .order_by(FacturaC.fecha.desc()).all()
+        return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_proveedores.route('/nueva_compra', methods=['GET', 'POST'])
 @check_session
@@ -209,29 +216,39 @@ def get_remitos(idproveedor):
 @alertas_mensajes
 def remitosComp():
     FacturaC_Alias = aliased(FacturaC)
-    if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-    remitos = db.session.query(FacturaC.id,
-                               FacturaC.fecha,
-                               FacturaC.nro_comprobante,
-                               TipoComprobantes.nombre.label('tipo_comprobante'),
-                               Proveedores.nombre.label('proveedor'),
-                               RemitoFacturas.idfactura,
-                               FacturaC_Alias.id.label('idfactura'),
-                               FacturaC_Alias.fecha.label('fecha_factura'),
-                               FacturaC_Alias.nro_comprobante.label('nro_comprobante_factura')) \
-                               .join(Proveedores, FacturaC.idproveedor == Proveedores.id) \
-                               .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
-                               .outerjoin(RemitoFacturas, RemitoFacturas.idremito == FacturaC.id) \
-                               .outerjoin(FacturaC_Alias, and_(FacturaC_Alias.id == RemitoFacturas.idfactura, FacturaC_Alias.idtipocomprobante != 11)) \
-                               .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante == 11) \
-                               .order_by(FacturaC.fecha.desc()).all()
-    print(remitos)                           
-    return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        if desde == None:
+            desde = date.today()
+        if hasta == None:    
+            hasta = date.today()
+        return redirect(url_for('proveedores.remitosComp', desde=desde, hasta=hasta))
+        
+    if request.method == 'GET':
+        desde = request.args.get('desde')
+        hasta = request.args.get('hasta')
+        if desde == None:
+            desde = date.today()
+        if hasta == None:    
+            hasta = date.today()
+        remitos = db.session.query(FacturaC.id,
+                                FacturaC.fecha,
+                                FacturaC.nro_comprobante,
+                                TipoComprobantes.nombre.label('tipo_comprobante'),
+                                Proveedores.nombre.label('proveedor'),
+                                RemitoFacturas.idfactura,
+                                FacturaC_Alias.id.label('idfactura'),
+                                FacturaC_Alias.fecha.label('fecha_factura'),
+                                FacturaC_Alias.nro_comprobante.label('nro_comprobante_factura')) \
+                                .join(Proveedores, FacturaC.idproveedor == Proveedores.id) \
+                                .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
+                                .outerjoin(RemitoFacturas, RemitoFacturas.idremito == FacturaC.id) \
+                                .outerjoin(FacturaC_Alias, and_(FacturaC_Alias.id == RemitoFacturas.idfactura, FacturaC_Alias.idtipocomprobante != 11)) \
+                                .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante == 11) \
+                                .order_by(FacturaC.fecha.desc()).all()
+        
+        return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_proveedores.route('/nuevo_remitoComp', methods=['GET', 'POST'])
 @check_session

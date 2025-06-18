@@ -267,8 +267,11 @@ async function fetchArticulo(id, idlista, itemDiv) {
     }    
   }
 
-  if (!response.ok) {
-    console.error("Error en la búsqueda de artículos");
+  if ((!response.ok)&&(id!="")) {
+    const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+    nuevoInputCodigo.value = "";
+    nuevoInputCodigo.focus();
+    alert("Error en la búsqueda de artículos");
     return;
   }
   //const data = await response.json();

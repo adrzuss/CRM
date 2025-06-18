@@ -53,10 +53,12 @@ def lst_cta_cte_prov(id):
 @check_session
 @alertas_mensajes
 def saldosprov():
-    if request.method == 'POST':
+    if request.method == 'GET':
         # Obtener la fecha del formulario
-        fecha_str = request.form['fecha']
-        
+        fecha_str = request.args.get('fecha')
+        if fecha_str is None:
+            # Si no se proporciona una fecha, usar la fecha actual
+            fecha_str = datetime.now().strftime('%Y-%m-%d')
         # Convertir la fecha a un objeto datetime
         fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
         
@@ -77,5 +79,6 @@ def saldosprov():
 
         # Pasar los resultados a la plantilla
         return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-    desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
-    return render_template('saldos-ctacteprov.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    else:
+        fecha_str = request.form['fecha']
+        return redirect(url_for('ctacteprov.saldosprov', fecha=fecha_str))

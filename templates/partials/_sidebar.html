@@ -41,7 +41,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de clientes:</h6>
                         <a class="collapse-item" href="{{ url_for('clientes.clientes', id=0) }}">ABM de clientes</a>
-                        <a class="collapse-item" href="#">ABC clientes</a>
+                        <a class="collapse-item" href="{{ url_for('clientes.abc_clientes') }}">ABC de clientes</a>
                     </div>
                 </div>
             </li>
@@ -96,7 +96,7 @@
                         <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasArticulos') }}">Artículos vendidos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasClientes') }}">Ventas a clientes</a>
-                        <a class="collapse-item" href="#">Ventas por vendedor</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.ventasVendedores') }}">Ventas por vendedor</a>
                     </div>
                 </div>
             </li>
@@ -195,7 +195,7 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Proveedores</h6>
-                        <a class="collapse-item" href="{{ url_for('proveedores.proveedores') }}">ABM Proveedores</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.proveedores', id=0) }}">ABM Proveedores</a>
                         <a class="collapse-item" href="{{ url_for('ctacteprov.saldosprov') }}">Cta. cte. de proveedores</a>
                         <a class="collapse-item" href="{{ url_for('proveedores.ordenpago') }}">Orden de pago</a>
                     </div>
@@ -267,7 +267,7 @@
             <div class="sidebar-card d-none d-lg-flex">         
                 <img class="sidebar-card-illustration mb-2" src="{{ url_for('static', filename='img/softtechweb.png')}}" alt="...">
                 <p class="text-center mb-2"><strong>Desarrollador por</strong> SoftTech Web</p>
-                <a class="btn btn-primary btn-sm" href="https://softtech-system.com">Visite nuestra página</a>
+                <a class="btn btn-primario btn-sm" href="https://softtech-system.com" target="_blank">Visite nuestra página</a>
             </div>
 
         </ul>

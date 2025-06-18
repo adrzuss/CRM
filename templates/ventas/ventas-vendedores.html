@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <h2 class="m-3">Artículos vendidos</h2>
+    <h2 class="m-3">Ventas por vendedores</h2>
     
     <div class="row justify-content-center align-items-center">
         <div class="col-8">
@@ -33,30 +33,33 @@
     </div>
     
     <div class="row justify-content-center align-items-center">
-        <div class="col-12">
+        <div class="col-8">
             <div class="table-responsive m-3" >
                 <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
                     <thead class="table-dark">
                         <tr>
-                            <th>Código</th>
-                            <th>Rubro</th>
-                            <th>Marca</th>
-                            <th>Detalle</th>
-                            <th>Cantidad</th>
+                            <th>#ID Vendedor</th>
+                            <th>Nombre</th>
+                            <th>Operaciones</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        {% for articulo in articulos %}        
+                        {% for venta in ventas %}        
                             <tr class="table-light">
-                                <td scope="row">{{ articulo.codigo }}</td>
-                                <td>{{ articulo.rubro }}</td>
-                                <td>{{ articulo.marca }}</td>
-                                <td>{{ articulo.detalle }}</td>
-                                <td>{{ articulo.cantidad_total }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(articulo.total_ventas) }}</td>
-                                <td><a href="{{ url_for('articulos.update_articulo', id=articulo.id) }}" class="btn btn-secondary">Ver artículo</a></td>
+                                <td scope="row">{{ venta.id }}</td>
+                                <td>{{ venta.nombre }}</td>
+                                <td style="text-align:center">{{ venta.cantidad_total }}</td>
+                                <td style="text-align:center"> {{ venta.total_ventas|round(2) }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('ventas.ventasUnVendedor') }}">
+                                        <input type="hidden" name="idVendedor" value="{{ venta.id }}">
+                                        <input type="hidden" name="fechaDesde" value="{{ desde }}">
+                                        <input type="hidden" name="fechaHasta" value="{{ hasta }}">
+                                        <button type="submit" class="btn btn-secondary">Ver factura</button>
+                                    </form>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

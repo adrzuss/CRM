@@ -1,5 +1,5 @@
 async function getVentasSucursales(desde, hasta){
-    const response = await fetch(`/get_vta_sucursales/${desde}/${hasta}`);
+    const response = await fetch(`${BASE_URL}/ventas/get_vta_sucursales/${desde}/${hasta}`);
     const data = await response.json();
     return data;
 }
@@ -30,7 +30,7 @@ document.getElementById('calcular_sucs').addEventListener('click', async functio
 });
 
 async function getVentasVendedores(desde, hasta){
-    const response = await fetch(`/get_vta_vendedores/${desde}/${hasta}`);
+    const response = await fetch(`${BASE_URL}/ventas/get_vta_vendedores/${desde}/${hasta}`);
     const data = await response.json();
     return data;
 }

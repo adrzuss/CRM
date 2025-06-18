@@ -148,13 +148,13 @@ def update_articulo(id):
                 articulo.idrubro = request.form['idrubro']
             except Exception as e: 
                 flash(f'Error grabando articulo modificado: {e}', 'error')
-                return redirect('/articulos')
+                return redirect('articulos.articulos')
             
         db.session.flush()
         # Manejar la imagen
         if 'imagen' not in request.files:
             flash('No file part')
-            return redirect('/articulos')
+            return redirect(url_for('articulos.articulos'))
             
         file = request.files['imagen']
             
@@ -167,7 +167,7 @@ def update_articulo(id):
                 articulo.imagen = imagen_path
             else:
                 flash('Tipo de archivo inválido')
-                return redirect('/articulos')    
+                return redirect(url_for('articulos.articulos'))
         
         
         #Actauliza precios    
@@ -216,7 +216,7 @@ def update_articulo(id):
                 flash(f'Error grabando stocks {e}', 'error')
 
         flash('Articulo grabado')
-        return redirect('/articulos')
+        return redirect(url_for('articulos.articulos'))
 
 # ------------------- Composición de artículos -----------------------------        
 @bp_articulos.route('/update_composicion/<id>', methods=['GET', 'POST'])
@@ -344,7 +344,7 @@ def get_articulos():
                                          Marca.nombre.label('marca'),
                                          Articulo.costo.label('precio'),
                                          ).join(Marca, Marca.id == Articulo.idmarca
-                                         ).filter(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"{detalle}"))).all()    
+                                         ).filter(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%"))).all()    
     else:
         articulos = []
     return jsonify([{'id': a.id, 'codigo': a.codigo, 'marca': a.marca, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])

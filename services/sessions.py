@@ -1,6 +1,6 @@
 from flask import session, jsonify
 from datetime import date, datetime
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, text
 from utils.db import db
 from models.sessions import Usuarios, Tareas, TareasUsuarios
 
@@ -66,4 +66,95 @@ def update_tareas_usuario(id_tarea, id_usuario):
     nueva_tarea = TareasUsuarios(idtarea=id_tarea, idusuario=id_usuario)
     db.session.add(nueva_tarea)
 
+#-------------- Mensajes ------------------
+
+def get_mensaje(id):
+    try:
+        from models.sessions import Mensajes
+        mensajes = Mensajes.query.get(id)
+        if not mensajes:
+            return jsonify(success=False, error='Mensaje no encontrado'), 404
+        else:
+            return mensajes, 200
+    except Exception as e:
+        print(f'error: {e}')
+        return jsonify(success=False, error=str(e)), 404
+
+def save_msg_user(titulo, subtitulo, mensaje, usuarioDestino):
+    try:
+        from models.sessions import Mensajes
+        from datetime import datetime
         
+        nuevo_mensaje = Mensajes(
+            idsucursal=session['id_sucursal'],
+            idusuario=session['user_id'],
+            fecha=datetime.now().date(),
+            hora=datetime.now().time(),
+            tipo='MENSAJE',
+            titulo=titulo,
+            subtitulo=subtitulo,
+            mensaje=mensaje,
+            idusr_destino=usuarioDestino
+        )
+        db.session.add(nuevo_mensaje)
+        db.session.commit()
+        return {'success':True, 'message':'Mensaje guardado correctamente'}, 200
+    except Exception as e:
+        print(f'error: {e}')
+        return {'success':False, 'error':str(e)}, 404
+
+def save_msg_branch(titulo, subtitulo, mensaje, sucursalDestino):
+    try:
+        from models.sessions import Mensajes
+        from datetime import datetime
+        laHora = datetime.now().time().replace(microsecond=0).strftime('%H:%M:%S')
+        print(f'laHora: {laHora}')
+        nuevo_mensaje = Mensajes(
+            idsucursal=session['id_sucursal'],
+            idusuario=session['user_id'],
+            fecha=datetime.now().date(),
+            hora=laHora,
+            tipo='MENSAJE',
+            titulo=titulo,
+            subtitulo=subtitulo,
+            mensaje=mensaje,
+            idsuc_destino=sucursalDestino
+        )
+        db.session.add(nuevo_mensaje)
+        db.session.commit()
+        return {'success':True, 'message':'Mensaje guardado correctamente'}, 200
+    except Exception as e:
+        print(f'error: {e}')
+        return {'success':False, 'error':str(e)}, 404
+    
+def get_mensajes_mios(id_usuario):
+    try:
+        from models.sessions import Mensajes
+        mensajes = db.session.execute(text("CALL get_mensajes_mios(:idusuario)"), {'idusuario': id_usuario}).fetchall()
+        return mensajes, 200
+    except Exception as e:
+        print(f'error: {e}')
+        return jsonify(success=False, error=str(e)), 404    
+    
+def get_mensajes_para_mi(id_usuario, id_sucursal):
+    try:
+        from models.sessions import Mensajes
+        mensajes = db.session.execute(text("CALL get_mensajes_para_mi(:idusuario, :idsucursal)"), {'idusuario': id_usuario, 'idsucursal': id_sucursal}).fetchall()
+        return mensajes, 200
+    except Exception as e:
+        print(f'error: {e}')
+        return jsonify(success=False, error=str(e)), 404    
+    
+def alerta_mensajes_usuario():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_para_mi(:idusuario)"), {'idusuario': session['user_id']}).scalar()
+    if cantidad > 0:            
+        return cantidad, {'titulo': 'Mensajes de usuario', 'subtitulo': f'Hay {cantidad} mensajes de usuario', 'tipo': 'peligro', 'entidad': 'usuario', 'url': '#'}
+    else:
+        return cantidad, {}
+    
+def alerta_mensajes_sucursal():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_esta_sucursal(:idsucursal)"), {'idsucursal': session['id_sucursal']}).scalar()
+    if cantidad > 0:            
+        return cantidad, {'titulo': 'Mensajes de sucursal', 'subtitulo': f'Hay {cantidad} mensajes de sucursal', 'tipo': 'peligro', 'entidad': 'sucursal', 'url': '#'}
+    else:
+        return cantidad, {}

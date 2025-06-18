@@ -21,16 +21,18 @@ def obtener_total_ventas_por_tipo_ingreso(desde, hasta, usuario=0):
 
 def obtener_total_compras_por_tipo_ingreso(desde, hasta, usuario=0):
     # Realizamos el JOIN entre las tablas y agrupamos por el tipo de ingreso
-    if usuario == 0:
-            resultados = db.session.query(
+    print(f'usuario: {usuario}')
+    if (usuario != '' and usuario != 0):
+        resultados = db.session.query(
             PagosCobros.pagos_cobros.label('tipo_ingreso'),  # Nombre del tipo de ingreso
             func.sum(PagosFC.total).label('total_ingreso')   # Suma de los totales
-            ).join(PagosFC, PagosFC.idpago == PagosCobros.id).join(FacturaC, FacturaC.id == PagosFC.idfactura).filter(FacturaC.fecha.between(desde, hasta)).group_by(PagosCobros.pagos_cobros).all()
+            ).join(PagosFC, PagosFC.idpago == PagosCobros.id).join(FacturaC, and_(FacturaC.id == PagosFC.idfactura , FacturaC.idusuario == usuario)).filter(FacturaC.fecha.between(desde, hasta)).group_by(PagosCobros.pagos_cobros).all()            
     else:    
         resultados = db.session.query(
             PagosCobros.pagos_cobros.label('tipo_ingreso'),  # Nombre del tipo de ingreso
             func.sum(PagosFC.total).label('total_ingreso')   # Suma de los totales
-            ).join(PagosFC, PagosFC.idpago == PagosCobros.id).join(FacturaC, and_(FacturaC.id == PagosFC.idfactura , FacturaC.idusuario == usuario)).filter(FacturaC.fecha.between(desde, hasta)).group_by(PagosCobros.pagos_cobros).all()
+            ).join(PagosFC, PagosFC.idpago == PagosCobros.id).join(FacturaC, FacturaC.id == PagosFC.idfactura).filter(FacturaC.fecha.between(desde, hasta)).group_by(PagosCobros.pagos_cobros).all()
+        
     return resultados
 
 def get_ventas_compras(desde, hasta):

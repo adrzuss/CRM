@@ -4,7 +4,7 @@ from datetime import datetime, date
 from models.clientes import Clientes
 from models.ventas import Factura
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes, TipoCompAplica
-from services.clientes import save_cliente
+from services.clientes import save_cliente, get_abc_operaciones, get_abc_montos, get_abc_productos
 from services.ctactecli import saldo_ctacte
 from services.configs import validar_cuit
 from utils.db import db
@@ -181,3 +181,25 @@ def facturas_cliente(id):
             Factura.fecha <= hasta
         ).all()
     return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)   
+
+@bp_clientes.route('/abc_clientes', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def abc_clientes():
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        return redirect(url_for('clientes.abc_clientes', desde=desde, hasta=hasta))
+    if request.method == 'GET':
+        desde = request.args.get('desde')
+        hasta = request.args.get('hasta')
+        if desde == None:
+            desde = date.today()
+        if hasta == None:    
+            hasta = date.today()
+        
+        abc_operaciones = get_abc_operaciones(desde, hasta)
+        abc_montos = get_abc_montos(desde, hasta)   
+        abc_productos = get_abc_productos(desde, hasta)
+        
+        return render_template('abc-clientes.html', desde=desde, hasta=hasta, abc_operaciones=abc_operaciones, abc_montos=abc_montos, abc_productos=abc_productos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

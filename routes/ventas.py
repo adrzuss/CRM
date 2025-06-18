@@ -3,6 +3,7 @@ from models.articulos import ListasPrecios
 from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
 from models.configs import PuntosVenta
+from models.sessions import Usuarios
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura
 from utils.db import db
@@ -98,7 +99,8 @@ def nuevo_remito():
             flash(f'Ocurrió un error al procesar el remito: {e}', 'error')
             return redirect(url_for('ventas.nuevo_remito'))
     hoy = date.today()
-    return render_template('nuevo_remito.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    listas_precio = ListasPrecios.query.all()
+    return render_template('nuevo_remito.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
 @check_session
@@ -195,6 +197,43 @@ def ventasUnCliente():
         articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
                          {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
     return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/ventasVendedores', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ventasVendedores():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        ventas = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        ventas = db.session.execute(text("CALL venta_vendedores(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+    return render_template('ventas-vendedores.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/ventasUnVendedor', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ventasUnVendedor():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        vendedor = {}
+        ventas = []
+        articulos = []
+    else:
+        id = request.form['idVendedor']
+        desde = request.form['fechaDesde']
+        hasta = request.form['fechaHasta']
+        
+        vendedor = Usuarios.query.get(id)
+        ventas = db.session.execute(text("CALL ventas_un_vendedor(:idvendedor, :desde, :hasta)"),
+                         {'idvendedor': id, 'desde': desde, 'hasta': hasta}).fetchall()
+        articulos = db.session.execute(text("CALL ventas_art_un_vendedor(:idvendedor, :desde, :hasta)"),
+                         {'idvendedor': id, 'desde': desde, 'hasta': hasta}).fetchall()
+    return render_template('ventas-un-vendedor.html', vendedor=vendedor, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 
 @bp_ventas.route('/get_vta_sucursales/<desde>/<hasta>')

@@ -93,10 +93,10 @@ async function fetchProveedor(input) {
   let response;
   if (!isNaN(input)) {
     // Si es un número, buscar por ID
-    response = await fetch(`${BASE_URL}/get_proveedor/${input}`); //1 venta
+    response = await fetch(`${BASE_URL}/proveedores/get_proveedor/${input}`); //1 venta
   } else {
     // Si es un nombre parcial, buscar por nombre
-    response = await fetch(`${BASE_URL}/get_proveedores?nombre=${input}`);
+    response = await fetch(`${BASE_URL}/proveedores/get_proveedores?nombre=${input}`);
   }
 
   if (!response.ok) {
@@ -125,9 +125,9 @@ async function fetchProveedor(input) {
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
   if (!isNaN(id)) {
-    response = await fetch(`${BASE_URL}/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`${BASE_URL}/get_articulos?detalle=${id}&idlista=${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
   }
 
   if (!response.ok) {

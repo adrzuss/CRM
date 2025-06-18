@@ -8,7 +8,7 @@
 
     <!-- Topbar Search -->
     <div class="row">
-        <h4 style = "color:#10246a" class="ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} <span class="sucursal_span">Sucursal: {{session['nombre_sucursal']}}</span></h4> 
+        <h4 style = "color:#10246a" class="col-12 ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} <span class="sucursal_span">Sucursal: {{session['nombre_sucursal']}}</span></h4> 
     </div>
     
 
@@ -189,9 +189,15 @@
                             {% endif %}
 
                         </div>
-                    {% else %}
+                    {% elif mensaje['entidad'] == 'usuario' %}
                         <div class="dropdown-list-image mr-3">
-                            <img class="rounded-circle" src="{{ url_for('static', filename='img/' + mensaje['avatar'])}}"
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_profile_1.svg')}}"
+                                alt="...">
+                            <div class="status-indicator bg-success"></div>
+                        </div>
+                    {% else %}    
+                        <div class="dropdown-list-image mr-3">
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_engineering-team_13ax.svg')}}"
                                 alt="...">
                             <div class="status-indicator bg-success"></div>
                         </div>
@@ -274,6 +280,10 @@
                 <a class="dropdown-item" href="{{ url_for('sesion.update_user', id=session['user_id']) }}">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Perfil
+                </a>
+                <a class="dropdown-item" href="{{ url_for('sesion.centro_mensajes') }}">
+                    <i class="fas fa-envelope fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Mensajes
                 </a>
                 <a class="dropdown-item" href="{{ url_for('configuraciones.abm_sucursales') }}">
                     <i class="fas fa-store fa-sm fa-fw mr-2 text-gray-400"></i>

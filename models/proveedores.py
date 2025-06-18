@@ -4,18 +4,21 @@ class Proveedores(db.Model):
     __tablename__ = 'proveedores'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(80))
+    fantasia = db.Column(db.String(80))
     email = db.Column(db.String(100))
     telefono  = db.Column(db.String(20))
     documento = db.Column(db.String(13))
     direccion = db.Column(db.String(80))
     id_tipo_doc = db.Column(db.Integer, db.ForeignKey('tipo_doc.id'))
     id_tipo_iva = db.Column(db.Integer, db.ForeignKey('tipo_iva.id'))
-    
-    def __init__(self, nombre, email, telefono, documento, tipo_doc, tipo_iva):
+
+    def __init__(self, nombre, fantasia, email, telefono, documento, direccion, tipo_doc, tipo_iva):
         self.nombre = nombre
+        self.fantasia = fantasia
         self.email = email
         self.telefono = telefono
         self.documento = documento
+        self.direccion = direccion
         self.id_tipo_doc = tipo_doc
         self.id_tipo_iva = tipo_iva
 

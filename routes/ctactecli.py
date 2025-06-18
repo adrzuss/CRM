@@ -36,7 +36,6 @@ def lst_cta_cte_cli(id):
     movimientos = CtaCteCli.query.filter_by(idcliente=cliente.id).order_by(CtaCteCli.fecha.desc()).all()
     saldo_total = saldo_ctacte(cliente.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    
     return render_template('lst-ctactecli.html', movimientos=movimientos, idCliente=cliente.id, nomCliente=cliente.nombre, entidades=entidades, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ctactecli.route('/saldosctactecli', methods=['GET'])
@@ -64,14 +63,16 @@ def saldosctactecli():
 
 
 # Obtiene el detalle de los saldos de lac cta cte de los clientes
-@bp_ctactecli.route('/movsctactecli', methods=['GET', 'POST'])
+@bp_ctactecli.route('/movsctactecli', methods=['GET'])
 @check_session
 @alertas_mensajes
 def movsctactecli():
-    if request.method == 'POST':
+    if request.method == 'GET':
         # Obtener la fecha del formulario
-        fecha_str = request.form['fecha']
         
+        fecha_str = request.args.get('fecha')
+        if fecha_str == None:
+            fecha_str = datetime.today().replace(day=1).strftime("%Y-%m-%d")
         # Convertir la fecha a un objeto datetime
         fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
         
@@ -92,8 +93,8 @@ def movsctactecli():
 
         # Pasar los resultados a la plantilla
         return render_template('movs-ctactecli.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-    desde = datetime.today().replace(day=1).strftime("%Y-%m-%d")
-    return render_template('movs-ctactecli.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    
+    #return render_template('movs-ctactecli.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 # Obtiene el detalle de los saldos de lac cta cte de los clientes
 @bp_ctactecli.route('/lst_cc_cli_vencidas', methods=['GET'])

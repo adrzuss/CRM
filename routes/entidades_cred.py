@@ -66,34 +66,39 @@ def add_entidad():
 @alertas_mensajes
 def listado_movimientos():
     entidades = EntidadesCred.query.all()
-    if request.method == 'POST':
-        desde = request.form.get('desde')
-        hasta = request.form.get('hasta')
-        entidad_id = request.form.get('entidad')
-        movimientos = db.session.query(Factura.id, 
-                                       Factura.idcliente,
-                                       Factura.nro_comprobante,
-                                       Factura.fecha, 
-                                       Factura.total, 
-                                       Sucursales.nombre.label('sucursal'),
-                                       Clientes.nombre.label('cliente'),
-                                       PagosFV.total.label('pago_total'), 
-                                       EntidadesCred.entidad) \
-                                .join(PagosFV, Factura.id == PagosFV.idfactura) \
-                                .join(EntidadesCred, PagosFV.entidad == EntidadesCred.id) \
-                                .join(Clientes, Factura.idcliente == Clientes.id) \
-                                .join(Sucursales, Factura.idsucursal == Sucursales.id) \
-                                .filter(Factura.fecha >= desde,
-                                        Factura.fecha <= hasta,
-                                        EntidadesCred.id == entidad_id).all()
-        
+    if request.method == 'GET':
+        desde = request.args.get('desde')
+        hasta = request.args.get('hasta')
+        if not desde:
+            desde = datetime.now().strftime('%Y-%m-%d')
+        if not hasta:
+            hasta = datetime.now().strftime('%Y-%m-%d')
+        entidad_id = request.args.get('idEntidad')
+        if entidad_id != None:
+            print(f'Entidades Cred: {entidad_id}')
+            movimientos = db.session.query(Factura.id, 
+                                        Factura.idcliente,
+                                        Factura.nro_comprobante,
+                                        Factura.fecha, 
+                                        Factura.total, 
+                                        Sucursales.nombre.label('sucursal'),
+                                        Clientes.nombre.label('cliente'),
+                                        PagosFV.total.label('pago_total'), 
+                                        EntidadesCred.entidad) \
+                                    .join(PagosFV, Factura.id == PagosFV.idfactura) \
+                                    .join(EntidadesCred, PagosFV.entidad == EntidadesCred.id) \
+                                    .join(Clientes, Factura.idcliente == Clientes.id) \
+                                    .join(Sucursales, Factura.idsucursal == Sucursales.id) \
+                                    .filter(Factura.fecha >= desde,
+                                            Factura.fecha <= hasta,
+                                            EntidadesCred.id == entidad_id).all()
+        else:
+            print(f'Sin Entidades Cred')
+            movimientos = []
         return render_template('listado-movimientos.html', desde=desde, hasta=hasta, entidades=entidades, movimientos=movimientos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     else:
         movimientos = []
         desde = request.form.get('desde', '')
         hasta = request.form.get('hasta', '')
-        if not desde:
-            desde = datetime.now().strftime('%Y-%m-%d')
-        if not hasta:
-            hasta = datetime.now().strftime('%Y-%m-%d')
-        return render_template('listado-movimientos.html', desde=desde, hasta=hasta, entidades=entidades, movimientos=movimientos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        idEntidad = request.form.get('entidad', '')
+        return redirect(url_for('entidades.listado_movimientos', desde=desde, hasta=hasta, idEntidad=idEntidad))

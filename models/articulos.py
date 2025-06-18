@@ -1,4 +1,5 @@
 from utils.db import db
+from datetime import date
 
 class Articulo(db.Model):
     __tablename__ = 'articulos'
@@ -16,6 +17,7 @@ class Articulo(db.Model):
     idtipoarticulo = db.Column(db.Integer, db.ForeignKey('tipo_articulos.id'))
     imagen = db.Column(db.String(255))
     es_compuesto = db.Column(db.Boolean, nullable=False)
+    baja = db.Column(db.Date, nullable=False)
     iva = db.relationship('AlcIva', back_populates='articulos')
     ingbto = db.relationship('AlcIB', back_populates='articulos')
     marca = db.relationship('Marca', back_populates='articulos')
@@ -38,6 +40,7 @@ class Articulo(db.Model):
         self.idtipoarticulo = idtipoarticulo
         self.imagen = imagen
         self.es_compuesto = es_compuesto
+        self.baja = date(1900, 1, 1)
 
 class ArticuloCompuesto(db.Model):    
     __tablename__ = 'art_compuesto'

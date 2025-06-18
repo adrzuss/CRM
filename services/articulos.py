@@ -693,7 +693,6 @@ def procesar_remito_a_sucursal(form):
 def remitos_mercaderia():    
     cantidad = db.session.query(func.count(RemitoSucursales.id))\
                .filter(and_(RemitoSucursales.iddestino == session['id_sucursal'], RemitoSucursales.fecha == date.today())).scalar()
-    print(f"Cantidad de remitos: {cantidad}")           
     if cantidad > 0:            
         return cantidad, {'titulo': 'Remitos', 'subtitulo': f'Hay {cantidad} remitos', 'tipo': 'peligro', 'entidad': 'sistema', 'url': '#'}
     else:

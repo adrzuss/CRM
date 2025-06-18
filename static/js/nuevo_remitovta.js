@@ -10,12 +10,12 @@ window.onbeforeunload = function () {
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     // Realizar la solicitud a la API
-    const response = await fetch(`${BASE_URL}/get_punto_vta`);	
+    const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);	
     const data = await response.json(); 
     // Verificar el valor de punto_vta
     if (!data.punto_vta) {
       // Si punto_vta es null o no está definido, mostrar el modal
-      const ptosVtasSucursal = await fetch(`${BASE_URL}/get_puntos_vta_sucursal`);
+      const ptosVtasSucursal = await fetch(`${BASE_URL}/ventas/get_puntos_vta_sucursal`);
       const datos = await ptosVtasSucursal.json(); 
       
       if (datos.length == 1) {
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
     // Llamar a la API para asignar el punto de venta a la sesión
-    const response = await fetch(`${BASE_URL}/set_punto_vta`, {
+    const response = await fetch(`${BASE_URL}/ventas/set_punto_vta`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,10 +156,10 @@ async function fetchCliente(input) {
   if (input != ""){
     if (!isNaN(input)) {
       // Si es un número, buscar por ID
-      response = await fetch(`${BASE_URL}/get_cliente/${input}/${4}`); //4 remito
+      response = await fetch(`${BASE_URL}/clientes/get_cliente/${input}/${5}`); //5 remito
     } else {
       // Si es un nombre parcial, buscar por nombre
-      response = await fetch(`${BASE_URL}/get_clientes?nombre=${input}&&tipo_operacion=${4}`);
+      response = await fetch(`${BASE_URL}/clientes/get_clientes?nombre=${input}&&tipo_operacion=${5}`);
     }
 
     if (!response.ok) {
@@ -234,9 +234,9 @@ function asignarCliente(cliente) {
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
   if (!isNaN(id)) {
-    response = await fetch(`${BASE_URL}/articulo/${id}/${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
   } else {
-    response = await fetch(`${BASE_URL}/get_articulos?detalle=${id}&idlista=${idlista}`);
+    response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
   }
 
   if (!response.ok) {
@@ -344,7 +344,6 @@ function updateTotalFactura() {
   });
   document.getElementById("total_factura").textContent =
     totalFactura.toFixed(2);
-  calcSaldo();
 }
 
 function removeItem(itemDiv) {

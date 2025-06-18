@@ -1,0 +1,22 @@
+<div
+    class="table-responsive"
+>
+    <table class="display table table-bordered table-striped" id="dataTable" width="100%" >
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Cliente</th>
+                <th scope="col">Cant. oper</th>
+                <th scope="col">Porcentaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for abc_operacion in abc_operaciones %}
+                <tr class="">
+                    <td scope="row">{{ abc_operacion.nombre }}</td>
+                    <td style="text-align: center;">{{ abc_operacion.cantidad }}</td>
+                    <td style="text-align: center;">{{ "%.2f"|format(abc_operacion.porcentaje) }} %</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

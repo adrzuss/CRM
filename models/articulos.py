@@ -110,6 +110,18 @@ class ListasPrecios(db.Model):
     def __init__(self, nombre, markup):
         self.nombre = nombre        
         self.markup = markup
+
+class ProvByArt(db.Model):
+    __tablename__ = 'prov_by_art'
+    idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
+    idproveedor = db.Column(db.Integer, db.ForeignKey('proveedores.id'), primary_key=True)
+    cod_proveedor = db.Column(db.String(20))
+    proveedor = db.relationship('Proveedores', backref=db.backref('prov_by_art', lazy=True))
+    
+    def __init__(self, idarticulo, idproveedor, cod_proveedor):
+        self.idarticulo = idarticulo
+        self.idproveedor = idproveedor
+        self.cod_proveedor = cod_proveedor
         
 class Balance(db.Model):
     __tablename__ = 'balance'

@@ -116,6 +116,7 @@ def facturar_fe(ptovta, idfactura):
             "cliente": {
                 "tipo_doc": factura_db["cliente"]["tipo_doc"],
                 "nro_doc": factura_db["cliente"]["nro_doc"],
+                "tipo_iva": factura_db["cliente"]["tipo_iva"],
                 "nombre": factura_db["cliente"].get("nombre", ""),  # Opcional
             },
             "items": [
@@ -153,7 +154,7 @@ def facturar_fe(ptovta, idfactura):
             punto_venta=datos_factura["punto_venta"])
         
         # 6. Actualizar la factura en DB con el CAE
-        #print('6- Actualizar la factura en DB con el CAE')
+        
         try:
             db.session.execute(
                 text("""
@@ -265,14 +266,11 @@ def generar_factura(id_factura):
     
     with tempfile.TemporaryDirectory() as tempdir:
         pdf_path = os.path.join(tempdir, f"Factura.pdf")
-        print(pdf_path)
         generar_factura_pdf(pdf_path, datos_factura, items)
-        print('Vamos a enviar PDF en:', pdf_path)
         # ✅ — Enviamos el archivo
         with open(pdf_path, 'rb') as f:
             response = Response(f.read(), mimetype='application/pdf')
             response.headers['Content-Disposition'] = f'attachment; filename=Factura.pdf'
-            print('La respuesta es:', response)
             return response
 
     

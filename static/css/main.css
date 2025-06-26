@@ -159,3 +159,9 @@ body{
     background-color: rgba(15, 96, 189, 0.149);
     color: black;
 }  
+
+.celda-baja {
+    text-decoration: line-through;
+    font-style: italic;
+    color: red !important;
+}

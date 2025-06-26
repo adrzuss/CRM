@@ -240,7 +240,29 @@
                                 </div>
                             {% endfor %}
                         </div>    
-                </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <h5 class="m-3">Proveedores de artículos</h5>
+                        <div class="card-body">
+                            {% for prov in provByArt %}
+                                <div class="row">
+                                    <div class="col-2">
+                                        <label for="idproveedor">#Id</label>
+                                        <input type="text" class="form-control" value="{{ prov.idproveedor }}" name="proveedor[{{loop.index}}][id]" readonly>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="stock">Proveedor</label>
+                                        <input type="text" class="form-control" value="{{ prov.nombre_proveedor }}" readonly>
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="stock">Cod. Proveedor</label>
+                                        <input type="text" class="form-control" value="{{ prov.cod_proveedor }}" readonly>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>    
+                    </div>
                 </div>
             </div>
         </div>    
@@ -259,7 +281,7 @@
     </div>      
     </form>
     <script src="{{ url_for('static', filename='js/utilidades.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/articulos.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/upd-articulos.js')}}"></script>
     
 {% endblock %}
 

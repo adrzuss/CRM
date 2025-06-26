@@ -4,10 +4,9 @@ from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC, RemitoFact
 from models.articulos import Articulo, Stock
 from models.ctacteprov import CtaCteProv
 from models.configs import AlcIva
-from services.articulos import actualizarStock, get_articulo_by_codigo
+from services.articulos import actualizarStock, get_articulo_by_codigo, actulizarProvByArt
 from utils.db import db
 from decimal import Decimal
-from services.articulos import actualizarStock
 from models.configs import PagosCobros
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text, func
@@ -50,7 +49,7 @@ def procesar_nueva_compra(form, id_sucursal):
         total = 0
         actualizoCostos = False
         
-        total,actualizoCostos = procesar_items(form, idfactura, id_sucursal, actualizoCostos)
+        total,actualizoCostos = procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos)
         
         nueva_factura.total = total
         # Registrar los pagos
@@ -62,7 +61,7 @@ def procesar_nueva_compra(form, id_sucursal):
         raise Exception(f"Error grabando compra: {e}")
     return actualizoCostos
 
-def procesar_items(form, idfactura, id_sucursal, actualizoCostos=False):
+def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=False):
     try:
         total = Decimal(0)
         iva = Decimal(0)
@@ -101,6 +100,7 @@ def procesar_items(form, idfactura, id_sucursal, actualizoCostos=False):
                         articulo.costo = precio_unitario
                     # Actualizar el stock
                     actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
+                    actulizarProvByArt(codigo, articulo.id, idproveedor)
         return total, actualizoCostos
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")
@@ -200,7 +200,6 @@ def get_factura(id):
             ).filter(PagosFC.idfactura == id
             ).all()
     # Formatear el periodo a "YYYY-MM"        
-    print(factura[0])
     return factura[0], items, pagos
 
 def actualizar_precios_por_compras(id):
@@ -242,12 +241,12 @@ def procesar_nuevo_remito(form, idsucursal):
         db.session.flush()
         idremito = nuevo_remito.id
         # Procesar los items
-        procesar_itemsR(form, idremito, idsucursal)
+        procesar_itemsR(form, idremito, idsucursal, idproveedor)
         db.session.commit()
     except SQLAlchemyError as e:
         raise Exception(f"Error grabando remito: {e}")
     
-def procesar_itemsR(form, idremito, id_sucursal):
+def procesar_itemsR(form, idremito, id_sucursal, idproveedor):
     try:
         stock = db.session.query(Stock).filter_by(idsucursal=id_sucursal).first()
         for key, value in form.items():
@@ -269,5 +268,6 @@ def procesar_itemsR(form, idremito, id_sucursal):
                     db.session.add(nuevo_item)
                     # Actualizar el stock
                     actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
+                    actulizarProvByArt(codigo, articulo.id, idproveedor)
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")

@@ -2,9 +2,10 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from flask import g
 from werkzeug.utils import secure_filename
 import os
-from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto
+from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt
 from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB
 from models.sucursales import Sucursales
+from models.proveedores import Proveedores
 from services.articulos import get_listado_precios, obtener_stock_sucursales, update_insert_articulo_compuesto, \
                                eliminarComp, obtenerArticulosMarcaRubro, procesar_nuevo_balance, \
                                procesar_articulo, procesar_cambio_precio, procesar_remito_a_sucursal, get_listado_articulos, \
@@ -76,6 +77,7 @@ def update_articulo(id):
             articulo = []
             listas_precios = ListasPrecios.query.all()
             stocks = []
+            provByArt = []
         else:    
             articulo = Articulo.query.get(id)
             listas_precios = db.session.query(
@@ -107,7 +109,12 @@ def update_articulo(id):
                 .filter(Articulo.id == articulo.id)  # Filtrar por el ID del artículo
                 .all()  # Obtener los resultados
             )
-        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+            provByArt = db.session.query(ProvByArt.idproveedor.label('idproveedor'), 
+                                         ProvByArt.cod_proveedor.label('cod_proveedor'), 
+                                         Proveedores.nombre.label('nombre_proveedor')) \
+                                   .join(Proveedores, ProvByArt.idproveedor == Proveedores.id) \
+                                   .filter(ProvByArt.idarticulo == articulo.id).all()
+        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
     if request.method == 'POST':
         
@@ -217,6 +224,22 @@ def update_articulo(id):
 
         flash('Articulo grabado')
         return redirect(url_for('articulos.articulos'))
+
+@bp_articulos.route('/api/eliminar/<id>', methods=['DELETE'])
+@check_session
+def api_eliminar(id):
+    try:
+        articulo = Articulo.query.get(id)
+        stock = db.session.query(func.coalesce(func.sum(Stock.actual), 0)).filter(Stock.idarticulo == articulo.id).scalar()
+        if stock <= 0:
+            articulo.baja = datetime.now().date()  # Marcar como dado de baja
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Artículo eliminado'}), 200
+        else:
+            return jsonify({'success': False, 'message': 'No se puede eliminar un artículo con stock disponible'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
 
 # ------------------- Composición de artículos -----------------------------        
 @bp_articulos.route('/update_composicion/<id>', methods=['GET', 'POST'])

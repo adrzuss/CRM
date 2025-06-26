@@ -120,7 +120,36 @@ class AFIP:
     
     def get_last_invoice(self, pto_vta, cbte_tipo):
         # Conexión a WSFE
-        print('last_invoice')
+        print('------------------------------------------------')
+        print('last_invoice 1')
+        if not self.auth:
+            self.authenticate()
+        print(self.auth)    
+        print('last_invoice 2')
+        session = Session()
+        transport = Transport(session=session)
+        client = Client(self.wsfe_url, transport=transport)
+        print('last_invoice 3')
+        auth = {
+            'Token': self.auth['Token'],
+            'Sign': self.auth['Sign'],
+            'Cuit': self.auth['Cuit']
+        }
+        print('last_invoice 4')
+        try:
+            response = client.service.FECompUltimoAutorizado(Auth=auth, PtoVta=pto_vta, CbteTipo=cbte_tipo)
+            print('Respuesta del último comprobante autorizado:', response)
+            print('------------------------------------------------')
+            return response
+        except Exception as e:
+            print('Error al obtener el último comprobante autorizado:', e)
+            return None
+    
+    def get_condicion_IVAReceptor(self, nro_doc, tipo_comprobante):
+        """Obtiene la condición de IVA del receptor"""
+        # Conexión a WSFE
+        print('------------------------------------------------')
+        print('GetCondicionIVAReceptor')
         print(self.auth)
         if not self.auth:
             self.authenticate()
@@ -132,7 +161,10 @@ class AFIP:
             'Sign': self.auth['Sign'],
             'Cuit': self.auth['Cuit']
         }
-        response = client.service.FECompUltimoAutorizado(Auth=auth, PtoVta=pto_vta, CbteTipo=cbte_tipo)
+        print(f'Obteniendo el código de la condición de IVA del receptor: {tipo_comprobante}')
+        response = client.service.FEParamGetCondicionIvaReceptor(Auth=auth)
+        print('Respuesta de la condición de IVA del receptor:', response)
+        print('------------------------------------------------')
         return response
     
     def create_invoice(self, invoice_data, tipo_comprobante):
@@ -157,6 +189,10 @@ class AFIP:
             print('------------------------------------------------')
         
         # Construir solicitud de factura
+        print('Construimos los datos de la factura')
+        print('------------------------------------------------')
+        print(invoice_data)
+        print('------------------------------------------------')
         if not discrimina_iva_afip(tipo_comprobante):
             request = {
                 'FeCAEReq': {
@@ -170,6 +206,7 @@ class AFIP:
                         'FECAEDetRequest': [{
                             'Concepto': invoice_data['concepto'],
                             'DocTipo': invoice_data['tipo_doc'],
+                            'CondicionIVAReceptorId': invoice_data['condicion_iva_receptor'],
                             'DocNro': invoice_data['nro_doc'],
                             'CbteDesde': invoice_data['nro_cbte'],
                             'CbteHasta': invoice_data['nro_cbte'],
@@ -233,7 +270,7 @@ class AFIP:
                 print('------------------------------------------------')
                 print('1.2.3- Respuesta del WSFE:', response)
                 print('------------------------------------------------')
-                
+            
             return self._process_response(response)
         except Exception as e:
             print(f"Error al crear factura: {str(e)}")
@@ -258,13 +295,18 @@ class AFIP:
             print('1.2.4- Procesando respuesta del WSFE')
             print('------------------------------------------------')
             print('1.2.4.1- Respuesta del WSFE:', response)
+        
         try:    
+            observaciones = []
+            if result['Observaciones'] != None:
+                if result.get('Observaciones') and result['Observaciones'].get('Obs'):
+                    observaciones = [obs['Msg'] for obs in result['Observaciones']['Obs']]
             respuesta = {
                 'cae': result['CAE'],
                 'cae_fch_vto': result['CAEFchVto'],
                 'nro_cbte': result['CbteDesde'],
                 'resultado': result['Resultado'],
-                'observaciones': [obs['Msg'] for obs in result['Observaciones']['Obs']]
+                'observaciones': observaciones
             }
         except Exception as e:
             respuesta = {

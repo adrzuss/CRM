@@ -21,32 +21,45 @@ class Facturador:
         
         # Construir datos para AFIP
         if  not discrimina_iva_afip(tipo_comprobante):
+            if self.afip.verbose:
+                print('--------------------------------------------------------')   
+                print('No discrimina IVA, se envía importe total sin IVA')
+                print('--------------------------------------------------------')
+            
             invoice_data = {
                 'punto_venta': punto_venta,  # Número de punto de venta
                 'tipo_comprobante': tipo_comprobante,  # 1=Factura A, 6=Factura B
                 'concepto': 1,  # 1=Productos, 2=Servicios, etc.
                 'tipo_doc': cliente['tipo_doc'],  # 80=CUIT, 96=DNI
                 'nro_doc': cliente['nro_doc'],
+                'condicion_iva_receptor': cliente['tipo_iva'],
                 'nro_cbte': self._get_proximo_numero(punto_venta, tipo_comprobante),  # Obtener último número +1
                 'importe_total': round(importe_total, 2),
                 'importe_neto': round(importe_neto, 2),
                 'importe_iva': round(0, 2)
             }
+             
         else:    
+            if self.afip.verbose:
+                print('--------------------------------------------------------')
+                print('Discrimina IVA, se envía importe total con IVA')
+                print('--------------------------------------------------------')
             invoice_data = {
                 'punto_venta': punto_venta,  # Número de punto de venta
                 'tipo_comprobante': tipo_comprobante,  # 1=Factura A, 6=Factura B
                 'concepto': 1,  # 1=Productos, 2=Servicios, etc.
                 'tipo_doc': cliente['tipo_doc'],  # 80=CUIT, 96=DNI
                 'nro_doc': cliente['nro_doc'],
-                'nro_cbte': self._get_proximo_numero(self.afip._get_cuit_from_certificate(), punto_venta, tipo_comprobante),  # Obtener último número +1
+                'condicion_iva_receptor': cliente['tipo_iva'],
+                'nro_cbte': self._get_proximo_numero(punto_venta, tipo_comprobante),  # Obtener último número +1
                 'importe_total': round(importe_total, 2),
                 'importe_neto': round(importe_neto, 2),
                 'importe_iva': round(iva, 2),
                 'alicuotas': self._build_alicuotas(items)
             }
         # Enviar a AFIP
-        return self.afip.create_invoice(invoice_data, tipo_comprobante)
+        invoice = self.afip.create_invoice(invoice_data, tipo_comprobante)
+        return invoice
     
     def _get_proximo_numero(self, pto_vta, cbte_tipo):
         """Obtiene el próximo número de comprobante"""
@@ -58,6 +71,16 @@ class Facturador:
             print("Error al consultar último comprobante autorizado:", e)
             return None
         
+    def _get_condicion_IVAReceptor(self, nro_doc, cbte_tipo):
+        try:
+            print(f'Obteniendo condición IVA del receptor: {nro_doc} para tipo de comprobante: {cbte_tipo}')
+            response = self.afip.get_condicion_IVAReceptor(nro_doc, cbte_tipo)
+            print(response['Desc'])
+            print(response['Cmp_Clase'])
+            return response['id']
+        except Exception as e:
+            print("Error al obtener condición IVA receptor:", e)
+            return None
     
     def _build_alicuotas(self, items):
         """Agrupa items por alícuota de IVA"""

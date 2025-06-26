@@ -13,3 +13,5 @@ static/img/entidades/*
 static/img/fondos/*
 cert_fe/*
 *.pdf
+*.sql
+*.mwb

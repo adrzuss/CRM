@@ -4,6 +4,7 @@ class TipoIva(db.Model):
     __tablename__ = 'tipo_iva'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     descripcion = db.Column(db.String(50), nullable=False)
+    id_afip = db.Column(db.Integer, nullable=False, default=0)
     
     def __init__(self, descripcion):
         self.descripcion = descripcion

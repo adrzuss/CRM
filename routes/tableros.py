@@ -43,6 +43,7 @@ def tablero_inicial():
     vta_rubros = get_vta_rubros(fecha_inicio, fecha_hoy)
     ventasSucursales = get_vta_sucursales_data(desde_sucs, hasta_sucs)
     ventasVendedores = get_vta_vendedores_data(desde_vend, hasta_vend)
+    print('los mensjes son: ', g.mensajes)
     return render_template('tablero.html', tituloTablero='Gerencia', desde_sucs=desde_sucs, hasta_sucs=hasta_sucs, desde_vend=desde_vend, hasta_vend=hasta_vend, vta_hoy=vta_hoy, vta_semana=vta_semana, saldo_clientes_actual=format_currency(saldo_clientes_actual), saldo_clientes_vencido=format_currency(saldo_clientes_vencido), saldo_proveedores=saldo_proveedores, meses=vta_6_meses['meses'], operaciones=vta_6_meses['operaciones'], tipoPagoss=pagosHoy['tipo_pago'], cantPagoss=pagosHoy['total_pago'], rubros=vta_rubros['rubros'], vtaRubros=vta_rubros['vtaRubros'], ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_tableros.route('/tablero-gerencial')    

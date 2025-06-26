@@ -2,7 +2,7 @@ from flask import session, flash, redirect, request, current_app, jsonify
 from werkzeug.utils import secure_filename
 import os
 from models.articulos import Articulo, Marca, Stock, Precio, Rubro, ArticuloCompuesto, Balance, ItemBalance, CambioPrecios, CambioPreciosItem, \
-                             RemitoSucursales, ItemRemitoSucs
+                             RemitoSucursales, ItemRemitoSucs, ProvByArt
 from models.sucursales import Sucursales
 from utils.config import allowed_file
 from sqlalchemy import func, and_, case, update, insert, text, desc
@@ -86,6 +86,7 @@ def get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, o
         Articulo.costo,
         Articulo.es_compuesto,
         Articulo.imagen,
+        Articulo.baja,
         Rubro.nombre.label('rubro'),
         Marca.nombre.label('marca')
     ).join(
@@ -121,6 +122,7 @@ def get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, o
             'detalle': articulo.detalle,
             'costo': articulo.costo,
             'es_compuesto': 'Si' if articulo.es_compuesto else 'No',
+            'baja': 'Si' if articulo.baja > date(1900, 1, 1) else 'No',
             'imagen': articulo.imagen,
             'rubro': articulo.rubro,
             'marca': articulo.marca
@@ -519,6 +521,15 @@ def actualizarStock(idstock, idarticulo, cantidad, idsucursal):
         print(f"Error procesando stock: {e}")
         raise Exception(f"Error al actualizar el stock ({tipoActualizacion}): {e}")
           
+def actulizarProvByArt(codigo, idarticulo, idproveedor):
+    try:
+        provByArt = ProvByArt.query.filter(ProvByArt.idarticulo == idarticulo, ProvByArt.idproveedor == idproveedor).first()
+        if provByArt is None:
+            provByArt = ProvByArt(idarticulo=idarticulo, idproveedor=idproveedor, cod_proveedor=codigo)
+            db.session.add(provByArt)
+    except SQLAlchemyError as e:
+        print(f"Error procesando provByArt: {e}")
+        raise Exception(f"Error al actualizar el provByArt: {e}")
             
 def actualizarPrecio(idlista, idarticulo, precio_nuevo):
     #El commit se raliza en el proceso principal de grabación de precios

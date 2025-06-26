@@ -17,6 +17,7 @@ from routes.ctacteprov import bp_ctacteprov
 from routes.configs import bp_configuraciones
 from routes.entidades_cred import bp_entidades
 from routes.fondos import bp_fondos
+from routes.creditos import bp_creditos
 
 def create_app():
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, template_folder=Config.TEMPLATES_FOLDER)
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(bp_configuraciones, url_prefix='/configuracion')
     app.register_blueprint(bp_entidades, url_prefix='/entidades')
     app.register_blueprint(bp_fondos, url_prefix='/fondos')
+    app.register_blueprint(bp_creditos, url_prefix='/creditos')
 
     @app.before_request
     def make_session_permanent():

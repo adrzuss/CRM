@@ -60,7 +60,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    
     <script>
         const tabla = new DataTable('#articulosTable', {
             processing: true, // Muestra un indicador de carga
@@ -109,6 +108,12 @@
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Traducción al español
             },
+            rowCallback: function(row, data, index) {
+                if (data.baja && data.baja == 'Si') {
+                    // Tachado y color rojo
+                    $('td:eq(0), td:eq(1), td:eq(2), td:eq(3), td:eq(4), td:eq(5), td:eq(6)', row).addClass('celda-baja');
+                }
+            },
             pageLength: 50, // Número de registros por página
             lengthMenu: [10, 25, 50, 100], // Opciones de paginación
             iDisplayLength: 50,
@@ -130,7 +135,9 @@
         $('#btnFiltrar').click(function () {
             tabla.ajax.reload(); // Recargar la tabla con los nuevos filtros
         });
+
     </script>
+    <script src="{{ url_for('static', filename='js/articulos.js')}}"></script>
 
 {% endblock %}    
 

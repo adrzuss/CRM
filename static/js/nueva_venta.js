@@ -9,6 +9,7 @@ window.onbeforeunload = function () {
 };
 
 document.addEventListener("DOMContentLoaded", async function () {
+  document.getElementById('idcliente').focus();
   try {
     // Realizar la solicitud a la API
     const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);	
@@ -35,6 +36,86 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   } catch (error) {
     console.log("Error al obtener el punto de venta:", error);
+  }
+
+  // Si hay datos de presupuesto, precargar
+  if (window.PRESUPUESTO) {
+    // Cargar cabecera
+    let cabecera = document.getElementById("cabecera");
+    if (!cabecera.querySelector("#idPresupuestoContainer")) {
+      cabecera.innerHTML += `<div class="m-2 col-2" id="idPresupuestoContainer">
+                                <h4 class="idPresupuestoLabel" >#Presupuesto: ${window.PRESUPUESTO.id} </h4>
+                                <input class="form-control" type="number" name="idPresupuesto" id="idPresupuesto" value="${window.PRESUPUESTO.id}" hidden>
+                              </div>`;
+
+    }
+    else {
+      let idPresupuestoLabel = document.getElementById("idPresupuestoLabel");
+      idPresupuestoLabel.innerText = 'Presupuesto: ' + window.PRESUPUESTO.id;
+      let idPresupuesto = document.getElementById("idPresupuesto");
+      idPresupuesto.value = window.PRESUPUESTO.id;
+    }
+    document.getElementById("idcliente").value = window.PRESUPUESTO.idcliente;
+    document.getElementById("total_factura").textContent = window.PRESUPUESTO.total;
+    document.getElementById("totalFactura").textContent = window.PRESUPUESTO.total;
+    
+    // Podés llamar a fetchCliente para completar el resto de los datos del cliente
+    fetchCliente(window.PRESUPUESTO.idcliente);
+
+    // Cargar artículos
+    window.PRESUPUESTO.articulos.forEach(art => {
+      // Simular click en "Agregar artículo"
+      document.getElementById("agregarArticulo").click();
+      // Buscar la última fila agregada
+      const fila = tablaItems.querySelector("tr:last-child");
+      fila.querySelector(".id-articulo").textContent = art.idarticulo;
+      fila.querySelector(".codigo-articulo").value = art.codigo;
+      fila.querySelector(".precio-unitario").value = art.precio_unitario;
+      fila.querySelector(".cantidad").value = art.cantidad;
+      // Calcular el total
+      fila.querySelector(".precio-total").value = (art.precio_unitario * art.cantidad).toFixed(2);
+    });
+    updateTotalFactura();
+  }
+
+  // Si hay datos de remito, precargar
+  if (window.REMITO) {
+    // Cargar cabecera
+    let cabecera = document.getElementById("cabecera");
+    if (!cabecera.querySelector("#idRemitoContainer")) {
+      cabecera.innerHTML += `<div class="m-2 col-2" id="idRemitoContainer">
+                                <h4 class="idRemitoLabel" >#Remito: ${window.REMITO.id} </h4>
+                                <input class="form-control" type="number" name="idRemito" id="idRemito" value="${window.REMITO.id}" hidden>
+                              </div>`;
+
+    }
+    else {
+      let idRemitoLabel = document.getElementById("idRemitoLabel");
+      idRemitoLabel.innerText = 'Remito: ' + window.REMITO.id;
+      let idRemito = document.getElementById("idRemito");
+      idRemito.value = window.REMITO.id;
+    }
+    document.getElementById("idcliente").value = window.REMITO.idcliente;
+    document.getElementById("total_factura").textContent = window.REMITO.total;
+    document.getElementById("totalFactura").textContent = window.REMITO.total;
+    
+    // Podés llamar a fetchCliente para completar el resto de los datos del cliente
+    fetchCliente(window.REMITO.idcliente);
+
+    // Cargar artículos
+    window.REMITO.articulos.forEach(art => {
+      // Simular click en "Agregar artículo"
+      document.getElementById("agregarArticulo").click();
+      // Buscar la última fila agregada
+      const fila = tablaItems.querySelector("tr:last-child");
+      fila.querySelector(".id-articulo").textContent = art.idarticulo;
+      fila.querySelector(".codigo-articulo").value = art.codigo;
+      fila.querySelector(".precio-unitario").value = art.precio_unitario;
+      fila.querySelector(".cantidad").value = art.cantidad;
+      // Calcular el total
+      fila.querySelector(".precio-total").value = (art.precio_unitario * art.cantidad).toFixed(2);
+    });
+    updateTotalFactura();
   }
 });
 
@@ -147,6 +228,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Asignar tecla F9 para grabar venta
+    if (event.key === "F8") {
+      event.preventDefault(); // Evita el comportamiento por defecto de la tecla
+      document.getElementById("efectivo").focus(); // Simula un click en el botón "Grabar Venta"
+    }
+
+    // Asignar tecla F9 para grabar venta
     if (event.key === "F9") {
       event.preventDefault(); // Evita el comportamiento por defecto de la tecla
       btnGrabar.click(); // Simula un click en el botón "Grabar Venta"
@@ -254,6 +341,7 @@ function asignarCliente(cliente) {
   } else {
     document.getElementById("label-ctacte").innerText = "Cta. Cte.";
   }
+  hayCredito(cliente.id);
 }
 
 async function fetchArticulo(id, idlista, itemDiv) {
@@ -304,11 +392,11 @@ function asignarArticuloElegido(articulo, itemDiv) {
 
 function asignarArticulo(articulo, itemDiv) {
   itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
-  itemDiv.target
-    .closest("tr")
-    .querySelector(".descripcion-articulo").textContent = articulo.detalle;
-  const precioUnitario = parseFloat(articulo.precio);
-  itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  if ((itemDiv.target.closest("tr").querySelector(".precio-unitario").value === null) || (itemDiv.target.closest("tr").querySelector(".precio-unitario").value == 0)) {
+    const precioUnitario = parseFloat(articulo.precio);
+    itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  }  
   updateItemTotal(itemDiv);
   updateTotalFactura();
 }
@@ -368,8 +456,8 @@ function updateTotalFactura() {
       totalFactura += precioTotal;
     }
   });
-  document.getElementById("total_factura").textContent =
-    totalFactura.toFixed(2);
+  document.getElementById("total_factura").textContent = totalFactura.toFixed(2);
+  document.getElementById("totalFactura").value = totalFactura.toFixed(2);
   calcSaldo();
 }
 
@@ -415,12 +503,12 @@ function checkDatosTarjeta() {
 /*FIXIT
         controlar valores nulos NaN*/
 function calcSaldo() {
-  const totalFac = parseFloat(
-    document.getElementById("total_factura").textContent
-  );
+  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
   const efectivo = parseFloat(document.getElementById("efectivo").value);
   const tarjeta = parseFloat(document.getElementById("tarjeta").value);
   const ctacte = parseFloat(document.getElementById("ctacte").value);
+  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
+  const monto_credito = parseFloat(document.getElementById("monto_credito").value);
   if (isNaN(efectivo)) {
     efectivo = 0;
   }
@@ -430,7 +518,13 @@ function calcSaldo() {
   if (isNaN(ctacte)) {
     ctacte = 0;
   }
-  let diferencia = totalFac - (efectivo + tarjeta + ctacte);
+  if (isNaN(bonificacion)) {
+    bonificacion = 0;
+  }
+  if (isNaN(monto_credito)) {
+    monto_credito = 0;
+  }
+  let diferencia = totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito);
   let lblSaldo = document.getElementById("saldo_factura");
   lblSaldo.textContent = diferencia.toFixed(2);
   if (diferencia > 0) {
@@ -443,12 +537,12 @@ function calcSaldo() {
 }
 
 function checkTotales() {
-  const totalFac = parseFloat(
-    document.getElementById("total_factura").textContent
-  );
+  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
   const efectivo = parseFloat(document.getElementById("efectivo").value);
   const ctacte = parseFloat(document.getElementById("ctacte").value);
   const tarjeta = parseFloat(document.getElementById("tarjeta").value);
+  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
+  const monto_credito = parseFloat(document.getElementById("monto_credito").value);
   if (isNaN(efectivo)) {
     efectivo = 0;
   }
@@ -458,8 +552,19 @@ function checkTotales() {
   if (isNaN(ctacte)) {
     ctacte = 0;
   }
-  let HayDiferencia = totalFac > 0 && totalFac == efectivo + tarjeta + ctacte;
-
+  if (isNaN(bonificacion)) {
+    bonificacion = 0;
+  }
+  if (isNaN(monto_credito)) {
+    monto_credito = 0;
+  }
+  let HayDiferencia;
+  if (efectivo > 0) {
+     HayDiferencia = totalFac > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito));
+  }
+  else{
+    HayDiferencia = totalFac > 0 && (totalFac === tarjeta + ctacte + bonificacion + monto_credito);
+  }  
   return HayDiferencia;
 }
 
@@ -472,6 +577,14 @@ document.getElementById("tarjeta").addEventListener("blur", function (event) {
 });
 
 document.getElementById("ctacte").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+document.getElementById("bonificacion").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+document.getElementById("monto_credito").addEventListener("blur", function (event) {
   calcSaldo();
 });
 
@@ -499,8 +612,8 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
                     <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
                     <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
                     <td class="descripcion-articulo">-</td>
-                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
-                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
+                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly onfocus="this.select()"></td>
+                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required onfocus="this.select()"></td> 
                     <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
                     <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
                 </tr>`;
@@ -532,9 +645,7 @@ tablaItems.addEventListener("click", (itemDiv) => {
   }
 });
 
-document
-  .getElementById("invoice_form")
-  .addEventListener("submit", function (event) {
+document.getElementById("invoice_form").addEventListener("submit", function (event) {
     if (document.querySelectorAll("#tabla-items tbody").length === 0) {
       event.preventDefault();
       alert("Debe agregar al menos un item a la factura");
@@ -549,7 +660,7 @@ document
     if (checkTotales() === false) {
       event.preventDefault();
       alert(
-        'El total debe ser mayor a cera y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura'
+        'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." + "Crédito" debe ser igual al total de la factura'
       );
       event.preventDefault();
       return false;
@@ -557,6 +668,36 @@ document
     if (confirm("¿Grabar la factura?") === false) {
       event.preventDefault();
     } else {
+      //let idPresupuestoContainer = document.getElementById("idPresupuestoContainer");
+      //if (idPresupuestoContainer) {
+      //  idPresupuestoContainer.remove();
+      //}
       isFormSubmited = true;
     }
   });
+
+async function hayCredito(idcliente) {
+  response = await fetch(`${BASE_URL}/creditos/hay_credito/${idcliente}`)
+  if (response.ok) {
+    const data = await response.json();
+    console.log(data);
+    if (data.success) {
+      if (data.credito.idcredito != 0) {
+        document.getElementById("monto_credito").disabled = false;
+        let monto_credito = parseFloat(data.credito.monto_credito);
+        document.getElementById("monto_credito").value = monto_credito.toFixed(2);
+        document.getElementById("idcredito").value = data.credito.idcredito;
+      } else {
+        document.getElementById("idcredito").disabled = true;
+        document.getElementById("idcredito").value = '';
+        document.getElementById("monto_credito").disabled = true;
+        document.getElementById("monto_credito").value = 0;
+      }
+    } else {
+      console.log('error');
+    }
+  }
+  else {
+    console.log('Error al consultar créditos');
+  } 
+}  

@@ -10,7 +10,7 @@
     <meta name="author" content="">
 
     <title>ERP - SoftTech</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico')}}">
+    
 
     <!-- Custom fonts for this template-->
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css')}}" rel="stylesheet" type="text/css">
@@ -26,6 +26,14 @@
 
     {% block adtional_css %}
     {% endblock %}
+
+    <script>
+        // Base URL para la aplicación
+        // Esto permite que las rutas relativas funcionen correctamente en el frontend
+        // Por ejemplo, si tienes un enlace a una imagen o un recurso estático
+        // se carga al principio para que este accesible en demás scripts
+        window.BASE_URL = "{{ request.script_root }}";
+    </script>
 </head>
  
 
@@ -111,10 +119,7 @@
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
 
-    <script>
-        window.BASE_URL = "{{ request.script_root }}";
-        
-    </script>
+    
     {% block js_script %}
         
     {% endblock %}

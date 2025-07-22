@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
 from sqlalchemy import and_
-from models.configs import Configuracion, AlcIva, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, TipoComprobantes, TipoCompAplica
+from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, TipoComprobantes, TipoCompAplica
 from models.sessions import Tareas
 from models.articulos import ListasPrecios
 from models.sucursales import Sucursales
@@ -23,7 +23,8 @@ def configuraciones():
     tareas = Tareas.query.all()
     alcIB = AlcIB.query.all()
     planCtas = PlanCtas.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    categorias = Categorias.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -50,6 +51,17 @@ def add_alc_iva():
     db.session.commit()
     flash('Alicuota de IVA grabada')
     return redirect('configuraciones')
+
+@bp_configuraciones.route('/add_categoria', methods=['POST'])
+@check_session
+def add_categoria():
+    categoria = request.form['categoria']
+    categoria = Categorias(nombre=categoria)
+    db.session.add(categoria)
+    db.session.commit()
+    flash('Categoria de clientes grabada')
+    return redirect('configuraciones')
+
 
 @bp_configuraciones.route('/add_alc_ib', methods=['POST'])
 @check_session

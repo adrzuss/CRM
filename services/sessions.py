@@ -2,7 +2,18 @@ from flask import session, jsonify
 from datetime import date, datetime
 from sqlalchemy import func, and_, text
 from utils.db import db
+from models.sucursales import Sucursales
 from models.sessions import Usuarios, Tareas, TareasUsuarios
+
+def autenticar_usuario(usuario, clave, sucursal_id):
+    usuario_ok = check_user(usuario, clave)
+    if usuario_ok:
+        session['id_sucursal'] = int(sucursal_id)
+        sucursal = Sucursales.query.get(session['id_sucursal'])
+        session['nombre_sucursal'] = sucursal.nombre
+        return True
+    else:
+        return False
 
 def check_user(usr_name, clave_usr):
     usuario = Usuarios.query.filter_by(usuario=usr_name, clave=clave_usr).first()
@@ -12,7 +23,6 @@ def check_user(usr_name, clave_usr):
         session['user_id'] = usuario.id
         session['user_name'] = usuario.nombre
         return True
-        
     
 def get_usuarios():
     try:
@@ -148,13 +158,45 @@ def get_mensajes_para_mi(id_usuario, id_sucursal):
 def alerta_mensajes_usuario():
     cantidad = db.session.execute(text("CALL get_cantidad_mensajes_para_mi(:idusuario)"), {'idusuario': session['user_id']}).scalar()
     if cantidad > 0:            
-        return cantidad, {'titulo': 'Mensajes de usuario', 'subtitulo': f'Hay {cantidad} mensajes de usuario', 'tipo': 'peligro', 'entidad': 'usuario', 'url': '#'}
+        return cantidad, {'titulo': 'Mensajes de usuario', 'subtitulo': f'Hay {cantidad} mensajes de usuario', 'tipo': 'peligro', 'entidad': 'usuario', 'url': ''}
     else:
         return cantidad, {}
     
 def alerta_mensajes_sucursal():
     cantidad = db.session.execute(text("CALL get_cantidad_mensajes_esta_sucursal(:idsucursal)"), {'idsucursal': session['id_sucursal']}).scalar()
     if cantidad > 0:            
-        return cantidad, {'titulo': 'Mensajes de sucursal', 'subtitulo': f'Hay {cantidad} mensajes de sucursal', 'tipo': 'peligro', 'entidad': 'sucursal', 'url': '#'}
+        return cantidad, {'titulo': 'Mensajes de sucursal', 'subtitulo': f'Hay {cantidad} mensajes de sucursal', 'tipo': 'peligro', 'entidad': 'sucursal', 'url': ''}
+    else:
+        return cantidad, {}
+
+def alerta_mensajes_creditos_nuevos():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_creditos_nuevos()")).scalar()
+    if cantidad > 0:            
+        mensaje = f'Hay {cantidad} solicitudes de créditos nuevos' if cantidad > 1 else f'Hay {cantidad} solicitud de crédito nuevo'
+        return cantidad, {'titulo': 'Mensajes de créditos nuevos', 'subtitulo': mensaje , 'tipo': 'bien', 'entidad': 'credito', 'url': 'creditos.lst_nuevos'}
+    else:
+        return cantidad, {}
+    
+def alerta_mensajes_creditos_pendientes():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_creditos_pendientes(:idsucursal)"), {'idsucursal': session['id_sucursal']}).scalar()
+    if cantidad > 0:            
+        mensaje = f'Hay {cantidad} créditos pendientes de aprobación' if cantidad > 1 else f'Hay {cantidad} crédito pendiente de aprobación'
+        return cantidad, {'titulo': 'Mensajes de créditos pendientes', 'subtitulo': mensaje, 'tipo': 'peligro', 'entidad': 'credito', 'url': 'creditos.lst_pendientes'}
+    else:
+        return cantidad, {}
+
+def alerta_mensajes_creditos_rechazados():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_creditos_rechazados(:idsucursal)"), {'idsucursal': session['id_sucursal']}).scalar()
+    if cantidad > 0:            
+        mensaje = f'Hay {cantidad} créditos rechazados' if cantidad > 1 else f'Hay {cantidad} crédito rechazado'
+        return cantidad, {'titulo': 'Mensajes de créditos rechazados', 'subtitulo': mensaje, 'tipo': 'peligro', 'entidad': 'credito', 'url': 'creditos.lst_rechazados'}
+    else:
+        return cantidad, {}
+    
+def alerta_mensajes_creditos_aprobados():
+    cantidad = db.session.execute(text("CALL get_cantidad_mensajes_creditos_aprobados(:idsucursal)"), {'idsucursal': session['id_sucursal']}).scalar()
+    if cantidad > 0:            
+        mensaje = f'Hay {cantidad} créditos aprobados' if cantidad > 1 else f'Hay {cantidad} crédito aprobado'
+        return cantidad, {'titulo': 'Mensajes de créditos aprobados', 'subtitulo': mensaje, 'tipo': 'exito', 'entidad': 'credito', 'url': 'creditos.lst_aprobados'}
     else:
         return cantidad, {}

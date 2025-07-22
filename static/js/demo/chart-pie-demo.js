@@ -9,8 +9,8 @@ var cantPagos;
 var coloresPie;
 
 /*coloresPie = ['#4e73df', '#1cc88a', '#36b9cc', '#731d56', '#c81b90', '#277540'];*/
-coloresPie = ['#1150af', '#008060', '#bb1133', '#a95943', '#f6a22d', '#4f3844'];
-coloresPieHover = ['#1870F5','#00EDB2', '#FF1746']
+coloresPie = ['#1150af', '#008060', '#bb1133', '#eb4315ff', '#f6a22d', '#80184eff'];
+coloresPieHover = ['#1870F5','#00EDB2', '#FF1746', '#ec6e4bff', '#fac06eff', '#81345cff']
 
 window.onload = () => {
   const titulosPie = document.getElementById('coloresPie');

@@ -79,5 +79,4 @@ def precio_VP(costo, impInt, exento, idIva):
     alcIva = AlcIva.query.get(idIva)
     iva = baseImponible * alcIva.alicuota / 100
     costoTotal = costo + iva + impuestosInternos
-    return costoTotal
-    
+    return costoTotal    

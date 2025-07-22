@@ -9,6 +9,7 @@ class Factura(db.Model):
     idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
     total = db.Column(db.Numeric(20,6), nullable=False)
+    bonificacion = db.Column(db.Numeric(20,6), nullable=False)
     iva = db.Column(db.Numeric(20,6), nullable=False)
     exento = db.Column(db.Numeric(20,6), nullable=False)
     impint = db.Column(db.Numeric(20,6), nullable=False)
@@ -26,15 +27,13 @@ class Factura(db.Model):
     lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
     tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
     sucursal = db.relationship('Sucursales', backref=db.backref('sucursales', lazy=True))
-    cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))
-    lista = db.relationship('ListasPrecios', backref=db.backref('listas_precio', lazy=True))
-    tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('tipo_comprobantes', lazy=True))
     
-    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, idsucursal, idusuario, total=0, iva=0, exento=0, impint=0, nro_comprobante=None, punto_vta=1):
+    def __init__(self, idcliente, idlista, fecha, id_tipo_comprobante, idsucursal, idusuario, total=0, bonificacion=0, iva=0, exento=0, impint=0, nro_comprobante=None, punto_vta=1):
         self.idcliente = idcliente
         self.idlista = idlista
         self.fecha = fecha
         self.total = total
+        self.bonificacion = bonificacion
         self.iva = iva
         self.exento = exento
         self.impint = impint
@@ -52,6 +51,7 @@ class Item(db.Model):
     cantidad = db.Column(db.Numeric(20,6), nullable=False)
     precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
     precio_total = db.Column(db.Numeric(20,6), nullable=False)
+    bonificacion = db.Column(db.Numeric(20,6), nullable=False)
     iva = db.Column(db.Numeric(20,6), nullable=False)
     idalciva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'), nullable=False)   
     ingbto = db.Column(db.Numeric(20,6), nullable=False)
@@ -61,13 +61,14 @@ class Item(db.Model):
     articulo = db.relationship('Articulo', backref=db.backref('items', lazy=True))
     factura = db.relationship('Factura', backref=db.backref('items', lazy=True))
     
-    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, iva=0, idalciva=0, ingbto=0, idingbto=0, exento=0, impint=0): 
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, bonificacion=0, iva=0, idalciva=0, ingbto=0, idingbto=0, exento=0, impint=0): 
         self.idfactura = idfactura,
         self.id = id,
         self.idarticulo = idarticulo
         self.cantidad = cantidad
         self.precio_unitario = precio_unitario
         self.precio_total = precio_total
+        self.bonificacion=bonificacion
         self.iva = iva
         self.idalciva = idalciva
         self.ingbto = ingbto
@@ -89,3 +90,74 @@ class PagosFV(db.Model):
         self.tipo = tipo
         self.total = total
         self.entidad = entidad
+
+class RemitosVtaFactura(db.Model):
+    __tablename__ = 'remitosvta_facturas'
+    idremito = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)
+    idfactura = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)
+
+    def __init__(self, idremito, idfactura):
+        self.idremito = idremito
+        self.idfactura = idfactura
+        
+class Presupuesto(db.Model):
+    __tablename__ = 'presupuesto'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idcliente = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
+    idlista = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=False)
+    fecha = db.Column(db.Date, nullable=False)
+    validez = db.Column(db.Date, nullable=False)
+    total = db.Column(db.Numeric(20,6), nullable=False)
+    idtipocomprobante = db.Column(db.Integer, db.ForeignKey('tipo_comprobantes.id'))
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'))
+    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    nro_comprobante = db.Column(db.String(13), nullable=False)
+    punto_vta = db.Column(db.Integer, nullable=False)
+    estado = db.Column(db.String(20), default='Pendiente')  # Estado del presupuesto (Pendiente, Facturado)
+    # Relación con otras tablas
+    usuario = db.relationship('Usuarios', backref=db.backref('presupuesto', lazy=True))
+    cliente = db.relationship('Clientes', backref=db.backref('presupuesto', lazy=True))
+    lista = db.relationship('ListasPrecios', backref=db.backref('presupuesto', lazy=True))
+    tipocomprobante = db.relationship('TipoComprobantes', backref=db.backref('presupuesto', lazy=True))
+    sucursal = db.relationship('Sucursales', backref=db.backref('presupuesto', lazy=True))
+
+    def __init__(self, idcliente, idlista, fecha, validez, id_tipo_comprobante, idsucursal, idusuario, total=0, nro_comprobante=None, punto_vta=1, estado='Pendiente'):
+        self.idcliente = idcliente
+        self.idlista = idlista
+        self.fecha = fecha
+        self.validez = validez
+        self.total = total
+        self.idtipocomprobante = id_tipo_comprobante
+        self.idsucursal = idsucursal
+        self.idusuario = idusuario
+        self.nro_comprobante = nro_comprobante
+        self.punto_vta = punto_vta
+        self.estado = estado
+
+class ItemP(db.Model):
+    __tablename__ = 'itemsp'
+    idpresupuesto = db.Column(db.Integer, db.ForeignKey('presupuesto.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), nullable=False)
+    cantidad = db.Column(db.Numeric(20,6), nullable=False)
+    precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
+    precio_total = db.Column(db.Numeric(20,6), nullable=False)
+    articulo = db.relationship('Articulo', backref=db.backref('itemsp', lazy=True))
+    presupuesto = db.relationship('Presupuesto', backref=db.backref('itemsp', lazy=True))
+
+    def __init__(self, idpresupuesto, id, idarticulo, cantidad, precio_unitario, precio_total): 
+        self.idpresupuesto = idpresupuesto
+        self.id = id,
+        self.idarticulo = idarticulo
+        self.cantidad = cantidad
+        self.precio_unitario = precio_unitario
+        self.precio_total = precio_total
+        
+class PresupuestoFactura(db.Model):
+    __tablename__ = 'presupuestos_facturas'
+    idpresupuesto = db.Column(db.Integer, db.ForeignKey('presupuesto.id'), primary_key=True)
+    idfactura = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)
+
+    def __init__(self, idpresupuesto, idfactura):
+        self.idpresupuesto = idpresupuesto
+        self.idfactura = idfactura

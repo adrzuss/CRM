@@ -5,7 +5,8 @@ from models.entidades_cred import EntidadesCred
 from models.configs import PuntosVenta
 from models.sessions import Usuarios
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
-                            ventas_desde_hasta, facturar_fe, generar_factura
+                            ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
+                            generar_presupuesto
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
@@ -85,22 +86,6 @@ def nueva_venta():
     entidades = EntidadesCred.query.all()
     listas_precio = ListasPrecios.query.all()
     return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-
-@bp_ventas.route('/nuevo_remito', methods=['GET', 'POST'])
-@check_session
-@alertas_mensajes
-def nuevo_remito():
-    if request.method == 'POST':
-        try:
-            nro_comprobante = procesar_nuevo_remito(request.form, session['id_sucursal'])
-            flash(f'Remito grabado exitosamente: {nro_comprobante}')
-            return redirect(url_for('ventas.nuevo_remito'))
-        except Exception as e:
-            flash(f'Ocurrió un error al procesar el remito: {e}', 'error')
-            return redirect(url_for('ventas.nuevo_remito'))
-    hoy = date.today()
-    listas_precio = ListasPrecios.query.all()
-    return render_template('nuevo_remito.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
 @check_session
@@ -248,3 +233,145 @@ def get_vta_sucursales(desde, hasta):
 def get_vta_vendedores(desde, hasta):
     ventas = get_vta_vendedores_data(desde, hasta)
     return jsonify(success=True, ventas=ventas) 
+
+#----------------------- Remitos -----------------------#
+
+@bp_ventas.route('/nuevo_remito', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def nuevo_remito():
+    if request.method == 'POST':
+        try:
+            nro_comprobante = procesar_nuevo_remito(request.form, session['id_sucursal'])
+            flash(f'Remito grabado exitosamente: {nro_comprobante}')
+            return redirect(url_for('ventas.nuevo_remito'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar el remito: {e}', 'error')
+            return redirect(url_for('ventas.nuevo_remito'))
+    hoy = date.today()
+    listas_precio = ListasPrecios.query.all()
+    return render_template('nuevo_remito.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/remitos_vta', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def remitos_vta():
+    if request.method == 'GET':
+        desde = request.args.get('desde', date.today())
+        hasta = request.args.get('hasta', date.today())
+        remitos = []
+        remitos = db.session.execute(text("CALL get_remitos(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+        return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        return redirect(url_for('ventas.remitos_vta', desde=desde, hasta=hasta))
+
+@bp_ventas.route('/ver_remito/<id>', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ver_remito(id):
+    remito, items, pagos = get_factura(id)
+    if not remito:
+        flash('Remito no encontrado', 'error')
+        return redirect(url_for('ventas.remitos_vta'))
+    return render_template('remito-vta.html', remito=remito, items=items, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/facturar_remito/<id>', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def facturar_remito(id):
+    if request.method == 'POST':
+        try:
+            nro_comprobante = procesar_nueva_venta(request.form, session['id_sucursal'])
+            flash(f'Factura grabada exitosamente: {nro_comprobante}')
+            return redirect(url_for('ventas.nueva_venta'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
+            return redirect(url_for('ventas.nueva_venta'))
+    else:    
+        id_remito = id
+        remito = None
+        articulos_remito = []
+        if id_remito:
+            remito, articulos_remito = get_remito(id_remito)
+        hoy = date.today()
+        entidades = EntidadesCred.query.all()
+        listas_precio = ListasPrecios.query.all()   
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, remito=remito, articulos_remito=articulos_remito, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+#----------------------- Fin Remitos ------------------------#
+
+#----------------------- Presupuestos -----------------------#
+@bp_ventas.route('/nuevo_presupuesto', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def nuevo_presupuesto():
+    if request.method == 'POST':
+        try:
+            nro_comprobante = procesar_nuevo_presupuesto(request.form, session['id_sucursal'])
+            flash(f'Presupuesto grabado exitosamente: {nro_comprobante}')
+            return redirect(url_for('ventas.nuevo_presupuesto'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar el presupuesto (2): {e}', 'error')
+            return redirect(url_for('ventas.nuevo_presupuesto'))
+    hoy = date.today()
+    listas_precio = ListasPrecios.query.all()
+    return render_template('nuevo_presupuesto.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+
+@bp_ventas.route('/presupuestos', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def presupuestos():
+    if request.method == 'GET':
+        desde = request.args.get('desde', date.today())
+        hasta = request.args.get('hasta', date.today())
+        presupuestos = []
+        presupuestos = db.session.execute(text("CALL get_presupuestos(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+        return render_template('presupuestos.html', presupuestos=presupuestos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        return redirect(url_for('ventas.presupuestos', desde=desde, hasta=hasta))
+    
+
+@bp_ventas.route('/ver_presupuesto/<id>', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ver_presupuesto(id):
+    presupuesto, itemsP = get_presupuesto(id)
+    if not presupuesto:
+        flash('Presupuesto no encontrado', 'error')
+        return redirect(url_for('ventas.presupuestos'))
+    return render_template('presupuesto.html', presupuesto=presupuesto, itemsP=itemsP, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/facturar_presupuesto/<id>', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def facturar_presupuesto(id):
+    if request.method == 'POST':
+        try:
+            nro_comprobante = procesar_nueva_venta(request.form, session['id_sucursal'])
+            flash(f'Factura grabada exitosamente: {nro_comprobante}')
+            return redirect(url_for('ventas.nueva_venta'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
+            return redirect(url_for('ventas.nueva_venta'))
+    else:    
+        id_presupuesto = id
+        presupuesto = None
+        articulos_presupuesto = []
+        if id_presupuesto:
+            presupuesto, articulos_presupuesto = get_presupuesto(id_presupuesto)
+        hoy = date.today()
+        entidades = EntidadesCred.query.all()
+        listas_precio = ListasPrecios.query.all()   
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, presupuesto=presupuesto, articulos_presupuesto=articulos_presupuesto, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/imprimir_presupuesto/<id>') 
+@check_session
+def imprimir_presupuesto(id):
+    return generar_presupuesto(id)
+    

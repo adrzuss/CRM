@@ -7,6 +7,7 @@ from services.ventas import get_vta_hoy, get_vta_semana, ventas_por_mes, pagos_h
 from services.articulos import get_stocks_negativos, get_stocks_faltantes
 from services.ctactecli import get_saldo_clientes
 from services.ctacteprov import get_saldo_proveedores
+from services.creditos import get_datos_creditos
 from utils.utils import check_session, format_currency
 from utils.msg_alertas import alertas_mensajes
 
@@ -43,8 +44,14 @@ def tablero_inicial():
     vta_rubros = get_vta_rubros(fecha_inicio, fecha_hoy)
     ventasSucursales = get_vta_sucursales_data(desde_sucs, hasta_sucs)
     ventasVendedores = get_vta_vendedores_data(desde_vend, hasta_vend)
-    print('los mensjes son: ', g.mensajes)
-    return render_template('tablero.html', tituloTablero='Gerencia', desde_sucs=desde_sucs, hasta_sucs=hasta_sucs, desde_vend=desde_vend, hasta_vend=hasta_vend, vta_hoy=vta_hoy, vta_semana=vta_semana, saldo_clientes_actual=format_currency(saldo_clientes_actual), saldo_clientes_vencido=format_currency(saldo_clientes_vencido), saldo_proveedores=saldo_proveedores, meses=vta_6_meses['meses'], operaciones=vta_6_meses['operaciones'], tipoPagoss=pagosHoy['tipo_pago'], cantPagoss=pagosHoy['total_pago'], rubros=vta_rubros['rubros'], vtaRubros=vta_rubros['vtaRubros'], ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    datos_creditos = get_datos_creditos()
+    return render_template('tablero.html', tituloTablero='Gerencia', desde_sucs=desde_sucs, hasta_sucs=hasta_sucs, desde_vend=desde_vend, \
+                           hasta_vend=hasta_vend, vta_hoy=vta_hoy, vta_semana=vta_semana, saldo_clientes_actual=format_currency(saldo_clientes_actual), \
+                           saldo_clientes_vencido=format_currency(saldo_clientes_vencido), saldo_proveedores=saldo_proveedores, \
+                           meses=vta_6_meses['meses'], operaciones=vta_6_meses['operaciones'], tipoPagoss=pagosHoy['tipo_pago'], \
+                           cantPagoss=pagosHoy['total_pago'], rubros=vta_rubros['rubros'], vtaRubros=vta_rubros['vtaRubros'], \
+                           ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, datos_creditos=datos_creditos, \
+                           alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_tableros.route('/tablero-gerencial')    
 

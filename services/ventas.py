@@ -7,11 +7,13 @@ from services.articulos import actualizarStock, get_articulo_by_codigo
 from services.configs import discrimina_iva
 
 from utils.utils import format_currency, precio
-from models.ventas import Factura, Item, PagosFV
+from models.ventas import Factura, Item, PagosFV, Presupuesto, ItemP, PresupuestoFactura, RemitosVtaFactura
 from models.clientes import Clientes
 from models.articulos import Articulo, ListasPrecios, Stock
 from models.ctactecli import CtaCteCli
-from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva
+from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva, \
+                           TipoCompAplica
+from models.creditos import Creditos 
 from sqlalchemy import func, extract, text, and_
 from sqlalchemy.exc import SQLAlchemyError
 from utils.db import db
@@ -205,6 +207,7 @@ def generar_factura(id_factura):
     cabecera = db.session.query(
                             Factura.fecha,
                             Factura.nro_comprobante,
+                            Factura.punto_vta,
                             Factura.total,
                             Factura.iva,
                             Factura.exento, 
@@ -216,21 +219,34 @@ def generar_factura(id_factura):
                             Clientes.direccion,
                             Clientes.localidad,
                             Clientes.provincia,
-                            TipoIva.descripcion.label('condicion_iva')) \
+                            TipoIva.descripcion.label('condicion_iva'),
+                            TipoComprobantes.id_afip.label('tipo_comprobante'),
+                            TipoComprobantes.letra.label('letra_comprobante')) \
                             .join(Clientes, Clientes.id == Factura.idcliente) \
                             .join(TipoIva, TipoIva.id == Clientes.id_tipo_iva) \
+                            .join(TipoComprobantes, TipoComprobantes.id == Factura.idtipocomprobante) \
                             .filter(Factura.id == id_factura) \
                             .first()        
                             
     
     datos_factura = {
-        "tipo_comprobante": "Factura C",
+        "tipo_comprobante": cabecera.tipo_comprobante,
+        "letra_comprobante": cabecera.letra_comprobante,
         "emisor_nombre": config.nombre_fantasia,
         "emisor_cuit": config.documento,
         "emisor_condicion_iva": config.condicion_iva,
         "emisor_domicilio": f"{config.direccion} - {config.localidad}, {config.provincia}",
         "receptor_nombre": cabecera.nombre,
         "receptor_cuit": cabecera.documento,
+        "fecha_emision": cabecera.fecha.strftime('%d/%m/%Y'),
+        "periodo_desde": cabecera.fecha.strftime('%d/%m/%Y'),
+        "periodo_hasta": cabecera.fecha.strftime('%d/%m/%Y'),
+        "vto_pago": cabecera.fecha.strftime('%d/%m/%Y'),
+        "condicion_venta": 'otra',
+        "nro_comprobante": cabecera.nro_comprobante, 
+        "punto_venta": cabecera.punto_vta,
+        "emisor_localidad": cabecera.localidad,
+        "emisor_provincia": cabecera.provincia,
         "receptor_condicion_iva": cabecera.condicion_iva,
         "receptor_domicilio": f"{cabecera.direccion} - {cabecera.localidad}, {cabecera.provincia}",
         "subtotal": round(cabecera.total - cabecera.iva - cabecera.exento - cabecera.impint, 2),
@@ -259,24 +275,17 @@ def generar_factura(id_factura):
                       "unidad_medida": "unidad",
                       "precio_unitario": round(item.precio_unitario, 2),
                       "subtotal": round(item.precio_total - item.iva - item.exento - item.impint, 2)})                            
-  
-    # Generar el PDF
-    #archivo = Config.INVOICES_FOLDER + f"/factura_{datos_factura['tipo']}_{datos_factura['punto_venta']}_{datos_factura['nro_comprobante']}.pdf"
-    #print(archivo)
     
     with tempfile.TemporaryDirectory() as tempdir:
-        pdf_path = os.path.join(tempdir, f"Factura.pdf")
+        nombrePDF = f"Factura-{datos_factura['letra_comprobante']}-{datos_factura['nro_comprobante']}.pdf"
+        pdf_path = os.path.join(tempdir, nombrePDF)
+        print(f'Generando factura en {pdf_path}')
         generar_factura_pdf(pdf_path, datos_factura, items)
         # ✅ — Enviamos el archivo
         with open(pdf_path, 'rb') as f:
             response = Response(f.read(), mimetype='application/pdf')
-            response.headers['Content-Disposition'] = f'attachment; filename=Factura.pdf'
+            response.headers['Content-Disposition'] = f'attachment; filename={nombrePDF}'
             return response
-
-    
-    
-    #archivo = generar_pdf(datos_factura, articulos)
-        
         
 def procesar_nueva_venta(form, id_sucursal):
     try:
@@ -288,6 +297,13 @@ def procesar_nueva_venta(form, id_sucursal):
         tarjeta = float(form['tarjeta'])
         entidad = form['entidad']
         ctacte = float(form['ctacte'])
+        bonificacion = float(form['bonificacion'])
+        idcredito = form.get('idcredito', None)
+        monto_credito = form.get('monto_credito', 0.0)
+        idPresupuesto = form.get('idPresupuesto', None)
+        idRemito = form.get('idRemito', None)
+        totalFactura = float(form.get('totalFactura', None))
+        descuento = bonificacion * 100 / totalFactura
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
         discrimina = discrimina_iva(id_tipo_comprobante)
@@ -297,6 +313,7 @@ def procesar_nueva_venta(form, id_sucursal):
             idlista=idlista,
             fecha=fecha,
             total=0,  # Se calculará más adelante
+            bonificacion=0,  # Se calculará más adelante
             id_tipo_comprobante=id_tipo_comprobante,
             idsucursal=id_sucursal,
             idusuario=session['user_id'],
@@ -309,8 +326,10 @@ def procesar_nueva_venta(form, id_sucursal):
 
         # Procesar los items
         total = 0
-        total, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal)
+        total_bonificacion = 0
+        total, total_bonificacion, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal, descuento)
         nueva_factura.total = total
+        nueva_factura.bonificacion = total_bonificacion
         if not discrimina:
             total_iva = 0
         else:    
@@ -318,15 +337,35 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte)
+        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte, bonificacion, idcredito, monto_credito)
+        # Si se está facturando un presupuesto se vincula el mismo a la factura 
+        if idPresupuesto:
+            presupuesto = Presupuesto.query.get(idPresupuesto)
+            presupuesto.estado = 'Facturado'
+            db.session.flush()
+            presupuestoFactura = PresupuestoFactura(
+                idpresupuesto=idPresupuesto,
+                idfactura=idfactura
+            )
+            db.session.add(presupuestoFactura)
+            db.session.flush()
+        # Si se está facturando un remito se vincula el mismo a la factura 
+        if idRemito:
+            remitoFactura = RemitosVtaFactura(
+                idremito=idRemito,
+                idfactura=idfactura
+            )
+            db.session.add(remitoFactura)
+            db.session.flush()
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
         raise Exception(f"Error grabando venta: {e}")
     return nro_comprobante
-    
-def procesar_items(form, idfactura, discrimina, id_sucursal):
+
+def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     total = Decimal(0)
+    total_bonificacion = Decimal(0)
     total_iva = Decimal(0)
     total_exento = Decimal(0)
     total_impint = Decimal(0)
@@ -342,13 +381,19 @@ def procesar_items(form, idfactura, discrimina, id_sucursal):
                     codigo = value
                     cantidad = Decimal(form[f'items[{index}][cantidad]'])
                     precioUnit = Decimal(form[f'items[{index}][precio_unitario]'])
+                    if descuento > 0:
+                        original = precioUnit
+                        precioUnit = Decimal(float(precioUnit) * (1 - descuento / 100))
+                        bonificacion = Decimal((original - precioUnit) * cantidad)
+                    else:
+                        bonificacion = 0    
                     articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
                     iva = AlcIva.query.get(articulo.idiva)
                     ingbto = AlcIB.query.get(articulo.idib)
                     precios = precio(precioUnit, articulo.impint, articulo.exento, Decimal(0), Decimal(0), Decimal(iva.alicuota), Decimal(ingbto.alicuota))
                     #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
                     #precio_unitario = precio.precio if precio else Decimal(0)
-                    precio_total = precios['PFinal'] * cantidad
+                    precio_total = precioUnit * cantidad
                     if not discrimina:
                         idalciva = 0
                         iva = 0
@@ -363,8 +408,9 @@ def procesar_items(form, idfactura, discrimina, id_sucursal):
                         id=index,
                         idarticulo=articulo.id,
                         cantidad=cantidad,
-                        precio_unitario=precios['PFinal'],
+                        precio_unitario=precioUnit,
                         precio_total=precio_total,
+                        bonificacion=bonificacion,
                         iva=iva,
                         idalciva=idalciva,
                         ingbto=ingbrutos,
@@ -374,6 +420,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal):
                     )
                     db.session.add(nuevo_item)
                     total += precio_total
+                    total_bonificacion += bonificacion
                     total_iva += iva
                     total_exento += exento
                     total_impint += impint
@@ -383,9 +430,9 @@ def procesar_items(form, idfactura, discrimina, id_sucursal):
     except SQLAlchemyError as e:
         print(f"Error procesando items: {e}")            
     
-    return total, total_iva, total_exento, total_impint
+    return total, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte):
+def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte, bonificacion, idcredito, monto_credito):
     try:
         if efectivo > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=1, tipo=1, entidad=0, total=Decimal(efectivo)))
@@ -395,6 +442,16 @@ def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctac
         if ctacte > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=3, tipo=3, entidad=0, total=Decimal(ctacte)))
             db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0), idcomp=idfactura))
+        if bonificacion > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=4, tipo=4, entidad=0, total=Decimal(bonificacion)))
+        if idcredito and Decimal(monto_credito) > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=5, tipo=5, entidad=0, total=Decimal(monto_credito)))
+            credito = Creditos.query.get(idcredito)
+            if credito:
+                credito.estado = 5 #facturado
+                credito.idfactura = idfactura
+                credito.fecha_inicio = datetime.now()
+            
         #db.session.commit()
     except SQLAlchemyError as e:
         print(f"Error de base de datos procesando pagos: {e}")
@@ -472,6 +529,34 @@ def procesar_items_remito(form, idremito, id_sucursal):
     
     return True
 
+def get_remito(id):
+    factura = db.session.query(
+                Factura.id,
+                Factura.fecha,
+                Factura.total,
+                Factura.nro_comprobante,
+                Factura.punto_vta,
+                Clientes.id.label('idcliente'),
+                Clientes.nombre,
+                Clientes.direccion,
+                ListasPrecios.nombre.label('lista'),
+                TipoComprobantes.nombre.label('tipo_comprobante')) \
+            .join(Clientes, Clientes.id == Factura.idcliente) \
+            .outerjoin(ListasPrecios, ListasPrecios.id == Factura.idlista) \
+            .join(TipoComprobantes, TipoComprobantes.id == Factura.idtipocomprobante) \
+            .filter(Factura.id == id).all()
+   #Factura.query.get(id)
+    items = db.session.query(
+            Item.id,
+            Item.idarticulo,
+            Item.cantidad,
+            Item.precio_unitario,
+            Item.precio_total,
+            Articulo.codigo,
+            Articulo.detalle) \
+            .join(Articulo, Articulo.id == Item.idarticulo) \
+            .filter(Item.idfactura == id)
+    return factura[0], items
 
 def get_vta_hoy():
     hoy = date.today()
@@ -760,6 +845,7 @@ def get_factura(id):
                 Factura.id,
                 Factura.fecha,
                 Factura.total,
+                Factura.bonificacion,
                 Factura.iva,
                 Factura.exento,
                 Factura.impint,
@@ -772,10 +858,12 @@ def get_factura(id):
                 Clientes.nombre,
                 Clientes.direccion,
                 ListasPrecios.nombre.label('lista'),
-                TipoComprobantes.nombre.label('tipo_comprobante')) \
+                TipoComprobantes.nombre.label('tipo_comprobante'),
+                TipoCompAplica.id_tipo_oper.label('tipo_oper')) \
             .join(Clientes, Clientes.id == Factura.idcliente) \
             .outerjoin(ListasPrecios, ListasPrecios.id == Factura.idlista) \
             .join(TipoComprobantes, TipoComprobantes.id == Factura.idtipocomprobante) \
+            .join(TipoCompAplica, TipoCompAplica.id_tipo_comp == Factura.idtipocomprobante) \
             .filter(Factura.id == id).all()
    #Factura.query.get(id)
     items = db.session.query(
@@ -783,6 +871,7 @@ def get_factura(id):
             Item.cantidad,
             Item.precio_unitario,
             Item.precio_total,
+            Item.bonificacion,
             Articulo.codigo,
             Articulo.detalle) \
             .join(Articulo, Articulo.id == Item.idarticulo) \
@@ -844,7 +933,7 @@ def procesar_recibo_cta_cte(form, ctactecli):
         )
         db.session.add(recibo)
         db.session.flush()
-        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, efectivo, tarjeta, entidad, 0)
+        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, efectivo, tarjeta, entidad, 0, 0, None, 0)
         return recibo
     except SQLAlchemyError as e:
         recibo = []
@@ -855,3 +944,226 @@ def procesar_recibo_cta_cte(form, ctactecli):
         print(f"Error procesando recibo de cta cte: {e}")
         raise Exception(f"Error procesando recibo de cta cte: {e}")
     
+#---------------- recibos de cobranza cuota credito ------------------#
+
+def procesar_recibo_cuota_credito(idCliente, fecha, pagoTotal, efectivo, tarjeta, entidad):
+    try:
+        recibo = Factura(
+            idsucursal=session['id_sucursal'],
+            idusuario=session['user_id'],
+            idcliente=idCliente,
+            idlista=1,
+            id_tipo_comprobante=12, #Recibo
+            fecha=fecha,
+            total= Decimal(pagoTotal),
+            iva=0,
+            exento=0,
+            impint=0,
+            nro_comprobante=getNroComprobante(12),
+            punto_vta=session['idPuntoVenta']
+        )
+        db.session.add(recibo)
+        db.session.flush()
+        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, efectivo, tarjeta, entidad, 0, 0, None, 0)
+        return recibo
+    except SQLAlchemyError as e:
+        recibo = []
+        print(f"Error procesando recibo de cta cte: {e}")
+        raise Exception(f"Error procesando recibo de cta cte: {e}")
+    except Exception as e:
+        recibo = []
+        print(f"Error procesando recibo de cta cte: {e}")
+        raise Exception(f"Error procesando recibo de cta cte: {e}")
+
+#----------------- presupuestos ------------------#
+def procesar_nuevo_presupuesto(form, id_sucursal):
+    try:
+        idcliente = form['idcliente']
+        fecha = form['fecha']
+        validez = form['validez']
+        idlista = form['idlista']
+        id_tipo_comprobante = form['id_tipo_comprobante']
+        
+        #Obtener nuemero de comprobante
+        nro_comprobante = getNroComprobante(id_tipo_comprobante)
+        # Crear la factura
+        nuevo_presupuesto = Presupuesto(
+            idcliente=idcliente,
+            idlista=idlista,
+            fecha=fecha,
+            validez=validez,
+            total=0,  # Se calculará más adelante
+            id_tipo_comprobante=id_tipo_comprobante,
+            idsucursal=id_sucursal,
+            idusuario=session['user_id'],
+            nro_comprobante=nro_comprobante,
+            punto_vta=session['idPuntoVenta'],
+            estado='Pendiente'  # Estado inicial del presupuesto
+        )
+        db.session.add(nuevo_presupuesto)
+        db.session.flush()
+        idpresupuesto = nuevo_presupuesto.id
+
+        # Procesar los items
+        total = 0
+        total = procesar_itemsP(form, idpresupuesto, id_sucursal)
+        nuevo_presupuesto.total = total
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise Exception(f"Error grabando presupuesto: {e}")
+    return nro_comprobante
+    
+def procesar_itemsP(form, idpresupuesto, id_sucursal):
+    total = Decimal(0)
+    try:
+        for key, value in form.items():
+            response = get_articulo_by_codigo(value)
+            if response['success'] == True:
+                if key.startswith('items') and key.endswith('[codigo]'):
+                    precio_total = Decimal(0)
+                    index = key.split('[')[1].split(']')[0]
+                    codigo = value
+                    cantidad = Decimal(form[f'items[{index}][cantidad]'])
+                    precioUnit = Decimal(form[f'items[{index}][precio_unitario]'])
+                    articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                    
+                    #precios = precio(precioUnit, articulo.impint, articulo.exento, Decimal(0), Decimal(0), Decimal(iva.alicuota), Decimal(ingbto.alicuota))
+                    #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
+                    #precio_unitario = precio.precio if precio else Decimal(0)
+                    precio_total = precioUnit * cantidad
+                    
+                    nuevo_item = ItemP(
+                        idpresupuesto=idpresupuesto,
+                        id=index,
+                        idarticulo=articulo.id,
+                        cantidad=cantidad,
+                        precio_unitario=precioUnit,
+                        precio_total=precio_total,
+                    )
+                    db.session.add(nuevo_item)
+                    total += precio_total
+    except SQLAlchemyError as e:
+        print(f"Error procesando items: {e}")            
+    return total
+
+def get_presupuesto(id):
+    factura = db.session.query(
+                Presupuesto.id,
+                Presupuesto.fecha,
+                Presupuesto.validez,
+                Presupuesto.total,
+                Presupuesto.nro_comprobante,
+                Presupuesto.punto_vta,
+                Clientes.id.label('idcliente'),
+                Clientes.nombre,
+                Clientes.direccion,
+                ListasPrecios.nombre.label('lista'),
+                TipoComprobantes.nombre.label('tipo_comprobante')) \
+            .join(Clientes, Clientes.id == Presupuesto.idcliente) \
+            .outerjoin(ListasPrecios, ListasPrecios.id == Presupuesto.idlista) \
+            .join(TipoComprobantes, TipoComprobantes.id == Presupuesto.idtipocomprobante) \
+            .filter(Presupuesto.id == id).all()
+   #Factura.query.get(id)
+    items = db.session.query(
+            ItemP.id,
+            ItemP.idarticulo,
+            ItemP.cantidad,
+            ItemP.precio_unitario,
+            ItemP.precio_total,
+            Articulo.codigo,
+            Articulo.detalle) \
+            .join(Articulo, Articulo.id == ItemP.idarticulo) \
+            .filter(ItemP.idpresupuesto == id)
+    return factura[0], items
+
+def generar_presupuesto(id_presupuesto):
+    # Simulación de datos (reemplazar con consulta a la BD)
+    config = db.session.query(
+                            Configuracion.nombre_fantasia,
+                            Configuracion.documento,
+                            Configuracion.direccion,
+                            Configuracion.localidad,                            
+                            Configuracion.provincia,
+                            TipoIva.descripcion.label('condicion_iva'),
+                            ).join(TipoIva, TipoIva.id == Configuracion.tipo_iva) \
+                            .first()
+    cabecera = db.session.query(
+                            Presupuesto.fecha,
+                            Presupuesto.nro_comprobante,
+                            Presupuesto.punto_vta,
+                            Presupuesto.total,
+                            Clientes.nombre,
+                            Clientes.documento,
+                            Clientes.direccion,
+                            Clientes.localidad,
+                            Clientes.provincia,
+                            TipoIva.descripcion.label('condicion_iva'),
+                            TipoComprobantes.id_afip.label('tipo_comprobante'),
+                            TipoComprobantes.letra.label('letra_comprobante')) \
+                            .join(Clientes, Clientes.id == Presupuesto.idcliente) \
+                            .join(TipoIva, TipoIva.id == Clientes.id_tipo_iva) \
+                            .join(TipoComprobantes, TipoComprobantes.id == Presupuesto.idtipocomprobante) \
+                            .filter(Presupuesto.id == id_presupuesto) \
+                            .first()        
+                            
+    
+    datos_factura = {
+        "tipo_comprobante": cabecera.tipo_comprobante,
+        "letra_comprobante": cabecera.letra_comprobante,
+        "emisor_nombre": config.nombre_fantasia,
+        "emisor_cuit": config.documento,
+        "emisor_condicion_iva": config.condicion_iva,
+        "emisor_domicilio": f"{config.direccion} - {config.localidad}, {config.provincia}",
+        "receptor_nombre": cabecera.nombre,
+        "receptor_cuit": cabecera.documento,
+        "fecha_emision": cabecera.fecha.strftime('%d/%m/%Y'),
+        "periodo_desde": cabecera.fecha.strftime('%d/%m/%Y'),
+        "periodo_hasta": cabecera.fecha.strftime('%d/%m/%Y'),
+        "vto_pago": cabecera.fecha.strftime('%d/%m/%Y'),
+        "condicion_venta": 'Presupuesto',
+        "nro_comprobante": cabecera.nro_comprobante, 
+        "punto_venta": cabecera.punto_vta,
+        "emisor_localidad": cabecera.localidad,
+        "emisor_provincia": cabecera.provincia,
+        "receptor_condicion_iva": cabecera.condicion_iva,
+        "receptor_domicilio": f"{cabecera.direccion} - {cabecera.localidad}, {cabecera.provincia}",
+        "subtotal": round(cabecera.total, 2),
+        "total":  round(cabecera.total, 2),
+        "cae": '',
+        "vencimiento_cae": ''
+    }
+    
+    items_fac = db.session.query(
+                            ItemP.cantidad,
+                            ItemP.precio_unitario,
+                            ItemP.precio_total,
+                            Articulo.codigo,
+                            Articulo.detalle) \
+                            .join(Articulo, Articulo.id == ItemP.idarticulo) \
+                            .filter(ItemP.idpresupuesto == id_presupuesto) \
+                            .all()
+    items = []                        
+    for item in items_fac:
+        items.append({"codigo": item.codigo,
+                      "descripcion": item.detalle,
+                      "cantidad": round(item.cantidad, 2),
+                      "unidad_medida": "unidad",
+                      "precio_unitario": round(item.precio_unitario, 2),
+                      "subtotal": round(item.precio_total, 2)})                            
+  
+    # Generar el PDF
+    #archivo = Config.INVOICES_FOLDER + f"/factura_{datos_factura['tipo']}_{datos_factura['punto_venta']}_{datos_factura['nro_comprobante']}.pdf"
+    #print(archivo)
+    
+    with tempfile.TemporaryDirectory() as tempdir:
+        nombrePDF = f"Presupuesto-{datos_factura['letra_comprobante']}-{datos_factura['nro_comprobante']}.pdf"
+        pdf_path = os.path.join(tempdir, nombrePDF)
+        print(f'Generando presupuesto en {pdf_path}')
+        generar_factura_pdf(pdf_path, datos_factura, items)
+        # ✅ — Enviamos el archivo
+        with open(pdf_path, 'rb') as f:
+            response = Response(f.read(), mimetype='application/pdf')
+            response.headers['Content-Disposition'] = f'attachment; filename={nombrePDF}'
+            return response
+

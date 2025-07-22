@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
+{% block body %}
+    <h2 class="m-3">Venciminetos de cuotas de créditos</h2>
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="card m-3">
+                <h5 class="px-5 pt-2">Periodo</h5>
+                <div class="card-body">
+                    <form action="" method="post">
+                        <div class="row justify-content-md-center">
+                            <div class="col-md-3">
+                                <label for="desde">Desde</label>
+                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hasta">Hasta</label>
+                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            </div>    
+                            <div class="col-md-2 m-4">
+                                <button type="submit" class="btn btn-primario">Buscar</button>
+                            </div>    
+                        </div>
+                    </form>
+                </div>    
+            </div>
+        </div>    
+    </div>
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-10">
+            <div class="table-responsive m-3" >
+                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
+                    <thead class="table-dark">
+                        <tr>
+                            <th># Credito</th>
+                            <th># Cuota</th>
+                            <th>Cliente</th>
+                            <th>Vencimiento</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for cuota in cuotas %}        
+                            <tr class="table-light">
+                                <td scope="row">{{ cuota.idcredito }}</td>
+                                <td>{{ cuota.numero_cuota }}</td>
+                                <td>{{ cuota.nombre_cliente }}</td>
+                                <td>{{ cuota.fecha_vencimiento.strftime("%d-%m-%Y") }}</td>
+                                <td style="text-align:center">{{ "${:,.2f}".format(cuota.monto) }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-secundario">Cobrar</a>
+                                    <a href="{{ url_for('creditos.ver_credito', id_credito=cuota.idcredito) }}" class="btn btn-primario">Ver crédito</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        
+                    </tfoot>
+                </table>
+            </div>
+        </div>    
+    </div>
+
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/datatables.js"></script>
+    <script src="/static/js/dataTables.js"></script>
+    
+{% endblock %}

@@ -22,9 +22,9 @@
             <form id="invoice_form" method="post">
                 <div class="card mb-3">
                 
-                    <div class="row">
-                        <h4 class="m-2 col-5">Cliente</h4>
-                        <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
+                    <div class="row" id="cabecera">
+                        <h4 class="m-2 col-4">Cliente</h4>
+                        <h4 class="m-2 col-4" id="tipo_comprobante">Tipo de factura: </h4>
                         <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
                     </div>
 
@@ -89,19 +89,22 @@
 
                 <div class="row">
                     <button class="btn btn-exito col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
-                    <h3 class="m-3">Total Factura: $<span id="total_factura">0.00</span></h3>
+                    <div class="row">
+                        <h3 class="m-3 col-3">Total Factura: $<span id="total_factura">0.00</span></h3>
+                        <input type="text" name="totalFactura" id="totalFactura" hidden>
+                    </div>    
                     <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
                 </div>
 
                 <div class="card bg-uno m-3">
-                    <h4 class="m-3">Formas de pago</h4>
+                    <h4 class="m-3">Formas de pago ( F8 )</h4>
                     <div class="card-body">
                         <div class="row justify-content-md-center">
-                            <div class="col-3 mt-3">
+                            <div class="col-2 mt-3">
                                 <label for="efectivo">Efectivo</label>
-                                <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0">
+                                <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0" onfocus="this.select()">
                             </div>
-                            <div class="col-3">
+                            <div class="col-2">
                                 <label for="entidad" class="form-label">Entidad</label>
                                 <select class="form-select form-select-md" name="entidad" id="entidad" >
                                     <option selected>Elija una</option>
@@ -110,11 +113,21 @@
                                     {% endfor %}
                                 </select>
                                 <label for="tarjeta">Tarjeta</label>
-                                <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0">
+                                <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0" onfocus="this.select()">
                             </div>    
-                            <div class="col-3 mt-3">    
+                            <div class="col-2 mt-3">    
                                 <label for="ctacte" id="label-ctacte">Cta. Cte.</label>
-                                <input type="number" name="ctacte" id="ctacte" class="form-control" step="0.01" value="0">
+                                <input type="number" name="ctacte" id="ctacte" class="form-control" step="0.01" value="0" onfocus="this.select()">
+                            </div>
+                            <div class="col-2 mt-3">
+                                <label for="bonificacion">Bonificación</label>
+                                <input type="number" name="bonificacion" id="bonificacion" class="form-control" step="0.01" value="0" onfocus="this.select()">
+                            </div>
+                            <div class="col-2">
+                                <label for="idcredito"># Crédito</label>
+                                <input type="number" name="idcredito" id="idcredito" class="form-control" onfocus="this.select()">
+                                <label for="monto_credito">Monto crédito</label>
+                                <input type="number" name="monto_credito" id="monto_credito" class="form-control" step="0.01" value="0" onfocus="this.select()">
                             </div>
                         </div>
 
@@ -129,6 +142,54 @@
     </div>        
 
     
+    <script>
+        // Solo si hay presupuesto
+        {% if presupuesto %}
+            window.PRESUPUESTO = {
+            id: {{ presupuesto.id }},
+            idcliente: {{ presupuesto.idcliente }},
+            total: {{ presupuesto.total }},
+            
+            articulos: [
+                {% for art in articulos_presupuesto %}
+                {
+                    idarticulo: {{ art.idarticulo }},
+                    codigo: {{ art.codigo }},
+                    precio_unitario: {{ art.precio_unitario }},
+                    cantidad: {{ art.cantidad }}
+                }
+                {% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+            };
+        {% else %}
+            window.PRESUPUESTO = null;
+        {% endif %}
+    </script>
+    <script>
+        // Solo si hay remito
+        {% if remito %}
+            window.REMITO = {
+            id: {{ remito.id }},
+            idcliente: {{ remito.idcliente }},
+            total: {{ remito.total }},
+
+            articulos: [
+                {% for art in articulos_remito %}
+                {
+                    idarticulo: {{ art.idarticulo }},
+                    codigo: {{ art.codigo }},
+                    precio_unitario: {{ art.precio_unitario }},
+                    cantidad: {{ art.cantidad }}
+                }
+                {% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+            };
+        {% else %}
+            window.REMITO = null;
+        {% endif %}
+    </script>
     <script src="{{ url_for('static', filename='js/nueva_venta.js')}}"></script>
     
 {% endblock %}

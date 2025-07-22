@@ -1,6 +1,5 @@
 from flask import session, current_app, flash
 from sqlalchemy import text, func
-from utils.db import db
 from models.configs import Configuracion, TipoComprobantes, PuntosVenta
 from models.articulos import ListasPrecios
 from utils.db import db

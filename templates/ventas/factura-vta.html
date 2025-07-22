@@ -25,7 +25,7 @@
                         <input type="text" class="form-control" name="cliente" id="cliente" value="{{ factura.nombre }}">
                     </div>    
                     <div class="col-2">
-                        <label for="tipo_comp">Cmprobante</label>
+                        <label for="tipo_comp">Comprobante</label>
                         <input type="text" class="form-control" name="tipo_comp" id="tipo_comp" value="{{ factura.tipo_comprobante }}">
                     </div>        
                     <div class="col-2">
@@ -46,22 +46,26 @@
                         <label for="total">Total</label>
                         <input type="number" class="form-control precio-normal" name="total" id="total" step="0.01" value="{{ factura.total|round(2) }}">
                     </div>    
+                    <div class="col-2">
+                        <label for="bonificacion">Bonificación</label>
+                        <input type="number" class="form-control precio-normal" name="bonificacion" id="bonificacion" step="0.01" value="{{ factura.bonificacion|round(2) }}">
+                    </div>    
                     <div class="col-3">
                         <label for="iva">IVA</label>
                         <input type="number" class="form-control precio-normal" name="iva" id="iva" step="0.01" value="{{ factura.iva|round(2) }}">
                     </div>    
-                    <div class="col-3">
+                    <div class="col-2">
                         <label for="exento">Exento</label>
                         <input type="number" class="form-control precio-normal" name="exento" id="exento" step="0.01" value="{{ factura.exento|round(2) }}">
                     </div>    
-                    <div class="col-3">
+                    <div class="col-2">
                         <label for="impint">Imp. int.</label>
                         <input type="number" class="form-control precio-normal" name="impint" id="impint" step="0.01" value="{{ factura.impint|round(2) }}">   
                     </div>    
                 </div>    
             </div>    
         </div>
-        {% if factura.cae == None %}
+        {% if (factura.cae == None)and(factura.tipo_oper == 1) %}
             <a href="{{ url_for('ventas.facturar', ptovta=factura.punto_vta, idfactura=factura.id) }}" class="btn btn-primary"> Generar factura electrónica </a>
         {% endif %}    
 
@@ -82,6 +86,7 @@
                                 <th>Detalle</th>
                                 <th>Cantiad</th>
                                 <th>Precio U.</th>
+                                <th>Bonif.</th>
                                 <th>Precio F.</th>
                             </tr>
                         </thead>
@@ -92,6 +97,7 @@
                                     <td>{{ item.detalle }}</td>
                                     <td>{{ item.cantidad|round(2) }}</td>
                                     <td>{{ item.precio_unitario|round(2) }}</td>
+                                    <td>{{ item.bonificacion|round(2) }}</td>
                                     <td>{{ item.precio_total|round(2) }}</td>
                                 </tr>
                                 {% endfor %}    

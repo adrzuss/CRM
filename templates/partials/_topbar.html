@@ -169,7 +169,7 @@
                     Centro de Mensajes
                 </h6>
                 {% for mensaje in mensajes %}
-                    {% if (mensaje['url'] != '#')or(mensaje['url'] != None) %}
+                    {% if mensaje['url']%}
                         <a class="dropdown-item d-flex align-items-center" href="{{ url_for(mensaje['url']) }}">
                     {% else %}
                         <a class="dropdown-item d-flex align-items-center" href="#">
@@ -195,6 +195,20 @@
                                 alt="...">
                             <div class="status-indicator bg-success"></div>
                         </div>
+                    {% elif mensaje['entidad'] == 'credito' %}    
+                        <div class="dropdown-list-image mr-3">
+                            <img class="rounded-circle" src="{{ url_for('static', filename='img/creditos.svg')}}"
+                                alt="...">
+                            {% if mensaje['tipo'] == 'peligro' %}   
+                                <div class="status-indicator bg-danger"></div>
+                            {% elif mensaje['tipo'] == 'cuidado' %}    
+                                <div class="status-indicator bg-warning"></div>
+                            {% elif mensaje['tipo'] == 'bien' %}
+                                <div class="status-indicator bg-success"></div>
+                            {% else %}
+                                <div class="status-indicator bg-primary"></div>
+                            {% endif %}
+                        </div>    
                     {% else %}    
                         <div class="dropdown-list-image mr-3">
                             <img class="rounded-circle" src="{{ url_for('static', filename='img/undraw_engineering-team_13ax.svg')}}"
@@ -300,6 +314,10 @@
                 <a class="dropdown-item" href="{{ url_for('configuraciones.puntos_venta', id=0) }}">
                     <i class="fa-solid fa-cash-register fa-sm fa-fw mr-2 text-gray-400"></i>
                     Configuración puntos de venta
+                </a>
+                <a class="dropdown-item" href="{{ url_for('creditos.config_cred') }}">
+                    <i class="fa-solid fa-brands fa-leanpub fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Configuración de créditos
                 </a>
                 <a class="dropdown-item" href="#">
                     <i class="fas fa-bars fa-sm fa-fw mr-2 text-gray-400"></i>

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<div class="container">
+    {% include 'partials/_modal-seleccion-ptovta.html' %}
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Selección de cuotas a pagar</h1>
+            <h4> <span id="punto_vta" class="resaltado_span_1"></span></h4>  
+        </div>
+        
+    </div>
+    <div class="card">
+        <div class="card-title">
+            <h3 class="ml-3 mt-3">Cuotas a pagar</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-2 ">
+                    <label for="idcliente">Cliente</label>
+                    <input type="text" name="idcliente" id="idcliente" class="form-control" >
+                </div>
+                <div class="col-4">
+                    <label for="cliente_nombre">Nombre</label>
+                    <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" >
+                </div>
+            </div>    
+        </div>
+    </div>    
+    <div class="card mt-3">
+        <div class="card-title">
+            <h3 class="ml-3 mt-3">Cuotas a pagar</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th scope="col"># Credito</th>
+                            <th scope="col">Monto crédito</th>
+                            <th scope="col"># Cuota</th>
+                            <th scope="col">Vencimiento</th>
+                            <th scope="col">Monto cuota</th>
+                            <th scope="col">Días mora</th>
+                            <th scope="col">Mora</th>
+                            <th scope="col">Total</th>
+                            <th scope="col">Seleccionar</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lst_cuotas">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="row mt-3 mb-3">
+                <div class="col-4">
+                    <label>Total a pagar:</label>
+                    <span id="total_cuotas" class="precio-destacado">$0.00</span>
+                    <input type="text" name="edt_total_cuotas" id="edt_total_cuotas" value="0.00" hidden>
+                </div>
+            </div>    
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-title">
+            <h4 class="ml-3 mt-3">Formas de pago</h4>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('creditos.seleccionar_cuota') }}" method="post">
+                <div class="row">
+                    <div class="col-4">
+                        <label for="efectivo">Efectivo</label>
+                        <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0">
+                    </div>
+                    <div class="col-4">
+                        <label for="entidad" class="form-label">Entidad</label>
+                        <select class="form-select form-select-md" name="entidad" id="entidad" >
+                            <option selected>Elija una</option>
+                            {% for entidad in entidades %}
+                                <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label for="tarjeta">Tarjeta</label>
+                        <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-3">
+                        <button class="btn btn-peligro"  onclick="cobrarCuotas()">Cobrar cuotas seleccionadas</button>
+                    </div>
+                </div>            
+
+            </form>    
+        </div>
+    </div>
+
+</div>
+
+<script src="/static/js/seleccion-cuotas-pago.js"></script>
+
+{% endblock %}

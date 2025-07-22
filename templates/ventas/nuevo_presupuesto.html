@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+
+    <h1 class="m-3">Nuevo Presupuesto</h1>
+    <div class="row">
+        <h2 id="punto_vta" class="m-3 col-3">Punto de venta: </h2>
+        <div class="col-7">
+            <div class="row">
+                <label class="col-md-1"></label>
+                <button class="btn btn-primario col-md-2" id="cambiar_pto_vta">Cambiar Pto. Vta.</button>
+            </div>
+        </div>    
+    </div>
+    <div class="m-2">
+        <div class="container-fluid">
+            <!-- Modal para seleccionar cliente y articulos -->
+            {% include 'partials/_modal-cliente.html' %}
+            {% include 'partials/_modal-seleccion-ptovta.html' %}
+
+            <form id="invoice_form" method="post">
+                <div class="card mb-3">
+                
+                    <div class="row">
+                        <h4 class="m-2 col-5">Cliente</h4>
+                        <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de presupuesto: </h4>
+                        <input class="form-control" type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+                    </div>
+
+                    
+                    <div class="cardbody bg-dos">
+                        <div class="row m-3">
+                            <div class="col-md-1">
+                                <label for="id">#Cli</label>
+                                <input class="form-control" type="text" name="id" id="id" readonly>   
+                            </div>
+                            <div class="col-md-2">
+                                <label for="idcliente">Cliente:</label>
+                                <input class="form-control" type="text" name="idcliente" id="idcliente" required>
+                            </div>    
+                            <div class="col-md-5">
+                                <label for="cliente_nombre">Nombre del Cliente:</label>
+                                <input class="form-control" type="text" name="cliente_nombre" id="cliente_nombre" readonly>   
+                            </div>    
+                        </div>    
+                        <div class="row m-3">
+                            <div class="col-md-2">
+                                <label for="fecha">Fecha:</label>
+                                <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                            </div>    
+                            <div class="col-md-2">
+                                <label for="validez">Validez:</label>
+                                <input class="form-control" type="date" name="validez" value="{{ hoy }}" required>
+                            </div>    
+                            <div class="col-md-2">
+                                <label for="idlista" class="form-label">Lista de precios:</label>
+                                <select class="form-select form-select-md" name="idlista" id="idlista">
+                                    {% for lista in listas_precio %}
+                                        {% if lista.id == 1 %}
+                                            <option value="{{ lista.id }}" selected>{{ lista.nombre }}</option>
+                                        {% endif %}    
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}    
+                                </select>
+                            </div>
+                        </div>    
+                    </div>    
+                </div>    
+
+                <div class="card bg-tres">
+                    <div class="cardbody m-3">
+                        <!-- Detalles (items) -->
+                        <h4>Artículos</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless align-middle" id="tabla-items">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Precio unit.</th>
+                                        <th>Cant.</th>
+                                        <th>Precio total</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <!-- Aquí se agregarán dinámicamente las filas -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>    
+
+                <div class="row">
+                    <button class="btn btn-exito col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
+                    <h3 class="m-3">Total Factura: $<span id="total_factura">0.00</span></h3>
+                    
+                </div>
+
+                <div class="row">
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarPresupuesto">Guardar Presupuesto F9</button>
+                </div>
+            </form>
+        </div>
+    </div>        
+
+
+    <script src="{{ url_for('static', filename='js/nuevo_presupuesto.js')}}"></script>
+
+{% endblock %}

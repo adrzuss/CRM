@@ -41,6 +41,13 @@ class Configuracion(db.Model):
         self.vencimiento = vencimiento
         self.licencia = licencia
 
+class Categorias(db.Model):
+    __tablename__ = 'categorias'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(80))
+    
+    def __init__(self, nombre):
+        self.nombre = nombre
 class AlcIva(db.Model):
     __tablename__ = 'alc_iva'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -109,11 +116,14 @@ class TipoComprobantes(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_afip = db.Column(db.Integer)
     nombre = db.Column(db.String(50))
+    letra = db.Column(db.String(5))
     discrimina_iva = db.Column(db.Boolean, nullable=False, default=False)
     
-    def __init__(self, nombre, id_afip):
+    def __init__(self, nombre, id_afip, letra, discrimina_iva=False):
         self.nombre = nombre
         self.id_afip = id_afip
+        self.letra = letra
+        self.discrimina_iva = discrimina_iva
         
 class TipoBalances(db.Model):
     __tablename__ = 'tipo_balances'
@@ -170,3 +180,21 @@ class PlanCtas(db.Model):
     
     def __init__(self, nombre):
         self.nombre = nombre
+
+class Provincias(db.Model):
+    __tablename__ = 'provincias'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    provincia = db.Column(db.String(100), nullable=False)
+    
+    def __init__(self, provincia):
+        self.provincia = provincia
+
+class Localidades(db.Model):
+    __tablename__ = 'localidades'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    localidad = db.Column(db.String(100), nullable=False)
+    id_provincia = db.Column(db.Integer, db.ForeignKey('provincias.id'), nullable=False)
+
+    def __init__(self, localidad, id_provincia):
+        self.localidad = localidad
+        self.id_provincia = id_provincia

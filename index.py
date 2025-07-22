@@ -4,7 +4,6 @@ from sqlalchemy.exc import OperationalError
 from services.configs import getOwner, getTareaUsuario
 from utils.db import db
 from utils.utils import check_session
-
 from utils.config import Config
 from routes.sessions import bp_sesiones
 from routes.tableros import bp_tableros
@@ -30,6 +29,7 @@ def create_app():
                     ])
     
     app.config.from_object(Config)
+    
     app.register_blueprint(bp_sesiones, url_prefix= '/sesions')
     app.register_blueprint(bp_tableros, url_prefix='/')
     app.register_blueprint(bp_clientes, url_prefix='/clientes')
@@ -85,6 +85,10 @@ else:
             case _:
                 return redirect(url_for('tableros.tablero_basico'))
                 
+
+@app.route('/favicon.ico')
+def favicon():
+    return url_for('static', filename='img/favicon.png')
 
 # Ruta para forzar un error 404
 @app.route('/404')

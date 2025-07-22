@@ -549,7 +549,8 @@ def obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje):
                              Articulo.codigo,
                              Articulo.detalle,
                              func.coalesce(Precio.precio, 0).label('precio')
-                             ).outerjoin(Precio, and_(Articulo.id == Precio.idarticulo, Precio.idlista == lista_precio))
+                             ).outerjoin(Precio, and_(Articulo.id == Precio.idarticulo, Precio.idlista == lista_precio)
+                             ).filter(Articulo.baja <= date(1900, 1, 1))  # Filtrar artículos no dados de baja
     if marca:
         query = query.filter(Articulo.idmarca == marca)
     if rubro:

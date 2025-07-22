@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Listado de créditos {{ titulo }}</h1>
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="card m-3">
+                <h5 class="px-5 pt-2">Periodo</h5>
+                <div class="card-body">
+                    <form action="{{ url_for(accion) }}" method="GET">
+                        <div class="row justify-content-md-center">
+                            <div class="col-md-3">
+                                <label for="desde">Desde</label>
+                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hasta">Hasta</label>
+                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            </div>    
+                            <div class="col-md-2 m-4">
+                                <button type="submit" class="btn btn-primario">Buscar</button>
+                            </div>    
+                        </div>
+                    </form>
+                </div>    
+            </div>
+        </div>    
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-dark">
+                <thead>
+                    <tr>                    
+                        <th scope="col">ID</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Fecha de solicitud</th>
+                        <th scope="col">Plan</th>
+                        <th scope="col">Monto</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                    
+                </thead>
+                <tbody>
+                    {% for credito in creditos %}
+                        <tr class="table table-light">
+                            <td scope="row">{{ credito.id }}</td>
+                            <td>{{ credito.cliente }}</td>
+                            <td>{{ credito.fecha_solicitud }}</td>
+                            <td>{{ credito.plan }}</td>
+                            <td>{{ "{:,.2f}".format(credito.monto_total) }}</td>
+                            <td>{{ credito.estado }}</td>
+                            <td>
+                               <a class="btn btn-primario" href="{{ url_for('creditos.ver_credito', id_credito=credito.id) }}">Ver</a> 
+                            </td>
+                        </tr>    
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>    
+
+{% endblock %}
+

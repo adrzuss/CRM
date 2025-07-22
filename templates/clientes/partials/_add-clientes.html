@@ -56,12 +56,52 @@
                         <label for="mail">E-mail</label>
                         <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail" value="{{ cliente.mail }}">
                     </div>    
-
-                    <div class="col-4 mb-3">
+                    <div class="mb-3 col-3">
+                            <label for="categoria" class="form-label">Categoria<span style="color: red">*</span></label>
+                            <select class="form-select form-select" name="categoria" id="categoria" required>
+                                {% for categoria in categorias %}
+                                    {% if cliente.idcategoria == categoria.id %}
+                                        <option value="{{ categoria.id }}" selected>{{ categoria.nombre }}</option>
+                                    {% else %}
+                                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
                         <label for="direccion">Dirección<span style="color: red">*</span></label>
                         <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ cliente.direccion }}" required>
                     </div>    
-                    <div class="col-2 form-check">
+                    
+                    <div class="col-3 mb-3">
+                        <label for="provincia">Provincia<span style="color: red">*</span></label>
+                        <select class="form-select form-select" name="provincia" id="provincia" required>
+                            {% for provincia in provincias %}
+                                {% if cliente.idprovincia == provincia.id %}
+                                    <option value="{{ provincia.id }}" selected>{{ provincia.provincia }}</option>
+                                {% else %}
+                                    <option value="{{ provincia.id }}">{{ provincia.provincia }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>    
+                    </div>    
+                    <div class="col-3 mb-3">
+                        <label for="localidad">Localidad<span style="color: red">*</span></label>
+                        <select class="form-select form-select" name="localidad" id="localidad" required>
+                            {% for localidad in localidades %}
+                                {% if cliente.idlocalidad == localidad.id %}
+                                    <option value="{{ localidad.id }}" selected>{{ localidad.localidad }}</option>
+                                {% else %}
+                                    <option value="{{ localidad.id }}">{{ localidad.nombre }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>    
+                </div>
+                <div class="row">
+                    <div class="col-2 form-check ml-3">
                         {% if cliente.ctacte == 1 %}
                             <input class="form-check-input" type="checkbox" value="" name="ctacte" id="ctacte" checked>
                         {% else %}    

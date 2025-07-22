@@ -1,0 +1,27 @@
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Lista</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for categoria in categorias %}
+                    <tr class="table table-light">
+                        <td scope="row">{{ categoria.id }}</td>
+                        <td>{{ categoria.nombre }}</td>
+                        <td>
+                            <a href="#" class="btn btn-exito">Actualizar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>    
+</div>

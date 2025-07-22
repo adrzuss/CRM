@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
+{% block body %}
+    <h2 class="m-3">Presupuestos a clientes</h2>
+    <div class="m-3">
+        <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-primario">Nuevo presupuesto</a>
+    </div>    
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="card m-3">
+                <h5 class="px-5 pt-2">Periodo</h5>
+                <div class="card-body">
+                    <form action="" method="post">
+                        <div class="row justify-content-md-center">
+                            <div class="col-md-3">
+                                <label for="desde">Desde</label>
+                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hasta">Hasta</label>
+                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            </div>    
+                            <div class="col-md-2 m-4">
+                                <button type="submit" class="btn btn-primario">Buscar</button>
+                            </div>    
+                        </div>
+                    </form>
+                </div>    
+            </div>
+        </div>    
+    </div>
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-10">
+            <div class="table-responsive m-3" >
+                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Validez</th>
+                            <th>Número</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for presupuesto in presupuestos %}        
+                            <tr class="table-light">
+                                <td scope="row">{{ presupuesto.cliente }}</td>
+                                <td>{{ presupuesto.fecha.strftime("%d-%m-%Y") }}</td>
+                                <td>{{ presupuesto.validez.strftime("%d-%m-%Y") }}</td>
+                                <td>{{ presupuesto.nro_comprobante }}</td>
+                                <td style="text-align:center">{{ "${:,.2f}".format(presupuesto.total) }}</td>
+                                <td style="text-align:center">{{ presupuesto.estado }}</td>
+                                <td>
+                                    <a href="{{ url_for('ventas.ver_presupuesto', id=presupuesto.id) }}" class="btn btn-secundario">Ver presupuesto</a>
+                                    {% if presupuesto.estado == 'Pendiente' %}
+                                        <a href="{{ url_for('ventas.facturar_presupuesto', id=presupuesto.id) }}" class="btn btn-primario">Facturar</a>                                        
+                                    {% else %}
+                                        <a href="{{ url_for('ventas.ver_factura_vta', id=presupuesto.idfactura) }}" class="btn btn-terciario">Ver Facturar</a>                                        
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        
+                    </tfoot>
+                </table>
+            </div>
+        </div>    
+    </div>
+
+    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+    <script src="/static/vendor/datatable/datatables.js"></script>
+    <script src="/static/js/dataTables.js"></script>
+    
+{% endblock %}

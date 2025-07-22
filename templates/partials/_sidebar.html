@@ -79,6 +79,7 @@
                         <h6 class="collapse-header">Ventas de artículos:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
                         <a class="collapse-item" href="{{ url_for('ventas.nuevo_remito') }}">Nuevo remito</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.nuevo_presupuesto') }}">Nuevo presupuesto</a>
                     </div>
                 </div>
             </li>
@@ -87,16 +88,18 @@
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentasListados"
                     aria-expanded="true" aria-controls="collapseVentasListados">
                     <i class="fas fa-fw fa-cash-register"></i>
-                    <span>Listado ventas</span>
+                    <span>Listados</span>
                 </a>
                 <div id="collapseVentasListados" class="collapse" aria-labelledby="headingVentas"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Ventas de artículos:</h6>
+                        <h6 class="collapse-header">Listados varios:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasArticulos') }}">Artículos vendidos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasClientes') }}">Ventas a clientes</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasVendedores') }}">Ventas por vendedor</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.remitos_vta') }}">Listado de remitos</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.presupuestos') }}">Listado de presupuestos</a>
                     </div>
                 </div>
             </li>
@@ -173,8 +176,12 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Entidades</h6>
-                        <a class="collapse-item" href="{{ url_for('creditos.planes_cred') }}">Planes</a>
+                        <a class="collapse-item" href="{{ url_for('creditos.simulador_cred') }}">Simulador</a>
                         <a class="collapse-item" href="{{ url_for('creditos.otorgamiento') }}">Otorgamiento</a>
+                        <a class="collapse-item" href="{{ url_for('creditos.lst_creditos') }}">Listado de créditos</a>
+                        <a class="collapse-item" href="{{ url_for('creditos.lst_nuevos') }}">Nuevos/Pendientes</a>
+                        <a class="collapse-item" href="{{ url_for('creditos.seleccionar_cuota') }}">Cobrar cuota de crédito</a>
+                        <a class="collapse-item" href="{{ url_for('creditos.vencimientos_cuotas') }}">Vencimientos de cuotas</a>
                     </div>
                     
                 </div>

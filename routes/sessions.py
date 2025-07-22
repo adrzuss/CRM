@@ -4,7 +4,7 @@ from models.sucursales import Sucursales
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from services.configs import get_sucursales
-from services.sessions import save_msg_user, save_msg_branch, get_mensajes_mios, get_mensajes_para_mi, get_mensaje
+from services.sessions import save_msg_user, save_msg_branch, get_mensajes_mios, get_mensajes_para_mi, get_mensaje, autenticar_usuario
 
 bp_sesiones = Blueprint('sesion', __name__, template_folder='../templates/sessions', static_folder='../static')
 
@@ -14,17 +14,26 @@ def login():
     if request.method == 'POST':
         usuario = request.form['usuario'] 
         clave = request.form['clave']
-        usuario_ok = check_user(usuario, clave)
-        if usuario_ok == True:
-            session['id_sucursal'] = int(request.form['sucursal'])
-            sucursal = Sucursales.query.get(session['id_sucursal'])
-            session['nombre_sucursal'] = sucursal.nombre
+        sucursal_id = request.form['sucursal']
+        if autenticar_usuario(usuario, clave, sucursal_id):
             return redirect(url_for('index'))
         else:
             flash('Nombre de usuario y/o contraseña incorrecta')
             return redirect( url_for('sesion.login'))
     else:    
         return render_template('login.html', sucursales=sucursales)
+
+# Esta ruta es para API login, es para ser usada por aplicaciones mobiles o clientes que necesiten autenticarse
+@bp_sesiones.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    usuario = data.get('usuario')
+    clave = data.get('clave')
+    sucursal_id = data.get('sucursal')
+    if autenticar_usuario(usuario, clave, sucursal_id):
+        return {'success': True}, 200
+    else:
+        return {'success': False, 'error': 'Credenciales incorrectas'}, 401
 
 @bp_sesiones.route('/logout')
 def logout():

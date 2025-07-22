@@ -1,0 +1,39 @@
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Plan</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Interés</th>
+                    <th scope="col">Cuotas</th>
+                    <th scope="col">Anticipo</th>
+                    <th scope="col">Garantes</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in planes_creditos %}
+                    <tr class="table table-light">
+                        <td scope="row">{{ plan.id }}</td>
+                        <td>{{ plan.nombre }}</td>
+                        <td>{{ plan.tasa_interes }}</td>
+                        <td style="text-align: center;">{{ plan.cuotas }}</td>
+                        {% if plan.anticipo %}
+                            <td style="text-align: center;">Si</td>
+                        {% else %}
+                            <td style="text-align: center;">No</td>
+                        {% endif %}
+                        <td style="text-align: center;">{{ plan.garantes }}</td>
+                        <td>
+                            <a href="#" class="btn btn-exito">Actualizar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>    
+</div>

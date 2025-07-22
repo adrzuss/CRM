@@ -1,0 +1,21 @@
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Ingreso de Documentos de créditos</h6>
+                    <form action="{{ url_for('creditos.add_documento_creditos') }}" method="post">
+                        <div class="mb-3"> 
+                            <label for="nombre_documento">Nombre</label>
+                            <input class="form-control" type="text" name="nombre_documento" id="nombre_documento" placeholder="Nombre del documento">
+                        </div>
+
+                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-documentos-de-creditos.html' %}
+        </div>     
+    </div>      

@@ -1,0 +1,647 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Otorgamiento de crédito</h1>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">
+            <h3 class="ml-3 mt-3">Datos para el otorgamiento del crédito: <span class="resaltado_span_1"> {{ credito.estado_credito }} </span></h3>
+        </div>
+
+        {% include 'partials/_modal-cliente.html' %}
+
+        <div class="card-body">
+            
+            <form action="{{ url_for('creditos.procesar_estado_credito') }}" id="aprobacion_form" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="idcredito" id="idcredito" value="{{ credito.id }}">
+                <input type="hidden" name="estado" id="estado" value="{{ credito.estado }}">
+                
+                <!-- Datos del cliente -->
+                <div class="card mt-3 card-color-uno">
+                    <div class="card-title">
+                        <h4 class="ml-3 mt-3">Datos del cliente</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-2">
+                                <label for="idcliente"># Cliente</label>
+                                <input class="form-control" type="text" name="idcliente" id="idcliente" placeholder="Ingrese el nombre" value="{{ credito.idcliente }}" required>
+                            </div>
+                            <div class="col-5">
+                                <label for="cliente_nombre">Nombre</label>
+                                <input class="form-control" type="text" name="cliente_nombre" id="cliente_nombre" value="{{ credito.nombre }}" readonly>
+                            </div>
+                            <div class="col-3">
+                                <label for="cliente_categoria">Categoría</label>
+                                <input class="form-control" type="text" name="cliente_categoria" id="cliente_categoria" value="{{ credito.categoria }}" readonly>
+                            </div>
+                        </div>
+                    </div>    
+                </div>     
+                <!-- Datos del plan -->
+                 <div class="card mt-3 card-color-dos">
+                    <div class="card-title">
+                        <h4 class="mt-3 ml-3">Datos del plan</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-3">
+                                <label for="idplan">Plan</label>
+                                <select class="form-control" name="idplan" id="idplan" required>
+                                    <option value="" disabled selected>Seleccione un plan</option>
+                                    {% for plan in planesCategorias %}
+                                        {% if plan.id == credito.idplan %}
+                                            <option value="{{ plan.id }}" selected>{{ plan.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ plan.id }}">{{ plan.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <label for="cuotas">Cuotas</label>
+                                <input class="form-control" type="number" step="1" name="cuotas" id="cuotas" placeholder="Cantidad de cuotas" max="1" value="{{ credito.cuotas }}" required>
+                            </div>
+                            <div class="col-2">
+                                <label for="tasa_interes">Tasa de interés</label>
+                                <input class="form-control" type="number" step="0.01" name="tasa_interes" id="tasa_interes" placeholder="Tasa de interés" value="{{ credito.tasa_interes }}" readonly>
+                            </div>
+                            <div class="col-2">
+                                <label for="garantes">Cant. garantes</label>
+                                <input class="form-control" type="number" step="1" name="garantes" id="garantes" placeholder="Cantidad de garantes" value="{{ credito.plan_garantes }}" readonly>
+                            </div>
+                        </div>
+                        <!-- Datos del crédito plan de cuotas-->
+                        <div class="row">
+                            <div class="col-4">
+                                <label for="monto_total">Monto del crédito</label>
+                                <input class="form-control " type="number" step="0.01" name="monto_total" id="monto_total" placeholder="Monto del crédito" value="{{ credito.monto_total|round(2) }}" required>
+                            </div>
+                            <div class="col-2">
+                                <label for="fecha_solicitud">Fecha de solicitud</label>
+                                {% if credito.fecha_solicitud %}
+                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" placeholder="Fecha de solicitud" readonly value="{{ credito.fecha_solicitud }}">
+                                {% else %}
+                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" placeholder="Fecha de solicitud" readonly value="{{ fecha_solicitud }}">
+                                {% endif %}
+                            </div>
+                            <div class="col-2">
+                                <label for="fecha_inicio">Fecha de inicio / 1° cuota</label>
+                                <input class="form-control" type="date" name="fecha_inicio" id="fecha_inicio" placeholder="Fecha de inicio" readonly value="{{ credito.fecha_inicio }}">
+                            </div>
+                        </div>
+                    </div>    
+                </div>    
+                <div class="card mt-3 card-color-tres">
+                    <div class="card-title">
+                        <h4 class="ml-3 mt-3">Datos de los garantes</h4>
+                    </div>
+                    <div class="card-body" id="datos_garantes">
+                        {% for garante in garantes %}
+                            <div class="row">
+                                <div class="col-2">
+                                    <label for="garante_id_{{ loop.index }}"># Garante {{ loop.index }}</label>
+                                    <input class="form-control" type="text" name="garante_id_{{ loop.index }}" id="garante_id_{{ loop.index }}" placeholder="Numero del garante" value="{{ garante.idgarante }}" required>
+                                </div>
+                                <div class="col-5">
+                                    <label for="garante_nombre_{{ loop.index }}"># Nombre garante {{ loop.index }}</label>
+                                    <input class="form-control" type="text" name="garante_nombre_{{ loop.index }}" id="garante_nombre_{{ loop.index }}" placeholder="Nombre del garante" value="{{ garante.garante_nombre }}" required>
+                                </div>
+                            </div>
+                        {% endfor %}        
+                    </div>
+                </div>
+                
+                {% if credito.estado in (1,2) %}
+                    <div class="row mt-3">
+                        <div class="col-4">
+                            <a class="btn btn-secundario" href="#" id="generar">Generar cuotas</a>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="card mt-3 card-color-cuatro">
+                    <div class="card-title">
+                        <h3 class="ml-3 mt-3">Detalles del crédito</h3>
+                        <div class="row">
+                            <div class="col-6 ml-3">
+                                <h3 id="monto_cuota" for="cuota_credito">Monto cuota:</h3>
+                                <input type="text" class="form-control col-4" id="cuota_credito" readonly hidden>
+                            </div>    
+                        </div>    
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                        <table class="table table-dark">
+                            <thead>
+                                {% if credito.estado in (3, 5) %}
+                                    <tr>
+                                        <th scope="col"># Cuota</th>
+                                        <th scope="col">Cuota</th>
+                                        <th scope="col">Vencimiento</th>
+                                    </tr>
+                                {% else%}
+                                    <tr>
+                                        <th scope="col"># Cuota</th>
+                                        <th scope="col">Cuota</th>
+                                        <th scope="col">Interes</th>
+                                        <th scope="col">Capital</th>
+                                        <th scope="col">Saldo</th>
+                                    </tr>
+                                {% endif %}    
+                            </thead>
+                            <tbody id="lst_cuotas">
+                                {% for cuota in cuotas_generadas %}
+                                    <tr class="table table-light">
+                                        <td scope="row">{{ cuota.numero_cuota }}</td>
+                                        <td scope="row">{{ "{:,.2f}".format(cuota.monto) }}</td>
+                                        <td scope="row">{{ cuota.fecha_vencimiento }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div> 
+                <!-- Datos del crédito documentos del plan -->
+                <div class="card mt-3 card-color-cinco">
+                    <div class="card-title">
+                        <h3 class="ml-3 mt-3">Documentos del plan</h3>
+                    </div>
+                    <div class="card-body" id="documentos_plan">
+                        {% for documento in documentos %}
+                            <div class="row mb-3">
+                                <div class="col-12"> 
+                                    <label for="documento{{ loop.index }}">{{ documento.documento_nombre }}</label>
+                                    <a href="{{ url_for('creditos.descargar_documento', idcredito=credito.id, iddocumento=documento.iddocumento_credito) }}">Descargar: {{ documento.documento }}</a>
+                                    {% if not(credito.estado in (3,5,4)) %}
+                                        <input class="form-control col-5" type="file" name="documento{{ loop.index }}" id="documento{{ loop.index }}" placeholder="Documento" value="{{ documento.documento }}" required>
+                                    {% endif %} 
+                                    
+                                    <input class="form-control" type="number" name="idDocumento{{ loop.index }}" id="idDocumento{{ loop.index }}" value="{{ documento.iddocumento_credito }}" hidden>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                        
+                </div> 
+
+                <!-- Observaciones del crédito -->
+                <div class="card mt-3 card-color-seis">
+                    <div class="card-title">
+                        <h3 class="ml-3 mt-3">Observaciones</h3>
+                    </div>
+                    <div class="card-body" >
+                        <textarea name="observaciones" id="observaciones" class="form-control" rows="5" placeholder="Observaciones">{% if credito.observaciones %}{{ credito.observaciones }}{% endif %}</textarea>
+                    </div>
+                        
+                </div> 
+                {% if credito.estado in (1,7) %}
+                    <button class="btn btn-cuidado mt-3" type="button" id="btn_pendiente">Pendiente de aprobación</button>
+                    <button class="btn btn-peligro mt-3" type="button" id="btn_rechazar">Rechazar crédito</button>
+                    <button class="btn btn-exito mt-3" type="button" id="btn_aprobar">Aprobar crédito</button>
+                {% elif credito.estado == 2 %}
+                    <button class="btn btn-cuidado mt-3" type="button" id="btn_actualizado">Datos actualizados</button>
+                {% endif %}
+            </form>
+    </div>
+</div>
+
+<script>
+    var datos_plan = [];
+    document.getElementById("idcliente").addEventListener("blur", function () {
+        const idcliente = this.value;
+        fetchCliente(idcliente);
+    });
+
+    document.getElementById("idplan").addEventListener("change", function (event) {
+        const idPlan = event.target.value;
+        if (idPlan != null) {
+            setPlanValues(idPlan);
+            createPlanDocuments(idPlan);
+            createGarantes();
+        }
+        
+    });
+
+    let boton;
+
+    boton = document.getElementById("generar");
+    if (boton) {
+        document.getElementById("generar").addEventListener("click", async () => {
+            
+            const cuotas = document.getElementById("cuotas").value;
+            const tasa_interes = document.getElementById("tasa_interes").value;
+            const monto_total = document.getElementById("monto_total").value;
+            if (cuotas === null || cuotas === "" || tasa_interes === null || tasa_interes === "" || monto_total === null || monto_total === "") {
+                alert("Faltan datos obligatorios");
+                return;
+            }
+            response = await fetch(`${BASE_URL}/creditos/generar_cuotas?cuotas=${cuotas}&&tasa_interes=${tasa_interes}&&monto_total=${monto_total}`);
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                
+                const cronograma = data.cronograma;
+                const cuota = data.cuota;
+                
+                let monto_cuota = document.getElementById("monto_cuota");
+                monto_cuota.innerHTML = `Monto cuota: ${cuota}`;
+                let cuota_credito = document.getElementById("cuota_credito");
+                cuota_credito.value = cuota;
+                let lst_cuotas = document.getElementById("lst_cuotas");
+                lst_cuotas.innerHTML = "";
+                cronograma.forEach((cuota) => {
+                    const cuotaOption = document.createElement("tr");
+                    cuotaOption.classList.add("table");
+                    cuotaOption.classList.add("table-light");
+                    cuotaOption.innerHTML = `<td scope="row">${cuota.nro_cuota}</td>
+                                            <td scope="row">$${cuota.cuota.toFixed(2)}</td>
+                                            <td scope="row">$${cuota.interes.toFixed(2)}</td>
+                                            <td scope="row">$${cuota.capital.toFixed(2)}</td>
+                                            <td scope="row">$${cuota.saldo.toFixed(2)}</td>`;
+                    lst_cuotas.appendChild(cuotaOption);
+                });
+            } else {
+                console.log('error');
+            }
+        });
+    }    
+
+    boton = document.getElementById("btn_pendiente");
+    if (boton) {
+        document.getElementById("btn_pendiente").addEventListener("click", function () {
+            observaciones = document.getElementById("observaciones").value.trim();
+            if (observaciones === null || observaciones === "") {
+                alert("Debe ingresar una observación antes de marcar el crédito como pendiente de aprobación.");
+                return;
+            }
+            if (confirm("¿Marcar el crédito como pendiente de aprobación?") === true) {
+                let estado = document.getElementById("estado");
+                estado.value = 2;
+                document.getElementById("aprobacion_form").submit();
+            }
+        });
+    }    
+
+    boton = document.getElementById("btn_rechazar");
+    if (boton) {
+        document.getElementById("btn_rechazar").addEventListener("click", function () {
+            observaciones =  document.getElementById("observaciones").value.trim();
+            if (observaciones === null || observaciones === "") {
+                alert("Debe ingresar una observación antes de marcar el crédito como rechazado de aprobación.");
+                return;
+            }
+            if (confirm("¿Rechazar el crédito?") === true) {
+                let estado = document.getElementById("estado");
+                estado.value = 4;
+                document.getElementById("aprobacion_form").submit();
+            }
+        });
+    }    
+
+    boton = document.getElementById("btn_aprobar");
+    if (boton) {
+        document.getElementById("btn_aprobar").addEventListener("click", function () {
+            if (confirm("¿Aprobar el crédito?") === true) {
+                let estado = document.getElementById("estado");
+                estado.value = 3;
+                document.getElementById("aprobacion_form").submit();
+            }
+        });
+    }
+
+    boton = document.getElementById("btn_actualizado");
+    if (boton) {
+        document.getElementById("btn_actualizado").addEventListener("click", function () {
+            if (confirm("¿Actualizar los datos del crédito?") === true) {
+                let estado = document.getElementById("estado");
+                estado.value = 7;
+                document.getElementById("aprobacion_form").submit();
+            }
+        });
+    }
+    
+    document.getElementById("aprobacion_form").addEventListener("submit", function (event) {
+        let idCliente = document.getElementById("idcliente").value;
+        let idPlan = document.getElementById("idplan").value;
+        let cuotas = document.getElementById("cuotas").value;
+        let montoTotal = document.getElementById("monto_total").value;
+        let tasa_interes = document.getElementById("tasa_interes").value;
+        let fecha_solicitud = document.getElementById("fecha_solicitud").value;
+        
+        if (confirm("¿Grabar los datos del crédito?") === false) {
+            event.preventDefault();
+        }
+    });
+
+    function setPlanValues(idPlan) {
+        if (idPlan && datos_plan.length > 0) {
+            let planSelecionado = 0;
+            for (let i = 0; i < datos_plan.length; i++) {
+                if (datos_plan[i].id == idPlan) {
+                    planSelecionado = i;
+                    break;
+                }
+            }
+            let cuotas = datos_plan[planSelecionado].cuotas;
+            let inputCuotas = document.getElementById("cuotas")
+            inputCuotas.value = cuotas;
+            inputCuotas.max = cuotas;
+            let tasa_interes = datos_plan[planSelecionado].tasa_interes;
+            let inputTasa_interes = document.getElementById("tasa_interes")
+            inputTasa_interes.value = tasa_interes;
+            let garantes = document.getElementById("garantes");
+            garantes.value = datos_plan[planSelecionado].garantes;
+            
+        }
+    };        
+
+    async function createPlanDocuments(idPlan) {
+        response = await fetch(`${BASE_URL}/creditos/get_documentos_por_plan/${idPlan}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.documentos.length > 0) {
+                let documentosPlan = document.getElementById("documentos_plan");
+                documentosPlan.innerHTML = "";
+                data.documentos.forEach((documento, indice) => {
+                    if (documento.idDocCred != null) {
+                        let documentDiv = document.createElement("div");
+                        documentDiv.classList.add("row");
+                        documentDiv.classList.add("mb-3");
+                        documentDiv.innerHTML = `<div class="col-10"> 
+                                                <label for="documento${indice+1}">${documento.documento}</label>
+                                                <input class="form-control" type="file" name="documento${indice+1}" id="documento${indice+1}" placeholder="Documento" value="${documento.documento}" required>
+                                                <input class="form-control" type="number" name="idDocumento${indice+1}" id="idDocumento${indice+1}" value="${documento.idDoc}" hidden>
+                                            </div>`;
+                        documentosPlan.appendChild(documentDiv);
+                    }    
+                });
+            } else {
+                alert("No se encontraron documentos para este plan");
+            }    
+        }    
+    };
+
+    function createGarantes() {
+        let garantes = document.getElementById("datos_garantes");
+        garantes.innerHTML = "";
+        cantGarantes = document.getElementById("garantes").value;
+        if (cantGarantes != null) {
+            for (let i = 0; i < cantGarantes; i++) {
+                garantes.innerHTML += ` <div class="row">
+                                            <div class="col-2">
+                                                <label for="garante_id_${i+1}"># Garante ${i+1}</label>
+                                                <input class="form-control" type="text" name="garante_id_${i+1}" id="garante_id_${i+1}" placeholder="Numero del garante">
+                                            </div>
+                                            <div class="col-5">
+                                                <label for="garante_nombre_${i+1}"># Nombre garante ${i+1}</label>
+                                                <input class="form-control" type="text" name="garante_nombre_${i+1}" id="garante_nombre_${i+1}" placeholder="Nombre del garante">
+                                            </div>
+                                        </div>
+                                        `;
+            }
+            document.querySelectorAll('input[name^="garante_id_"]').forEach(input => {
+                input.addEventListener("blur", function () {
+                fetchGarante(this);
+                });
+            });
+        } else {
+            console.log('error');
+        }
+    }
+
+    async function fetchCliente(input) {
+        let response;
+        // Determinar si la entrada es un ID numérico o un nombre
+        if (input != ""){
+            if (!isNaN(input)) {
+            // Si es un número, buscar por ID
+                response = await fetch(`${BASE_URL}/clientes/get_cliente/${input}/${1}`); //1 venta
+            } else {
+                // Si es un nombre parcial, buscar por nombre
+                response = await fetch(`${BASE_URL}/clientes/get_clientes?nombre=${input}&&tipo_operacion=${1}`);
+            }
+
+            if (!response.ok) {
+                console.error("Error en la búsqueda del cliente");
+                return;
+            }
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.cliente) {
+                    // Si se encuentra un cliente por ID, asignarlo directamente
+                    if (data.cliente.baja == true) {
+                    limpiarDatosCliente();
+                    alert("Cliente dado de baja. No puedes facturar a este cliente.");
+                    return;
+                    }
+                    asignarCliente(data.cliente);
+                } else {
+                    alert("No se encontraron clientes con ese ID.");
+                }
+            } else {
+            if (data.length > 1) {
+                // Si hay más de un resultado, mostrar un modal para seleccionar
+                mostrarModalSeleccionClientes(data);
+            } else if (data.length === 1) {
+                // Si hay un solo resultado, asignar directamente
+                asignarCliente(data[0]);
+            } else {
+                limpiarDatosCliente
+                alert("No se encontraron clientes con ese nombre.");
+            }
+            }
+        }  
+    }
+
+    function asignarCliente(cliente) {
+        document.getElementById("idcliente").value = cliente.id;
+        document.getElementById("cliente_nombre").value = cliente.nombre;
+        document.getElementById("cliente_categoria").value = cliente.categoria;
+        planesParaCliente(cliente.idcategoria);
+    }
+
+    function limpiarDatosCliente() {
+        let idcliente = document.getElementById("idcliente");
+        idcliente.value = "";
+        document.getElementById("cliente_nombre").value = "";
+        document.getElementById("cliente_categoria").value = "";
+        document.getElementById("idplan").value = "";
+        document.getElementById("cuotas").value = "";
+        document.getElementById("tasa_interes").value = "";
+        document.getElementById("monto_total").value = "";
+        document.getElementById("fecha_solicitud").value = "";
+        idcliente.focus();
+    }
+
+    function mostrarModalSeleccionClientes(clientes) {
+    // Crear el contenido del modal con las opciones de cliente
+    const tituloModal = document.getElementById("clienteModalLabel");
+    tituloModal.textContent = "Seleccione un Cliente";
+    const modalContent = document.getElementById("modalContent");
+    modalContent.innerHTML = "";
+    const listaClientes = document.createElement("ul");
+    listaClientes.classList.add("list-group");
+    modalContent.appendChild(listaClientes);
+
+    clientes.forEach((cliente) => {
+        const clienteOption = document.createElement("li");
+        clienteOption.classList.add("cliente-option");
+        clienteOption.classList.add("list-group-item");
+        clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
+        clienteOption.onclick = () => {
+        asignarCliente(cliente);
+        $("#clienteModal").modal("hide");
+        // Enfocar el nuevo input de código
+        const clienteInput = document.getElementById("idcliente");
+        clienteInput.focus();
+        };
+        listaClientes.appendChild(clienteOption);
+    });
+
+    // Mostrar el modal
+    $("#clienteModal").modal("show");
+    }
+
+    async function fetchGarante(input) {
+        const valor = input.value;
+        // Aquí puedes guardar el valor anterior si lo necesitas
+        // Por ejemplo: input.dataset.valorAnterior = valor;
+
+        if (valor !== "") {
+            let response;
+            if (!isNaN(valor)) {
+                response = await fetch(`${BASE_URL}/clientes/get_cliente/${valor}/1`);
+            } else {
+                response = await fetch(`${BASE_URL}/clientes/get_clientes?nombre=${valor}&&tipo_operacion=1`);
+            }
+
+            if (!response.ok) {
+                limpiarDatosGarante(input);
+                alert("Error en la búsqueda del garante");
+                return;
+            }
+            const data = await response.json();
+
+            if (data.success && data.cliente) {
+                if (data.cliente.baja == true) {
+                    limpiarDatosGarante(input);
+                    alert("Garante dado de baja.");
+                    return;
+                }
+                asignarGarante(input, data.cliente);
+            } else if (data.length === 1) {
+                asignarGarante(input, data[0]);
+            } else {
+                if (data.length > 1) {
+                    // Si hay más de un resultado, mostrar un modal para seleccionar
+                    mostrarModalSeleccionGarantes(data, input);
+                } else 
+                {
+                    limpiarDatosGarante(input);
+                    alert("No se encontró garante.");
+                }    
+            }
+        } else {
+            limpiarDatosGarante(input);
+        }
+    }
+
+    function asignarGarante(input, garante) {
+        idCliente = document.getElementById("idcliente").value;
+        if ( idCliente === input.value )  {
+            limpiarDatosGarante(input);
+            alert("No puedes asignar como garante al mismo cliente.");
+            input.focus();
+            return;
+        }
+        input.value = garante.id;
+        // Buscar el input de nombre relacionado y asignar el nombre
+        const row = input.closest('.row');
+        if (row) {
+            const nombreInput = row.querySelector('input[name^="garante_nombre"]');
+            if (nombreInput) {
+                nombreInput.value = garante.nombre;
+            }
+        }
+    }
+
+    function limpiarDatosGarante(input) {
+        input.value = "";
+        const row = input.closest('.row');
+        if (row) {
+            const nombreInput = row.querySelector('input[name^="garante_nombre"]');
+            if (nombreInput) {
+                nombreInput.value = "";
+            }
+        }
+    }
+
+    function mostrarModalSeleccionGarantes(garantes, input) {
+    // Crear el contenido del modal con las opciones de cliente
+    const tituloModal = document.getElementById("clienteModalLabel");
+    tituloModal.textContent = "Seleccione un Cliente";
+    const modalContent = document.getElementById("modalContent");
+    modalContent.innerHTML = "";
+    const listaClientes = document.createElement("ul");
+    listaClientes.classList.add("list-group");
+    modalContent.appendChild(listaClientes);
+
+    garantes.forEach((garante) => {
+        const clienteOption = document.createElement("li");
+        clienteOption.classList.add("cliente-option");
+        clienteOption.classList.add("list-group-item");
+        clienteOption.textContent = `${garante.nombre} - Tel/Cel: ${garante.telefono}`;
+        clienteOption.onclick = () => {
+        asignarGarante(input,garante);
+        $("#clienteModal").modal("hide");
+        // Enfocar el nuevo input de código
+        input.focus();
+        };
+        listaClientes.appendChild(clienteOption);
+    });
+
+    // Mostrar el modal
+    $("#clienteModal").modal("show");
+    }
+
+    async function planesParaCliente(categoria) {
+        const response = await fetch(`${BASE_URL}/creditos/planes_para_cliente/${categoria}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                datos_plan = data.planes;
+                let planes = data.planes;
+                let planesSeleccionados = document.getElementById("idplan");
+                planesSeleccionados.innerHTML = "";
+                if (planes.length > 0) {
+                    const planesOption = document.createElement("option");
+                    planesOption.textContent = 'Seleccione un plan';
+                    planesSeleccionados.appendChild(planesOption);
+                    planes.forEach((plane) => {
+                        const planesOption = document.createElement("option");
+                        planesOption.value = plane.id;
+                        planesOption.textContent = plane.nombre;
+                        planesSeleccionados.appendChild(planesOption);
+                    });
+                } else {
+                    alert("No se encontraron planes para este cliente");
+                    limpiarDatosCliente();
+                }
+            } else {
+                console.log('error');
+            }
+        } else {
+            console.log('no ok');
+        }
+    }
+</script>    
+    
+{% endblock %}

@@ -3,7 +3,7 @@ from flask import g
 from datetime import datetime, date
 from models.clientes import Clientes
 from models.ventas import Factura
-from models.configs import TipoDocumento, TipoIva, TipoComprobantes, TipoCompAplica
+from models.configs import TipoDocumento, TipoIva, TipoComprobantes, TipoCompAplica, Categorias, Provincias, Localidades
 from services.clientes import save_cliente, get_abc_operaciones, get_abc_montos, get_abc_productos
 from services.ctactecli import saldo_ctacte
 from services.configs import validar_cuit
@@ -25,7 +25,13 @@ def clientes(id):
     clientes = Clientes.query.all()
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
-    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    categorias = Categorias.query.all()
+    provincias = Provincias.query.all()
+    if cliente:
+        localidades = Localidades.query.filter_by(id_provincia=cliente.idprovincia).all()
+    else:
+        localidades = []
+    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, categorias=categorias, provincias=provincias, localidades=localidades, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_clientes.route('/new_cliente', methods=['POST'])
 @check_session
@@ -37,8 +43,11 @@ def add_cliente():
         cliente.nombre = request.form['nombre']
         cliente.documento = request.form['documento']
         cliente.email = request.form['mail']
+        cliente.idcategoria = request.form['categoria']
         cliente.telefono = request.form['telefono']
         cliente.direccion = request.form['direccion']
+        cliente.idlocalidad = request.form['localidad']
+        cliente.idprovincia = request.form['provincia']
         cliente.id_tipo_doc = request.form['tipo_doc']
         cliente.id_tipo_iva = request.form['tipo_iva']
         cliente.ctacte = ctacte
@@ -48,41 +57,60 @@ def add_cliente():
         nombre = request.form['nombre']
         documento = request.form['documento']
         mail = request.form['mail']
+        categoria = request.form['categoria']
         telefono = request.form['telefono']
         direccion = request.form['direccion']
+        localidad = request.form['localidad']
+        provincia = request.form['provincia']
         ctacte = request.form.get("ctacte") != None
         id_tipo_doc = request.form['tipo_doc']
         id_tipo_iva = request.form['tipo_iva']
-        id_cliente = save_cliente(nombre, documento, mail, telefono, direccion, ctacte, id_tipo_doc, id_tipo_iva)
+        id_cliente = save_cliente(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva)
         flash(f'Cliente agregado: {id_cliente}: {nombre}')
     return redirect('/')
+
+@bp_clientes.route('/localidades/<idprovincia>', methods=['GET'])
+@check_session
+def get_localidades(idprovincia):
+    print(f"Fetching localidades for provincia ID: {idprovincia}")
+    localidades = Localidades.query.filter_by(id_provincia=idprovincia).all()
+    print(f"Localidades for provincia {idprovincia}: {[loc.localidad for loc in localidades]}")
+    return jsonify(success=True, localidades=[{'id': loc.id, 'localidad': loc.localidad} for loc in localidades]) 
+
 
 @bp_clientes.route('/get_cliente/<id>/<tipo_operacion>')
 @check_session
 def get_cliente(id, tipo_operacion):
-    #cliente = Clientes.query.get(id)
-    cliente = db.session.query(
-        Clientes.id.label('id'),
-        Clientes.nombre.label('nombre'),
-        Clientes.documento.label('documento'),
-        Clientes.email.label('email'),
-        Clientes.telefono.label('telefono'),
-        Clientes.direccion.label('direccion'),
-        Clientes.ctacte.label('ctacte'),
-        Clientes.id_tipo_doc.label('id_tipo_doc'),
-        Clientes.id_tipo_iva.label('id_tipo_iva'),
-        Clientes.baja.label('baja'),
-        TipoComprobantes.id.label('id_tipo_comprobante'),
-        TipoComprobantes.nombre.label('tipo_comprobante'))\
-        .join(TipoCompAplica, and_(Clientes.id_tipo_iva == TipoCompAplica.id_iva_entidad, TipoCompAplica.id_iva_owner == session['tipo_iva'], TipoCompAplica.id_tipo_oper == tipo_operacion))\
-        .join(TipoComprobantes, (TipoCompAplica.id_tipo_comp == TipoComprobantes.id))\
-        .filter(Clientes.id == id).first()
+    try:
+        cliente = db.session.query(
+            Clientes.id.label('id'),
+            Clientes.nombre.label('nombre'),
+            Clientes.documento.label('documento'),
+            Clientes.email.label('email'),
+            Clientes.idcategoria,
+            Clientes.telefono.label('telefono'),
+            Clientes.direccion.label('direccion'),
+            Clientes.ctacte.label('ctacte'),
+            Clientes.id_tipo_doc.label('id_tipo_doc'),
+            Clientes.id_tipo_iva.label('id_tipo_iva'),
+            Clientes.baja.label('baja'),
+            TipoComprobantes.id.label('id_tipo_comprobante'),
+            TipoComprobantes.nombre.label('tipo_comprobante'),
+            Categorias.nombre.label('categoria'))\
+            .join(TipoCompAplica, and_(Clientes.id_tipo_iva == TipoCompAplica.id_iva_entidad, TipoCompAplica.id_iva_owner == session['tipo_iva'], TipoCompAplica.id_tipo_oper == tipo_operacion))\
+            .join(TipoComprobantes, (TipoCompAplica.id_tipo_comp == TipoComprobantes.id))\
+            .outerjoin(Categorias, Clientes.idcategoria == Categorias.id)\
+            .filter(Clientes.id == id).first()
+    except Exception as e:
+        print(e)
+        cliente = None
+        
     if cliente:
         if (cliente.baja == datetime(1900,1,1).date()):
             baja = False
         else:
             baja = True
-        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte, 'id_tipo_comprobante': cliente.id_tipo_comprobante, 'tipo_comprobante':cliente.tipo_comprobante, 'tipo_doc':cliente.id_tipo_doc, 'tipo_iva':cliente.id_tipo_iva, 'baja': baja}) 
+        return jsonify(success=True, cliente={'id': cliente.id, 'nombre': cliente.nombre, 'idcategoria': cliente.idcategoria, 'categoria': cliente.categoria, 'telefono': cliente.telefono, 'ctacte': cliente.ctacte, 'id_tipo_comprobante': cliente.id_tipo_comprobante, 'tipo_comprobante':cliente.tipo_comprobante, 'tipo_doc':cliente.id_tipo_doc, 'tipo_iva':cliente.id_tipo_iva, 'baja': baja}) 
     else:
         return jsonify(success=False)
 
@@ -97,19 +125,22 @@ def get_clientes():
         Clientes.nombre.label('nombre'),
         Clientes.documento.label('documento'),
         Clientes.email.label('email'),
+        Clientes.idcategoria,
         Clientes.telefono.label('telefono'),
         Clientes.direccion.label('direccion'),
         Clientes.ctacte.label('ctacte'),
         Clientes.id_tipo_doc.label('id_tipo_doc'),
         Clientes.id_tipo_iva.label('id_tipo_iva'),
         TipoComprobantes.id.label('id_tipo_comprobante'),
-        TipoComprobantes.nombre.label('tipo_comprobante'))\
+        TipoComprobantes.nombre.label('tipo_comprobante'),
+        Categorias.nombre.label('categoria'))\
         .join(TipoCompAplica, and_(Clientes.id_tipo_iva == TipoCompAplica.id_iva_entidad, TipoCompAplica.id_iva_owner == session['tipo_iva'], TipoCompAplica.id_tipo_oper == tipo_operacion))\
         .join(TipoComprobantes, (TipoCompAplica.id_tipo_comp == TipoComprobantes.id))\
+        .outerjoin(Categorias, Clientes.idcategoria == Categorias.id)\
         .filter(Clientes.nombre.like(f"{nombre}%")).all()
     else:
         clientes = []
-    return jsonify([{'id': c.id, 'nombre': c.nombre, 'telefono': c.telefono, 'ctacte': c.ctacte, 'id_tipo_comprobante': c.id_tipo_comprobante, 'tipo_comprobante':c.tipo_comprobante, 'tipo_doc':c.id_tipo_doc, 'tipo_iva':c.id_tipo_iva} for c in clientes]) 
+    return jsonify([{'id': c.id, 'nombre': c.nombre, 'idcategoria': c.idcategoria, 'categoria': c.categoria, 'telefono': c.telefono, 'ctacte': c.ctacte, 'id_tipo_comprobante': c.id_tipo_comprobante, 'tipo_comprobante':c.tipo_comprobante, 'tipo_doc':c.id_tipo_doc, 'tipo_iva':c.id_tipo_iva} for c in clientes]) 
 
 @bp_clientes.route('/update_cliente/<id>', methods=['GET', 'POST'])
 @check_session

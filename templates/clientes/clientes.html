@@ -16,6 +16,25 @@
     <script src="{{ url_for('static', filename='vendor/datatable/datatables.js')}}"></script>
     
     <script>
+
+        document.getElementById("provincia").addEventListener("change", function() {
+            const provinciaId = this.value;
+            fetch(`${BASE_URL}/clientes/localidades/${provinciaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const localidadSelect = document.getElementById("localidad");
+                    localidadSelect.innerHTML = '';
+                    data.localidades.forEach(localidad => {
+                        console.log(localidad);
+                        const option = document.createElement("option");
+                        option.value = localidad.id;
+                        option.textContent = localidad.localidad;
+                        localidadSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching localidades:', error));
+        }); 
+
         document.getElementById("documento").addEventListener("blur", function() {
             checkCuit();
         });

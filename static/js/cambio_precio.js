@@ -99,8 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Validar salida sin guardar
     
     window.addEventListener("beforeunload", (e) => {
-        e.preventDefault();
-        e.returnValue = "Tiene cambios sin guardar. ¿Está seguro de salir?";
+        if (!isFormSubmited) {
+            return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
+        }
     });
     
     // Cargar artículos en tabla de acuerdo a los filtros

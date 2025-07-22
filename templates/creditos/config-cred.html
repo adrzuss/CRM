@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 mt-3">
+            <h3>Planes de crédito</h3>
+            {% include 'partials/_planes-creditos.html' %}
+        </div>
+    </div>    
+    <div class="row">    
+        <div class="col-md-12 mt-3">
+            <h3>Documentos de créditos</h3>
+            {% include 'partials/_documentos-de-creditos.html' %}
+        </div>
+    </div>    
+    <div class="row">    
+        <div class="col-md-12 mt-3">
+            <h3>Estados de créditos</h3>
+            {% include 'partials/_estados-creditos.html' %}
+        </div>
+    </div>    
+    <div class="row">    
+        <div class="col-md-12 mt-3">
+            <h3>Documentos necesarios para cada plan de crédito</h3>
+            {% include 'partials/_documentos-por-plan.html' %}
+        </div>
+    </div>    
+
+    <div class="row">    
+        <div class="col-md-12 mt-3">
+            <h3>Categorias de clientes para cada plan de crédito</h3>
+            {% include 'partials/_categorias-por-plan.html' %}
+        </div>
+    </div>    
+
+
+    <script src="{{ url_for('static', filename='js/config_creditos.js')}}"></script>
+    
+{% endblock %}

@@ -1,4 +1,5 @@
 from utils.db import db
+from datetime import date
 
 class TipoIva(db.Model):
     __tablename__ = 'tipo_iva'
@@ -198,3 +199,45 @@ class Localidades(db.Model):
     def __init__(self, localidad, id_provincia):
         self.localidad = localidad
         self.id_provincia = id_provincia
+        
+class MonedasBilletes(db.Model):
+    __tablename__ = 'monedas_billetes'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    descripcion = db.Column(db.String(100), nullable=False)
+    valor = db.Column(db.Numeric(20,6), nullable=False)
+    baja = db.Column(db.Date, nullable=False, default=date(1900, 1, 1))
+
+    def __init__(self, descripcion, valor, baja=date(1900, 1, 1)):
+        self.descripcion = descripcion
+        self.valor = valor
+        self.baja = baja
+        
+class RendicionesCaja(db.Model):
+    __tablename__ = 'rendiciones_caja'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    fecha = db.Column(db.Date, nullable=False)
+    idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    idpunto_vta = db.Column(db.Integer, db.ForeignKey('puntos_venta.id'), nullable=False)
+    total_ventas = db.Column(db.Numeric(20,6), nullable=False, default=0)
+    total_efectivo = db.Column(db.Numeric(20,6), nullable=False, default=0)
+
+    def __init__(self, fecha, idusuario, idpunto_vta, total_ventas, total_efectivo):
+        self.fecha = fecha
+        self.idusuario = idusuario
+        self.idpunto_vta = idpunto_vta
+        self.total_ventas = total_ventas
+        self.total_efectivo = total_efectivo
+        
+class ItemsRendicionesCaja(db.Model):
+    __tablename__ = 'items_rendiciones_caja'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idrendicion = db.Column(db.Integer, db.ForeignKey('rendiciones_caja.id'), nullable=False)
+    idmoneda_billete = db.Column(db.Integer, db.ForeignKey('monedas_billetes.id'), nullable=False)
+    cantidad = db.Column(db.Numeric(20,6), nullable=False)
+
+    def __init__(self, idrendicion, idmoneda_billete, cantidad):
+        self.idrendicion = idrendicion
+        self.idmoneda_billete = idmoneda_billete
+        self.cantidad = cantidad
+        
+        

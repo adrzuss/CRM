@@ -92,3 +92,10 @@ def flujo_fondos():
             estadoResultado.append([compras[1], format_currency(compras[0]), 'Compra/Gasto'])
         
     return render_template('flujo-fondos.html', desde=desde, hasta=hasta, detalles=detalles, montos=montos, valoresVtasCompras=ventasCompras['valores'], detalleVtasCompras=ventasCompras['detalle'], detalleGastosLeyendas=detalleGastos['detalle'], detalleGastosValores=detalleGastos['valores'], detallesCtasCtes=detallesCtasCtes, valoresCtasCtes=valoresCtasCtes, estadoResultado=estadoResultado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+
+@bp_fondos.route('/rendicionCaja', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def rendicionCaja():
+    pass

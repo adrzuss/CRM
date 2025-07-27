@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2 class="m-3">Rendición de caja</h2>
+
+    <div class="row justify-content-center align-items-center">
+        <div class="col-10">
+            {% if rendicion['id'] %}
+                <form action="{{ url_for('fondos.rendicionCaja', idRendicion=rendicion['id']) }}" id="rendicion_form" method="POST">
+            {% else %}
+                <form action="{{ url_for('fondos.rendicionCaja', idRendicion=0) }}" id="rendicion_form" method="POST">
+            {% endif %}
+                <div class="card">
+                    <h6 class="m-3">Detalles de la caja</h6>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-2">
+                                <label for="idRendicion" class="label-input">#</label>
+                                {% if rendicion['id'] %}
+                                    <input class="form-control" type="number" name="idRendicion" id="idRendicion" value="{{ rendicion['id'] }}" readonly>
+                                {% else %}
+                                    <input class="form-control" type="number" name="idRendicion" id="idRendicion" value="0" readonly>
+                                {% endif %}
+                            </div>
+                            <div class="col-2">
+                                <label for="fecha" class="label-input">Fecha:</label>
+                                <input class="form-control" type="date" name="fecha" id="fecha" value="{{ rendicion['fecha'] }}" required>
+                            </div>
+                            <div class="col-3">
+                                <label for="usuario" class="label-input">Usuario:</label>
+                                <select class="form-select" name="usuario" id="usuario" aria-label="Seleccione un usuario" required>
+                                    <option value="">Seleccione un usuario</option>
+                                    {% for usuario in usuarios %}
+                                        {% if usuario.id == rendicion['idusuario'] %}
+                                            <option value="{{ usuario.id }}" selected>{{ usuario.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>    
+                            </div>    
+                            <div class="col-3">
+                                <label for="sucursal" class="label-input">Sucursal:</label>
+                                <select class="form-select" name="sucursal" id="sucursal" aria-label="Seleccione una sucursal" required>
+                                    <option value="">Seleccione una sucursal</option>
+                                    {% for sucursal in sucursales %}
+                                        {% if sucursal.id == rendicion['idsucursal'] %}
+                                            <option value="{{ sucursal.id }}" selected>{{ sucursal.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-4">
+                                <label for="tipo-rendicion" class="label-input">Tipo de rendición:</label>
+                                <select class="form-select" name="tipo-rendicion" id="tipo-rendicion" aria-label="Seleccione un tipo de rendición" required>
+                                    <option value="">Seleccione un tipo de rendición</option>
+                                    {% for tipo_rendicion in tipos_rendicion %}
+                                        {% if tipo_rendicion['id'] == rendicion['idtipo_rendicion'] %}
+                                            <option value="{{ tipo_rendicion['id'] }}" selected>{{ tipo_rendicion['nombre'] }}</option>
+                                        {% else %}
+                                            <option value="{{ tipo_rendicion['id'] }}">{{ tipo_rendicion['nombre'] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <small id="helpId" class="form-text text-muted">Seleccione el tipo de rendición</small>
+                            </div>
+                            <div class="col-2">
+                                <label for="punto-vta" class="label-input">Punto de venta:</label>
+                                <select class="form-select" name="punto-vta" id="punto-vta" aria-label="Seleccione un punto de venta" required>
+                                    <option value="">Seleccione un punto de venta</option>
+                                    {% for puntoVta in puntosVta %}
+                                        {% if puntoVta.id == rendicion['idpunto_vta'] %}
+                                            <option value="{{ puntoVta.id }}" selected>{{ puntoVta.punto_vta }}</option>
+                                        {% else %}
+                                            <option value="{{ puntoVta.id }}">{{ puntoVta.punto_vta }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>    
+                            </div>    
+                            <div class="col-3">
+                                <label for="venta-total" class="label-input">Venta total:</label>
+                                <input class="form-control" type="number" name="venta-total" id="venta-total" value="{{ rendicion['venta_total'] }}" readonly>
+                            </div>
+                            <div class="col-3">
+                                <label for="efectivo-total" class="label-input">Total efectivo:</label>
+                                <input class="form-control" type="number" name="efectivo-total" id="efectivo-total" value="{{ rendicion['efectivo_total'] }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <h6 class="m-3">Valores rendidos</h6>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-borderless table-dark align-middle" id="items-rendidos">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Moneda/billete</th>
+                                        <th>Valor</th>
+                                        <th>Cantidad</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    {% for valor in valoresRendidos %}
+                                        <tr class="table-success">
+                                            <td scope="row">{{ valor['id'] }} <input type="hidden" name="item[{{loop.index}}][idMoneda]" value="{{ valor['idmoneda_billete'] }}"></td>
+                                            <td>{{ valor['descripcion'] }}</td>
+                                            <td> <input type="number" class="form-control valor" name="item[{{loop.index}}][valor]" id="valor" value="{{valor['valor']}}" readonly /></td>
+                                            <td> <input type="number" class="form-control cantidad" name="item[{{loop.index}}][cantidad]" id="cantidad" aria-describedby="helpId"  placeholder="Cantidad" value="{{ valor['cantidad'] }}" onfocus="this.select()" /></td>
+                                            {% if valor['total'] > 0 %}
+                                                <td> <input type="number" class="form-control total text-success fw-bold" name="item[{{loop.index}}][total]" id="total" aria-describedby="helpId"  placeholder="Total" value="{{ valor['total'] }}" readonly /></td>
+                                            {% else %}
+                                                <td> <input type="number" class="form-control total text-danger" name="item[{{loop.index}}][total]" id="total" aria-describedby="helpId"  placeholder="Total" value="{{ valor['total'] }}" readonly /></td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        Total de rendición <span class="precio-destacado" id="total-rendido">{{ "${:,.2f}".format(totalRendido) }}</span>
+                    </div>
+                </div>
+                <div class="mt-3 mb-3">
+                    <button class="btn btn-primario" type="submit">Grabar rendición</button>
+                    <a href="{{ url_for('fondos.rendicionCaja', idRendicion=0) }}" class="btn btn-secundario">Nueva rendición</a>
+                </div>
+            </form>    
+        </div>
+
+    </div>
+    
+
+<script>
+    let isFormSubmited = false;
+    const items = document.querySelector("#items-rendidos tbody");
+    const totalRendidoSpan = document.getElementById("total-rendido");
+
+    const fehca = document.getElementById("fecha");
+    fecha.focus();
+    if (fecha.value == "") {
+        fecha.value = new Date().toISOString().split('T')[0];
+    };    
+
+    function actualizarTotalGeneral() {
+        let suma = 0;
+        items.querySelectorAll(".total").forEach(input => {
+            suma += parseFloat(input.value) || 0;
+        });
+        totalRendidoSpan.textContent = suma.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    }
+
+    items.addEventListener("input", function(event) {
+        if (event.target.classList.contains("cantidad")) {
+            const row = event.target.closest("tr");
+            const cantidad = parseFloat(event.target.value) || 0;
+            const valor = parseFloat(row.querySelector(".valor").value) || 0;
+            const total = (cantidad * valor).toFixed(2);
+            row.querySelector(".total").value = total;
+            if (total > 0) {
+                row.querySelector(".total").classList.remove("text-danger");
+                row.querySelector(".total").classList.add("text-success");
+                row.querySelector(".total").classList.add("fw-bold");
+            } else {
+                row.querySelector(".total").classList.remove("text-success");
+                row.querySelector(".total").classList.remove("fw-bold");
+                row.querySelector(".total").classList.add("text-danger");
+            }
+            actualizarTotalGeneral();
+        }
+    });
+    
+    document.getElementById("rendicion_form").addEventListener("submit", function (event) {
+        let suma = 0;
+        items.querySelectorAll(".total").forEach(input => {
+            suma += parseFloat(input.value) || 0;
+        });
+        if (suma <= 0) {
+            event.preventDefault();
+            alert("Debe agregar al menos un item a la caja de rendición");
+            event.preventDefault();
+            return false;
+        }
+        if (confirm("¿Grabar la caja de rendición?") === false) {
+            event.preventDefault();
+        } else {
+            isFormSubmited = true;
+        }
+    });    
+
+    actualizarTotalGeneral();
+</script>
+{% endblock %}

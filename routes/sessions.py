@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g
+from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g, jsonify
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 from models.sucursales import Sucursales
 from utils.utils import check_session
@@ -54,6 +54,13 @@ def usuarios():
     else:
         usuarios = []
         return render_template('usuarios.html', usuarios=usuarios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_sesiones.route('/getUsuario/<id>')
+@check_session
+def getUsuario(id):
+    usuario, status_code = get_usuario(id)
+    return jsonify({'success': True, 'usuario': usuario})
+    
 
 @bp_sesiones.route('/registro')
 def registro():

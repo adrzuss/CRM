@@ -37,6 +37,15 @@ def get_comprobantes():
     tipo_comprobantes = TipoComprobantes.query.all()
     return tipo_comprobantes
 
+def getPuntosVta():
+    puntos_vta = PuntosVenta.query.all()
+    return puntos_vta
+
+def getSucursales():
+    sucursales = Sucursales.query.all()
+    return sucursales
+
+
 def save_and_update_lista_precios(nombre_lista_precio, markup):
     lista_precio = ListasPrecios(nombre_lista_precio, markup)
     db.session.add(lista_precio)

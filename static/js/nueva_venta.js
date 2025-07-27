@@ -624,9 +624,7 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
   nuevoInputCodigo.focus();
 });
 
-tablaItems.addEventListener(
-  "blur",
-  (itemDiv) => {
+tablaItems.addEventListener("blur", (itemDiv) => {
     if (itemDiv.target.classList.contains("codigo-articulo")) {
       const codigo = itemDiv.target.value;
       const idlista = document.getElementById("idlista").value;

@@ -1,0 +1,31 @@
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Ingreso de monedas y billetes</h6>
+                    <form action="{{ url_for('configuraciones.add_monedabillete') }}" method="post">
+                        <div class="mb-3"> 
+                            <label for="descripcion">Descripcion</label>
+                            <input class="form-control" type="text" name="descripcion" id="descripcion" placeholder="Descripción de la moneda/billete" required>
+                        </div>
+                        <div class="mb-3"> 
+                            <label for="valor">Valor</label>
+                            <input class="form-control" type="number" name="valor" id="valor" placeholder="Valor de la moneda/billete" required>
+                        </div>
+                        <div class="mb-3"> 
+                            <label for="baja">Fecha de baja</label>
+                            <input class="form-control" type="date" name="baja" id="baja" placeholder="Fecha de baja" readonly>
+                        </div>
+
+                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-monedas-billetes.html' %}
+        </div>     
+    </div>      
+

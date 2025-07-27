@@ -70,7 +70,20 @@
                                 <label for="licencia">Licencia</label>
                                 <input class="form-control" type="text" name="licencia" id="licencia" value="{{ configuracion.licencia }}" readonly>
                             </div>    
-                        </div>    
+                        </div> 
+                        
+                        <div class="row">
+                            <div class="col-2 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="cajaConApertura" name="cajaConApertura" {{ 'checked' if configuracion.caja_con_apertura else '' }} >
+                                    <label class="form-check-label" for=""> Caja con apertura </label>
+                                </div>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <label for="idplanSistema">Su plan</label>
+                                <input class="form-control" type="text" name="idplanSistema" id="idplanSistema" value="{{ configuracion.nombre_plan }}" readonly>
+                            </div>
+                        </div>
 
                         <button class="btn btn-exito" type="submit">Grabar</button>
                     </form>

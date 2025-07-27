@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
 from sqlalchemy import and_
-from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, TipoComprobantes, TipoCompAplica
+from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, \
+                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema
 from models.sessions import Tareas
 from models.articulos import ListasPrecios
 from models.sucursales import Sucursales
@@ -8,6 +9,7 @@ from services.configs import grabar_configuracion, save_and_update_lista_precios
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
+from datetime import date
 
 bp_configuraciones = Blueprint('configuraciones', __name__, template_folder='../templates/configuracion')
 
@@ -15,7 +17,24 @@ bp_configuraciones = Blueprint('configuraciones', __name__, template_folder='../
 @check_session
 @alertas_mensajes
 def configuraciones():
-    configuracion = Configuracion.query.get(session['id_empresa'])
+    #configuracion = Configuracion.query.get(session['id_empresa'])
+    configuracion = db.session.query(Configuracion.id,
+                                     Configuracion.nombre_propietario,
+                                     Configuracion.nombre_fantasia,
+                                     Configuracion.tipo_iva,
+                                     Configuracion.tipo_documento,
+                                     Configuracion.documento,
+                                     Configuracion.telefono,
+                                     Configuracion.mail,
+                                     Configuracion.clave,
+                                     Configuracion.vencimiento,
+                                     Configuracion.licencia,
+                                     Configuracion.caja_con_apertura,
+                                     Configuracion.idplan_sistema,
+                                     PlanesSistema.nombre.label('nombre_plan')
+                                     ).join(PlanesSistema, PlanesSistema.id == Configuracion.idplan_sistema
+                                     ).filter(Configuracion.id == session['id_empresa']).first()
+    print(configuracion)                                 
     alcIva = AlcIva.query.all()
     listas_precios = ListasPrecios.query.all()
     tipo_ivas = TipoIva.query.all()
@@ -24,7 +43,8 @@ def configuraciones():
     alcIB = AlcIB.query.all()
     planCtas = PlanCtas.query.all()
     categorias = Categorias.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    monedasBilletes = MonedasBilletes.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -115,6 +135,24 @@ def add_planCtas():
     except Exception as e:
         flash(f'Error grabando Plan ctas.: {e}', 'error')
         return redirect('configuraciones')    
+
+@bp_configuraciones.route('/add_monedabillete', methods=['POST'])
+@check_session
+def add_monedabillete():
+    try:
+        descripcion = request.form['descripcion']
+        valor = request.form['valor']
+        baja = request.form['baja']
+        if not baja:
+            baja = date(1900, 1, 1)
+        monedaBillete = MonedasBilletes(descripcion, valor, baja)
+        db.session.add(monedaBillete)
+        db.session.commit()
+        flash('Moneda/billete grabado')
+        return redirect('configuraciones')
+    except Exception as e:
+        flash(f'Error grabando Plan ctas.: {e}', 'error')
+        return redirect('configuraciones')        
     
 @bp_configuraciones.route('/abm_sucursales', methods=['GET', 'POST'])
 @check_session
@@ -189,3 +227,11 @@ def checkCuit(cuit, tipo_doc):
     else:
         cuitValido = True
     return jsonify(success=True, cuitValido=cuitValido) 
+
+@bp_configuraciones.route('/planes_opciones')
+@check_session
+@alertas_mensajes
+def planes_opciones():
+    planes = PlanesSistema.query.all()
+    opciones = OpcionesPlanSistema.query.all()
+    return render_template('planes-opciones.html', planes=planes, opciones=opciones, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

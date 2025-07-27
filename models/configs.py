@@ -10,6 +10,18 @@ class TipoIva(db.Model):
     def __init__(self, descripcion):
         self.descripcion = descripcion
 
+class PlanesSistema(db.Model):
+    __tablename__ = 'planes_sistema'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    
+class OpcionesPlanSistema(db.Model):
+    __tablename__ = 'opciones_plan_sistema'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_plan_sistema = db.Column(db.Integer, db.ForeignKey('planes_sistema.id'), nullable=False)
+    nombre = db.Column(db.String(100), nullable=False)
+    habilitada = db.Column(db.Boolean, nullable=False, default=False)
+
 class Configuracion(db.Model):
     __tablename__ = 'configuracion'
     id = db.Column(db.Integer, primary_key=True)
@@ -29,8 +41,10 @@ class Configuracion(db.Model):
     paso_cert = db.Column(db.String(200))
     paso_key = db.Column(db.String(200))
     dias_vto_cta_cte = db.Column(db.SmallInteger, nullable=False, default=0)
+    caja_con_apertura = db.Column(db.Boolean, nullable=False, default=False)
+    idplan_sistema = db.Column(db.Integer, db.ForeignKey('planes_sistema.id'), nullable=False)
     
-    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia):
+    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia, caja_con_apertura, idplan_sistema):
         self.nombre_propietario = nombre_propietario
         self.nombre_fantasia = nombre_fantasia
         self.tipo_iva = tipo_iva
@@ -41,6 +55,8 @@ class Configuracion(db.Model):
         self.clave = clave
         self.vencimiento = vencimiento
         self.licencia = licencia
+        self.caja_con_apertura = caja_con_apertura
+        self.idplan_sistema = idplan_sistema
 
 class Categorias(db.Model):
     __tablename__ = 'categorias'
@@ -212,19 +228,30 @@ class MonedasBilletes(db.Model):
         self.valor = valor
         self.baja = baja
         
+class TipoRendiciones(db.Model):        
+    __tablename__ = 'tipo_rendiciones'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    
+    def __init__(self, nombre):
+        self.nombre = nombre
 class RendicionesCaja(db.Model):
     __tablename__ = 'rendiciones_caja'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     fecha = db.Column(db.Date, nullable=False)
     idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     idpunto_vta = db.Column(db.Integer, db.ForeignKey('puntos_venta.id'), nullable=False)
+    idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'), nullable=False)
+    idtipo_rendicion = db.Column(db.Integer, db.ForeignKey('tipo_rendiciones.id'), nullable=False)
     total_ventas = db.Column(db.Numeric(20,6), nullable=False, default=0)
     total_efectivo = db.Column(db.Numeric(20,6), nullable=False, default=0)
 
-    def __init__(self, fecha, idusuario, idpunto_vta, total_ventas, total_efectivo):
+    def __init__(self, fecha, idusuario, idpunto_vta, idsucursal, idtipo_rendicion, total_ventas, total_efectivo):
         self.fecha = fecha
         self.idusuario = idusuario
         self.idpunto_vta = idpunto_vta
+        self.idsucursal = idsucursal
+        self.idtipo_rendicion = idtipo_rendicion
         self.total_ventas = total_ventas
         self.total_efectivo = total_efectivo
         

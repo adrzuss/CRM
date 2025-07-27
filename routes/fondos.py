@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, request, g
+from flask import Blueprint, render_template, request, g, redirect, url_for, flash
 from datetime import date, datetime
 from sqlalchemy import func, and_
 from services.ventas import get_vta_desde_hasta
 from models.sessions import Usuarios
 from services.fondos import obtener_total_ventas_por_tipo_ingreso, obtener_total_compras_por_tipo_ingreso, get_ventas_compras, \
-                            get_detalle_gastos, get_saldo_ctas_ctes_cli, get_saldo_ctas_ctes_prov, get_estado_resultado
+                            get_detalle_gastos, get_saldo_ctas_ctes_cli, get_saldo_ctas_ctes_prov, get_estado_resultado, \
+                            getTiposRendiciones, getRendicion, getMonedasBilletes, procesarRendicion, getRendiciones
+from services.sessions import get_usuarios
+from services.configs import getPuntosVta, getSucursales    
 from utils.db import db
 from utils.utils import check_session, format_currency
 from utils.msg_alertas import alertas_mensajes
@@ -94,8 +97,44 @@ def flujo_fondos():
     return render_template('flujo-fondos.html', desde=desde, hasta=hasta, detalles=detalles, montos=montos, valoresVtasCompras=ventasCompras['valores'], detalleVtasCompras=ventasCompras['detalle'], detalleGastosLeyendas=detalleGastos['detalle'], detalleGastosValores=detalleGastos['valores'], detallesCtasCtes=detallesCtasCtes, valoresCtasCtes=valoresCtasCtes, estadoResultado=estadoResultado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 
-@bp_fondos.route('/rendicionCaja', methods=['GET', 'POST'])
+@bp_fondos.route('/rendicionCaja/<idRendicion>', methods=['GET', 'POST'])
 @check_session
 @alertas_mensajes
-def rendicionCaja():
-    pass
+def rendicionCaja(idRendicion):
+    if request.method == 'POST':
+        try:
+            idRendicion, mensaje = procesarRendicion(request.form)
+            if idRendicion>0:
+                flash('Rendición grabada', 'success')
+                return redirect(url_for('fondos.rendicionCaja', idRendicion=idRendicion))
+            else:
+                raise Exception(f'Error grabando rendición: {mensaje}')
+        except Exception as e:
+            flash(f'Error grabando rendición: {e}', 'error')
+            return redirect(url_for('fondos.rendicionCaja', idRendicion=idRendicion))
+    else:
+        tipos_rendicion = getTiposRendiciones()
+        monedas_billetes = getMonedasBilletes()
+        sucursales = getSucursales()
+        puntosVta = getPuntosVta()
+        usuarios, resultado = get_usuarios()
+        rendicion, valoresRendidos = getRendicion(idRendicion) 
+        
+    totalRendido = 0
+    return render_template('rend-cajas.html', totalRendido=totalRendido, tipos_rendicion=tipos_rendicion, puntosVta=puntosVta, \
+                           usuarios=usuarios, rendicion=rendicion, valoresRendidos=valoresRendidos, monedas_billetes=monedas_billetes, \
+                           sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, \
+                           cantidadMensajes=g.cantidadMensajes)
+
+
+@bp_fondos.route('/lst_rendiciones', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def lst_rendiciones():
+    if request.method == 'GET':
+        desde = request.args.get('desde', date.today())
+        hasta = request.args.get('hasta', date.today())
+        rendiciones = getRendiciones(desde, hasta)
+    else:
+        return redirect(url_for('fondos.lst_rendiciones'))
+    return render_template('lst-rendiciones.html', rendiciones=rendiciones, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

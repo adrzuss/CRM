@@ -12,7 +12,7 @@ from models.clientes import Clientes
 from models.articulos import Articulo, ListasPrecios, Stock
 from models.ctactecli import CtaCteCli
 from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva, \
-                           TipoCompAplica
+                           TipoCompAplica, Localidades, Provincias
 from models.creditos import Creditos 
 from sqlalchemy import func, extract, text, and_
 from sqlalchemy.exc import SQLAlchemyError
@@ -217,14 +217,16 @@ def generar_factura(id_factura):
                             Clientes.nombre,
                             Clientes.documento,
                             Clientes.direccion,
-                            Clientes.localidad,
-                            Clientes.provincia,
+                            Localidades.localidad.label('localidad'),
+                            Provincias.provincia.label('provincia'),
                             TipoIva.descripcion.label('condicion_iva'),
                             TipoComprobantes.id_afip.label('tipo_comprobante'),
                             TipoComprobantes.letra.label('letra_comprobante')) \
                             .join(Clientes, Clientes.id == Factura.idcliente) \
                             .join(TipoIva, TipoIva.id == Clientes.id_tipo_iva) \
                             .join(TipoComprobantes, TipoComprobantes.id == Factura.idtipocomprobante) \
+                            .outerjoin(Localidades, Localidades.id == Clientes.idlocalidad) \
+                            .outerjoin(Provincias, Provincias.id == Clientes.idprovincia) \
                             .filter(Factura.id == id_factura) \
                             .first()        
                             
@@ -924,7 +926,7 @@ def procesar_recibo_cta_cte(form, ctactecli):
             idlista=1,
             id_tipo_comprobante=12, #Recibo
             fecha=form['fecha'],
-            total= Decimal(ctactecli.debe) - Decimal(ctactecli.haber),
+            total= Decimal(ctactecli.haber),
             iva=0,
             exento=0,
             impint=0,

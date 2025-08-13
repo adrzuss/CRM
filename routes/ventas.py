@@ -166,22 +166,28 @@ def ventasClientes():
 @alertas_mensajes
 def ventasUnCliente():
     if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
-        cliente = {}
-        ventas = []
-        articulos = []
+        desde = request.args.get('desde', date.today())
+        hasta = request.args.get('hasta', date.today())
+        id = request.args.get('idcliente', None)
+        if id:
+            
+            cliente = Clientes.query.get(id)
+            ventas = db.session.execute(text("CALL ventas_un_cliente(:idcliente, :desde, :hasta)"),
+                            {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
+            articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
+                            {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
+        else:
+            cliente = []
+            ventas = []
+            articulos = []    
+        return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     else:
-        id = request.form['idCliente']
-        desde = request.form['fechaDesde']
-        hasta = request.form['fechaHasta']
+        id = request.form['idcliente']
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        return redirect(url_for('ventas.ventasUnCliente', idcliente=id, desde=desde, hasta=hasta))
         
-        cliente = Clientes.query.get(id)
-        ventas = db.session.execute(text("CALL ventas_un_cliente(:idcliente, :desde, :hasta)"),
-                         {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
-        articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
-                         {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    
 
 @bp_ventas.route('/ventasVendedores', methods=['GET', 'POST'])
 @check_session

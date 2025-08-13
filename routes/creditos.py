@@ -335,16 +335,14 @@ def vencimientos_cuotas():
 @check_session
 @alertas_mensajes
 def seleccionar_cuota():
-    print("Entrando a seleccionar cuota")
     if request.method == 'GET':
         # Lógica para mostrar el formulario de cobranza
-        entidades = EntidadesCred.query.all()
-        print("Seleccion de cuotas por GET")
-        return render_template('seleccion-cuotas-pago.html', entidades=entidades, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        idcliente = request.args.get('idcliente', None)
+        nom_cliente = request.args.get('nom_cliente', None)
+        return render_template('seleccion-cuotas-pago.html', idcliente=idcliente, nom_cliente=nom_cliente, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
         
     if request.method == 'POST':
         # Lógica para procesar el formulario de cobranza    
-        print("Seleccion de cuotas por POST")
         return redirect(url_for('creditos.seleccionar_cuota'))
     
 @bp_creditos.route('/cuotas_pendientes/<idcliente>')
@@ -352,7 +350,7 @@ def seleccionar_cuota():
 def cuotas_pendientes(idcliente):
     try:
         cuotasPendientes = get_cuotas_pendientes(idcliente)
-        return jsonify(success=True, cuotas = [{'id': cuota[0], 'monto_total': cuota[1], 'numero_cuota': cuota[2], 'fecha_vencimiento': cuota[3], 'monto': cuota[5], 'dias_mora': 0 if cuota[4] <= 0 else cuota[4]} for cuota in cuotasPendientes])
+        return jsonify(success=True, cuotas = [{'id': cuota[0], 'monto_credito': cuota[1], 'numero_cuota': cuota[2], 'fecha_vencimiento': cuota[3], 'dias_mora': 0 if cuota[4] <= 0 else cuota[4], 'monto': cuota[5], 'interes_mora': cuota[6], 'total_a_pagar': cuota[7]} for cuota in cuotasPendientes])
     except Exception as e:
         print(f"Error al obtener las cuotas pendientes: {e}")
         return jsonify(success=False, mensaje=f'Error al obtener las cuotas pendientes: {e}')    
@@ -361,7 +359,6 @@ def cuotas_pendientes(idcliente):
 @check_session
 @alertas_mensajes
 def cobrar_cuotas():
-    print("Entrando a cobrar cuotas")
     if request.method == 'POST':
         data = request.get_json()
         cuotas = data.get('cuotas', [])

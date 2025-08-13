@@ -79,6 +79,10 @@
                                     <label class="form-check-label" for=""> Caja con apertura </label>
                                 </div>
                             </div>
+                            <div class="col-2 mb-3">
+                                <label for="interesMora">Interes díario por mora</label>
+                                <input class="form-control" type="number" max="1" min="0" step="0.001" name="interesMora" id="interesMora" value="{{ configuracion.interes_mora_creditos }}" required>
+                            </div>
                             <div class="col-4 mb-3">
                                 <label for="idplanSistema">Su plan</label>
                                 <input class="form-control" type="text" name="idplanSistema" id="idplanSistema" value="{{ configuracion.nombre_plan }}" readonly>

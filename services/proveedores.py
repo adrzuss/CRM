@@ -1,10 +1,11 @@
 from flask import request, session
-from datetime import datetime
-from models.proveedores import Proveedores, FacturaC, ItemC, PagosFC, RemitoFacturas
+from datetime import date, datetime
+from models.proveedores import Proveedores, FacturaC, ItemC, ItemsOP, PagosFC, RemitoFacturas
 from models.articulos import Articulo, Stock
 from models.ctacteprov import CtaCteProv
 from models.configs import AlcIva
 from services.articulos import actualizarStock, get_articulo_by_codigo, actulizarProvByArt
+from services.bancos import BancoPropioService, BancoPropioProveedorService
 from utils.db import db
 from decimal import Decimal
 from models.configs import PagosCobros
@@ -111,7 +112,7 @@ def procesar_pagos(idfactura, idproveedor, fecha, efectivo, ctacte):
             db.session.add(PagosFC(idfactura=idfactura, idpago=1, tipo=1, total=Decimal(efectivo)))
         if ctacte > 0:
             db.session.add(PagosFC(idfactura=idfactura, idpago=3, tipo=3, total=Decimal(ctacte)))
-            db.session.add(CtaCteProv(idproveedor=idproveedor, fecha=fecha, debe=Decimal(0), haber=Decimal(ctacte)))
+            db.session.add(CtaCteProv(idproveedor=idproveedor, idfactura=idfactura, fecha=fecha, debe=Decimal(0), haber=Decimal(ctacte)))
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando pagos: {e}")
 
@@ -271,3 +272,127 @@ def procesar_itemsR(form, idremito, id_sucursal, idproveedor):
                     actulizarProvByArt(codigo, articulo.id, idproveedor)
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")
+    
+#--------------- Ordenes de pago ------------------
+
+def get_movs_pendientes_ctacte(idproveedor):
+    try:
+        movs_ctacte = db.session.execute(text("CALL get_movs_cc_prov(:idproveedor)"), {'idproveedor': idproveedor}).all()
+        return movs_ctacte
+    except SQLAlchemyError as e:
+        print(f"Error obteniendo movimientos de cta. cte.: {e}")
+        raise Exception(f"Error obteniendo movimientos de cta. cte.: {e}")
+
+def procesar_nueva_op(form, id_sucursal):
+    try:
+        idproveedor = form['idproveedor']
+        total = float(form['total'])
+        efectivo = float(form['efectivo'])
+        fecha = form['fecha']
+        
+        # items = form['items']
+        # Crear la factura
+        nro_factura = '0000-00000000'
+        nueva_op = FacturaC(idproveedor=idproveedor, nro_comprobante=nro_factura, fecha=fecha, periodo=fecha, idtipocomprobante=14, idplancuenta=0, idsucursal=id_sucursal, idusuario=session['user_id'], total=total)
+        db.session.add(nueva_op)
+        db.session.flush()
+        idop = nueva_op.id
+        # Graba movimiento en cta. cte.
+        
+        # Armar pago con cheques
+        cheques = []
+        for key, value in form.items():
+            if key.startswith('cheque') and key.endswith('[numero]'):
+                index = key.split('[')[1].split(']')[0]
+                idBanco = form[f'cheque[{index}][idbanco]']
+                numero = form[f'cheque[{index}][numero]']
+                vencimiento = form[f'cheque[{index}][vto]']
+                importe = Decimal(form[f'cheque[{index}][monto]'])
+                cheques.append({'idbanco': idBanco, 'numero': numero, 'vencimiento': vencimiento, 'importe': importe})
+                
+        # Registrar los pagos
+        pagoTotal = procesar_pagos_op(idop, idproveedor, fecha, efectivo, cheques)
+        
+        nueva_op.total = pagoTotal
+        procesar_movs_cc(idop, idproveedor, fecha, pagoTotal, form)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        print(f"Error grabando orden de pago: {e}")
+        raise Exception(f"Error grabando orden de pago: {e}")
+    
+def procesar_pagos_op(idop, idproveedor, fecha, efectivo, cheques):
+    pagoTotal = 0
+    try:
+        if efectivo > 0:
+            pagoTotal += Decimal(efectivo)
+            db.session.add(PagosFC(idfactura=idop, idpago=1, tipo=1, total=Decimal(efectivo)))
+        if cheques:
+            hoy = date.today()
+            totalCheques = 0
+            for cheque in cheques:
+                vencimiento = datetime.strptime(cheque['vencimiento'], "%Y-%m-%d").date()
+                numero = cheque['numero']
+                importe = cheque['importe']
+                idbanco = cheque['idbanco']
+                totalCheques += Decimal(cheque['importe'])
+                cheque = BancoPropioService.crear(fecha_emision=hoy, fecha_vencimiento=vencimiento, tipo_movimiento=1, nro_movimiento=numero, monto=importe, id_banco=idbanco)
+                BancoPropioProveedorService.insertar_desde_op(idproveedor, cheque.id)
+            pagoTotal += Decimal(totalCheques)
+            db.session.add(PagosFC(idfactura=idop, idpago=6, tipo=6, total=Decimal(totalCheques)))    
+        return pagoTotal
+    except SQLAlchemyError as e:
+        print(f"Error procesando pagos: {e}")
+        raise Exception(f"Error procesando pagos: {e}")
+
+def procesar_movs_cc(idop, idproveedor, fecha, total, form):
+    try:
+        saldo = Decimal(total)
+        # Iterar por los ítems y verificar los checkboxes
+        for key, value in form.items():
+            if key.startswith('mov_cc') and key.endswith('[check]'):  # Verificar si es un checkbox
+                index = key.split('[')[1].split(']')[0]  # Obtener el índice del ítem
+                if value == 'on':  # Si el checkbox está marcado
+                    # Obtener el ID del remito asociado
+                    id_mov_cc = form[f'mov_cc_id[{index}][id]']
+                    print('vamos a buscar el saldo')
+                    resultado = db.session.execute(text("CALL get_saldo_mov_ccp(:idpro, :idmov)"), {'idpro': idproveedor, 'idmov': id_mov_cc}).first()
+                    print(f'El resultado es: {resultado}')
+                    idfactura = resultado[0]
+                    saldoMov = resultado[1]
+                    print(f'idfactura: {idfactura}, saldoMov: {saldoMov}')
+                    if saldoMov > saldo:
+                        itemsOP = ItemsOP(idop=idop, idfactura=idfactura, pago=Decimal(saldo))
+                    else:    
+                        if (saldoMov > 0) and (saldo >= 0):
+                                itemsOP = ItemsOP(idop=idop, idfactura=idfactura, pago=Decimal(saldoMov))
+                    saldo -= saldoMov        
+                    # Procesar el remito seleccionado (por ejemplo, asociarlo a la factura)
+                    db.session.add(itemsOP)
+        
+    except SQLAlchemyError as e:
+        print(f"Error procesando movimientos de cta. cte.: {e}")
+        raise Exception(f"Error procesando movimientos de cta. cte.: {e}")
+    
+    try:
+        if saldo > 0:
+            print(f'Saldo positivo: {saldo}')
+            db.session.add(CtaCteProv(idproveedor=idproveedor, idfactura=idop, fecha=fecha, debe=Decimal(saldo), haber=0.0))
+        if (total-saldo != 0):
+            ctacteprov = CtaCteProv(idproveedor=idproveedor, idfactura=idop, fecha=fecha, debe=(total-saldo), haber=0.0)
+            db.session.add(ctacteprov)    
+    except SQLAlchemyError as e:
+        print(f"Error procesando saldo a favor movimientos de cta. cte.: {e}")
+        raise Exception(f"Error procesando saldo a favor movimientos de cta. cte.: {e}")
+    
+def get_ordenes_pago(desde, hasta):
+    try:
+        return db.session.query(Proveedores.nombre, 
+                                FacturaC.id,
+                                FacturaC.nro_comprobante, 
+                                FacturaC.fecha, 
+                                FacturaC.total
+                                ).join(Proveedores, Proveedores.id == FacturaC.idproveedor \
+                                ).filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante == 14).all()
+    except SQLAlchemyError as e:
+        print(f"Error obteniendo movimientos de cta. cte.: {e}")
+        raise Exception(f"Error obteniendo movimientos de cta. cte.: {e}")

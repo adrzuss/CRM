@@ -80,7 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
  // Validar y guardar
  document.getElementById("form-cambio-precios").addEventListener("submit", function (event) {
-    console.log("Formulario enviado");
     if (document.querySelectorAll("#tabla-items tbody").length === 0) {
       event.preventDefault();
       alert("Debe agregar al menos un item a la factura");
@@ -109,7 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         const marca = document.getElementById('marca').value;
         const rubro = document.getElementById('rubro').value;
-        console.log('Marca:', marca, 'Rubro: ', rubro);
         const listaPrecio = document.getElementById('lista_precio').value;
         const porcentaje = document.getElementById('porcentaje').value;
         if (!listaPrecio) {
@@ -125,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
             response = await fetch(`${BASE_URL}/articulos/filtrar_articulos/${marca}/${rubro}/${listaPrecio}/${porcentaje}`);
             if (!response.ok) throw new Error('Error al cargar los artículos');
             const data = await response.json();
-            console.log(data);
             if (data.success) {
                 cargarArticulosEnTabla(data.articulos);
             }

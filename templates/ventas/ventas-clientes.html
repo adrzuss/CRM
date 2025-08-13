@@ -33,9 +33,9 @@
     </div>
     
     <div class="row justify-content-center align-items-center">
-        <div class="col-8">
+        <div class="col-10">
             <div class="table-responsive m-3" >
-                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
+                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
                     <thead class="table-dark">
                         <tr>
                             <th>#ID Cliente</th>
@@ -71,8 +71,8 @@
         </div>    
     </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/dataTables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
+    <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatable/dataTables.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
     
 {% endblock %}

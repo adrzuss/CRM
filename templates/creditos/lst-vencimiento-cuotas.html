@@ -38,10 +38,13 @@
                 <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
                     <thead class="table-dark">
                         <tr>
-                            <th># Credito</th>
-                            <th># Cuota</th>
+                            <th width="7%">Crédito</th>
+                            <th width="5%">N° Cuota</th>
                             <th>Cliente</th>
-                            <th>Vencimiento</th>
+                            <th width="5%">Vencimiento</th>
+                            <th>Cuota</th>
+                            <th width="5%">Dias mora</th>
+                            <th>Interes</th>
                             <th>Total</th>
                             <th>Acciones</th>
                         </tr>
@@ -49,13 +52,27 @@
                     <tbody class="table-group-divider">
                         {% for cuota in cuotas %}        
                             <tr class="table-light">
-                                <td scope="row">{{ cuota.idcredito }}</td>
-                                <td>{{ cuota.numero_cuota }}</td>
-                                <td>{{ cuota.nombre_cliente }}</td>
-                                <td>{{ cuota.fecha_vencimiento.strftime("%d-%m-%Y") }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(cuota.monto) }}</td>
+                                {% if cuota.dias_mora == 0 %}
+                                    <td scope="row">{{ cuota.idcredito }}</td>
+                                    <td>{{ cuota.numero_cuota }}</td>
+                                    <td>{{ cuota.nombre_cliente }}</td>
+                                    <td>{{ cuota.fecha_vencimiento }}</td>
+                                    <td style="text-align:center">{{ "${:,.2f}".format(cuota.monto) }}</td>
+                                    <td style="text-align:center">{{ cuota.dias_mora }}</td>
+                                    <td style="text-align:center">{{ "${:,.2f}".format(cuota.interes) }}</td>
+                                    <td style="text-align:center">{{ "${:,.2f}".format(cuota.total_a_pagar) }}</td>
+                                {% else %}
+                                    <td scope="row" style="color: red">{{ cuota.idcredito }}</td>
+                                    <td style="color: red">{{ cuota.numero_cuota }}</td>
+                                    <td style="color: red">{{ cuota.nombre_cliente }}</td>
+                                    <td style="color: red">{{ cuota.fecha_vencimiento }}</td>
+                                    <td style="text-align:center; color: red">{{ "${:,.2f}".format(cuota.monto) }}</td>
+                                    <td style="text-align:center; color: red">{{ cuota.dias_mora }}</td>
+                                    <td style="text-align:center; color: red">{{ "${:,.2f}".format(cuota.interes) }}</td>
+                                    <td style="text-align:center; color: red">{{ "${:,.2f}".format(cuota.total_a_pagar) }}</td>
+                                {% endif %}
                                 <td>
-                                    <a href="#" class="btn btn-secundario">Cobrar</a>
+                                    <a href="{{ url_for('creditos.seleccionar_cuota', idcliente=cuota.idcliente, nom_cliente=cuota.nombre_cliente) }}" class="btn btn-secundario">Cobrar</a>
                                     <a href="{{ url_for('creditos.ver_credito', id_credito=cuota.idcredito) }}" class="btn btn-primario">Ver crédito</a>
                                 </td>
                             </tr>

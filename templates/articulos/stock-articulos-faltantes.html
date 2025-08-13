@@ -38,8 +38,8 @@
         <h3 class="m-3">Stock de artículos</h3>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="display table table-bordered table-striped" id="stockTable">
-                    <thead>
+                <table class="display table table-bordered table-striped" id="stockTable" with="100%">
+                    <thead class="thead-dark">
                         <tr>
                             <th scope="col">Código</th>
                             <th scope="col">Rubro</th>
@@ -52,7 +52,7 @@
                     </thead>
                     <tbody class="table-group-divider">
                         {% for articulo in listado %}
-                            <tr >
+                            <tr class="table-light">
                                 <td scope="row"> <a href="{{ url_for('articulos.update_articulo', id=articulo.id ) }}">{{ articulo.codigo }}</a></td>
                                 <td>{{ articulo.detalle }}</td>
                                 {% if articulo.actual < 0 %}
@@ -74,8 +74,10 @@
     </div>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
     
     <script>
         $(document).ready(function () {
@@ -128,9 +130,19 @@
                     
                 ],
                 language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                    entries: {
+                        _: "entradas",
+                        1: "entrada"
+                    },
+                    sEmptyTable: "No se encontraron resultados",
+                    sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ registros",
+                    sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                    sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
+                    sLengthMenu: "_MENU_ registros por páginas",
+                    sSearch: 'Buscar',
+                    sSearchPlaceholder: 'Buscar registros'
                 },
-                pageLength: 25,
+                pageLength: 50,
                 lengthMenu: [10, 25, 50, 100]
             });
         

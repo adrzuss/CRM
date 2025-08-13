@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="m-3">
+    <h3>Listado de movimientos de Bancos/Billeteras virtuales</h3>
+</div>
+<div class="m-2">
+    <form action="{{ url_for('bancos.listado_movs_bancos') }}" method="GET">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-2">
+                        <label for="desde">Desde</label>
+                        <input class="form-control" type="date" name="desde" id="desde" value="{{ desde }}" required>
+                    </div>
+                    <div class="col-2">
+                        <label for="hasta">Hasta</label>
+                        <input class="form-control" type="date" name="hasta" id="hasta" value="{{ hasta }}" required>
+                    </div>
+                    <div class="col-4">    
+                        <label for="entidad">Bancos/Billeteras</label>
+                        <select class="form-control" name="entidad" id="entidad" required>
+                            <option value="">Seleccione un Banco/Billetera</option>
+                            {% for banco in bancos %}
+                                {% if banco.id == entidad %}
+                                    <option value="{{ banco.id }}" selected>{{ banco.nombre }}</option>
+                                {% else %}
+                                    <option value="{{ banco.id }}">{{ banco.nombre }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">        
+                    <div class="col-3">
+                        <button class="btn btn-success" type="submit">Consultar</button>
+                    </div>    
+                </div>    
+            </div>
+        </div>
+    </form>
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5>Movimientos</h5>
+        </div>    
+        <div class="card-body mt-3">
+            {% if movimientos %}
+                <table class="table table-striped" id="dataTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Banco</th>
+                            <th>Emision</th>
+                            <th>Vencimiento</th>
+                            <th>Tipo</th>
+                            <th>N° comprobante</th>
+                            <th>Proveedor</th>
+                            <th>Importe</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimiento in movimientos %}
+                            <tr>
+                                <td>{{ movimiento.banco }}</td>
+                                <td>{{ movimiento.fecha_emision.strftime('%d-%m-%Y') }}</td>
+                                <td>{{ movimiento.fecha_vencimiento.strftime('%d-%m-%Y') }}</td>
+                                <td>{{ movimiento.tipo_movimiento }}</td>
+                                <td>{{ movimiento.nro_movimiento }}</td>
+                                {% if movimiento.proveedor %}
+                                    <td>{{ movimiento.proveedor }}</td>
+                                {% else %}
+                                    <td>Sin proveedor</td>
+                                {% endif %}
+                                <td>{{ "${:,.2f}".format(movimiento.monto) }}</td>
+                                <td>
+                                    <a class="btn btn-primario" href="#">Ver movimiento</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="ml-3">No se encontraron movimientos para los criterios seleccionados.</p>
+            {% endif %}    
+        </div>    
+    </div>    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
+{% endblock %}

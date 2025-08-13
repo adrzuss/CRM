@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Nueva Oferta</h2>
+    <form method="POST" id="formOferta">
+        <!-- Datos básicos de la oferta -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="nombre">Nombre de la oferta</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="tipo_oferta">Tipo de oferta</label>
+                    <select class="form-control" id="tipo_oferta" name="tipo_oferta" required>
+                        <option value="normal">Oferta Normal</option>
+                        <option value="vinculada">Oferta Vinculada</option>
+                        <option value="regla_seleccion">Oferta por Mayor/Menor Valor</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="tipo_descuento">Tipo de descuento</label>
+                    <select class="form-control" id="tipo_descuento" name="tipo_descuento" required>
+                        {% for tipo in tipos_descuento %}
+                        <option value="{{ tipo.value }}">{{ tipo.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="valor_descuento">Valor del descuento</label>
+                    <input type="number" step="0.01" class="form-control" id="valor_descuento" name="valor_descuento" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="cantidad_minima">Cantidad mínima</label>
+                    <input type="number" step="1" class="form-control" id="cantidad_minima" name="cantidad_minima" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label for="fecha_inicio">Fecha de inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label for="fecha_fin">Fecha de fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mt-4">
+                    <input type="checkbox" class="form-check-input" id="multiplos" name="multiplos">
+                    <label class="form-check-label" for="multiplos">Aplicar a múltiplos</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de ofertas vinculadas -->
+        <div id="seccion-vinculada" class="card mt-4" style="display: none;">
+            <div class="card-header">
+                <h5>Artículos Vinculados</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="articulo_origen">Artículo que debe comprar</label>
+                            <div class="input-group">
+                                <input type="hidden" id="id_articulo_origen" name="id_articulo_origen">
+                                <input type="text" class="form-control" id="codigo_articulo_origen" 
+                                    name="codigo_articulo_origen" placeholder="Código o descripción">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" 
+                                            onclick="limpiarArticulo('origen')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small id="desc_articulo_origen" class="form-text text-muted"></small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="articulo_destino">Artículo con descuento</label>
+                            <div class="input-group">
+                                <input type="hidden" id="id_articulo_destino" name="id_articulo_destino">
+                                <input type="text" class="form-control" id="codigo_articulo_destino" 
+                                    name="codigo_articulo_destino" placeholder="Código o descripción">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" 
+                                            onclick="limpiarArticulo('destino')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small id="desc_articulo_destino" class="form-text text-muted"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para selección de artículos -->
+        <div class="modal fade" id="modalArticulos" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Seleccionar Artículo</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Marca</th>
+                                    <th>Precio</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaArticulos">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de regla de selección -->
+        <div id="seccion-regla" class="card mt-4" style="display: none;">
+            <div class="card-header">
+                <h5>Regla de Selección</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="regla_seleccion">Aplicar descuento al artículo de:</label>
+                    <select class="form-control" id="regla_seleccion" name="regla_seleccion">
+                        {% for regla in reglas_seleccion %}
+                        <option value="{{ regla.value }}">{{ regla.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de condiciones normales -->
+        <div id="seccion-normal" class="card mt-4">
+            <div class="card-header">
+                <h5>Condiciones de la oferta</h5>
+            </div>
+            <div class="card-body">
+                <div id="condiciones-container">
+                    <div class="condicion-item row mb-3">
+                        <div class="col-md-5">
+                            <select class="form-control tipo-condicion" name="tipo_condicion[]" required>
+                                <option value="">Seleccione tipo</option>
+                                {% for tipo in tipos_condiciones %}
+                                <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <select class="form-control referencia" name="referencia[]" required disabled>
+                                <option value="">Primero seleccione un tipo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm remover-condicion">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="agregar-condicion">
+                    <i class="fas fa-plus"></i> Agregar condición
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Guardar Oferta</button>
+            <a href="{{ url_for('ofertas.ofertas') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+let articuloSeleccionTipo = null; // 'origen' o 'destino'
+
+function seleccionarArticulo(tipo, boton) {
+        const articulo = {
+            id: boton.dataset.id,
+            codigo: boton.dataset.codigo,
+            detalle: boton.dataset.detalle,
+            marca: boton.dataset.marca
+        };
+        asignarArticulo(tipo, articulo);
+        $('#modalArticulos').modal('hide');
+}
+
+function asignarArticulo(tipo, articulo) {
+        document.getElementById(`id_articulo_${tipo}`).value = articulo.id;
+        document.getElementById(`codigo_articulo_${tipo}`).value = articulo.codigo;
+        document.getElementById(`desc_articulo_${tipo}`).textContent = `${articulo.marca} - ${articulo.detalle}`;
+}
+
+function limpiarArticulo(tipo) {
+    document.getElementById(`id_articulo_${tipo}`).value = '';
+    document.getElementById(`codigo_articulo_${tipo}`).value = '';
+    document.getElementById(`desc_articulo_${tipo}`).textContent = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    
+
+    const condicionesContainer = document.getElementById('condiciones-container');
+    const btnAgregarCondicion = document.getElementById('agregar-condicion');
+
+    const tipoOferta = document.getElementById('tipo_oferta');
+    const seccionVinculada = document.getElementById('seccion-vinculada');
+    const seccionRegla = document.getElementById('seccion-regla');
+    const seccionNormal = document.getElementById('seccion-normal');
+
+    // Cargar artículos para ofertas vinculadas
+    async function buscarArticulo(tipo, codigo) {
+        try {
+            const idlista = 1;
+            let response; 
+            response = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/${idlista}`);
+            //const response = await fetch(`/articulos/buscar/${codigo}`);
+            if (!response.ok) {
+                response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${codigo}&idlista=${idlista}`);
+            }
+            if (!response.ok) {
+                console.error('Error en la búsqueda del artículo:', response.statusText);
+                throw new Error('Error en la búsqueda del artículo');
+            }
+            const data = await response.json();
+            if (data.success) {
+                // Si solo hay un artículo, seleccionarlo directamente
+                asignarArticulo(tipo, data.articulo);
+            } else if (data.length > 1) {
+                // Si hay múltiples artículos, mostrar modal
+                articuloSeleccionTipo = tipo;
+                mostrarModalArticulos(data);
+            } else {
+                // No se encontraron artículos
+                limpiarArticulo(tipo);
+                alert('No se encontró ningún artículo');
+            }
+        } catch (error) {
+            console.error('Error buscando artículo:', error);
+            alert('Error al buscar artículo');
+        }
+    }
+
+    function mostrarModalArticulos(articulos) {
+        const tbody = document.getElementById('tablaArticulos');
+        tbody.innerHTML = '';
+        
+        articulos.forEach(art => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${art.codigo}</td>
+                <td>${art.detalle}</td>
+                <td>${art.marca}</td>
+                <td>${art.precio}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary" 
+                        data-id="${art.id}"
+                        data-codigo="${art.codigo}"
+                        data-detalle="${art.detalle}"
+                        data-marca="${art.marca}"
+                        onclick="seleccionarArticulo('${articuloSeleccionTipo}', this)">
+                        Seleccionar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        $('#modalArticulos').modal('show');
+    }
+
+    // Agregar event listeners para los inputs de artículos
+    document.getElementById('codigo_articulo_origen').addEventListener('blur', function() {
+        if (this.value) buscarArticulo('origen', this.value);
+    });
+
+    document.getElementById('codigo_articulo_destino').addEventListener('blur', function() {
+        if (this.value) buscarArticulo('destino', this.value);
+    });
+
+    // Mostrar/ocultar secciones según tipo de oferta
+    tipoOferta.addEventListener('change', function() {
+        seccionVinculada.style.display = 'none';
+        seccionRegla.style.display = 'none';
+        seccionNormal.style.display = 'none';
+
+        switch(this.value) {
+            case 'vinculada':
+                seccionVinculada.style.display = 'block';
+                cargarArticulos();
+                break;
+            case 'regla_seleccion':
+                seccionRegla.style.display = 'block';
+                seccionNormal.style.display = 'block';
+                break;
+            default:
+                seccionNormal.style.display = 'block';
+        }
+    });
+
+    btnAgregarCondicion.addEventListener('click', function() {
+        const nuevaCondicion = condicionesContainer.querySelector('.condicion-item').cloneNode(true);
+        nuevaCondicion.querySelectorAll('select').forEach(select => select.value = '');
+        nuevaCondicion.querySelector('.referencia').disabled = true;
+        condicionesContainer.appendChild(nuevaCondicion);
+    });
+
+    condicionesContainer.addEventListener('change', async function(e) {
+        if (e.target.classList.contains('tipo-condicion')) {
+            const referenciaSelect = e.target.closest('.condicion-item').querySelector('.referencia');
+            referenciaSelect.disabled = true;
+            referenciaSelect.innerHTML = '<option value="">Cargando...</option>';
+
+            try {
+                const response = await fetch(`/ofertas/get_referencias/${e.target.value}`);
+                const data = await response.json();
+                
+                referenciaSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.nombre;
+                    referenciaSelect.appendChild(option);
+                });
+                referenciaSelect.disabled = false;
+            } catch (error) {
+                console.error('Error cargando referencias:', error);
+                referenciaSelect.innerHTML = '<option value="">Error al cargar</option>';
+            }
+        }
+    });
+
+    condicionesContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remover-condicion') || 
+            e.target.closest('.remover-condicion')) {
+            const condicionItem = e.target.closest('.condicion-item');
+            if (condicionesContainer.querySelectorAll('.condicion-item').length > 1) {
+                condicionItem.remove();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

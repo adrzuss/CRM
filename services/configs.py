@@ -6,7 +6,7 @@ from utils.db import db
 from models.sessions import TareasUsuarios
 from models.sucursales import Sucursales
 
-def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte):
+def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos):
     configuracion = Configuracion.query.get(session['id_empresa'])
     if configuracion:
         if 'owner' in session:
@@ -21,6 +21,8 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
         configuracion.telefono = telefono
         configuracion.mail = mail
         configuracion.dias_vto_cta_cte = dias_vto_cta_cte
+        configuracion.idplan_sistema = idplan_sistema
+        configuracion.interes_mora_creditos = interes_mora_creditos
         db.session.commit()
 
 def getOwner():

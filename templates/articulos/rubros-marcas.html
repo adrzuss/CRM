@@ -18,8 +18,17 @@
             searchable: true,
             sortable: true,
             language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-            }
+                    entries: {
+                        _: "entradas",
+                        1: "entrada"
+                    },
+                    sEmptyTable: "No se encontraron resultados",
+                    sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ registros",
+                    sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                    sLengthMenu: "_MENU_ registros por páginas",
+                    sSearch: 'Buscar',
+                    sSearchPlaceholder: 'Buscar registros'
+                }
             
         });
         new DataTable('#rubrosTable', {
@@ -28,7 +37,16 @@
             searchable: true,
             sortable: true,
             language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                    entries: {
+                        _: "entradas",
+                        1: "entrada"
+                    },
+                    sEmptyTable: "No se encontraron resultados",
+                    sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ registros",
+                    sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
+                    sLengthMenu: "_MENU_ registros por páginas",
+                    sSearch: 'Buscar',
+                    sSearchPlaceholder: 'Buscar registros'
                 },
             labels: {
                 placeholder: 'Buscar...',

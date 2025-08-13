@@ -4,7 +4,7 @@ from datetime import datetime
 from utils.utils import format_currency
 from models.proveedores import Proveedores
 from models.ctacteprov import CtaCteProv
-from services.ctacteprov import saldo_ctacte
+from services.ctacteprov import saldo_ctacte, getSaldosCtacteProv
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
@@ -63,19 +63,7 @@ def saldosprov():
         fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
         
         # Realizar la consulta agregada
-        saldos = db.session.query(
-            Proveedores.nombre,
-            CtaCteProv.idproveedor,
-            func.sum(CtaCteProv.debe).label('total_debe'),
-            func.sum(CtaCteProv.haber).label('total_haber')
-        ).join(
-            Proveedores, Proveedores.id == CtaCteProv.idproveedor        
-        ).filter(
-            CtaCteProv.fecha >= fecha
-        ).group_by(
-            Proveedores.nombre,
-            CtaCteProv.idproveedor
-        ).all()
+        saldos = getSaldosCtacteProv()
 
         # Pasar los resultados a la plantilla
         return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

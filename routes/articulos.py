@@ -17,6 +17,7 @@ from utils.config import allowed_file
 from utils.utils import check_session, convertir_decimal
 from utils.msg_alertas import alertas_mensajes
 from datetime import datetime
+from decimal import Decimal
 
 bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/articulos')
 
@@ -301,9 +302,9 @@ def cambio_precio():
 filtra los articulos según las condiciones de la petición
 para pasarlos a la carga de precios
 """
-@bp_articulos.route('/filtrar_articulos/<int:marca>/<int:rubro>/<int:lista_precio>/<int:porcentaje>')
+@bp_articulos.route('/filtrar_articulos/<int:marca>/<int:rubro>/<int:lista_precio>/<float:porcentaje>')
 def filtrar_articulos(marca, rubro, lista_precio, porcentaje):
-    resultado = obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje)
+    resultado = obtenerArticulosMarcaRubro(marca, rubro, lista_precio, Decimal(porcentaje))
     return jsonify(success=True, articulos=resultado)
 
     
@@ -316,6 +317,8 @@ def get_articulo(codigo, idlista):
                                 Articulo.codigo,
                                 Articulo.detalle,
                                 Articulo.costo,
+                                Articulo.idrubro,
+                                Articulo.idmarca,
                                 Marca.nombre.label('marca')
                                 ).outerjoin(Marca, Marca.id == Articulo.idmarca
                                 ).filter(Articulo.codigo == codigo).first()
@@ -331,6 +334,14 @@ def get_articulo(codigo, idlista):
         # Verificar si se encontró un precio para el idlista especificado
         if not precio:
             return {"error": "Precio no disponible para el artículo en la lista solicitada"}, 404
+        # Buscar ofertas
+        oferta = db.session.execute(text("call get_oferta_articulo(:idarticulo, :idrubro, :idmarca)"), {"idarticulo": articulo.id, "idrubro": articulo.idrubro, "idmarca": articulo.idmarca}).fetchall()
+        if oferta[0].v_valor_descuento != None:
+            # Si hay ofertas, aplicar la lógica correspondiente
+            if oferta[0].v_tipo_descuento == 1:
+                precio.precio = precio.precio - (precio.precio * oferta[0].v_valor_descuento / 100)
+            else:    
+                precio.precio = oferta[0].v_valor_descuento
         # Devolver la información requerida
         return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio})   
     elif idlista == 0:

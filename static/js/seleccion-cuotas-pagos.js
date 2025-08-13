@@ -205,29 +205,50 @@ async function cuotasPendientes(idcliente) {
                     const cuotaOption = document.createElement("tr");
                     cuotaOption.classList.add("table");
                     cuotaOption.classList.add("table-light");
-                    valorCredito = parseFloat(cuota.monto_total);
+                    valorCredito = parseFloat(cuota.monto_credito);
                     valorCuota = parseFloat(cuota.monto);
+                    interesMora = parseFloat(cuota.interes_mora);
+                    totalAPagar = parseFloat(cuota.total_a_pagar);
                     vencimiento = new Date(cuota.fecha_vencimiento);
                     cuota.fecha_vencimiento = vencimiento.toLocaleDateString('es-ES', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit'
                     });
-                    cuotaOption.innerHTML = `<td scope="row" name="">${cuota.id}</td>
-                                            <td scope="row">$${valorCredito.toFixed(2)}</td>
-                                            <td scope="row">${cuota.numero_cuota}</td>
-                                            <td scope="row">${cuota.fecha_vencimiento}</td>
-                                            <td scope="row">$${valorCuota.toFixed(2)}</td>
-                                            <td scope="row">${cuota.dias_mora}</td>
-                                            <td scope="row">$0</td>
-                                            <td scope="row">$0</td>
-                                            <td scope="col" onclick="calcularCuota()">
-                                                <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${valorCuota.toFixed(2)}" onchange="calcularCuota()">
-                                            </td>
-                                            <td scope="row">
-                                                <a href="#" class="btn btn-secundario">Ver crédito</a>
-                                            </td>    
-                                        `;
+                    if (cuota.dias_mora == 0) {
+                        cuotaOption.innerHTML = `<td scope="row" name="">${cuota.id}</td>
+                                                <td scope="row">$${valorCredito.toFixed(2)}</td>
+                                                <td scope="row">${cuota.numero_cuota}</td>
+                                                <td scope="row">${cuota.fecha_vencimiento}</td>
+                                                <td scope="row">$${valorCuota.toFixed(2)}</td>
+                                                <td scope="row">${cuota.dias_mora}</td>
+                                                <td scope="row">$${interesMora.toFixed(2)}</td>
+                                                <td scope="row">$${totalAPagar.toFixed(2)}</td>
+                                                <td scope="col" style="text-align:center" onclick="calcularCuota()">
+                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" onchange="calcularCuota()">
+                                                </td>
+                                                <td scope="row">
+                                                    <a href="#" class="btn btn-secundario">Ver crédito</a>
+                                                </td>    
+                                            `;
+                    }
+                    else{
+                        cuotaOption.innerHTML = `<td scope="row" style="color: red" name="">${cuota.id}</td>
+                                                <td scope="row" style="color: red">$${valorCredito.toFixed(2)}</td>
+                                                <td scope="row" style="color: red">${cuota.numero_cuota}</td>
+                                                <td scope="row" style="color: red">${cuota.fecha_vencimiento}</td>
+                                                <td scope="row" style="color: red">$${valorCuota.toFixed(2)}</td>
+                                                <td scope="row" style="color: red">${cuota.dias_mora}</td>
+                                                <td scope="row" style="color: red">$${interesMora.toFixed(2)}</td>
+                                                <td scope="row" style="color: red">$${totalAPagar.toFixed(2)}</td>
+                                                <td scope="col" style="text-align:center; color: red" onclick="calcularCuota()">
+                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" onchange="calcularCuota()">
+                                                </td>
+                                                <td scope="row">
+                                                    <a href="#" class="btn btn-secundario">Ver crédito</a>
+                                                </td>    
+                                            `;
+                    }
                     lst_cuotas.appendChild(cuotaOption);
                 });
             } else {

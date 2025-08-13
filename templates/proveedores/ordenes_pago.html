@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <h2 class="m-3">Ordenes de pago</h2>
+    <div class="m-3">
+        <a href="{{ url_for('proveedores.nueva_op') }}" class="btn btn-primario">Nueva orden de pago</a>
+    </div>    
+
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="card m-3">
+                <h5 class="px-5 pt-2">Periodo</h5>
+                <div class="card-body">
+                    <form action="{{ url_for('proveedores.ordenes_pago') }}" method="GET">
+                        <div class="row justify-content-md-center">
+                            <div class="col-md-3">
+                                <label for="desde">Desde</label>
+                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hasta">Hasta</label>
+                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            </div>    
+                            <div class="col-md-2 m-4">
+                                <button type="submit" class="btn btn-primario">Buscar</button>
+                            </div>    
+                        </div>
+                    </form>
+                </div>    
+            </div>
+        </div>    
+    </div>
+    
+    <div class="row justify-content-center align-items-center">
+        <div class="col-8">
+            <div class="table-responsive m-3" >
+                <table class="table table-striped table-hover table-borderless align-middle" >
+                    <thead class="table-light">
+                        <caption>
+                            Ordenes de pago
+                        </caption>
+                        <tr>
+                            <th>Proveedor</th>
+                            <th>Fecha</th>
+                            <th>Nro. orden pago</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for ordenPago in ordenesPago %}        
+                            <tr class="table-dark">
+                                <td scope="row">{{ ordenPago.nombre }}</td>
+                                <td>{{ ordenPago.fecha.strftime('%d-%m-%Y') }}</td>
+                                <td>{{ ordenPago.nro_comprobante }}</td>
+                                <td>{{ "${:,.2f}".format(ordenPago.total) }}</td>
+                                <td><a href="{{ url_for('proveedores.ver_op', id=ordenPago.id) }}" class="btn btn-primario">Ver orden de pago</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        
+                    </tfoot>
+                </table>
+            </div>
+        </div>    
+    </div>
+
+
+{% endblock %}

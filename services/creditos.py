@@ -339,20 +339,7 @@ def generar_credito_cliente(form, files):
         db.session.add(credito)
         db.session.flush()
         idcredito = credito.id
-        
-        """
-        Las cuotas las generamos al aprobar el crédito, no al crearlo
-        # Generar las cuotas del crédito
-        
-        for x in range(int(cuotas)):
-            cuota = VencimientosCreditos(
-                idcredito=idcredito,
-                nro_cuota=x + 1,
-                monto=float(monto_cuotas),
-                fecha_vencimiento=fecha_inicio + timedelta(days=(x + 1) * 30)  # Asumiendo vencimiento mensual
-            )
-            db.session.add(cuota)
-        """    
+                
         paso = 'Asignando garantes'
         for garante in garantes:
             garante_credito = GarantesCreditos(idcredito=idcredito, idgarante=int(garante['id']))
@@ -496,7 +483,6 @@ def get_datos_creditos():
     hoy = date.today()
     try:
         inicio_semana = hoy - timedelta(days=hoy.weekday())
-        print(f"Inicio de semana: {inicio_semana}, Fecha de hoy: {hoy}")
         # Realizar la consulta para obtener el total de créditos de la semana
         creditos_semana = db.session.query(
             func.coalesce(func.sum(Creditos.monto_total), 0.0).label('total_creditos'),
@@ -513,7 +499,6 @@ def get_datos_creditos():
     
     try:
         inicio_mes = hoy.replace(day=1)
-        print(f"Inicio del mes: {inicio_mes}, Fecha de hoy: {hoy}")
         # Realizar la consulta para obtener el total de créditos de la semana
         creditos_mes = db.session.query(
             func.coalesce(func.sum(Creditos.monto_total), 0.0).label('total_creditos'),

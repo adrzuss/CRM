@@ -2,25 +2,7 @@
 {% block body %}
 
 <div class="row justify-content-center align-items-center g-2 m-3">
-    <div class="col-4">
-        <div class="card">
-            <h5 class="m-3">Consultar Cta Cte desde Fecha</h5>
-            <div class="card-body">
-                <form action="{{ url_for('ctacteprov.saldosprov') }}" method="POST">
-                    <label for="fecha">Fecha de Inicio:</label>
-                    <input class="form-control" type="date" id="fecha" name="fecha" value="{{ desde }}" required><br>
-
-                    <button class="btn btn-primario" type="submit">Consultar</button>
-                </form>
-            </div>    
-        </div>    
-
-    </div>
-    
-</div>
-
-<div class="row justify-content-center align-items-center g-2 m-3">
-    <div class="col-8">
+    <div class="col-10">
         <div class="card">
             <h3 class="m-3">Saldos de cta cte de proveedores</h3>
             <div class="card-body">
@@ -35,6 +17,7 @@
                                 <th>Proveedor</th>
                                 <th>Total Debe</th>
                                 <th>Total Haber</th>
+                                <th>Total</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -45,7 +28,15 @@
                                     <td>{{ saldo.nombre }}</td>
                                     <td>{{ "${:,.2f}".format(saldo.total_debe) }}</td>
                                     <td>{{ "${:,.2f}".format(saldo.total_haber) }}</td>
-                                    <td> <a class="btn btn-dark" href="{{ url_for('ctacteprov.lst_cta_cte_prov', id=saldo.idproveedor) }}"> Cta. cte. proveedor </a></td>
+                                    {% if (saldo.total_debe - saldo.total_haber) > 0 %}
+                                        <td>{{ "${:,.2f}".format(saldo.total_debe - saldo.total_haber) }}</td>
+                                    {% else %}
+                                        <td style="color: red;">{{ "${:,.2f}".format(saldo.total_debe - saldo.total_haber) }}</td>
+                                    {% endif %}
+                                    <td> 
+                                        <a class="btn btn-dark" href="{{ url_for('ctacteprov.lst_cta_cte_prov', id=saldo.idproveedor) }}"> Cta. cte. proveedor </a>
+                                        <a class="btn btn-secundario" href="{{ url_for('proveedores.nueva_op', id=saldo.idproveedor) }}"> Orden de pago </a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

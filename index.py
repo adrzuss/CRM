@@ -17,6 +17,8 @@ from routes.configs import bp_configuraciones
 from routes.entidades_cred import bp_entidades
 from routes.fondos import bp_fondos
 from routes.creditos import bp_creditos
+from routes.bancos import bp_bancos
+from routes.ofertas import bp_ofertas
 
 def create_app():
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, template_folder=Config.TEMPLATES_FOLDER)
@@ -42,6 +44,8 @@ def create_app():
     app.register_blueprint(bp_entidades, url_prefix='/entidades')
     app.register_blueprint(bp_fondos, url_prefix='/fondos')
     app.register_blueprint(bp_creditos, url_prefix='/creditos')
+    app.register_blueprint(bp_bancos, url_prefix='/bancos')
+    app.register_blueprint(bp_ofertas, url_prefix='/ofertas')
 
     @app.before_request
     def make_session_permanent():

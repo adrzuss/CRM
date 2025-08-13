@@ -16,14 +16,25 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-2 ">
-                    <label for="idcliente">Cliente</label>
-                    <input type="text" name="idcliente" id="idcliente" class="form-control" >
-                </div>
-                <div class="col-4">
-                    <label for="cliente_nombre">Nombre</label>
-                    <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" >
-                </div>
+                {% if idcliente %}
+                    <div class="col-2 ">
+                        <label for="idcliente">Cliente</label>
+                        <input type="text" name="idcliente" id="idcliente" class="form-control" value="{{ idcliente }}">
+                    </div>
+                    <div class="col-4">
+                        <label for="cliente_nombre">Nombre</label>
+                        <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" value="{{ nom_cliente }}">
+                    </div>
+                {% else %}
+                    <div class="col-2 ">
+                        <label for="idcliente">Cliente</label>
+                        <input type="text" name="idcliente" id="idcliente" class="form-control">
+                    </div>
+                    <div class="col-4">
+                        <label for="cliente_nombre">Nombre</label>
+                        <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" >
+                    </div>
+                {% endif %}
             </div>    
         </div>
     </div>    
@@ -102,6 +113,6 @@
 
 </div>
 
-<script src="/static/js/seleccion-cuotas-pago.js"></script>
+<script src="/static/js/seleccion-cuotas-pagos.js"></script>
 
 {% endblock %}

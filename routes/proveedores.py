@@ -2,8 +2,10 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from datetime import date
 from models.proveedores import Proveedores, FacturaC, RemitoFacturas
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica
+from models.ctacteprov import CtaCteProv
+from services.bancos import BancoService
 from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto, get_factura, actualizar_precios_por_compras, \
-    procesar_nuevo_remito, get_remito   
+    procesar_nuevo_remito, get_remito, procesar_nueva_op, get_movs_pendientes_ctacte, get_ordenes_pago
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from utils.db import db
@@ -274,8 +276,56 @@ def ver_remito_comp(id):
 
 #--------- ordenes de pago --------------
                        
-@bp_proveedores.route('/ordenpago') 
+@bp_proveedores.route('/nueva_op', methods = ['GET', 'POST']) 
 @check_session
 @alertas_mensajes
-def ordenpago():
-    return render_template('nueva_op.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+def nueva_op():
+    if request.method == 'POST':
+        try:
+            procesar_nueva_op(request.form, session['id_sucursal'])
+            flash('Orden de pago grabado exitosamente')
+            return redirect(url_for('proveedores.nueva_op'))
+        except Exception as e:
+            flash(f'Ocurrió un error al procesar la orden de pago: {e}', 'error')
+            return redirect(url_for('proveedores.nueva_op'))
+    else:
+        idproveedor = request.args.get('id', None)
+    hoy = date.today()
+    bancos = BancoService.obtener_todos()
+    return render_template('nueva_op.html', hoy=hoy, idproveedor=idproveedor, bancos=bancos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_proveedores.route('/ordenes_pago')
+@check_session
+@alertas_mensajes
+def ordenes_pago():
+    desde = request.args.get('desde')
+    hasta = request.args.get('hasta')
+    if desde == None:
+        desde = date.today()
+    if hasta == None:    
+        hasta = date.today()
+    ordenesPago = get_ordenes_pago(desde, hasta)
+    return render_template('ordenes_pago.html', ordenesPago=ordenesPago, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_proveedores.route('/ver_op/<int:id>')
+@check_session
+@alertas_mensajes
+def ver_op(id):
+    return redirect(url_for('proveedores.ver_factura_comp', id=id))
+
+#--------------- Cuentas Corrientes ------------------
+@bp_proveedores.route('/get_movs_ctacte/<int:idproveedor>')
+@check_session
+def get_movs_ctacte(idproveedor):
+    #Obtiene movimientos pendientes de cta. cte. de proveedores
+    if idproveedor > 0:
+        try:
+            movs_ctacte = get_movs_pendientes_ctacte(idproveedor)
+        except Exception as e:
+            print(f"Error obteniendo movimientos de cta. cte.: {e}")
+            raise Exception(f"Error obteniendo movimientos de cta. cte.: {e}")
+          
+    else:
+        movs_ctacte = []
+    
+    return jsonify([{'id': r.id, 'fecha': r.fecha, 'tipo_comprobante': r.tipo_comprobante, 'nro_comprobante': r.nro_comprobante, 'saldo': (r.haber-r.debe-r.pagos)} for r in movs_ctacte]) 

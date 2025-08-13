@@ -31,10 +31,10 @@ def configuraciones():
                                      Configuracion.licencia,
                                      Configuracion.caja_con_apertura,
                                      Configuracion.idplan_sistema,
+                                     Configuracion.interes_mora_creditos,
                                      PlanesSistema.nombre.label('nombre_plan')
                                      ).join(PlanesSistema, PlanesSistema.id == Configuracion.idplan_sistema
                                      ).filter(Configuracion.id == session['id_empresa']).first()
-    print(configuracion)                                 
     alcIva = AlcIva.query.all()
     listas_precios = ListasPrecios.query.all()
     tipo_ivas = TipoIva.query.all()
@@ -57,7 +57,9 @@ def update_config():
     tipo_doc = request.form['tipo_doc']
     documento = request.form['documento']
     dias_vto_cta_cte = request.form['dias_vto_cc']
-    grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc,documento, telefono, mail, dias_vto_cta_cte)
+    idplan_sistema = request.form['idplanSistema']
+    interes_mora_creditos = request.form['interesMora']
+    grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc,documento, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos)
     flash('Datos de configuracion grabados')
     return redirect('configuraciones')
 

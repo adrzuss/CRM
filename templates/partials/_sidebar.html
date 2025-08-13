@@ -126,6 +126,7 @@
                         <a class="collapse-item" href="{{ url_for('articulos.ing_balance') }}">Ingreso de balance</a>
                         <a class="collapse-item" href="{{ url_for('articulos.remitos_sucursales') }}">Remito a sucursales</a>
                         <a class="collapse-item" href="{{ url_for('articulos.cambio_precio') }}">Cambios de precio</a>
+                        <a class="collapse-item" href="{{ url_for('ofertas.nueva_oferta') }}">Nueva oferta</a>
                     </div>
                 </div>
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulosListados"
@@ -142,9 +143,33 @@
                         <a class="collapse-item" href="{{ url_for('articulos.stock_sucursales') }}">Stock de sucursales</a>
                         <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Precios</a>
                         <a class="collapse-item" href="{{ url_for('articulos.lst_compuestos') }}">Compuestos</a>
+                        <a class="collapse-item" href="{{ url_for('ofertas.ofertas') }}">Ofertas</a>
                     </div>
                 </div>
             </li>
+            <!-- Bancos -->
+            <div class="sidebar-heading">
+                Bancos
+            </div>
+            <!-- Nav Item - Utilities Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBancos"
+                    aria-expanded="true" aria-controls="collapseBancos">
+                    <i class="fas fa-folid fa-building-columns"></i>
+                    <span>Bancos</span>
+                </a>
+                <div id="collapseBancos" class="collapse" aria-labelledby="headingBancos"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Bancos</h6>
+                        <a class="collapse-item" href="{{ url_for('bancos.bancos') }}">ABM Bancos</a>
+                        <a class="collapse-item" href="{{ url_for('bancos.listado_movs_bancos') }}">Listado movimientos</a>
+                    </div>
+                    
+                </div>
+            </li>     
+            
+            <!-- Divider -->
             <!-- Entidades Credito -->
             <div class="sidebar-heading">
                 Créditos
@@ -204,7 +229,8 @@
                         <h6 class="collapse-header">Proveedores</h6>
                         <a class="collapse-item" href="{{ url_for('proveedores.proveedores', id=0) }}">ABM Proveedores</a>
                         <a class="collapse-item" href="{{ url_for('ctacteprov.saldosprov') }}">Cta. cte. de proveedores</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.ordenpago') }}">Orden de pago</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.nueva_op') }}">Orden de pago</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.ordenes_pago') }}">Listado de orden de pago</a>
                     </div>
                     
                 </div>

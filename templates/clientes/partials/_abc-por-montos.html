@@ -1,7 +1,7 @@
 <div
     class="table-responsive"
 >
-    <table class="display table table-bordered table-striped" id="dataTable" width="100%" >
+    <table class="display table table-bordered table-striped" id="dataTable2" width="100%" >
         <thead class="thead-dark">
             <tr>
                 <th scope="col">Cliente</th>
@@ -13,7 +13,7 @@
             {% for abc_monto in abc_montos %}
                 <tr class="">
                     <td scope="row">{{ abc_monto.nombre }}</td>
-                    <td style="text-align: center;">{{ "%.2f"|format(abc_monto.total) }}</td>
+                    <td style="text-align: center;">${{ "%.2f"|format(abc_monto.total) }}</td>
                     <td style="text-align: center;">{{ "%.2f"|format(abc_monto.porcentaje) }} %</td>
                 </tr>
             {% endfor %}

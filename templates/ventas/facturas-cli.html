@@ -7,16 +7,16 @@
         <div class="card mb-3 mx-5">
             <form action="" method="post">
                 <div class="row justify-content-md-center mt-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="desde">Desde</label>
                         <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="hasta">Hasta</label>
                         <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
                     </div>    
                     <div class="col-md-2 m-4">
-                        <button type="submit" class="btn btn-primary">Buscar</button>
+                        <button type="submit" class="btn btn-primario">Buscar</button>
                     </div>    
                 </div>
             </form>
@@ -24,7 +24,7 @@
 
         <div class="m-3 card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Listado facturas del cliente</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Listado de facturas del cliente</h6>
             </div>
             <div class="card-body">
                 <div class='input-group mb-3'>
@@ -39,6 +39,7 @@
                             <tr>
                                 <th>Cliente</th>
                                 <th>Fecha</th>
+                                <th>Sucursal</th>
                                 <th>Total</th>
                                 <th>Acciones</th>
                             </tr>
@@ -47,6 +48,7 @@
                             <tr>
                                 <th>Cliente</th>
                                 <th>Fecha</th>
+                                <th>Sucursal</th>
                                 <th>Total</th>
                                 <th>Acciones</th>
                             </tr>
@@ -56,8 +58,9 @@
                                 <tr class="table-light">
                                     <td scope="row">{{ factura.cliente.nombre }}</td>
                                     <td scope="row">{{ factura.fecha }}</td>
+                                    <td scope="row">{{ factura.sucursal.nombre }}</td>
                                     <td scope="row">{{ "${:,.2f}".format(factura.total) }}</td>
-                                    <td scope="row"><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secondary">Ver factura</a></td>
+                                    <td scope="row"><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secundario">Ver factura</a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -66,12 +69,9 @@
             </div>
         </div>
 
-        <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-        <script src="/static/vendor/datatable/datatables.js"></script>
+        <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendor/datatable/datatables.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
     
-        <script src="/static/js/dataTables.js"></script>
-        
-   
-
     
 {% endblock %}

@@ -39,9 +39,9 @@
         <h3 class="m-3">Stock de artículos</h3>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="display table table-bordered table-striped" id="dataTable">
-                    <thead>
-                        <tr>
+                <table class="display table table-bordered table-striped" id="dataTable" with="100%">
+                    <thead class="thead-dark">
+                        <tr class="table-light">
                             {% for columna in columnas %}
                                 <th scope="col">{{ columna }}</th>
                             {% endfor %}
@@ -59,6 +59,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
     
     <script>
         $(document).ready(function () {

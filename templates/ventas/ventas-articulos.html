@@ -35,7 +35,7 @@
     <div class="row justify-content-center align-items-center">
         <div class="col-12">
             <div class="table-responsive m-3" >
-                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
+                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" width="100%">
                     <thead class="table-dark">
                         <tr>
                             <th>Código</th>
@@ -68,8 +68,8 @@
         </div>    
     </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/datatables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
+    <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatable/datatables.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
     
 {% endblock %}

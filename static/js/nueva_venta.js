@@ -375,10 +375,22 @@ async function fetchArticulo(id, idlista, itemDiv) {
   } else {
     if (data.length > 1) {
       // Si hay más de un resultado, mostrar un modal para seleccionar
-      mostrarModalSeleccionArticulos(data, itemDiv);
+      mostrarModalSeleccionArticulos(data, idlista, itemDiv);
     } else if (data.length === 1) {
       // Si hay un solo resultado, asignar directamente
-      asignarArticuloElegido(data[0], itemDiv);
+      
+      response = await fetch(`${BASE_URL}/articulos/articulo/${data[0].codigo}/${idlista}`);
+      if (response.ok) {
+        response.then((result) => {
+          asignarArticulo(result.articulo, itemDiv);
+        });
+      } else {
+        response.catch((err) => {
+          console.error("Error al buscar artículo:", err);
+        });
+      }
+        
+      //asignarArticuloElegido(data[0], itemDiv);
     } else {
       alert("No se encontraron articulos con ese detalle.");
     }
@@ -401,7 +413,7 @@ function asignarArticulo(articulo, itemDiv) {
   updateTotalFactura();
 }
 
-function mostrarModalSeleccionArticulos(articulos, itemDiv) {
+function mostrarModalSeleccionArticulos(articulos, idlista, itemDiv) {
   // Crear el contenido del modal con las opciones de cliente
   const tituloModal = document.getElementById("clienteModalLabel");
   tituloModal.textContent = "Seleccione un Artículo";
@@ -421,8 +433,14 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}</span>`;
-    articuloOption.onclick = () => {
-      asignarArticuloElegido(articulo, itemDiv);
+    articuloOption.onclick = async() => {
+      response = await fetch(`${BASE_URL}/articulos/articulo/${articulo.codigo}/${idlista}`);
+      if (response.ok) {
+        const data = await response.json();
+        //asignarArticulo(data.articulo, itemDiv);
+        asignarArticuloElegido(data.articulo, itemDiv);
+      }
+      //asignarArticuloElegido(articulo, itemDiv);
       $("#clienteModal").modal("hide");
       // Enfocar el nuevo input de código
       const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
@@ -678,7 +696,6 @@ async function hayCredito(idcliente) {
   response = await fetch(`${BASE_URL}/creditos/hay_credito/${idcliente}`)
   if (response.ok) {
     const data = await response.json();
-    console.log(data);
     if (data.success) {
       if (data.credito.idcredito != 0) {
         document.getElementById("monto_credito").disabled = false;

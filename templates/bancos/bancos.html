@@ -1,0 +1,63 @@
+{% extends 'base.html'%}
+{% block body %}
+    <div class="m-2">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>Ingreso de Bancos y billetras virtuales</h3>
+                        <form action="#" method="POST">
+                        
+                            <div class="row">
+                                <div class="mb-3 col-1"> 
+                                    <label for="id">#Id</label>
+                                    <input class="form-control" type="text" name="id" id="id" placeholder="Ingrese el ID" value="{{ banco.id }}" readonly>
+                                </div>
+                                <div class="mb-3 col-5"> 
+                                    <label for="nombre">Nombre del Banco o billetera virtual</label>
+                                    <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ banco.nombre }}" required>
+                                </div>
+                                <div class="mb-3 col-5"> 
+                                    <label for="fantasia">Dirección</label>
+                                    <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la fantasia" value="{{ banco.direccion }}" required>
+                                </div>
+                            </div>  
+                            <div class="row">
+                                <div class="mb-3 col-6">
+                                    <label for="direccion">Nro cuenta</label>
+                                    <input class="form-control" type="text" name="nroCta" id="nroCta" placeholder="Ingrese el número de cuenta" value="{{ banco.nro_cta }}">
+                                </div>    
+                                <div class="mb-3 col-3">
+                                    <label for="direccion">Teléfono</label>
+                                    <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese la dirección" value="{{ banco.telefono }}">
+                                </div>    
+                                <div class="mb-3 col-3">
+                                    <label for="mail">E-mail</label>
+                                    <input class="form-control" type="text" name="email" id="email" placeholder="Ingrese el mail" value="{{ banco.email }}">
+                                </div>    
+                            </div>  
+                            
+                            <button class="btn btn-success" type="submit">Grabar</button>
+                        </form>
+                    </div>    
+                </div>   
+            </div>    
+        </div>    
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-10">
+                <h3 class="m-3">Bancos</h3>
+                <p class="m-3">Listado de bancos y billeteras virtuales registrados en el sistema.</p>
+            </div>
+              
+            <div class="col-md-10">
+                {% include 'partials/_lst-bancos.html' %}
+            </div>     
+        </div>    
+    </div>    
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
+
+{% endblock %}  

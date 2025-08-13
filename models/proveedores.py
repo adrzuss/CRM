@@ -81,7 +81,19 @@ class ItemC(db.Model):
         self.idalciva = idalciva
         self.exento = exento
         self.impint = impint
+
+class ItemsOP(db.Model):
+    __tablename__ = 'items_op'
+    idop = db.Column(db.Integer, db.ForeignKey('facturac.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idfactura = db.Column(db.Integer, db.ForeignKey('facturac.id'))
+    pago = db.Column(db.Numeric(20,6), nullable=False)
     
+    def __init__(self, idop, idfactura, pago):
+        self.idop = idop
+        self.idfactura = idfactura
+        self.pago = pago
+        
 class PagosFC(db.Model):
     __tablename__ = 'pagos_fc'
     idfactura = db.Column(db.Integer, db.ForeignKey('facturac.id'), primary_key=True)

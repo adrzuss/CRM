@@ -180,7 +180,7 @@
                     <!-- Card Header - Dropdown -->
                     <div
                         class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Cobranzas de hoy</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Ingresos de hoy</h6>
                         <div class="dropdown no-arrow">
                             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -218,7 +218,7 @@
 
         <div class="row">
             <!-- Ventas por rubros -->
-            <div class="col-xl-12 col-lg-8">
+            <div class="col-xl-12 col-lg-8 col-md-6">
                 <div class="card shadow mb-4">
                     <!-- Card Header - Dropdown -->
                     <div
@@ -241,14 +241,35 @@
                     </div>
                     <!-- Card Body -->
                     <div class="card-body">
-                        <div class="chart-area">
-                            <canvas id="barrasRubros"></canvas>
-                            
-                            <script>
-                                nombresRubros = {{ rubros|tojson }};
-                                ventasRubros = {{ vtaRubros|tojson }};
-                            </script>
-                            
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="chart-pie2" style="min-height: 400px;">
+                                    <canvas id="myPieChart2"></canvas>
+                                    
+                                    <script>
+                                        nombresRubros = {{ rubros|tojson }};
+                                        ventasRubros = {{ vtaRubros|tojson }};
+                                    </script>
+                                    
+                                </div>
+                                <div class="mt-4 text-center small">
+                                    <span>Ventas por rubros</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="chart-pie3" style="min-height: 400px;">
+                                    <canvas id="myPieChart3"></canvas>
+                                    
+                                    <script>
+                                        nombresRubros = {{ rubros|tojson }};
+                                        cantidadRubros = {{ cantRubros|tojson }};
+                                    </script>
+                                    
+                                </div>
+                                <div class="mt-4 text-center small">
+                                    <span>Ventas por cant. de productos</span>
+                                </div>
+                            </div>    
                         </div>
                     </div>
                 </div>

@@ -3,7 +3,7 @@ let contadorFilas = 0;
 
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
+    return "¿Estás seguro de cerrar la compra sin guardar los cambios?";
   }
 };
 
@@ -196,10 +196,11 @@ function asignarArticulo(articulo, itemDiv) {
   itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
   itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
   const precioUnitario = parseFloat(articulo.precio);
-  itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  const edtPrecio = itemDiv.target.closest("tr").querySelector(".precio-unitario")
+  edtPrecio.value = precioUnitario.toFixed(2);
   updateItemTotal(itemDiv);
   updateTotalFactura();
-  
+  edtPrecio.focus();
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
@@ -344,8 +345,8 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
             <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
             <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
             <td class="descripcion-articulo">-</td>
-            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00" step="0.01" min="0.01" required></td>
-            <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
+            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00" step="0.01" min="0.01" onfocus="this.select()" required></td>
+            <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" onfocus="this.select()" required></td> 
             <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
             <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
         </tr>`;

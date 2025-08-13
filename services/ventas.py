@@ -798,15 +798,18 @@ def ventas_por_mes():
 def get_vta_rubros(desde_vend, hasta_vend):
     nombres_rubros = []
     ventas_rubros = []
+    cantidad_rubros = []
     db.session.execute(text("SET lc_time_names = 'es_ES'"))
     resultados = db.session.execute(text("CALL venta_rubros(:desde, :hasta)"),
                          {'desde': desde_vend, 'hasta': hasta_vend}).fetchall()
     for resultado in resultados:
         nombres_rubros.append(resultado.rubro)
-        ventas_rubros.append(resultado.vtaRubro)
+        ventas_rubros.append(round(resultado.vtaRubro, 2))
+        cantidad_rubros.append(round(resultado.cantRubro, 2))
     return {
             'rubros': nombres_rubros,
-            'vtaRubros': ventas_rubros
+            'vtaRubros': ventas_rubros,
+            'cantRubros': cantidad_rubros
         }
         
 def pagos_hoy():
@@ -826,7 +829,7 @@ def pagos_hoy():
         
         for resultado in resultados:
             tipo_pago.append(resultado.pagos_cobros)
-            total_pago.append(resultado.total_pago)
+            total_pago.append(round(resultado.total_pago, 2))
 
             # Devolver las listas como respuesta
         return {

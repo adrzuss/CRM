@@ -43,8 +43,9 @@ class Configuracion(db.Model):
     dias_vto_cta_cte = db.Column(db.SmallInteger, nullable=False, default=0)
     caja_con_apertura = db.Column(db.Boolean, nullable=False, default=False)
     idplan_sistema = db.Column(db.Integer, db.ForeignKey('planes_sistema.id'), nullable=False)
+    interes_mora_creditos = db.Column(db.Numeric(20,6), nullable=False, default=0)
     
-    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia, caja_con_apertura, idplan_sistema):
+    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia, caja_con_apertura, idplan_sistema, interes_mora_creditos):
         self.nombre_propietario = nombre_propietario
         self.nombre_fantasia = nombre_fantasia
         self.tipo_iva = tipo_iva
@@ -57,6 +58,7 @@ class Configuracion(db.Model):
         self.licencia = licencia
         self.caja_con_apertura = caja_con_apertura
         self.idplan_sistema = idplan_sistema
+        self.interes_mora_creditos = interes_mora_creditos
 
 class Categorias(db.Model):
     __tablename__ = 'categorias'

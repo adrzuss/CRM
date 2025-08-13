@@ -9,9 +9,9 @@
         <h3 class="m-3">Artículos compuestos</h3>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="display table table-bordered table-striped" id="dataTable">
-                    <thead>
-                        <tr>
+                <table class="display table table-bordered table-striped" id="dataTable" width="100%">
+                    <thead class="thead-dark">
+                        <tr class="table-light">
                             <th scope="col">Código</th>
                             <th scope="col">Rubro</th>
                             <th scope="col">Marca</th>
@@ -36,24 +36,6 @@
 
     <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js')}}"></script>
     <script src="{{ url_for('static', filename='vendor/datatable/datatables.js')}}"></script>
-
-    <script>
-        
-        new DataTable('#dataTable', {
-            iDisplayLength: 50,
-            language: {
-                entries: {
-                    _: "entradas",
-                    1: "entrada"
-                },
-                sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ _ENTRIES-TOTAL_",
-                sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
-                sInfoFiltered: "(Filtrando _MAX_ de un total de _ENTRIES-MAX_)",
-                sLengthMenu: "_MENU_ _ENTRIES_ por página",
-                sSearch: 'Buscar',
-                sSearchPlaceholder: 'Buscar registros'
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
     
 {% endblock %}    

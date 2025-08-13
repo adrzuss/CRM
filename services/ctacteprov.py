@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from utils.utils import format_currency
 from models.ctacteprov import CtaCteProv
+from models.proveedores import Proveedores
 from utils.db import db
 
 def saldo_ctacte(idproveedor):
@@ -23,3 +24,17 @@ def get_saldo_proveedores():
         return saldos
     except: 
         return format_currency(0.0)
+    
+def getSaldosCtacteProv():
+    saldos = db.session.query(
+        Proveedores.nombre,
+        CtaCteProv.idproveedor,
+        func.sum(CtaCteProv.debe).label('total_debe'),
+        func.sum(CtaCteProv.haber).label('total_haber')
+    ).join(
+        Proveedores, Proveedores.id == CtaCteProv.idproveedor        
+    ).group_by(
+        Proveedores.nombre,
+        CtaCteProv.idproveedor
+    ).all()
+    return saldos

@@ -56,7 +56,8 @@ def get_saldo_clientes():
         saldoActual = float(saldos_cta_cte[0][0])
         saldoVencido = float(saldos_cta_cte[0][1])
         return saldoActual, saldoVencido
-    except:
+    except Exception as e:
+        print(f'Error al obtener saldo de clientes: {e}')
         return 0.0, 0.0
     
 def ctacte_vencida():

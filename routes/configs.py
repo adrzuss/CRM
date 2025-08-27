@@ -210,7 +210,19 @@ def puntos_venta(id=0):
             puntoVenta = None    
     sucursales = Sucursales.query.all()    
     puntos_venta = PuntosVenta.query.all()
-    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    from services.printer_service import get_printer_service
+    try:
+        printer_service = get_printer_service()
+        
+        result = printer_service.list_printers()
+        if result['success']:
+            printers = result['printers']
+        else:
+            print(f"Error: {result['error']}")
+            printers = []
+    except Exception as e:
+        print(f'Error listando impresoras: {e}')
+    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, posPrinters=printers, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/get_tipos_comprobantes/<id_tipo_iva>/<aplica>')
 @check_session

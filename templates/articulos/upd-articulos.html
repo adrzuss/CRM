@@ -24,11 +24,11 @@
                                     </div>
                                     <div class="mb-3 col-3"> 
                                         <label for="codigo">Código<span style="color: red">*</span></label>
-                                        <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}">
+                                        <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}" required>
                                     </div>
                                     <div class="mb-3 col-8">
                                         <label for="detalle">Detalle<span style="color: red">*</span></label>
-                                        <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle" value="{{ articulo.detalle }}">
+                                        <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle" value="{{ articulo.detalle }}" required>
                                     </div>    
                                 </div>    
                                 
@@ -103,7 +103,7 @@
                                     </div>    
                                 </div>    
                                 <div class="row">
-                                    <div class="col-6 mb-3">
+                                    <div class="col-4 mb-3">
                                         <label for="idtipoarticulo">Tipo de articulo:<span style="color: red">*</span></label>
                                         <select class="form-select" id="idtipoarticulo" name="idtipoarticulo" required>
                                         {% for tipoarticulo in tipoarticulos %}
@@ -115,7 +115,7 @@
                                         {% endfor %}
                                         </select>
                                     </div>    
-                                    <div class="col-6 mb-3 form-check">
+                                    <div class="col-3 mb-3 form-check">
                                         {% if articulo.es_compuesto == 1 %}
                                             <input class="form-check-input" type="checkbox" id="es_compuesto" name="es_compuesto" checked>
                                         {% else %}
@@ -123,6 +123,19 @@
                                         {% endif %}    
                                         <label for="es_compuesto" class="form-check-label">Es Compuesto</label>
                                     </div>    
+                                    <div class="col-4 mb-3">
+                                        <label for="pedir_en_ventas">Pedir en ventas:<span style="color: red">*</span></label>
+                                        <select class="form-select" id="pedir_en_ventas" name="pedir_en_ventas" required>
+                                        {% for opcion in pedirEnVentas %}
+                                            {% if articulo.pedir_en_ventas == opcion.name %}
+                                                <option value="{{ opcion.name }}" selected>{{ opcion.value }}</option>
+                                            {% else %}
+                                                <option value="{{ opcion.name }}">{{ opcion.value }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </select>
+
+                                    </div>
                                 </div>    
                                 
                                 <div class="row">

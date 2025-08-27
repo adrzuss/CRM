@@ -9,17 +9,30 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="nombre">Nombre de la oferta</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ oferta.nombre }}" required>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="tipo_oferta">Tipo de oferta</label>
-                    <select class="form-control" id="tipo_oferta" name="tipo_oferta" required>
-                        <option value="normal">Oferta Normal</option>
-                        <option value="vinculada">Oferta Vinculada</option>
-                        <option value="regla_seleccion">Oferta por Mayor/Menor Valor</option>
+                    <select class="form-control" id="tipo_oferta" name="tipo_oferta" required >
+                        <script>console.log('Tipo de condicion: ', {{ condiciones.id_oferta }})</script>
+                        {% set tipo = 'normal' %}
+                        {% if (vinculos != None) %}
+                            {% set tipo = 'vinculada' %}
+                        {% elif ((condiciones != None)and(condiciones[0].id_tipo_condicion == 3)) %}
+                            {% set tipo = 'regla_seleccion' %}
+                        {% endif %}
+                        
+                        <option value="normal" {% if tipo == 'normal' %}selected{% endif %}>Oferta Normal </option>
+                        <option value="vinculada" {% if tipo == 'vinculada' %}selected{% endif %}>Oferta Vinculada</option>
+                        <option value="regla_seleccion" {% if tipo == 'regla_seleccion' %}selected{% endif %}>Oferta por Mayor/Menor Valor </option>
                     </select>
+                    {% if condiciones %}
+                        {% for condicion in condiciones %}
+                            <label for="">La selección {{condicion.id_oferta}}</label>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -28,9 +41,13 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="tipo_descuento">Tipo de descuento</label>
-                    <select class="form-control" id="tipo_descuento" name="tipo_descuento" required>
+                    <select class="form-control" id="tipo_descuento" name="tipo_descuento" value="{{ oferta.tipo_descuento }}" required>
                         {% for tipo in tipos_descuento %}
-                        <option value="{{ tipo.value }}">{{ tipo.name }}</option>
+                            {% if tipo == oferta.tipo_descuento %}
+                                <option value="{{ tipo.value }}" selected>{{ tipo.name }}</option>
+                            {% else %}
+                                <option value="{{ tipo.value }}">{{ tipo.name }}</option>
+                            {% endif %}    
                         {% endfor %}
                     </select>
                 </div>
@@ -38,13 +55,13 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="valor_descuento">Valor del descuento</label>
-                    <input type="number" step="0.01" class="form-control" id="valor_descuento" name="valor_descuento" required>
+                    <input type="number" step="0.01" class="form-control" id="valor_descuento" name="valor_descuento" value="{{ oferta.valor_descuento }}" required>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="cantidad_minima">Cantidad mínima</label>
-                    <input type="number" step="1" class="form-control" id="cantidad_minima" name="cantidad_minima" required>
+                    <input type="number" step="1" class="form-control" id="cantidad_minima" name="cantidad_minima" value="{{ oferta.cantidad_minima }}" required>
                 </div>
             </div>
         </div>
@@ -53,25 +70,26 @@
             <div class="col-md-5">
                 <div class="form-group">
                     <label for="fecha_inicio">Fecha de inicio</label>
-                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ oferta.fecha_inicio }}" required>
                 </div>
             </div>
             <div class="col-md-5">
                 <div class="form-group">
                     <label for="fecha_fin">Fecha de fin</label>
-                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ oferta.fecha_fin }}" required>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-check mt-4">
-                    <input type="checkbox" class="form-check-input" id="multiplos" name="multiplos">
+                    <input type="checkbox" class="form-check-input" id="multiplos" name="multiplos" {% if oferta.multiplos %}checked{% endif %}>
                     <label class="form-check-label" for="multiplos">Aplicar a múltiplos</label>
                 </div>
             </div>
         </div>
 
         <!-- Sección de ofertas vinculadas -->
-        <div id="seccion-vinculada" class="card mt-4" style="display: none;">
+        
+        <div id="seccion-vinculada" class="card mt-4" style="display: {% if tipo == 'vinculada' %}block{% else %}none{% endif %};">
             <div class="card-header">
                 <h5>Artículos Vinculados</h5>
             </div>
@@ -81,9 +99,10 @@
                         <div class="form-group">
                             <label for="articulo_origen">Artículo que debe comprar</label>
                             <div class="input-group">
-                                <input type="hidden" id="id_articulo_origen" name="id_articulo_origen">
+                                <input type="hidden" id="id_articulo_origen" name="id_articulo_origen" value="{{ vinculos.id_articulo_origen if vinculos else '' }}">
                                 <input type="text" class="form-control" id="codigo_articulo_origen" 
-                                    name="codigo_articulo_origen" placeholder="Código o descripción">
+                                    name="codigo_articulo_origen" placeholder="Código o descripción" 
+                                    value="{{ vinculos.codigo_origen if vinculos else '' }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" 
                                             onclick="limpiarArticulo('origen')">
@@ -98,9 +117,10 @@
                         <div class="form-group">
                             <label for="articulo_destino">Artículo con descuento</label>
                             <div class="input-group">
-                                <input type="hidden" id="id_articulo_destino" name="id_articulo_destino">
+                                <input type="hidden" id="id_articulo_destino" name="id_articulo_destino" value="{{ vinculos.id_articulo_destino if vinculos else '' }}">
                                 <input type="text" class="form-control" id="codigo_articulo_destino" 
-                                    name="codigo_articulo_destino" placeholder="Código o descripción">
+                                    name="codigo_articulo_destino" placeholder="Código o descripción"
+                                    value="{{ vinculos.codigo_destino if vinculos else '' }}">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" 
                                             onclick="limpiarArticulo('destino')">
@@ -145,7 +165,7 @@
         </div>
 
         <!-- Sección de regla de selección -->
-        <div id="seccion-regla" class="card mt-4" style="display: none;">
+        <div id="seccion-regla" class="card mt-4" style="display: {% if tipo == 'regla_seleccion' %}block{% else %}none{% endif %};">
             <div class="card-header">
                 <h5>Regla de Selección</h5>
             </div>
@@ -154,7 +174,9 @@
                     <label for="regla_seleccion">Aplicar descuento al artículo de:</label>
                     <select class="form-control" id="regla_seleccion" name="regla_seleccion">
                         {% for regla in reglas_seleccion %}
-                        <option value="{{ regla.value }}">{{ regla.name }}</option>
+                        <option value="{{ regla.value }}" {% if oferta.regla_seleccion == regla %}selected{% endif %}>
+                            {{ regla.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -167,27 +189,95 @@
                 <h5>Condiciones de la oferta</h5>
             </div>
             <div class="card-body">
+                
                 <div id="condiciones-container">
-                    <div class="condicion-item row mb-3">
-                        <div class="col-md-5">
-                            <select class="form-control tipo-condicion" name="tipo_condicion[]" required>
-                                <option value="">Seleccione tipo</option>
-                                {% for tipo in tipos_condiciones %}
-                                <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
-                                {% endfor %}
-                            </select>
+                    {% if condiciones %}
+                        {% for condicion in condiciones %}
+                        <div class="condicion-item row mb-3">
+                            <div class="col-md-5">
+                                <select class="form-control tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
+                                    <option value="">Seleccione tipo</option>
+                                    {% for tipo in tipos_condiciones %}
+                                    <option value="{{ tipo.id }}" {% if tipo.id == condicion.id_tipo_condicion %}selected{% endif %}>
+                                        {{ tipo.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <!-- Contenedor para el select normal -->
+                                <div class="select-container">
+                                    <select class="form-control referencia" name="referencia[]" required>
+                                        <option value="">Primero seleccione un tipo</option>
+                                        {% if condicion.id_referencia %}
+                                            <option value="{{ condicion.id_referencia }}" selected>{{ condicion.nombre_referencia }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                <!-- Contenedor para la búsqueda de artículos -->
+                                <div class="articulo-container" style="display: none;">
+                                    <div class="input-group">
+                                        <input type="hidden" class="id-articulo" name="referencia[]" value="{{ condicion.id_referencia if condicion.id_referencia else '' }}">
+                                        <input type="text" class="form-control codigo-articulo" 
+                                            name="codigo_articulo[]"
+                                            placeholder="Código o descripción">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary limpiar-articulo" type="button">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted desc-articulo"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm remover-condicion">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <select class="form-control referencia" name="referencia[]" required disabled>
-                                <option value="">Primero seleccione un tipo</option>
-                            </select>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Template para nueva condición -->
+                        <div class="condicion-item row mb-3">
+                            <div class="col-md-5">
+                                <select class="form-control tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
+                                    <option value="">Seleccione tipo</option>
+                                    {% for tipo in tipos_condiciones %}
+                                    <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <!-- Contenedor para el select normal -->
+                                <div class="select-container">
+                                    <select class="form-control referencia" name="referencia[]" required>
+                                        <option value="">Primero seleccione un tipo</option>
+                                    </select>
+                                </div>
+                                <!-- Contenedor para la búsqueda de artículos -->
+                                <div class="articulo-container" style="display: none;">
+                                    <div class="input-group">
+                                        <input type="hidden" class="id-articulo" name="referencia[]" value="">
+                                        <input type="text" class="form-control codigo-articulo" 
+                                            name="codigo_articulo[]"
+                                            placeholder="Código o descripción">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary limpiar-articulo" type="button">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted desc-articulo"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm remover-condicion">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-danger btn-sm remover-condicion">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
                 <button type="button" class="btn btn-secondary" id="agregar-condicion">
                     <i class="fas fa-plus"></i> Agregar condición
@@ -205,46 +295,184 @@
 <script>
 let articuloSeleccionTipo = null; // 'origen' o 'destino'
 
-function seleccionarArticulo(tipo, boton) {
-        const articulo = {
-            id: boton.dataset.id,
-            codigo: boton.dataset.codigo,
-            detalle: boton.dataset.detalle,
-            marca: boton.dataset.marca
-        };
-        asignarArticulo(tipo, articulo);
-        $('#modalArticulos').modal('hide');
-}
-
-function asignarArticulo(tipo, articulo) {
-        document.getElementById(`id_articulo_${tipo}`).value = articulo.id;
-        document.getElementById(`codigo_articulo_${tipo}`).value = articulo.codigo;
-        document.getElementById(`desc_articulo_${tipo}`).textContent = `${articulo.marca} - ${articulo.detalle}`;
-}
-
-function limpiarArticulo(tipo) {
-    document.getElementById(`id_articulo_${tipo}`).value = '';
-    document.getElementById(`codigo_articulo_${tipo}`).value = '';
-    document.getElementById(`desc_articulo_${tipo}`).textContent = '';
-}
-
 document.addEventListener('DOMContentLoaded', function() {
 
     
-
     const condicionesContainer = document.getElementById('condiciones-container');
-    const btnAgregarCondicion = document.getElementById('agregar-condicion');
-
+    
     const tipoOferta = document.getElementById('tipo_oferta');
     const seccionVinculada = document.getElementById('seccion-vinculada');
     const seccionRegla = document.getElementById('seccion-regla');
     const seccionNormal = document.getElementById('seccion-normal');
+
+    // Función para manejar cambio de tipo de condición
+    function handleTipoCondicionChange(condicionItem) {
+        console.log('change condicion');
+        const tipoSelect = condicionItem.querySelector('.tipo-condicion');
+        const selectContainer = condicionItem.querySelector('.select-container');
+        const articuloContainer = condicionItem.querySelector('.articulo-container');
+        const referenciaSelect = condicionItem.querySelector('.referencia');
+        const idArticuloInput = articuloContainer.querySelector('.id-articulo');
+        
+        // Verificar que el select tenga una opción seleccionada
+        //bbbbbbbbbbbb
+        if (tipoSelect.selectedIndex >= 0) {
+            const tipoSeleccionado = tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase();
+            console.log("Tipo condición seleccionado: ", tipoSeleccionado);
+            if (tipoSeleccionado === 'articulo') {
+                // Configuración para artículos
+                selectContainer.style.display = 'none';
+                articuloContainer.style.display = 'block';
+                
+                // Deshabilitar y quitar name del select
+                referenciaSelect.removeAttribute('required');
+                referenciaSelect.setAttribute('disabled', 'disabled');
+                referenciaSelect.name = '';  // Importante: quitar el name
+                
+                // Habilitar y agregar name al input de artículo
+                idArticuloInput.name = 'referencia[]';
+                articuloContainer.querySelector('.codigo-articulo').setAttribute('required', 'required');
+            } else {
+                // Configuración para otros tipos (marca, rubro, etc)
+                selectContainer.style.display = 'block';
+                articuloContainer.style.display = 'none';
+                
+                // Habilitar y agregar name al select
+                referenciaSelect.setAttribute('required', 'required');
+                referenciaSelect.removeAttribute('disabled');
+                referenciaSelect.name = 'referencia[]';
+                
+                // Deshabilitar y quitar name del input de artículo
+                idArticuloInput.name = '';
+                articuloContainer.querySelector('.codigo-articulo').removeAttribute('required');
+            }
+        }
+    }
+
+    // Cargar datos iniciales de artículos vinculados
+    async function cargarDatosArticulos() {
+        if ('{{ vinculos }}' !== 'None') {
+            if ('{{ vinculos.id_articulo_origen }}') {
+                console.log('3');
+                const responseOrigen = await fetch(`${BASE_URL}/articulos/articulo_id/{{ vinculos.id_articulo_origen }}`);
+                const dataOrigen = await responseOrigen.json();
+                if (dataOrigen.success) {
+                    asignarArticulo('origen', dataOrigen.articulo);
+                }
+            }
+            if ('{{ vinculos.id_articulo_destino }}') {
+                console.log('4');
+                const responseDestino = await fetch(`${BASE_URL}/articulos/articulo_id/{{ vinculos.id_articulo_destino }}`);
+                const dataDestino = await responseDestino.json();
+                if (dataDestino.success) {
+                    asignarArticulo('destino', dataDestino.articulo);
+                }
+            }
+        }
+    }
+
+    async function cargarReferenciasIniciales() {
+        console.log('Cargando referencias iniciales...');
+        const condiciones = document.querySelectorAll('.condicion-item');
+        if (condiciones.length > 0) {
+            console.log('Tengo condiciones');
+                for (let condicion of condiciones) {
+                    const tipoSelect = condicion.querySelector('.tipo-condicion');
+                    console.log('Tipo de condicion: ', tipoSelect.options[tipoSelect.selectedIndex].text);
+                    // Leer el valor de referencia desde el input hidden .id-articulo si existe, si no desde el select
+                    let idReferencia = condicion.querySelector('.id-articulo')?.value;
+                    if ((!idReferencia) && (typeof referenciaSelect !== 'undefined')) {
+
+                        idReferencia = referenciaSelect.value;
+                    }
+                    else{
+                        if (typeof referenciaSelect !== 'undefined'){
+                            ///ccccccccccccc
+                        }
+                    }
+                if (tipoSelect && tipoSelect.selectedIndex >= 0) {
+                    const referenciaSelect = condicion.querySelector('.referencia');
+                    const tipoSeleccionado = tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase();
+                    const idReferencia = condicion.querySelector('.id-articulo')?.value || 
+                                    referenciaSelect.getAttribute('data-id-referencia');
+
+                    if (tipoSeleccionado === 'articulo') {
+                        console.log('Datos de articulo');
+                        if (idReferencia) {
+                            const response = await fetch(`${BASE_URL}/articulos/articulo_id/${idReferencia}`);
+                            const data = await response.json();
+                            if (data.success) {
+                                asignarArticuloCondicion(condicion.querySelector('.articulo-container'), data.articulo);
+                            }
+                        }
+                    } else if (tipoSelect.value) {
+                        const response = await fetch(`${BASE_URL}/ofertas/get_referencias/${tipoSelect.value}`);
+                        const data = await response.json();
+                        
+                        referenciaSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                        data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.nombre;
+                            if (item.id == idReferencia) {
+                                option.selected = true;
+                            }
+                            referenciaSelect.appendChild(option);
+                        });
+                        referenciaSelect.disabled = false;
+                    }
+                }
+            }
+        }
+    }
+
+
+    // Cargar datos de artículos en condiciones
+    async function cargarDatosCondiciones() {
+        const condiciones = document.querySelectorAll('.condicion-item');
+        if (condiciones.length > 0) {
+            for (let condicion of condiciones) {
+                const tipoSelect = condicion.querySelector('.tipo-condicion');
+                if (tipoSelect && tipoSelect.selectedIndex >= 0 && 
+                    tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase() === 'articulo') {
+                    const articuloContainer = condicion.querySelector('.articulo-container');
+                    const idArticulo = articuloContainer.querySelector('.id-articulo').value;
+                    if (idArticulo) {
+                        const response = await fetch(`${BASE_URL}/articulos/articulo_id/${idArticulo}`);
+                        const data = await response.json();
+                        if (data.success) {
+                            asignarArticuloCondicion(articuloContainer, data.articulo);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Ejecutar carga inicial
+    console.log('Cargando...')
+    cargarDatosArticulos();
+    cargarDatosCondiciones();
+    cargarReferenciasIniciales();
+
+    // Mostrar secciones según tipo de oferta inicial
+    const tipoInicial = tipoOferta.value;
+    console.log("Tipo de oferta inicial: ", tipoInicial);
+    if (tipoInicial === 'vinculada') {
+        seccionVinculada.style.display = 'block';
+    } else if (tipoInicial === 'regla_seleccion') {
+        seccionRegla.style.display = 'block';
+        seccionNormal.style.display = 'block';
+    } else {
+        seccionNormal.style.display = 'block';
+    }
 
     // Cargar artículos para ofertas vinculadas
     async function buscarArticulo(tipo, codigo) {
         try {
             const idlista = 1;
             let response; 
+            console.log('7');
             response = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/${idlista}`);
             //const response = await fetch(`/articulos/buscar/${codigo}`);
             if (!response.ok) {
@@ -273,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function mostrarModalArticulos(articulos) {
+    function mostrarModalArticulos(articulos, container = null) {
         const tbody = document.getElementById('tablaArticulos');
         tbody.innerHTML = '';
         
@@ -285,17 +513,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${art.marca}</td>
                 <td>${art.precio}</td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-primary" 
+                    <button type="button" class="btn btn-sm btn-primary seleccionar-articulo" 
                         data-id="${art.id}"
                         data-codigo="${art.codigo}"
                         data-detalle="${art.detalle}"
-                        data-marca="${art.marca}"
-                        onclick="seleccionarArticulo('${articuloSeleccionTipo}', this)">
+                        data-marca="${art.marca}">
                         Seleccionar
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
+        });
+
+        // Agregar event listeners a los botones
+        tbody.querySelectorAll('.seleccionar-articulo').forEach(boton => {
+            boton.addEventListener('click', function() {
+                const articulo = {
+                    id: this.dataset.id,
+                    codigo: this.dataset.codigo,
+                    detalle: this.dataset.detalle,
+                    marca: this.dataset.marca
+                };
+                
+                if (container) {
+                    asignarArticuloCondicion(container, articulo);
+                } else {
+                    asignarArticulo(articuloSeleccionTipo, articulo);
+                }
+                
+                $('#modalArticulos').modal('hide');
+            });
         });
         
         $('#modalArticulos').modal('show');
@@ -312,56 +559,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar/ocultar secciones según tipo de oferta
     tipoOferta.addEventListener('change', function() {
+        //aaaaaaaaaaaa
+        console.log('change tipo oferta');
         seccionVinculada.style.display = 'none';
         seccionRegla.style.display = 'none';
         seccionNormal.style.display = 'none';
-
+        const tipoCondicion = document.querySelector('.tipo-condicion');
+        const referencia = document.querySelector('.referencia');
         switch(this.value) {
             case 'vinculada':
                 seccionVinculada.style.display = 'block';
-                cargarArticulos();
+                cargarDatosArticulos();
+                tipoCondicion.removeAttribute('required');
+                referencia.removeAttribute('required');
                 break;
             case 'regla_seleccion':
                 seccionRegla.style.display = 'block';
                 seccionNormal.style.display = 'block';
+                tipoCondicion.setAttribute('required', 'required');
+                referencia.setAttribute('required', 'required');
                 break;
             default:
                 seccionNormal.style.display = 'block';
+                tipoCondicion.setAttribute('required', 'required');
+                referencia.setAttribute('required', 'required');
         }
     });
-
-    btnAgregarCondicion.addEventListener('click', function() {
-        const nuevaCondicion = condicionesContainer.querySelector('.condicion-item').cloneNode(true);
-        nuevaCondicion.querySelectorAll('select').forEach(select => select.value = '');
-        nuevaCondicion.querySelector('.referencia').disabled = true;
-        condicionesContainer.appendChild(nuevaCondicion);
-    });
-
-    condicionesContainer.addEventListener('change', async function(e) {
-        if (e.target.classList.contains('tipo-condicion')) {
-            const referenciaSelect = e.target.closest('.condicion-item').querySelector('.referencia');
-            referenciaSelect.disabled = true;
-            referenciaSelect.innerHTML = '<option value="">Cargando...</option>';
-
-            try {
-                const response = await fetch(`/ofertas/get_referencias/${e.target.value}`);
-                const data = await response.json();
-                
-                referenciaSelect.innerHTML = '<option value="">Seleccione una opción</option>';
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.nombre;
-                    referenciaSelect.appendChild(option);
-                });
-                referenciaSelect.disabled = false;
-            } catch (error) {
-                console.error('Error cargando referencias:', error);
-                referenciaSelect.innerHTML = '<option value="">Error al cargar</option>';
-            }
-        }
-    });
-
+        
     condicionesContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('remover-condicion') || 
             e.target.closest('.remover-condicion')) {
@@ -371,6 +595,172 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    condicionesContainer.addEventListener('change', async function(e) {
+        console.log('Cambio de condiciones')
+        if (e.target.classList.contains('tipo-condicion')) {
+            const condicionItem = e.target.closest('.condicion-item');
+            handleTipoCondicionChange(condicionItem);
+            const selectContainer = condicionItem.querySelector('.select-container');
+            const articuloContainer = condicionItem.querySelector('.articulo-container');
+            const referenciaSelect = condicionItem.querySelector('.referencia');
+            const idArticulo = articuloContainer.querySelector('.id-articulo');
+
+            const tipoSeleccionado = e.target.options[e.target.selectedIndex].text.toLowerCase();
+            if (tipoSeleccionado === 'articulo') { 
+                selectContainer.style.display = 'none';
+                articuloContainer.style.display = 'block';
+                referenciaSelect.removeAttribute('required');
+                articuloContainer.querySelector('.codigo-articulo').setAttribute('required', 'required');
+
+                // Si hay un ID de artículo, cargar sus datos
+                if (idArticulo.value) {
+                    console.log('1');
+                    const response = await fetch(`${BASE_URL}/articulos/articulo/${idArticulo.value}/1`);
+                    const data = await response.json();
+                    if (data.success) {
+                        asignarArticuloCondicion(articuloContainer, data.articulo);
+                    }
+                }
+                
+                // Inicializar el input de artículo
+                const codigoInput = articuloContainer.querySelector('.codigo-articulo');
+                codigoInput.addEventListener('blur', async function() {
+                    if (this.value) {
+                        try {
+                            const idlista = 1;
+                            console.log('2');
+                            let response = await fetch(`${BASE_URL}/articulos/articulo/${this.value}/${idlista}`);
+                            
+                            if (!response.ok) {
+                                response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${this.value}&idlista=${idlista}`);
+                            }
+                            
+                            if (!response.ok) {
+                                throw new Error('Error en la búsqueda del artículo');
+                            }
+
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                // Un solo artículo encontrado
+                                asignarArticuloCondicion(articuloContainer, data.articulo);
+                            } else if (data.length > 1) {
+                                // Múltiples artículos encontrados
+                                articuloSeleccionTipo = 'condicion';
+                                mostrarModalArticulos(data, articuloContainer);
+                            } else {
+                                alert('No se encontró ningún artículo');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Error al buscar artículo');
+                        }
+                    }
+                });
+            } else {
+                // Mostrar select normal
+                selectContainer.style.display = 'block';
+                articuloContainer.style.display = 'none';
+                
+                // Cargar referencias normales
+                referenciaSelect.disabled = true;
+                referenciaSelect.innerHTML = '<option value="">Cargando...</option>';
+
+                try {
+                    const response = await fetch(`/ofertas/get_referencias/${e.target.value}`);
+                    const data = await response.json();
+                    
+                    referenciaSelect.innerHTML = '<option value="">Seleccione una opción</option>';
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.nombre;
+                        referenciaSelect.appendChild(option);
+                    });
+                    referenciaSelect.disabled = false;
+                } catch (error) {
+                    console.error('Error cargando referencias:', error);
+                    referenciaSelect.innerHTML = '<option value="">Error al cargar</option>';
+                }
+            }
+        }
+    });
+
+    document.querySelectorAll('.condicion-item').forEach(condicionItem => {
+        handleTipoCondicionChange(condicionItem);
+    });
+
+    document.getElementById('agregar-condicion').addEventListener('click', function() {
+        // Obtener la primera condición como template
+        const templateCondicion = document.querySelector('.condicion-item');
+        if (!templateCondicion) return;
+        
+        // Clonar el template
+        const nuevaCondicion = templateCondicion.cloneNode(true);
+        
+        // Limpiar valores
+        const selects = nuevaCondicion.querySelectorAll('select');
+        
+        selects.forEach(select => {
+            select.value = '';
+            if (select.classList.contains('referencia')) {
+                select.innerHTML = '<option value="">Primero seleccione un tipo</option>';
+            }
+        });
+
+        // Limpiar contenedores de artículos
+        const articuloContainer = nuevaCondicion.querySelector('.articulo-container');
+        if (articuloContainer) {
+            articuloContainer.querySelector('.id-articulo').value = '';
+            articuloContainer.querySelector('.codigo-articulo').value = '';
+            articuloContainer.querySelector('.desc-articulo').textContent = '';
+            articuloContainer.style.display = 'none';
+        }
+
+        // Mostrar el select container
+        const selectContainer = nuevaCondicion.querySelector('.select-container');
+        if (selectContainer) {
+            selectContainer.style.display = 'block';
+        }
+
+        // Agregar la nueva condición al contenedor
+        document.getElementById('condiciones-container').appendChild(nuevaCondicion);
+    });
+
+    function seleccionarArticulo(tipo, boton) {
+        const articulo = {
+            id: boton.dataset.id,
+            codigo: boton.dataset.codigo,
+            detalle: boton.dataset.detalle,
+            marca: boton.dataset.marca
+        };
+        asignarArticulo(tipo, articulo);
+        $('#modalArticulos').modal('hide');
+}
+
+    function asignarArticulo(tipo, articulo) {
+            document.getElementById(`id_articulo_${tipo}`).value = articulo.id;
+            document.getElementById(`codigo_articulo_${tipo}`).value = articulo.codigo;
+            document.getElementById(`desc_articulo_${tipo}`).textContent = `${articulo.marca} - ${articulo.detalle}`;
+    }
+
+    function limpiarArticulo(tipo) {
+        document.getElementById(`id_articulo_${tipo}`).value = '';
+        document.getElementById(`codigo_articulo_${tipo}`).value = '';
+        document.getElementById(`desc_articulo_${tipo}`).textContent = '';
+    }
+
+    // Función para asignar artículo en condiciones
+    function asignarArticuloCondicion(container, articulo) {
+        console.log('articulo: ', articulo);
+        if (articulo != null) {
+            container.querySelector('.id-articulo').value = articulo.id;
+            container.querySelector('.codigo-articulo').value = articulo.codigo;
+            container.querySelector('.desc-articulo').textContent = `${articulo.marca} - ${articulo.detalle}`;
+        }    
+    }
+
 });
 </script>
 {% endblock %}

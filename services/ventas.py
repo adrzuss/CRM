@@ -10,6 +10,7 @@ from utils.utils import format_currency, precio
 from models.ventas import Factura, Item, PagosFV, Presupuesto, ItemP, PresupuestoFactura, RemitosVtaFactura
 from models.clientes import Clientes
 from models.articulos import Articulo, ListasPrecios, Stock
+from models.entidades_cred import MovEntidades
 from models.ctactecli import CtaCteCli
 from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva, \
                            TipoCompAplica, Localidades, Provincias
@@ -296,8 +297,14 @@ def procesar_nueva_venta(form, id_sucursal):
         idlista = form['idlista']
         id_tipo_comprobante = form['id_tipo_comprobante']
         efectivo = float(form['efectivo'])
+        #datos de la tarjeta
         tarjeta = float(form['tarjeta'])
+        cuotas = form.get('cuotas', 1)
+        coeficiente = form.get('coeficiente', 1)
+        documento = form['documento']
+        telefono = form['telefono']
         entidad = form['entidad']
+        #fin datos de la tarjeta
         ctacte = float(form['ctacte'])
         bonificacion = float(form['bonificacion'])
         idcredito = form.get('idcredito', None)
@@ -339,7 +346,7 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte, bonificacion, idcredito, monto_credito)
+        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito)
         # Si se está facturando un presupuesto se vincula el mismo a la factura 
         if idPresupuesto:
             presupuesto = Presupuesto.query.get(idPresupuesto)
@@ -362,8 +369,13 @@ def procesar_nueva_venta(form, id_sucursal):
         db.session.commit()
     except SQLAlchemyError as e:
         db.session.rollback()
+        print(f"Error sql grabando venta: {e}")
+        raise Exception(f"Error sql grabando venta: {e}")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error grabando venta: {e}")
         raise Exception(f"Error grabando venta: {e}")
-    return nro_comprobante
+    return nro_comprobante, idfactura
 
 def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     total = Decimal(0)
@@ -434,13 +446,21 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     
     return total, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, ctacte, bonificacion, idcredito, monto_credito):
+def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito):
     try:
         if efectivo > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=1, tipo=1, entidad=0, total=Decimal(efectivo)))
         if tarjeta > 0:
             entidad = int(entidad)
             db.session.add(PagosFV(idfactura=idfactura, idpago=2, tipo=2, entidad=entidad, total=Decimal(tarjeta)))
+            try:
+                intereses = Decimal(tarjeta) / Decimal(coeficiente)
+            except ZeroDivisionError:
+                intereses = 0.0
+            try:    
+                db.session.add(MovEntidades(idfactura=idfactura, identidad=int(entidad), cuotas=int(cuotas), total=Decimal(tarjeta), intereses=intereses, documento=documento, telefono=telefono))
+            except Exception as e:
+                print(f'Error insertando movimiento de entidad: {e}')
         if ctacte > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=3, tipo=3, entidad=0, total=Decimal(ctacte)))
             db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0), idcomp=idfactura))
@@ -1172,3 +1192,4 @@ def generar_presupuesto(id_presupuesto):
             response.headers['Content-Disposition'] = f'attachment; filename={nombrePDF}'
             return response
 
+#----------------- fin presupuestos ------------------#

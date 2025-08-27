@@ -5,7 +5,7 @@
             <div class="row justify-content-md-center">
                 <div class="col-10">
                     <div class="card-body text-bg-primary mb-3">
-                        <h5 class="card-title">Datos generle del punto de venta</h5>
+                        <h5 class="card-title">Datos generles del punto de venta</h5>
                         <div class="row">
                             <div class="col-1 mb-3"> 
                                 <label for="id_puntoventa">#ID</label>
@@ -109,6 +109,24 @@
                                 <label for="calve_cert">Clave del certificado</label>
                                 <input class="form-control" type="text" name="clave_cert" id="clave_cert" placeholder="Ingrese la calve del certificado p12/pfx" value="{{ puntoVenta.clave_certificado }}">
                             </div>    
+                        </div>
+                    </div>
+                    <div class="card-body text-bg-light mb-3">
+                        <h5 class="card-title">Configuración de impresoras de comprobantes</h5>
+                        <div class="row">
+                            <div class="col-3 mb-3">
+                                <label for="pos_printer">Impresora POS</label>
+                                <select class="form-select form-select-md" name="pos_printer" id="pos_printer">
+                                    {% for printer in posPrinters %}
+                                        {% if printer.name == puntoVenta.pos_printer %}
+                                            <option value="{{ printer.name }}" selected>{{ printer.name }}</option>
+                                        {% else %}
+                                            <option value="{{ printer.name }}">{{ printer.name }}</option>
+                                        {% endif %}    
+                                    {% endfor %}
+                                </select>    
+                            </div>
+                            
                         </div>
                     </div>
                 </div>

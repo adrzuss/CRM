@@ -3,6 +3,46 @@
 {% block body %}
     <h1 class="m-3">Listado de ofertas</h1>
     <div class="m-2">
+        <div class="card">
+            <div class="card-title">
+                <h5 class="m-3">Listado de ofertas cargadas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Tipo desc</th>
+                                <th scope="col">Valor desc</th>
+                                <th scope="col">Inicio</th>
+                                <th scope="col">Fin</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for oferta in ofertas %}
+                                <tr class="table-light">
+                                    <td scope="row">{{ oferta.nombre }}</td>
+                                    <td>{{ oferta.tipo_descuento_display }}</td>
+                                    <td>{{ oferta.valor_descuento }}</td>
+                                    <td>{{ oferta.fecha_inicio.strftime("%d-%m-%Y") }}</td>
+                                    <td>{{ oferta.fecha_fin.strftime("%d-%m-%Y") }}</td>
+                                    <td>
+                                        <a href="{{ url_for('ofertas.edit', id=oferta.id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                        <form action="{{ url_for('ofertas.delete', id=oferta.id) }}" method="post" style="display:inline;">
+                                            <input type="hidden" name="_method" value="DELETE">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>    
+        </div>    
+        
             
     </div>    
 

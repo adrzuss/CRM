@@ -5,6 +5,7 @@ from services.configs import getOwner, getTareaUsuario
 from utils.db import db
 from utils.utils import check_session
 from utils.config import Config
+from models.articulos import PedirEnVentas
 from routes.sessions import bp_sesiones
 from routes.tableros import bp_tableros
 from routes.clientes import bp_clientes
@@ -46,7 +47,7 @@ def create_app():
     app.register_blueprint(bp_creditos, url_prefix='/creditos')
     app.register_blueprint(bp_bancos, url_prefix='/bancos')
     app.register_blueprint(bp_ofertas, url_prefix='/ofertas')
-
+    
     @app.before_request
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)

@@ -42,6 +42,10 @@
                                     {% endfor %}
                                 </select>
                             </div>    
+                            <div class="col-sm-3 m-3 from-check">
+                                <input class="form-check-input" type="checkbox" id="ver_baja" name="ver_baja" value="1">
+                                <label for="ver_baja" class="form-check-label">Ver artículos de baja</label>
+                            </div>
                             <div>
                                 <button id="btnFiltrar" class="col-1 m-3 btn btn-exito">Filtrar</button>
                             </div>
@@ -70,6 +74,7 @@
                 data: function (d) {
                     d.idmarca = $('#idmarca').val(); // Pasar el ID de la marca seleccionada
                     d.idrubro = $('#idrubro').val(); // Pasar el ID del rubro seleccionado
+                    d.ver_baja = $('#ver_baja').is(':checked') ? 1 : 0;
                 },
                 error: function (xhr, error, thrown) {
                     alert('Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.');

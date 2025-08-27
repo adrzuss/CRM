@@ -170,6 +170,7 @@ class PuntosVenta(db.Model):
     ultimo_rem_x = db.Column(db.Integer, nullable=False)
     ultimo_rec_x = db.Column(db.Integer, nullable=False)
     fac_electronica = db.Column(db.Boolean, nullable=False, default=False)
+    pos_printer = db.Column(db.String(100), nullable=True)
     certificado_p12 = db.Column(db.String(300))
     clave_certificado = db.Column(db.String(50))
     token = db.Column(db.String(1000))

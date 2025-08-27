@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
-from models.articulos import ListasPrecios
+from models.articulos import ListasPrecios, PedirEnVentas
 from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
 from models.configs import PuntosVenta
@@ -7,12 +7,15 @@ from models.sessions import Usuarios
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
                             generar_presupuesto
+from services.configs import getDatosSucEmpresa, getPosPrinter
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
 from sqlalchemy import text
+
+from services.printer_service import get_printer_service, WindowsPrinterService, LinuxPrinterService
 
 bp_ventas = Blueprint('ventas', __name__, template_folder='../templates/ventas', static_folder='../static')
 
@@ -35,12 +38,11 @@ def ventas():
 #@check_session
 def get_punto_vta():
     try:
-        
         if not ('idPuntoVenta' in session):
             punto_vta = None
         else:    
             punto_vta = session['idPuntoVenta']
-        
+            session['posPrinter'] = getPosPrinter(punto_vta)
         #punto_vta = 1    
         return jsonify({'success': True, 'punto_vta': punto_vta})
     except Exception as e:
@@ -49,10 +51,14 @@ def get_punto_vta():
 @bp_ventas.route('/get_puntos_vta_sucursal')
 @check_session
 def get_puntos_vta_sucursal():
-    puntosVtaSucursal = db.session.query(PuntosVenta.id, 
-                                         PuntosVenta.punto_vta, 
-                                         PuntosVenta.fac_electronica).filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
-    return jsonify([{'id': pv.id, 'puntoVta': pv.punto_vta, 'facElectronica': 'Si' if pv.fac_electronica else 'No'} for pv in puntosVtaSucursal])
+    try:
+        session['posPrinter'] = None
+        puntosVtaSucursal = db.session.query(PuntosVenta.id, 
+                                            PuntosVenta.punto_vta, 
+                                            PuntosVenta.fac_electronica).filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
+        return jsonify([{'id': pv.id, 'puntoVta': pv.punto_vta, 'facElectronica': 'Si' if pv.fac_electronica else 'No'} for pv in puntosVtaSucursal])
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @bp_ventas.route('/set_punto_vta', methods=['POST'])
 @check_session
@@ -65,8 +71,10 @@ def set_punto_vta():
 
         # Asignar el valor a la sesión
         session['idPuntoVenta'] = punto_vta_id
+        puntoVta = PuntosVenta.query.get(punto_vta_id)
+        session['posPrinter'] = puntoVta.pos_printer
         
-        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente'})
+        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al asignar el punto de venta: {str(e)}'}), 500
     
@@ -76,16 +84,23 @@ def set_punto_vta():
 def nueva_venta():
     if request.method == 'POST':
         try:
-            nro_comprobante = procesar_nueva_venta(request.form, session['id_sucursal'])
+            nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
             flash(f'Factura grabada exitosamente: {nro_comprobante}')
-            return redirect(url_for('ventas.nueva_venta'))
+            #return redirect(url_for('ventas.nueva_venta'))
+            return jsonify({
+                'success': True,
+                'message': f'Factura grabada exitosamente: {nro_comprobante}',
+                'nro_comprobante': nro_comprobante,
+                'id': id_factura 
+            })
         except Exception as e:
             flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
             return redirect(url_for('ventas.nueva_venta'))
-    hoy = date.today()
-    entidades = EntidadesCred.query.all()
-    listas_precio = ListasPrecios.query.all()
-    return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    if request.method == 'GET':
+        hoy = date.today()
+        entidades = EntidadesCred.query.all()
+        listas_precio = ListasPrecios.query.all()
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
 @check_session
@@ -381,3 +396,51 @@ def facturar_presupuesto(id):
 def imprimir_presupuesto(id):
     return generar_presupuesto(id)
     
+#------------- impresion de comprobantes -------------#
+                   
+@bp_ventas.route('/imprimir_factura_vta_pos/<id>')
+@check_session
+def imprimir_factura_vta_pos(id):
+    try:
+        
+        factura, items, pagos = get_factura(id)
+        empresa = getDatosSucEmpresa()
+        posPrinterName = getPosPrinter(session['idPuntoVenta'])
+        printer_service = get_printer_service()
+        # "POS Printer 203DPI Series"
+        if isinstance(printer_service, WindowsPrinterService):
+            printer_service.printer_name = posPrinterName 
+        elif isinstance(printer_service, LinuxPrinterService):
+            printer_service.printer_name = posPrinterName
+        else:
+            printer_service.vendor_id = 0x0483
+            printer_service.product_id = 0x5740
+        print(factura)
+        for item in items:
+            print(item)
+        printer_service.print_invoice(factura, items, empresa)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Factura impresa correctamente'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error al imprimir: {str(e)}'
+        }), 500
+        
+@bp_ventas.route('/list_printers')
+@check_session
+def list_printers():
+    try:
+        printer_service = get_printer_service()
+        
+        result = printer_service.list_printers()
+        if result['success']:
+            for printer in result['printers']:
+                print(printer)
+        else:
+            print(f"Error: {result['error']}")
+    except Exception as e:
+        print(f'Error listando impresoras: {e}')        

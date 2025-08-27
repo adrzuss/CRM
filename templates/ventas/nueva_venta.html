@@ -6,6 +6,7 @@
     <h1 class="m-3">Nueva factura de venta</h1>
     <div class="row">
         <h2 id="punto_vta" class="m-3 col-3">Punto de venta: </h2>
+        <h6 id="posPrinter" class="m-3 col-3">Pos: {{ session['posPrinter']}} </h2> 
         <div class="col-7">
             <div class="row">
                 <label class="col-md-1"></label>
@@ -18,8 +19,30 @@
             <!-- Modal para seleccionar cliente y articulos -->
             {% include 'partials/_modal-cliente.html' %}
             {% include 'partials/_modal-seleccion-ptovta.html' %}
+            <!-- Spinner -->
+            <div id="spinner" style="display: none; text-align: center; margin-top: 20px;">
+                <div class="loader"></div>
+                <p>Procesando factura, por favor espere...</p>
+            </div> 
 
+            <style>
+                .loader {
+                border: 6px solid #f3f3f3; /* color gris */
+                border-top: 6px solid #3498db; /* color azul */
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: auto;
+                }
+                @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+                }
+            </style>
+            <!-- Fin spinner --> 
             <form id="invoice_form" method="post">
+                {% include 'partials/_modal-pagos.html' %}
                 <div class="card mb-3">
                 
                     <div class="row" id="cabecera">
@@ -89,54 +112,18 @@
 
                 <div class="row">
                     <button class="btn btn-exito col-2 m-2" type="button" id="agregarArticulo">Agregar articulo F4</button>
-                    <div class="row">
-                        <h3 class="m-3 col-3">Total Factura: $<span id="total_factura">0.00</span></h3>
-                        <input type="text" name="totalFactura" id="totalFactura" hidden>
-                    </div>    
-                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
+                    <button class="btn btn-primario col-2 m-2" type="button" id="btnPagos" name="btnPagos" onclick="abrirModalPagos()"> F8 Pagos </button>
                 </div>
 
                 <div class="card bg-uno m-3">
-                    <h4 class="m-3">Formas de pago ( F8 )</h4>
-                    <div class="card-body">
-                        <div class="row justify-content-md-center">
-                            <div class="col-2 mt-3">
-                                <label for="efectivo">Efectivo</label>
-                                <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0" onfocus="this.select()">
-                            </div>
-                            <div class="col-2">
-                                <label for="entidad" class="form-label">Entidad</label>
-                                <select class="form-select form-select-md" name="entidad" id="entidad" >
-                                    <option selected>Elija una</option>
-                                    {% for entidad in entidades %}
-                                        <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
-                                    {% endfor %}
-                                </select>
-                                <label for="tarjeta">Tarjeta</label>
-                                <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0" onfocus="this.select()">
-                            </div>    
-                            <div class="col-2 mt-3">    
-                                <label for="ctacte" id="label-ctacte">Cta. Cte.</label>
-                                <input type="number" name="ctacte" id="ctacte" class="form-control" step="0.01" value="0" onfocus="this.select()">
-                            </div>
-                            <div class="col-2 mt-3">
-                                <label for="bonificacion">Bonificación</label>
-                                <input type="number" name="bonificacion" id="bonificacion" class="form-control" step="0.01" value="0" onfocus="this.select()">
-                            </div>
-                            <div class="col-2">
-                                <label for="idcredito"># Crédito</label>
-                                <input type="number" name="idcredito" id="idcredito" class="form-control" onfocus="this.select()">
-                                <label for="monto_credito">Monto crédito</label>
-                                <input type="number" name="monto_credito" id="monto_credito" class="form-control" step="0.01" value="0" onfocus="this.select()">
-                            </div>
-                        </div>
-
+                    <h4 class="m-3">Total Factura</h4>
+                    <div class="row">
+                        <div class="col-3 m-3">
+                            <input type="number" class="form-control precio-destacado" name="totalFactura" id="totalFactura" readonly value="0">
+                        </div>    
                     </div>
                 </div>
-
-                <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarVenta">Guardar Factura F9</button>
-                </div>
+                
             </form>
         </div>
     </div>        

@@ -1,6 +1,11 @@
 from utils.db import db
 from datetime import date
+from enum import Enum
 
+class PedirEnVentas(Enum):
+    CANTIDAD = "Pedir cantidad"
+    PRECIO = "Pedir precio"
+    CANTIDAD_PRECIO = "Pedir cantidad y precio"
 class Articulo(db.Model):
     __tablename__ = 'articulos'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -17,6 +22,7 @@ class Articulo(db.Model):
     idtipoarticulo = db.Column(db.Integer, db.ForeignKey('tipo_articulos.id'))
     imagen = db.Column(db.String(255))
     es_compuesto = db.Column(db.Boolean, nullable=False)
+    pedir_en_ventas = db.Column(db.Enum(PedirEnVentas), default=PedirEnVentas.CANTIDAD, nullable=False)
     baja = db.Column(db.Date, nullable=False)
     iva = db.relationship('AlcIva', back_populates='articulos')
     ingbto = db.relationship('AlcIB', back_populates='articulos')
@@ -26,7 +32,7 @@ class Articulo(db.Model):
     #tipoarticulo = db.relationship('TipoArticulos', back_populates='articulos', lazy=True)
     #stock = db.relationship('Stock', back_populates='idarticulo')
     
-    def __init__(self, codigo, detalle, costo, costo_total, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto):
+    def __init__(self, codigo, detalle, costo, costo_total, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto, pedir_en_ventas):
         self.codigo = codigo
         self.detalle = detalle
         self.costo = costo
@@ -40,7 +46,20 @@ class Articulo(db.Model):
         self.idtipoarticulo = idtipoarticulo
         self.imagen = imagen
         self.es_compuesto = es_compuesto
+        self.pedir_en_ventas = pedir_en_ventas
         self.baja = date(1900, 1, 1)
+    
+    @property
+    def pedir_en_ventas_display(self):
+        return self.pedir_en_ventas.name if self.pedir_en_ventas else None
+    """
+        displays = {
+            PedirEnVentas.CANTIDAD: 'Cantidad',
+            PedirEnVentas.PRECIO: 'Precio',
+            PedirEnVentas.CANTIDAD_PRECIO: 'Cantidad y Precio'
+        }
+        return displays.get(self.pedir_en_ventas, self.pedir_en_ventas)    
+    """    
 
 class ArticuloCompuesto(db.Model):    
     __tablename__ = 'art_compuesto'

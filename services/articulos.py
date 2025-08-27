@@ -73,7 +73,7 @@ def procesar_articulo(form, idarticulo):
         except Exception as e:
             flash(f'Error grabando precios {e}', 'error')    
             
-def get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir):            
+def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, length, order_column, order_dir):            
      # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'es_compuesto']
     order_by = columns[order_column] if order_column < len(columns) else 'codigo'
@@ -98,9 +98,23 @@ def get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, o
     # Aplicar búsqueda
     if search_value:
         if search_value[0:2] == '//':
-            query = query.filter(Articulo.codigo.ilike(f"{search_value[2:]}%"))
+            if len(search_value) > 2:
+                codBusqueda = search_value[2:]
+                print(f'Codigo a buscar: {codBusqueda}')
+                if verBaja == 1:
+                    query = query.filter(and_(Articulo.codigo.ilike(f"{codBusqueda}%"), Articulo.baja >= date(1900, 1, 1)))
+                else:
+                    query = query.filter(and_(Articulo.codigo.ilike(f"{codBusqueda}%"), Articulo.baja == date(1900, 1, 1)))
         else:
-            query = query.filter(Articulo.detalle.ilike(f"%{search_value}%"))
+            if verBaja == 1:
+                query = query.filter(and_(Articulo.detalle.ilike(f"%{search_value}%"), Articulo.baja >= date(1900, 1, 1)))
+            else:
+                query = query.filter(and_(Articulo.detalle.ilike(f"%{search_value}%"), Articulo.baja == date(1900, 1, 1)))
+    else:
+        if verBaja == 1:
+            query = query.filter(Articulo.baja >= date(1900, 1, 1))
+        else:
+            query = query.filter(Articulo.baja == date(1900, 1, 1))
 
     # Aplicar ordenamiento
     if order_dir == 'desc':

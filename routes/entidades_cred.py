@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, g
+from flask import Blueprint, render_template, request, redirect, flash, url_for, g, jsonify
 from models.entidades_cred import EntidadesCred
 from models.ventas import Factura, PagosFV
 from models.clientes import Clientes
 from models.sucursales import Sucursales
+from services.entidades_cred import getFinanciamiento, grabarAlicuotas, calcular_coeficiente
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
@@ -102,3 +103,21 @@ def listado_movimientos():
         hasta = request.form.get('hasta', '')
         idEntidad = request.form.get('entidad', '')
         return redirect(url_for('entidades.listado_movimientos', desde=desde, hasta=hasta, idEntidad=idEntidad))
+
+@bp_entidades.route('/alicuotas/<int:id>', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def alicuotas(id):
+    if request.method == 'POST':
+        resultado =grabarAlicuotas(id, request.form)
+        if resultado:
+            flash('Alícuotas grabadas correctamente')
+        return redirect(url_for('entidades.alicuotas', id=id))
+    else:
+        entidad, financiamiento = getFinanciamiento(id)
+        return render_template('fin-ent-cred.html', entidad=entidad, financiamiento=financiamiento, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        
+@bp_entidades.route('/coeficiente_cuotas/<int:tarjeta>/<int:cuotas>', methods=['GET'])
+def coeficiente_cuotas(tarjeta, cuotas):
+    if request.method == 'GET':
+        return jsonify({'coeficiente': calcular_coeficiente(tarjeta, cuotas)})

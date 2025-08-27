@@ -15,8 +15,9 @@
                         <td scope="row">{{ entidad.entidad }}</td>
                         <td>{{ entidad.telefono }}</td>
                         <td>
-                            <a href="{{ url_for('entidades.entidades', id=entidad.id) }}" class="btn btn-success">Actualizar</a>
-                            <a href="#" class="btn btn-danger">Eliminar</a>
+                            <a href="{{ url_for('entidades.entidades', id=entidad.id) }}" class="btn btn-exito">Actualizar</a>
+                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                            <a href="{{ url_for('entidades.alicuotas', id=entidad.id) }}" class="btn btn-primario">Alícuotas</a>
                         </td>
                     </tr>
                 {% endfor %}

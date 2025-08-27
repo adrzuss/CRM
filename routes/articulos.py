@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from flask import g
 from werkzeug.utils import secure_filename
 import os
-from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt
+from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt, PedirEnVentas
 from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB
 from models.sucursales import Sucursales
 from models.proveedores import Proveedores
@@ -16,7 +16,7 @@ from utils.db import db
 from utils.config import allowed_file
 from utils.utils import check_session, convertir_decimal
 from utils.msg_alertas import alertas_mensajes
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 
 bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/articulos')
@@ -41,10 +41,11 @@ def api_articulos():
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
+    verBaja = request.args.get('ver_baja', type=int)# != None  # Ver artículos de baja
     order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
     
-    draw, total_records, total_records, data = get_listado_articulos(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)
+    draw, total_records, total_records, data = get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, length, order_column, order_dir)
 
     # Respuesta para DataTables
     response = {
@@ -115,8 +116,9 @@ def update_articulo(id):
                                          Proveedores.nombre.label('nombre_proveedor')) \
                                    .join(Proveedores, ProvByArt.idproveedor == Proveedores.id) \
                                    .filter(ProvByArt.idarticulo == articulo.id).all()
-        return render_template('upd-articulos.html', articulo=articulo, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-    
+        
+        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
     if request.method == 'POST':
         
         if (id == '0'):
@@ -133,7 +135,9 @@ def update_articulo(id):
                 idmarca=request.form['idmarca']
                 idTipoArticulo=request.form['idtipoarticulo']
                 esCompuesto=request.form.get("es_compuesto") != None
-                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto) 
+                pedirEnVentas=request.form.get("pedir_en_ventas")
+                print(f'Que pedimos: {pedirEnVentas}')
+                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto, pedir_en_ventas=pedirEnVentas) 
                 db.session.add(articulo)
                 
             except Exception as e:
@@ -152,6 +156,7 @@ def update_articulo(id):
                 articulo.idib = request.form['idib']
                 articulo.idtipoarticulo = request.form['idtipoarticulo']
                 articulo.es_compuesto = request.form.get("es_compuesto") != None
+                articulo.pedir_en_ventas = request.form.get("pedir_en_ventas")
                 articulo.idmarca = request.form['idmarca']
                 articulo.idrubro = request.form['idrubro']
             except Exception as e: 
@@ -309,9 +314,61 @@ def filtrar_articulos(marca, rubro, lista_precio, porcentaje):
 
     
 @bp_articulos.route('/articulo/<string:codigo>/<int:idlista>', methods=['GET'])
-#@check_session
+@check_session
 #busqueda de datos de articulos
 def get_articulo(codigo, idlista):
+    # Buscar el artículo por código
+    try:
+        articulo = db.session.query(Articulo.id,
+                                    Articulo.codigo,
+                                    Articulo.detalle,
+                                    Articulo.costo,
+                                    Articulo.idrubro,
+                                    Articulo.idmarca,
+                                    Articulo.baja,
+                                    Articulo.pedir_en_ventas,
+                                    Marca.nombre.label('marca')
+                                    ).outerjoin(Marca, Marca.id == Articulo.idmarca
+                                    ).filter(Articulo.codigo == codigo).first()
+        
+        if not articulo:
+            return jsonify(success=False, articulo={}), 404
+        # Obtener el precio del artículo según la lista especificada (idlista)
+        # Si la lista es 0 es porque vengo desde las compra 
+        enOferta = False
+        if idlista > 0 :
+            precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
+        
+            # Verificar si se encontró un precio para el idlista especificado
+            if not precio:
+                return {"error": "Precio no disponible para el artículo en la lista solicitada"}, 404
+            # Buscar ofertas
+            oferta = db.session.execute(text("call get_oferta_articulo(:idarticulo, :idrubro, :idmarca)"), {"idarticulo": articulo.id, "idrubro": articulo.idrubro, "idmarca": articulo.idmarca}).fetchall()
+            enOferta = False
+            if oferta[0].v_valor_descuento != None:
+                enOferta = True
+                # Si hay ofertas, aplicar la lógica correspondiente
+                if oferta[0].v_tipo_descuento == 1:
+                    precio.precio = precio.precio - (precio.precio * oferta[0].v_valor_descuento / 100)
+                else:    
+                    precio.precio = oferta[0].v_valor_descuento
+            # Devolver la información requerida
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})   
+        elif idlista == 0:
+            # Obtener el precio del artículo según la lista especificada (idlista)
+            # Si la lista es 0 es porque vengo desde las compra y en precio se pasa el costo
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
+        else:    
+            # Devolver la información requerida
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
+    except Exception as e:
+        print(f'Error al obtener el artículo: {e}')
+        return jsonify(success=False, error=str(e)), 500
+
+@bp_articulos.route('/articulo_id/<int:idarticulo>', methods=['GET'])
+@check_session
+#busqueda de datos de articulos
+def get_articulo_id(idarticulo):
     # Buscar el artículo por código
     articulo = db.session.query(Articulo.id,
                                 Articulo.codigo,
@@ -321,36 +378,14 @@ def get_articulo(codigo, idlista):
                                 Articulo.idmarca,
                                 Marca.nombre.label('marca')
                                 ).outerjoin(Marca, Marca.id == Articulo.idmarca
-                                ).filter(Articulo.codigo == codigo).first()
+                                ).filter(Articulo.id == idarticulo).first()
     
     if not articulo:
         return jsonify(success=False, articulo={}), 404
-    
-    # Obtener el precio del artículo según la lista especificada (idlista)
-    # Si la lista es 0 es porque vengo desde las compra 
-    if idlista > 0 :
-        precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
-    
-        # Verificar si se encontró un precio para el idlista especificado
-        if not precio:
-            return {"error": "Precio no disponible para el artículo en la lista solicitada"}, 404
-        # Buscar ofertas
-        oferta = db.session.execute(text("call get_oferta_articulo(:idarticulo, :idrubro, :idmarca)"), {"idarticulo": articulo.id, "idrubro": articulo.idrubro, "idmarca": articulo.idmarca}).fetchall()
-        if oferta[0].v_valor_descuento != None:
-            # Si hay ofertas, aplicar la lógica correspondiente
-            if oferta[0].v_tipo_descuento == 1:
-                precio.precio = precio.precio - (precio.precio * oferta[0].v_valor_descuento / 100)
-            else:    
-                precio.precio = oferta[0].v_valor_descuento
-        # Devolver la información requerida
-        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio})   
-    elif idlista == 0:
-        # Obtener el precio del artículo según la lista especificada (idlista)
-        # Si la lista es 0 es porque vengo desde las compra y en precio se pasa el costo
-        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo})
     else:    
-        # Devolver la información requerida
-        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo})
+        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo})   
+    
+
     
     
 @bp_articulos.route('/get_articulos')
@@ -359,30 +394,33 @@ def get_articulos():
     # Buscar el artículo por detalle
     detalle = request.args.get('detalle', '')
     idlista = request.args.get('idlista', '')
-    if detalle and idlista:
-        if idlista != "0":
-            articulos = db.session.query(Articulo.id,
-                                         Articulo.codigo,
-                                         Articulo.detalle,
-                                         Articulo.costo,
-                                         Marca.nombre.label('marca'),
-                                         Precio.precio
-                                        ).join(Precio, Precio.idarticulo == Articulo.id
-                                        ).join(Marca, Marca.id == Articulo.idmarca
-                                        ).filter(and_(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%")), Precio.idlista == idlista)).all()
+    try:
+        if detalle and idlista:
+            if idlista != "0":
+                articulos = db.session.query(Articulo.id,
+                                            Articulo.codigo,
+                                            Articulo.detalle,
+                                            Articulo.costo,
+                                            Marca.nombre.label('marca'),
+                                            Precio.precio
+                                            ).join(Precio, Precio.idarticulo == Articulo.id
+                                            ).join(Marca, Marca.id == Articulo.idmarca
+                                            ).filter(and_(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%")), Articulo.baja == date(1900, 1, 1), Precio.idlista == idlista)).all()
+            else:
+                articulos = db.session.query(Articulo.id,
+                                            Articulo.codigo,
+                                            Articulo.detalle,
+                                            Articulo.costo,
+                                            Marca.nombre.label('marca'),
+                                            Articulo.costo.label('precio'),
+                                            ).join(Marca, Marca.id == Articulo.idmarca
+                                            ).filter(and_(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%")), Articulo.baja == date(1900, 1, 1))).all()    
         else:
-            articulos = db.session.query(Articulo.id,
-                                         Articulo.codigo,
-                                         Articulo.detalle,
-                                         Articulo.costo,
-                                         Marca.nombre.label('marca'),
-                                         Articulo.costo.label('precio'),
-                                         ).join(Marca, Marca.id == Articulo.idmarca
-                                         ).filter(or_(Articulo.detalle.like(f"%{detalle}%"), Marca.nombre.like(f"%{detalle}%"))).all()    
-    else:
-        articulos = []
-    return jsonify([{'id': a.id, 'codigo': a.codigo, 'marca': a.marca, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio} for a in articulos])
-    
+            articulos = []
+    except Exception as e:
+        print(f'Error al obtener los artículos: {e}')
+    return jsonify([{'id': a.id, 'codigo': a.codigo, 'marca': a.marca, 'detalle': a.detalle, 'costo': a.costo, 'precio': a.precio, 'baja': False} for a in articulos])
+
 @bp_articulos.route('/lst_precios', methods=['GET']) 
 @check_session
 @alertas_mensajes

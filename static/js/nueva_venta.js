@@ -151,6 +151,7 @@ function saleccionarPtoVta(datos) {
     ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
     ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica; // Mostrar el nombre del punto de venta
     listaPtosVtasSucursal.appendChild(ptoVtaOption);
+    
   });
   
   // Agregar el <select> al modal
@@ -173,6 +174,17 @@ function saleccionarPtoVta(datos) {
   $("#ptovtaModal").modal("show");
 }
 
+function abrirModalPagos(){
+  // Enfocar el primer campo de pago
+  $("#pagosModal").modal("show");
+
+  // Cuando el modal se haya mostrado, enfocar el input
+    document.getElementById('pagosModal').addEventListener('shown.bs.modal', function () {
+      document.getElementById("efectivo").focus();
+    }, { once: true }); // once=true para que no se dispare más de una vez
+
+}
+
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
     // Llamar a la API para asignar el punto de venta a la sesión
@@ -181,7 +193,7 @@ async function asignarPuntoVenta(idPuntoVenta) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ punto_vta_id: idPuntoVenta }),
+      body: JSON.stringify({ punto_vta_id: idPuntoVenta}),
     });
 
     const result = await response.json();
@@ -189,6 +201,7 @@ async function asignarPuntoVenta(idPuntoVenta) {
       $("#ptovtaModal").modal("hide");
       // Actualizar el texto en la página con el punto de venta seleccionado
       document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
+      document.getElementById("posPrinter").textContent = 'Pos: ' + result.posPrinter;
       document.getElementById("idcliente").focus();
     } else {
       alert('Error al asignar el punto de venta: ' + result.message);
@@ -226,11 +239,15 @@ document.addEventListener("DOMContentLoaded", function () {
         inputs[nextIndex].focus();
       }
     }
-
+    // Asignar tecla F4 para agregar un nuevo artículo
+    if (event.key === "F4") {
+      event.preventDefault(); // Evita la recarga de página con F5
+      btnAgregar.click(); // Simula un click en el botón "Agregar Artículo"
+    }
     // Asignar tecla F9 para grabar venta
     if (event.key === "F8") {
       event.preventDefault(); // Evita el comportamiento por defecto de la tecla
-      document.getElementById("efectivo").focus(); // Simula un click en el botón "Grabar Venta"
+      abrirModalPagos(); // Simula un click en el botón "Grabar Venta"
     }
 
     // Asignar tecla F9 para grabar venta
@@ -239,13 +256,96 @@ document.addEventListener("DOMContentLoaded", function () {
       btnGrabar.click(); // Simula un click en el botón "Grabar Venta"
     }
 
-    // Asignar tecla F5 para agregar un nuevo artículo
-    if (event.key === "F4") {
-      event.preventDefault(); // Evita la recarga de página con F5
-      btnAgregar.click(); // Simula un click en el botón "Agregar Artículo"
+    // Atajos de teclado en modal de formas de pago
+    // Verifica si la modal está visible
+    if (document.getElementById('pagosModal').classList.contains('show')) {
+        // Alt + E para Efectivo
+        if (event.altKey && event.key.toLowerCase() === 'e') {
+            event.preventDefault();
+            const efectivoTab = document.querySelector('[data-bs-target="#pago-efectivo"]');
+            //const efectivoTab = document.getElementById('efectivo-tab');
+            const tab = new bootstrap.Tab(efectivoTab);
+            tab.show();
+            activarDatosTab('pago-efectivo');
+            document.getElementById('efectivo').focus();
+        }
+        // Alt + T para Tarjetas
+        if (event.altKey && event.key.toLowerCase() === 't') {
+            event.preventDefault();
+            const tarjetasTab = document.querySelector('[data-bs-target="#pago-tarjetas"]');
+            //const tarjetasTab = document.getElementById('tarjetas-tab');
+            const tab = new bootstrap.Tab(tarjetasTab);
+            tab.show();
+            activarDatosTab('pago-tarjetas');
+            document.getElementById('entidad').focus();
+        }
+        // Alt + C para Cuenta corriente
+        if (event.altKey && event.key.toLowerCase() === 'c') {
+            event.preventDefault();
+            const ctacteTab = document.querySelector('[data-bs-target="#pago-ctacte"]');
+            //const ctacteTab = document.getElementById('ctacte-tab');
+            const tab = new bootstrap.Tab(ctacteTab);
+            tab.show();
+            activarDatosTab('pago-ctacte');
+            document.getElementById('ctacte').focus();
+        }
+        // Alt + R para Creditos
+        if (event.altKey && event.key.toLowerCase() === 'r') {
+            event.preventDefault();
+            const creditoTab = document.querySelector('[data-bs-target="#pago-credito"]');
+            //const creditoTab = document.getElementById('credito-tab');
+            const tab = new bootstrap.Tab(creditoTab);
+            tab.show();
+            activarDatosTab('pago-credito');
+            document.getElementById('idcredito').focus();
+        }
+        // Alt + B para Bonificacion
+        if (event.altKey && event.key.toLowerCase() === 'b') {
+            event.preventDefault();
+            const bonificacionTab = document.querySelector('[data-bs-target="#pago-bonificacion"]');
+            //const bonificacionTab = document.getElementById('bonificacion-tab');
+            const tab = new bootstrap.Tab(bonificacionTab);
+            tab.show();
+            activarDatosTab('pago-bonificacion');
+            document.getElementById('bonificacion').focus();
+        }
+        // Puedes agregar más atajos siguiendo el mismo patrón
     }
+    
   });
 });
+
+
+document.querySelector('[data-bs-target="#pago-efectivo"]').addEventListener('click', function() {
+  document.getElementById('efectivo').focus();
+});
+
+document.querySelector('[data-bs-target="#pago-tarjetas"]').addEventListener('click', function() {
+  document.getElementById('entidad').focus();
+});
+
+document.querySelector('[data-bs-target="#pago-ctacte"]').addEventListener('click', function() {
+  document.getElementById('ctacte').focus();
+});
+
+document.querySelector('[data-bs-target="#pago-credito"]').addEventListener('click', function() {
+  document.getElementById('idcredito').focus();
+});
+
+document.querySelector('[data-bs-target="#pago-bonificacion"]').addEventListener('click', function() {
+  document.getElementById('bonificacion').focus();
+});
+
+
+function activarDatosTab(tabClass){
+  const tabs = document.querySelectorAll(".tab-pane");
+  tabs.forEach(t => {
+    t.classList.remove('show')
+    t.classList.remove('active');
+  });
+  document.getElementById(tabClass).classList.add('show');
+  document.getElementById(tabClass).classList.add('active');
+}
 
 function limpiarDatosCliente() {
   inputIdCliente = document.getElementById("idcliente");
@@ -354,7 +454,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
         response = await fetch(`${BASE_URL}/articulos/get_articulos?detalle=${id}&idlista=${idlista}`);
     }    
   }
-
+  
   if ((!response.ok)&&(id!="")) {
     const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
     nuevoInputCodigo.value = "";
@@ -364,10 +464,15 @@ async function fetchArticulo(id, idlista, itemDiv) {
   }
   //const data = await response.json();
   const data = await response.json();
-
+  
   if (data.success) {
+    if (data.articulo && data.articulo.baja == true) {
+      // Artículo dado de baja
+      alert("El artículo está dado de baja.");
+      return;
+    }
+
     if (data.articulo) {
-      // Si se encuentra un cliente por ID, asignarlo directamente
       asignarArticulo(data.articulo, itemDiv);
     } else {
       alert("No se encontraron articulos con ese ID.");
@@ -378,12 +483,11 @@ async function fetchArticulo(id, idlista, itemDiv) {
       mostrarModalSeleccionArticulos(data, idlista, itemDiv);
     } else if (data.length === 1) {
       // Si hay un solo resultado, asignar directamente
-      
       response = await fetch(`${BASE_URL}/articulos/articulo/${data[0].codigo}/${idlista}`);
       if (response.ok) {
-        response.then((result) => {
-          asignarArticulo(result.articulo, itemDiv);
-        });
+        result = await response.json();
+        asignarArticulo(result.articulo, itemDiv);
+        
       } else {
         response.catch((err) => {
           console.error("Error al buscar artículo:", err);
@@ -403,12 +507,43 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
+  console.log('Tipo de artículo: ', articulo.pedirEnVentas);
   itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
+  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
   itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
   if ((itemDiv.target.closest("tr").querySelector(".precio-unitario").value === null) || (itemDiv.target.closest("tr").querySelector(".precio-unitario").value == 0)) {
     const precioUnitario = parseFloat(articulo.precio);
-    itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
-  }  
+    const inputPrecio = itemDiv.target.closest("tr").querySelector(".precio-unitario")
+    inputPrecio.value = precioUnitario.toFixed(2);
+    if (articulo.oferta == true){
+      inputPrecio.className = inputPrecio.className + " precio-destacado";
+    }
+    else{
+      inputPrecio.className = inputPrecio.className + " precio-normal";
+    }  
+  } 
+  // Establezco que inputs son editables en base a la propiedad pedirEnVentas del articulo  
+  if (articulo.pedirEnVentas === "PRECIO"){
+    const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
+    precioUnitario.removeAttribute("readonly")
+    const cantidad = itemDiv.target.closest("tr").querySelector(".cantidad");
+    cantidad.value = 1;
+    cantidad.setAttribute("readonly", "readonly");
+    precioUnitario.focus();
+  }else{
+    if (articulo.pedirEnVentas === "CANTIDAD_PRECIO"){
+      const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
+      precioUnitario.removeAttribute("readonly", true);
+      const cantidad = itemDiv.target.closest("tr").querySelector(".cantidad");
+      cantidad.removeAttribute("readonly");
+      precioUnitario.focus();
+    }else{
+      const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
+      precioUnitario.setAttribute("readonly", "readonly");
+      const cantidad = itemDiv.target.closest("tr").querySelector(".cantidad");
+      cantidad.removeAttribute("readonly");
+    }
+  }
   updateItemTotal(itemDiv);
   updateTotalFactura();
 }
@@ -523,7 +658,7 @@ function checkDatosTarjeta() {
 function calcSaldo() {
   const totalFac = parseFloat(document.getElementById("total_factura").textContent);
   const efectivo = parseFloat(document.getElementById("efectivo").value);
-  const tarjeta = parseFloat(document.getElementById("tarjeta").value);
+  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
   const ctacte = parseFloat(document.getElementById("ctacte").value);
   const bonificacion = parseFloat(document.getElementById("bonificacion").value);
   const monto_credito = parseFloat(document.getElementById("monto_credito").value);
@@ -532,6 +667,10 @@ function calcSaldo() {
   }
   if (isNaN(tarjeta)) {
     tarjeta = 0;
+  }
+  else{
+    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
+    tarjeta = tarjeta / coeficiente;
   }
   if (isNaN(ctacte)) {
     ctacte = 0;
@@ -542,9 +681,9 @@ function calcSaldo() {
   if (isNaN(monto_credito)) {
     monto_credito = 0;
   }
-  let diferencia = totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito);
+  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito)).toFixed(2);
   let lblSaldo = document.getElementById("saldo_factura");
-  lblSaldo.textContent = diferencia.toFixed(2);
+  lblSaldo.textContent = diferencia;
   if (diferencia > 0) {
     lblSaldo.className = "negativo";
   } else if (diferencia === 0) {
@@ -558,7 +697,7 @@ function checkTotales() {
   const totalFac = parseFloat(document.getElementById("total_factura").textContent);
   const efectivo = parseFloat(document.getElementById("efectivo").value);
   const ctacte = parseFloat(document.getElementById("ctacte").value);
-  const tarjeta = parseFloat(document.getElementById("tarjeta").value);
+  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
   const bonificacion = parseFloat(document.getElementById("bonificacion").value);
   const monto_credito = parseFloat(document.getElementById("monto_credito").value);
   if (isNaN(efectivo)) {
@@ -567,6 +706,11 @@ function checkTotales() {
   if (isNaN(tarjeta)) {
     tarjeta = 0;
   }
+  else{
+    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
+    tarjeta = tarjeta / coeficiente;
+  }
+
   if (isNaN(ctacte)) {
     ctacte = 0;
   }
@@ -578,10 +722,10 @@ function checkTotales() {
   }
   let HayDiferencia;
   if (efectivo > 0) {
-     HayDiferencia = totalFac > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito));
+     HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito).toFixed(2));
   }
   else{
-    HayDiferencia = totalFac > 0 && (totalFac === tarjeta + ctacte + bonificacion + monto_credito);
+    HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac.toFixed(2) === (tarjeta + ctacte + bonificacion + monto_credito).toFixed(2));
   }  
   return HayDiferencia;
 }
@@ -614,7 +758,8 @@ document.getElementById("idcliente").addEventListener("blur", function () {
 document.getElementById("tabla-items").addEventListener("input", function (e) {
   if (
     e.target.classList.contains("idarticulo") ||
-    e.target.classList.contains("cantidad")
+    e.target.classList.contains("cantidad") ||
+    e.target.classList.contains("precio-unitario")
   ) {
     updateItemTotal(e);
     updateTotalFactura();
@@ -628,7 +773,7 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
   const nuevaFila = `
                 <tr class="items">
                     <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
-                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
+                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required onfocus="this.select()"></td>
                     <td class="descripcion-articulo">-</td>
                     <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly onfocus="this.select()"></td>
                     <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required onfocus="this.select()"></td> 
@@ -646,8 +791,10 @@ tablaItems.addEventListener("blur", (itemDiv) => {
     if (itemDiv.target.classList.contains("codigo-articulo")) {
       const codigo = itemDiv.target.value;
       const idlista = document.getElementById("idlista").value;
-
-      // Simulación de una búsqueda (deberías usar una API aquí)
+      const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
+      if (precioUnitario){
+        precioUnitario.value = 0;
+      }
       fetchArticulo(codigo, idlista, itemDiv);
     }
   },
@@ -661,36 +808,64 @@ tablaItems.addEventListener("click", (itemDiv) => {
   }
 });
 
-document.getElementById("invoice_form").addEventListener("submit", function (event) {
-    if (document.querySelectorAll("#tabla-items tbody").length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un item a la factura");
-      event.preventDefault();
-      return false;
+document.getElementById("invoice_form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (document.querySelectorAll("#tabla-items tbody tr").length === 0) {
+        alert("Debe agregar al menos un item a la factura");
+        return false;
     }
     if (checkDatosTarjeta() === false) {
-      event.preventDefault();
-      return false;
+        return false;
     }
-
     if (checkTotales() === false) {
-      event.preventDefault();
-      alert(
-        'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." + "Crédito" debe ser igual al total de la factura'
-      );
-      event.preventDefault();
-      return false;
+        alert(
+            'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." + "Crédito" debe ser igual al total de la factura'
+        );
+        return false;
     }
     if (confirm("¿Grabar la factura?") === false) {
-      event.preventDefault();
-    } else {
-      //let idPresupuestoContainer = document.getElementById("idPresupuestoContainer");
-      //if (idPresupuestoContainer) {
-      //  idPresupuestoContainer.remove();
-      //}
-      isFormSubmited = true;
+        return false;
     }
-  });
+
+    // 👉 Mostrar spinner
+    document.getElementById("spinner").style.display = "block";
+
+    isFormSubmited = true;
+    try {
+        const formData = new FormData(this);
+        const response = await fetch(`${BASE_URL}/ventas/nueva_venta`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            // Imprimir factura
+            posPrinter = document.getElementById("posPrinter").value;
+            if (posPrinter != ""){
+              try {
+                  await imprimirFactura(result.id);
+              } catch (error) {
+                  console.error('Error al imprimir la factura:', error);
+              }
+            }
+
+            window.location.href = `${BASE_URL}/ventas/nueva_venta`;
+        } else {
+            alert(result.message);
+            window.location.href = `${BASE_URL}/ventas/nueva_venta`;
+        }
+    }
+    catch (error) {
+        console.error(error);
+        alert('Error al procesar la venta');
+        window.location.href = `${BASE_URL}/ventas/nueva_venta`;
+    }
+});
+
 
 async function hayCredito(idcliente) {
   response = await fetch(`${BASE_URL}/creditos/hay_credito/${idcliente}`)
@@ -716,3 +891,51 @@ async function hayCredito(idcliente) {
     console.log('Error al consultar créditos');
   } 
 }  
+
+
+async function imprimirFactura(id) {
+    try {
+        // Construir la URL completa para debugging
+        const url = `${BASE_URL}/ventas/imprimir_factura_vta_pos/${id}`;
+
+        const response = await fetch(url);
+        
+        // Si la respuesta no es ok, lanzar error con más detalles
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Error desconocido en la impresión');
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error detallado:', error);
+        console.error('Stack trace:', error.stack);
+        alert(`Error al imprimir la factura: ${error.message}`);
+        return false;
+    }
+}
+
+async function coefCuotas(tarjeta, cuotas) {
+  if (cuotas === 0) return 0;
+  const url = `${BASE_URL}/entidades/coeficiente_cuotas/${tarjeta}/${cuotas}`;
+  response = await fetch(url);
+  if (response.ok) {
+    const data = await response.json();
+    return data.coeficiente;
+  }  
+}
+
+document.getElementById('cuotas').addEventListener('input', async function() {
+    const cuotas = this.value;
+    const tarjeta = document.getElementById('entidad').value;
+    const coeficienteCuotas = await coefCuotas(tarjeta, cuotas);
+    document.getElementById('coeficiente').value = coeficienteCuotas;
+    const saldo = parseFloat(document.getElementById("saldo_factura").innerHTML);
+    document.getElementById('total_tarjeta').value = parseFloat(saldo * coeficienteCuotas).toFixed(2);
+    //document.getElementById('total').innerText = total.toFixed(2);
+});

@@ -4,6 +4,31 @@ from utils.db import db
 from datetime import datetime
 
 class OfertaService:
+    def obtener_oferta_por_id(self, id):
+        """Obtiene una oferta con todas sus condiciones"""
+        try:
+            oferta = Oferta.query.get(id)
+            if not oferta:
+                return None
+            
+            # Obtener las condiciones
+            condiciones = OfertasCondiciones.query.filter_by(id_oferta=id).all()
+            
+            # Si es oferta vinculada, obtener los artículos
+            vinculos = None
+            print(f'La oferta: {oferta}')
+            vinculos = OfertasVinculadas.query.filter_by(id_oferta=id).first()
+            print('Vinculos: ', vinculos)
+            
+            return {
+                'oferta': oferta,
+                'condiciones': condiciones,
+                'vinculos': vinculos
+            }
+        except Exception as e:
+            current_app.logger.error(f"Error obteniendo oferta: {str(e)}")
+            return None
+
     def crear_oferta(self, datos_oferta, condiciones):
         """Crea una nueva oferta con sus condiciones"""
         try:
@@ -65,6 +90,104 @@ class OfertaService:
             datos_oferta['regla_seleccion'] = regla_seleccion
             nueva_oferta = self.crear_oferta(datos_oferta, condiciones)
             return nueva_oferta
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    def actualizar_oferta(self, id, datos_oferta, condiciones):
+        """Actualiza una oferta existente con sus condiciones"""
+        try:
+            oferta = Oferta.query.get(id)
+            if not oferta:
+                raise ValueError("Oferta no encontrada")
+                
+            # Actualizar datos básicos
+            oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_descuento = datos_oferta['tipo_descuento']
+            oferta.valor_descuento = datos_oferta['valor_descuento']
+            oferta.cantidad_minima = datos_oferta['cantidad_minima']
+            oferta.multiplos = datos_oferta['multiplos']
+            oferta.fecha_inicio = datos_oferta['fecha_inicio']
+            oferta.fecha_fin = datos_oferta['fecha_fin']
+            
+            # Eliminar condiciones anteriores
+            OfertasCondiciones.query.filter_by(id_oferta=id).delete()
+            
+            # Crear nuevas condiciones
+            for condicion in condiciones:
+                nueva_condicion = OfertasCondiciones(
+                    id_oferta=id,
+                    id_tipo_condicion=condicion['id_tipo_condicion'],
+                    id_referencia=condicion['id_referencia']
+                )
+                db.session.add(nueva_condicion)
+                
+            db.session.commit()
+            return oferta
+            
+        except Exception as e:
+            db.session.rollback()
+            raise e
+        
+    def actualizar_oferta_vinculada(id, datos_oferta, articulo_origen, articulo_destino):
+        try:
+            oferta = Oferta.query.get(id)
+            if not oferta:
+                raise ValueError("Oferta no encontrada")
+
+            # Actualizar datos básicos
+            oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_descuento = datos_oferta['tipo_descuento']
+            oferta.valor_descuento = datos_oferta['valor_descuento']
+            oferta.cantidad_minima = datos_oferta['cantidad_minima']
+            oferta.multiplos = datos_oferta['multiplos']
+            oferta.fecha_inicio = datos_oferta['fecha_inicio']
+            oferta.fecha_fin = datos_oferta['fecha_fin']
+
+            # Actualizar vínculo entre artículos
+            vinculo = OfertasVinculadas.query.filter_by(id_oferta=id).first()
+            if vinculo:
+                vinculo.id_articulo_origen = articulo_origen
+                vinculo.id_articulo_destino = articulo_destino
+
+            db.session.commit()
+            return oferta
+
+        except Exception as e:
+            db.session.rollback()
+            raise e
+        
+    def actualizar_oferta_regla_seleccion(id, datos_oferta, condiciones, regla):
+        try:
+            oferta = Oferta.query.get(id)
+            if not oferta:
+                raise ValueError("Oferta no encontrada")
+
+            # Actualizar datos básicos
+            oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_descuento = datos_oferta['tipo_descuento']
+            oferta.valor_descuento = datos_oferta['valor_descuento']
+            oferta.cantidad_minima = datos_oferta['cantidad_minima']
+            oferta.multiplos = datos_oferta['multiplos']
+            oferta.fecha_inicio = datos_oferta['fecha_inicio']
+            oferta.fecha_fin = datos_oferta['fecha_fin']
+
+            # Actualizar condiciones
+            OfertasCondiciones.query.filter_by(id_oferta=id).delete()
+            for condicion in condiciones:
+                nueva_condicion = OfertasCondiciones(
+                    id_oferta=id,
+                    id_tipo_condicion=condicion['id_tipo_condicion'],
+                    id_referencia=condicion['id_referencia']
+                )
+                db.session.add(nueva_condicion)
+
+            # Actualizar regla de selección
+            oferta.regla_seleccion = regla
+
+            db.session.commit()
+            return oferta
+
         except Exception as e:
             db.session.rollback()
             raise e

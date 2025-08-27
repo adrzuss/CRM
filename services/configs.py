@@ -91,6 +91,7 @@ def grabarDatosPtoVta(form):
         ultima_deb_c = form['ultima_deb_c']
     ultimo_rem_x = form['ultimo_rem_x']
     ultimo_rec_x = form['ultimo_rec_x']
+    pos_printer = form['pos_printer']
     try:    
         if idPuntoVenta:
             puntoVenta = PuntosVenta.query.get(idPuntoVenta)
@@ -107,6 +108,7 @@ def grabarDatosPtoVta(form):
             puntoVenta.ultima_nc_c = ultima_nc_c
             puntoVenta.ultimo_rem_x = ultimo_rem_x
             puntoVenta.ultimo_rec_x = ultimo_rec_x
+            puntoVenta.pos_printer = pos_printer
             db.session.commit()
             flash(f'Punto de venta actualizado: {puntoVenta.punto_vta}')
         else:
@@ -155,3 +157,16 @@ def validar_cuit(cuit: str) -> bool:
 def get_sucursales():
     sucursales = Sucursales.query.all()
     return sucursales
+
+def getDatosSucEmpresa():
+    empresa = Configuracion.query.get(session['id_empresa'])
+    sucursal = Sucursales.query.get(session['id_sucursal'])
+    return {
+        'nombre': empresa.nombre_fantasia + ' - ' + sucursal.nombre,
+        'direccion': sucursal.direccion,
+        'telefono': sucursal.telefono
+    }
+    
+def getPosPrinter(idPuntoVenta):
+    puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+    return puntoVenta.pos_printer if puntoVenta else None

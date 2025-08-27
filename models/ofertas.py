@@ -25,8 +25,8 @@ class Oferta(db.Model):
     valor_descuento = db.Column(db.Numeric(10,2), nullable=False)
     cantidad_minima = db.Column(db.Numeric(10,2), nullable=False)
     multiplos = db.Column(db.Boolean, default=False)
-    fecha_inicio = db.Column(db.DateTime, nullable=False)
-    fecha_fin = db.Column(db.DateTime, nullable=False)
+    fecha_inicio = db.Column(db.Date, nullable=False)
+    fecha_fin = db.Column(db.Date, nullable=False)
     es_condicion_compra = db.Column(db.Boolean, default=False)
 
     def __init__(self, nombre, tipo_descuento, valor_descuento, cantidad_minima, multiplos, fecha_inicio, fecha_fin, es_condicion_compra):
@@ -41,6 +41,14 @@ class Oferta(db.Model):
 
     def __repr__(self):
         return f'<Oferta {self.nombre}>'
+    
+    @property
+    def tipo_descuento_display(self):
+        displays = {
+            TipoDescuento.PORCENTAJE: 'Porcentaje',
+            TipoDescuento.MONTO_FIJO: 'Monto fijo'
+        }
+        return displays.get(self.tipo_descuento, self.tipo_descuento)
 
 class OfertasVinculadas(db.Model):
     __tablename__ = 'ofertas_vinculadas'

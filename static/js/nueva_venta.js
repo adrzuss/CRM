@@ -1,6 +1,7 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
-
+let articulosFacturados = [];
+let ofertasDeCierre = [];
 
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
@@ -175,6 +176,8 @@ function saleccionarPtoVta(datos) {
 }
 
 function abrirModalPagos(){
+  //Calcular ofertas de cierre
+  calcularOfetasDeCierre();
   // Enfocar el primer campo de pago
   $("#pagosModal").modal("show");
 
@@ -182,6 +185,52 @@ function abrirModalPagos(){
     document.getElementById('pagosModal').addEventListener('shown.bs.modal', function () {
       document.getElementById("efectivo").focus();
     }, { once: true }); // once=true para que no se dispare más de una vez
+
+}
+
+async function calcularOfetasDeCierre(){
+  articulosFacturados = [];
+  const filas = document.querySelectorAll("#tabla-items tbody tr");
+  let totalFactura = 0;
+  filas.forEach((fila) => {
+    const idofertaInput = fila.querySelector(".idoferta").value;
+    const idoferta = parseInt(idofertaInput);
+    if (idoferta === 0) {
+      const precio = fila.querySelector(".precio-unitario");
+      const idArticulo = fila.querySelector(".id-articulo").textContent;
+      const idMarca = fila.querySelector(".id-marca").textContent;
+      const idRubro = fila.querySelector(".id-rubro").textContent;
+      const cantidadInput = fila.querySelector(".cantidad").value;
+      const cantidad = parseInt(cantidadInput);
+      
+      articulosFacturados.push({id: idArticulo, idmarca: idMarca, idrubro: idRubro, cantidad: cantidad, precio: precio.value});
+    }  
+  });
+  try{                                                
+    const response = await fetch(`${BASE_URL}/ofertas/calcular_ofertas_de_cierre`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ articulos: articulosFacturados })
+    });
+    if (response.ok){
+      const data = await response.json();
+      let totalOfeta = 0.0;
+      ofertasDeCierre = []
+      for (const oferta of data) {
+        totalOfeta += parseFloat(oferta.precio);
+        //arma el arreglo de ofertas para cargarlo a la venta
+        ofertasDeCierre.push(oferta);
+      }
+      document.getElementById("ofertas_especiales").value = totalOfeta.toFixed(2);
+    }else{
+      console.error("Error al calcular ofertas de cierre:", response.statusText);
+    }
+  }
+  catch(error){ 
+    console.error("Error al calcular ofertas de cierre:", error);
+  }
 
 }
 
@@ -218,7 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const btnGrabar = document.getElementById("grabarVenta");
 
   // Detectar tecla Enter en los inputs del formulario
-  form.addEventListener("keydown", function (event) {
+  form.addEventListener("keydown", async function (event) {
     if (event.key === "Enter") {
       event.preventDefault(); // Evita que se envíe el formulario
 
@@ -244,9 +293,14 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault(); // Evita la recarga de página con F5
       btnAgregar.click(); // Simula un click en el botón "Agregar Artículo"
     }
-    // Asignar tecla F9 para grabar venta
+    // Asignar tecla F8 para mostra formas de pago
     if (event.key === "F8") {
       event.preventDefault(); // Evita el comportamiento por defecto de la tecla
+      // Si el elemento activo es un input codigo-articulo
+      if (document.activeElement.classList.contains("codigo-articulo")) {
+        // Esperar a que se complete el blur antes de abrir el modal
+        await handleArticuloBlur({target: document.activeElement});
+      }
       abrirModalPagos(); // Simula un click en el botón "Grabar Venta"
     }
 
@@ -507,9 +561,11 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  console.log('Tipo de artículo: ', articulo.pedirEnVentas);
   itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
+  itemDiv.target.closest("tr").querySelector(".id-marca").textContent = articulo.idmarca;
+  itemDiv.target.closest("tr").querySelector(".id-rubro").textContent = articulo.idrubro;
   itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
+  itemDiv.target.closest("tr").querySelector(".idoferta").value = articulo.idoferta;
   itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
   if ((itemDiv.target.closest("tr").querySelector(".precio-unitario").value === null) || (itemDiv.target.closest("tr").querySelector(".precio-unitario").value == 0)) {
     const precioUnitario = parseFloat(articulo.precio);
@@ -595,8 +651,7 @@ function updateItemTotal(itemDiv) {
   if (isNaN(precioTotal)) {
     precioTotal = 0;
   }
-  itemDiv.target.closest("tr").querySelector(".precio-total").value =
-    precioTotal;
+  itemDiv.target.closest("tr").querySelector(".precio-total").value = precioTotal;
 }
 
 function updateTotalFactura() {
@@ -662,6 +717,7 @@ function calcSaldo() {
   const ctacte = parseFloat(document.getElementById("ctacte").value);
   const bonificacion = parseFloat(document.getElementById("bonificacion").value);
   const monto_credito = parseFloat(document.getElementById("monto_credito").value);
+  const ofertas_especiales = parseFloat(document.getElementById("ofertas_especiales").value);
   if (isNaN(efectivo)) {
     efectivo = 0;
   }
@@ -681,7 +737,10 @@ function calcSaldo() {
   if (isNaN(monto_credito)) {
     monto_credito = 0;
   }
-  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito)).toFixed(2);
+  if (isNaN(ofertas_especiales)) {
+    ofertas_especiales = 0;
+  }
+  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales)).toFixed(2);
   let lblSaldo = document.getElementById("saldo_factura");
   lblSaldo.textContent = diferencia;
   if (diferencia > 0) {
@@ -700,6 +759,7 @@ function checkTotales() {
   let tarjeta = parseFloat(document.getElementById("tarjeta").value);
   const bonificacion = parseFloat(document.getElementById("bonificacion").value);
   const monto_credito = parseFloat(document.getElementById("monto_credito").value);
+  const ofertas_especiales = parseFloat(document.getElementById("ofertas_especiales").value);
   if (isNaN(efectivo)) {
     efectivo = 0;
   }
@@ -720,12 +780,15 @@ function checkTotales() {
   if (isNaN(monto_credito)) {
     monto_credito = 0;
   }
+  if (isNaN(ofertas_especiales)) {
+    ofertas_especiales = 0;
+  }
   let HayDiferencia;
   if (efectivo > 0) {
-     HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito).toFixed(2));
+     HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales).toFixed(2));
   }
   else{
-    HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac.toFixed(2) === (tarjeta + ctacte + bonificacion + monto_credito).toFixed(2));
+    HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac.toFixed(2) === (tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales).toFixed(2));
   }  
   return HayDiferencia;
 }
@@ -772,12 +835,17 @@ const tablaItems = document.querySelector("#tabla-items tbody");
 document.getElementById("agregarArticulo").addEventListener("click", () => {
   const nuevaFila = `
                 <tr class="items">
-                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
+                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">- <input type="number" name="items[${contadorFilas}][idrubro]" hidden> <input type="number" name="items[${contadorFilas}][idmarca]" hidden> </td>
+
+                    <td class="id-marca" name="items[${contadorFilas}][idmarca]" hidden> </td>
+                    <td class="id-rubro" name="items[${contadorFilas}][idrubro]" hidden> </td>
+
                     <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required onfocus="this.select()"></td>
                     <td class="descripcion-articulo">-</td>
                     <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly onfocus="this.select()"></td>
                     <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required onfocus="this.select()"></td> 
                     <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
+                    <td hidden><input type="number" class="idoferta" name="items[${contadorFilas}][idoferta]" value="0"></td> 
                     <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
@@ -787,19 +855,19 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
   nuevoInputCodigo.focus();
 });
 
-tablaItems.addEventListener("blur", (itemDiv) => {
-    if (itemDiv.target.classList.contains("codigo-articulo")) {
-      const codigo = itemDiv.target.value;
-      const idlista = document.getElementById("idlista").value;
-      const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
-      if (precioUnitario){
-        precioUnitario.value = 0;
-      }
-      fetchArticulo(codigo, idlista, itemDiv);
+async function handleArticuloBlur(itemDiv) {
+  if (itemDiv.target.classList.contains("codigo-articulo")) {
+    const codigo = itemDiv.target.value;
+    const idlista = document.getElementById("idlista").value;
+    const precioUnitario = itemDiv.target.closest("tr").querySelector(".precio-unitario");
+    if (precioUnitario){
+      precioUnitario.value = 0;
     }
-  },
-  true
-);
+    await fetchArticulo(codigo, idlista, itemDiv);
+  }
+}
+
+tablaItems.addEventListener("blur", handleArticuloBlur, true);
 
 // Eliminar fila
 tablaItems.addEventListener("click", (itemDiv) => {
@@ -830,6 +898,24 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
 
     // 👉 Mostrar spinner
     document.getElementById("spinner").style.display = "block";
+
+    // Cargargres el arreglo de ofertas de cierre
+    if (ofertasDeCierre.length > 0) {
+      ofertasDeCierre.forEach(art => {
+        // Simular click en "Agregar artículo"
+        document.getElementById("agregarArticulo").click();
+        // Buscar la última fila agregada
+        const fila = tablaItems.querySelector("tr:last-child");
+        fila.querySelector(".id-articulo").textContent = art.id;
+        fila.querySelector(".codigo-articulo").value = art.codigo;
+        fila.querySelector(".precio-unitario").value = art.precio;
+        fila.querySelector(".cantidad").value = -art.cantidad;
+        fila.querySelector(".idoferta").value = art.idoferta;
+        // Calcular el total
+        fila.querySelector(".precio-total").value = -(art.precio * art.cantidad).toFixed(2);
+      });
+    }  
+    updateTotalFactura();
 
     isFormSubmited = true;
     try {

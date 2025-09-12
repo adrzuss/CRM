@@ -10,7 +10,7 @@ from services.creditos import get_planes_creditos, procesar_plan_credito, get_do
                               get_cats_por_plan, limpiar_categorias_para_plan, asignar_categoria_para_plan, \
                               get_planes_creditos_categoria, get_creditos_by_estado, get_credito_by_id,\
                               buscar_documento_descarga, grabar_cuotas, actualizar_credito,get_credito_by_idcliente, \
-                              vencimientos_cuotas_creditos, get_cuotas_pendientes, generarRecibo
+                              vencimientos_cuotas_creditos, get_cuotas_pendientes, generarRecibo, ver_cuotas_creditos_vencidas
 from datetime import date, timedelta
 
 
@@ -331,6 +331,16 @@ def vencimientos_cuotas():
         hasta = request.form['hasta']
         return redirect(url_for('creditos.vencimientos_cuotas', desde=desde, hasta=hasta))   
     
+@bp_creditos.route('/ver_cuotas_atrasadas', methods=['GET'])
+@check_session
+@alertas_mensajes
+def ver_cuotas_atrasadas():
+    if request.method == 'GET':
+        cuotas = ver_cuotas_creditos_vencidas()
+        return render_template('lst-cuotas-vencidas.html', cuotas=cuotas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    
+
+    
 @bp_creditos.route('/seleccionar_cuota', methods=['GET', 'POST'])
 @check_session
 @alertas_mensajes
@@ -377,3 +387,4 @@ def cobrar_cuotas():
             print("Cuotas cobradas exitosamente")    
             flash('Cuotas cobradas exitosamente.')
     return jsonify(success=False, mensaje='Método no permitido.')
+

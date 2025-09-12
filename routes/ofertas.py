@@ -4,7 +4,7 @@ from flask import g
 from utils.utils import check_session, convertir_decimal
 from utils.msg_alertas import alertas_mensajes
 from services.ofertas import OfertaService
-from models.ofertas import TipoDescuento, ReglaSeleccion
+from models.ofertas import TipoOferta, TipoDescuento, ReglaSeleccion
 from datetime import datetime
 from decimal import Decimal
 
@@ -24,6 +24,7 @@ def nueva_oferta():
             print('1')
             datos_oferta = {
                 'nombre': request.form['nombre'],
+                'tipo_oferta': TipoOferta(request.form['tipo_oferta']),
                 'tipo_descuento': TipoDescuento(request.form['tipo_descuento']),
                 'valor_descuento': float(request.form['valor_descuento']),
                 'cantidad_minima': float(request.form['cantidad_minima']),
@@ -41,7 +42,7 @@ def nueva_oferta():
                 servicio.crear_oferta_vinculada(datos_oferta, articulo_origen, articulo_destino)
                 print('5')
             
-            elif tipo_oferta == 'regla_seleccion':
+            elif tipo_oferta == 'mayor_menor_valor':
                 print('6')
                 regla = ReglaSeleccion(request.form.get('regla_seleccion'))
                 print('7')
@@ -64,6 +65,7 @@ def nueva_oferta():
                 print('10')
                 # Obtener las listas de tipos y referencias
                 tipos = request.form.getlist('tipo_condicion[]')
+                print('11')
                 referencias = request.form.getlist('referencia[]')
                 print(f'12/1 - {referencias}')
                 
@@ -111,6 +113,7 @@ def nueva_oferta():
         oferta=oferta_,
         condiciones=condiciones_,
         vinculos=vinculos_,
+        tipo_ofertas=TipoOferta,
         tipos_descuento=TipoDescuento,
         tipos_condiciones=servicio.obtener_tipos_condiciones(),
         reglas_seleccion=ReglaSeleccion,
@@ -126,7 +129,7 @@ def nueva_oferta():
 @alertas_mensajes
 def ofertas():
     ofertas = OfertaService().obtener_ofertas_activas()
-    return render_template('ofertas.html', ofertas= ofertas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ofertas.html', ofertas= ofertas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes) 
 
 
 @bp_ofertas.route('/get_referencias/<int:tipo_condicion_id>')
@@ -146,8 +149,12 @@ def edit(id):
     
     if request.method == 'POST':
         try:
+            print('El tipo de ofertas es:', (request.form['tipo_oferta']))
+            print('El tipo de descuento es:', (request.form['tipo_descuento']))
+            tipo_oferta = request.form.get('tipo_oferta')
             datos_oferta = {
                 'nombre': request.form['nombre'],
+                'tipo_oferta': TipoOferta(tipo_oferta),
                 'tipo_descuento': TipoDescuento(request.form['tipo_descuento']),
                 'valor_descuento': float(request.form['valor_descuento']),
                 'cantidad_minima': float(request.form['cantidad_minima']),
@@ -155,15 +162,13 @@ def edit(id):
                 'fecha_inicio': datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d'),
                 'fecha_fin': datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d')
             }
-
-            tipo_oferta = request.form.get('tipo_oferta')
             
             if tipo_oferta == 'vinculada':
                 articulo_origen = request.form.get('id_articulo_origen')
                 articulo_destino = request.form.get('id_articulo_destino')
                 servicio.actualizar_oferta_vinculada(id, datos_oferta, articulo_origen, articulo_destino)
             
-            elif tipo_oferta == 'regla_seleccion':
+            elif tipo_oferta == 'mayor_menor_valor':
                 regla = ReglaSeleccion(request.form.get('regla_seleccion'))
                 condiciones = [
                     {
@@ -232,6 +237,7 @@ def edit(id):
         oferta=oferta_,
         condiciones=condiciones_,
         vinculos=vinculos_,
+        tipo_ofertas = TipoOferta,
         tipos_descuento=TipoDescuento,
         tipos_condiciones=servicio.obtener_tipos_condiciones(),
         reglas_seleccion=ReglaSeleccion,
@@ -247,3 +253,18 @@ def edit(id):
 @alertas_mensajes
 def delete(id):
     pass
+
+
+@bp_ofertas.route('/calcular_ofertas_de_cierre', methods=['POST'])
+@check_session
+@alertas_mensajes
+def calcular_ofertas_de_cierre():
+    print("Calculando ofertas de cierre")
+    data = request.get_json()
+    articulos = data.get('articulos', [])
+    print(f'Los datos son: {articulos}' )
+    ofertasService = OfertaService()
+    ofertas = ofertasService.buscarOfertas(articulos)
+    print(f'Las ofertas encontradas son: {ofertas}')
+        
+    return ofertas

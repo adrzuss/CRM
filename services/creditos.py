@@ -478,6 +478,15 @@ def vencimientos_cuotas_creditos(desde, hasta):
     except Exception as e:
         print(f"Error obteniendo vencimientos de cuotas de créditos: {e}")
         return []
+
+def ver_cuotas_creditos_vencidas():
+    try:
+        vencimientos = db.session.execute(text("CALL get_cuotas_creditos_vencidas()"),).fetchall()
+        return vencimientos
+    except Exception as e:
+        print(f"Error obteniendo vencimientos de cuotas de créditos: {e}")
+        return []
+
     
 def get_datos_creditos():
     hoy = date.today()
@@ -564,3 +573,12 @@ def generarRecibo(idCliente, cuotas, totalCuotas, efectivo, tarjeta, entidad):
     except Exception as e:
         print(f"Error al generar recibo: {e}")
         return {'success':False, 'mensaje': f'Error al generar recibo: {e}'}
+
+
+def alerta_creditos_atrasados():
+    cantidad = db.session.execute(text("CALL get_cant_cuotas_vencidas()"),).scalar()
+    if cantidad > 0:            
+        #articulos.precios_nuevos
+        return cantidad, {'titulo': 'Créditos', 'subtitulo': f'Hay {cantidad} créditos atrasados', 'tipo': 'peligro', 'url': 'creditos.ver_cuotas_atrasadas'}
+    else:
+        return cantidad, {}

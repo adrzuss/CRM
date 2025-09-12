@@ -2,11 +2,16 @@ from utils.db import db
 from enum import Enum
 from datetime import datetime
 
+class TipoOferta(Enum):
+    NORMAL = 'normal'
+    VINCULADA = 'vinculada'
+    MAYOR_MENOR_VALOR = 'mayor_menor_valor'
 class TipoDescuento(Enum):
     PORCENTAJE = "porcentaje"
     MONTO_FIJO = "monto_fijo"
     
 class ReglaSeleccion(Enum):
+    NO_APLICA = "no_aplica"
     MENOR_VALOR = "menor_valor"
     MAYOR_VALOR = "mayor_valor"
     ESPECIFICO = "especifico"
@@ -21,22 +26,26 @@ class Oferta(db.Model):
     __tablename__ = 'ofertas'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
+    tipo_oferta = db.Column(db.Enum(TipoOferta), nullable=False, default=TipoOferta.NORMAL)
     tipo_descuento = db.Column(db.Enum(TipoDescuento), nullable=False)
     valor_descuento = db.Column(db.Numeric(10,2), nullable=False)
     cantidad_minima = db.Column(db.Numeric(10,2), nullable=False)
     multiplos = db.Column(db.Boolean, default=False)
     fecha_inicio = db.Column(db.Date, nullable=False)
     fecha_fin = db.Column(db.Date, nullable=False)
+    regla_seleccion = db.Column(db.Enum(ReglaSeleccion), nullable=False, default=ReglaSeleccion.MENOR_VALOR)
     es_condicion_compra = db.Column(db.Boolean, default=False)
 
-    def __init__(self, nombre, tipo_descuento, valor_descuento, cantidad_minima, multiplos, fecha_inicio, fecha_fin, es_condicion_compra):
+    def __init__(self, nombre, tipo_oferta, tipo_descuento, valor_descuento, cantidad_minima, multiplos, fecha_inicio, fecha_fin, regla_seleccion, es_condicion_compra):
         self.nombre = nombre
+        self.tipo_oferta = tipo_oferta
         self.tipo_descuento = tipo_descuento
         self.valor_descuento = valor_descuento
         self.cantidad_minima = cantidad_minima
         self.multiplos = multiplos
         self.fecha_inicio = fecha_inicio
         self.fecha_fin = fecha_fin
+        self.regla_seleccion = regla_seleccion
         self.es_condicion_compra = es_condicion_compra
 
     def __repr__(self):

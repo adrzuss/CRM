@@ -282,7 +282,6 @@ def generar_factura(id_factura):
     with tempfile.TemporaryDirectory() as tempdir:
         nombrePDF = f"Factura-{datos_factura['letra_comprobante']}-{datos_factura['nro_comprobante']}.pdf"
         pdf_path = os.path.join(tempdir, nombrePDF)
-        print(f'Generando factura en {pdf_path}')
         generar_factura_pdf(pdf_path, datos_factura, items)
         # ✅ — Enviamos el archivo
         with open(pdf_path, 'rb') as f:
@@ -346,7 +345,7 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito)
+        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito)
         # Si se está facturando un presupuesto se vincula el mismo a la factura 
         if idPresupuesto:
             presupuesto = Presupuesto.query.get(idPresupuesto)
@@ -417,6 +416,11 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                     exento = precios['Exento'] * cantidad
                     impint = precios['ImpInt'] * cantidad
                     ingbrutos = precios['IngBto'] * cantidad
+                    idoferta = form[f'items[{index}][idoferta]']
+                    if idoferta:
+                        idoferta = int(idoferta)
+                    else:
+                        idoferta = 0    
                     nuevo_item = Item(
                         idfactura=idfactura,
                         id=index,
@@ -430,7 +434,8 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                         ingbto=ingbrutos,
                         idingbto=ingbto.id,
                         exento=exento,  
-                        impint=impint
+                        impint=impint,
+                        idoferta=idoferta 
                     )
                     db.session.add(nuevo_item)
                     total += precio_total
@@ -446,7 +451,23 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     
     return total, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito):
+def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito):
+    #Calculamos el total de pagos para calcular si hay vuelto
+    #El vuelto solo impacta en el total del efectivo
+    
+    #Calculo de intereses de pago con tarjeta
+    intereses = 0.0
+    if tarjeta > 0:
+        try:
+            intereses = Decimal(tarjeta) / Decimal(coeficiente)
+        except ZeroDivisionError:
+            intereses = 0.0
+            
+    
+    totalPagos = Decimal(efectivo) + Decimal(Decimal(tarjeta) - Decimal(intereses)) + Decimal(ctacte) + Decimal(bonificacion) + Decimal(monto_credito)
+    totalPagos = totalPagos - total
+    if totalPagos > 0:
+        efectivo = Decimal(efectivo) - Decimal(totalPagos)
     try:
         if efectivo > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=1, tipo=1, entidad=0, total=Decimal(efectivo)))
@@ -454,10 +475,6 @@ def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuot
             entidad = int(entidad)
             db.session.add(PagosFV(idfactura=idfactura, idpago=2, tipo=2, entidad=entidad, total=Decimal(tarjeta)))
             try:
-                intereses = Decimal(tarjeta) / Decimal(coeficiente)
-            except ZeroDivisionError:
-                intereses = 0.0
-            try:    
                 db.session.add(MovEntidades(idfactura=idfactura, identidad=int(entidad), cuotas=int(cuotas), total=Decimal(tarjeta), intereses=intereses, documento=documento, telefono=telefono))
             except Exception as e:
                 print(f'Error insertando movimiento de entidad: {e}')
@@ -473,8 +490,10 @@ def procesar_pagos(idfactura, idcliente, fecha, efectivo, tarjeta, entidad, cuot
                 credito.estado = 5 #facturado
                 credito.idfactura = idfactura
                 credito.fecha_inicio = datetime.now()
-            
-        #db.session.commit()
+        #Si hay vuelto lo registramos        
+        if (totalPagos) > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=99, tipo=1, entidad=0, total=Decimal(totalPagos)))
+        
     except SQLAlchemyError as e:
         print(f"Error de base de datos procesando pagos: {e}")
         raise Exception(f"Error de base de datos procesando pagos: {e}")
@@ -629,7 +648,7 @@ def ventas_desde_hasta(desde, hasta):
                                 TipoComprobantes.nombre.label('tipo_comprobante')
                                 ).join(Clientes, Factura.idcliente == Clientes.id 
                                 ).join(TipoComprobantes, Factura.idtipocomprobante == TipoComprobantes.id
-                                ).filter(Factura.fecha >= desde, Factura.fecha <= hasta).all()
+                                ).filter(Factura.fecha >= desde, Factura.fecha <= hasta).order_by(Factura.id.desc()).all()
         return ventas                        
     except Exception as e:
         print(f'error: {e}')
@@ -897,6 +916,7 @@ def get_factura(id):
             Item.precio_unitario,
             Item.precio_total,
             Item.bonificacion,
+            Item.idoferta,
             Articulo.codigo,
             Articulo.detalle) \
             .join(Articulo, Articulo.id == Item.idarticulo) \
@@ -989,11 +1009,15 @@ def procesar_recibo_cuota_credito(idCliente, fecha, pagoTotal, efectivo, tarjeta
         )
         db.session.add(recibo)
         db.session.flush()
-        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, efectivo, tarjeta, entidad, 0, 0, None, 0)
+        cuotas = 1
+        coeficiente = 1
+        documento = ''
+        telefono = ''
+        procesar_pagos(recibo.id, recibo.idcliente, recibo.fecha, Decimal(pagoTotal), Decimal(efectivo), Decimal(tarjeta), entidad, cuotas, coeficiente, documento, telefono, 0, 0, None, 0)
         return recibo
     except SQLAlchemyError as e:
         recibo = []
-        print(f"Error procesando recibo de cta cte: {e}")
+        print(f"Error SQLAlchemy, procesando recibo de cta cte: {e}")
         raise Exception(f"Error procesando recibo de cta cte: {e}")
     except Exception as e:
         recibo = []
@@ -1184,7 +1208,6 @@ def generar_presupuesto(id_presupuesto):
     with tempfile.TemporaryDirectory() as tempdir:
         nombrePDF = f"Presupuesto-{datos_factura['letra_comprobante']}-{datos_factura['nro_comprobante']}.pdf"
         pdf_path = os.path.join(tempdir, nombrePDF)
-        print(f'Generando presupuesto en {pdf_path}')
         generar_factura_pdf(pdf_path, datos_factura, items)
         # ✅ — Enviamos el archivo
         with open(pdf_path, 'rb') as f:

@@ -415,9 +415,7 @@ def imprimir_factura_vta_pos(id):
         else:
             printer_service.vendor_id = 0x0483
             printer_service.product_id = 0x5740
-        print(factura)
-        for item in items:
-            print(item)
+        
         printer_service.print_invoice(factura, items, empresa)
         
         return jsonify({

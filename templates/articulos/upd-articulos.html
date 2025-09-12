@@ -229,8 +229,9 @@
                                         <input type="text" class="form-control" value="{{ stock.id }}" name="stock[{{loop.index}}][id]" readonly>
                                     </div>
                                     <div class="col-6">
-                                        <label for="stock">Stock</label>
-                                        <input type="text" class="form-control" value="{{ stock.nombre_sucursal }}" readonly>
+                                        <label for="stock">Stock/Sucursal</label>
+                                        <input type="text" class="form-control" name="stock[{{loop.index}}][nombre_sucursal]" value="{{ stock.nombre_sucursal }}" readonly>
+                                        <input type="text" name="stock[{{loop.index}}][idsucursal]" value="{{ stock.idsucursal }}" readonly hidden>
                                     </div>
                                     <div class="col-2">
                                         <label for="stock">Stock</label>

@@ -58,10 +58,12 @@ class Item(db.Model):
     idingbto = db.Column(db.Integer, db.ForeignKey('alc_ib.id'), nullable=False)   
     exento = db.Column(db.Numeric(20,6), nullable=False)
     impint = db.Column(db.Numeric(20,6), nullable=False)
+    idoferta = db.Column(db.Integer, nullable=True)
+    # Relaciones
     articulo = db.relationship('Articulo', backref=db.backref('items', lazy=True))
     factura = db.relationship('Factura', backref=db.backref('items', lazy=True))
     
-    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, bonificacion=0, iva=0, idalciva=0, ingbto=0, idingbto=0, exento=0, impint=0): 
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, bonificacion=0, iva=0, idalciva=0, ingbto=0, idingbto=0, exento=0, impint=0, idoferta=0): 
         self.idfactura = idfactura,
         self.id = id,
         self.idarticulo = idarticulo
@@ -75,6 +77,7 @@ class Item(db.Model):
         self.idingbto = idingbto
         self.exento = exento
         self.impint = impint
+        self.idoferta = idoferta
 
 class PagosFV(db.Model):
     __tablename__ = 'pagos_fv'

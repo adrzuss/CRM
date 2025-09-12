@@ -625,8 +625,7 @@ def procesar_items_balance(form, idbalance, id_sucursal):
 
 def get_stocks_negativos():
     sucursal = session['id_sucursal']
-    stk_neg = db.session.execute(text("CALL get_stock_negativos(:sucursal)"),
-                         {'sucursal': sucursal}).fetchall()
+    stk_neg = db.session.execute(text("CALL get_stock_negativos(:sucursal)"),{'sucursal': sucursal}).fetchall()
     stk_list = []
     for stk in stk_neg:
         stk_list.append({

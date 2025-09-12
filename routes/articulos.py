@@ -136,7 +136,6 @@ def update_articulo(id):
                 idTipoArticulo=request.form['idtipoarticulo']
                 esCompuesto=request.form.get("es_compuesto") != None
                 pedirEnVentas=request.form.get("pedir_en_ventas")
-                print(f'Que pedimos: {pedirEnVentas}')
                 articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto, pedir_en_ventas=pedirEnVentas) 
                 db.session.add(articulo)
                 
@@ -213,16 +212,17 @@ def update_articulo(id):
         for i in range(item_count):
             try:
                 idstock = request.form[f'stock[{i+1}][id]']
+                idsucstock = request.form[f'stock[{i+1}][idsucursal]']
                 deseable = request.form[f'stock[{i+1}][deseable]']
                 maximo = request.form[f'stock[{i+1}][maximo]']
                 if (idstock != None) and (deseable != None) and (maximo != None):
-                    stock = Stock.query.get((idstock, id, idsucursal))
+                    stock = Stock.query.get((idstock, id, idsucstock))
                     if stock:
                         stock.deseable = deseable
                         stock.maximo = maximo
                         db.session.commit()
                     else:    
-                        stock = Stock(idstock, articulo.id, idsucursal, deseable, maximo)
+                        stock = Stock(idstock, articulo.id, idsucstock, deseable, maximo)
                         db.session.add(stock)
                     db.session.commit()
             except Exception as e:
@@ -336,6 +336,7 @@ def get_articulo(codigo, idlista):
         # Obtener el precio del artículo según la lista especificada (idlista)
         # Si la lista es 0 es porque vengo desde las compra 
         enOferta = False
+        idOferta = 0
         if idlista > 0 :
             precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
         
@@ -345,22 +346,24 @@ def get_articulo(codigo, idlista):
             # Buscar ofertas
             oferta = db.session.execute(text("call get_oferta_articulo(:idarticulo, :idrubro, :idmarca)"), {"idarticulo": articulo.id, "idrubro": articulo.idrubro, "idmarca": articulo.idmarca}).fetchall()
             enOferta = False
+            
             if oferta[0].v_valor_descuento != None:
                 enOferta = True
+                idOferta = oferta[0].v_id_oferta
                 # Si hay ofertas, aplicar la lógica correspondiente
                 if oferta[0].v_tipo_descuento == 1:
                     precio.precio = precio.precio - (precio.precio * oferta[0].v_valor_descuento / 100)
                 else:    
                     precio.precio = oferta[0].v_valor_descuento
             # Devolver la información requerida
-            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})   
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "idmarca": articulo.idmarca, "marca": articulo.marca, "idrubro": articulo.idrubro, "detalle": articulo.detalle, "costo": articulo.costo, "precio": precio.precio, "idoferta": idOferta, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})   
         elif idlista == 0:
             # Obtener el precio del artículo según la lista especificada (idlista)
             # Si la lista es 0 es porque vengo desde las compra y en precio se pasa el costo
-            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "idmarca": articulo.idmarca,"marca": articulo.marca, "idrubro": articulo.idrubro, "detalle": articulo.detalle, "costo": articulo.costo, "precio": articulo.costo, "idoferta": idOferta, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
         else:    
             # Devolver la información requerida
-            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
+            return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "idmarca": articulo.idmarca, "marca": articulo.marca, "idrubro": articulo.idrubro, "detalle": articulo.detalle, "costo": articulo.costo, "idoferta": idOferta, "oferta": enOferta, "pedirEnVentas": articulo.pedir_en_ventas.name, "baja": articulo.baja != date(1900, 1, 1)})
     except Exception as e:
         print(f'Error al obtener el artículo: {e}')
         return jsonify(success=False, error=str(e)), 500
@@ -383,7 +386,7 @@ def get_articulo_id(idarticulo):
     if not articulo:
         return jsonify(success=False, articulo={}), 404
     else:    
-        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo})   
+        return jsonify(success=True, articulo={"id": articulo.id, "codigo": articulo.codigo, "marca": articulo.marca, "detalle": articulo.detalle, "costo": articulo.costo, "idoferta": 0, "oferta": False, "baja": False})   
     
 
     

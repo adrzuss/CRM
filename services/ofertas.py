@@ -1,7 +1,8 @@
-from flask import current_app
+from flask import current_app, jsonify
 from models.ofertas import Oferta, OfertasCondiciones, TipoDescuento, TipoCondiciones, OfertasVinculadas, ReglaSeleccion
 from utils.db import db
 from datetime import datetime
+from sqlalchemy import text
 
 class OfertaService:
     def obtener_oferta_por_id(self, id):
@@ -16,9 +17,7 @@ class OfertaService:
             
             # Si es oferta vinculada, obtener los artículos
             vinculos = None
-            print(f'La oferta: {oferta}')
             vinculos = OfertasVinculadas.query.filter_by(id_oferta=id).first()
-            print('Vinculos: ', vinculos)
             
             return {
                 'oferta': oferta,
@@ -32,19 +31,22 @@ class OfertaService:
     def crear_oferta(self, datos_oferta, condiciones):
         """Crea una nueva oferta con sus condiciones"""
         try:
+            print('Creando: 1')
             nueva_oferta = Oferta(
                 nombre=datos_oferta['nombre'],
+                tipo_oferta=datos_oferta['tipo_oferta'],
                 tipo_descuento=datos_oferta['tipo_descuento'],
                 valor_descuento=datos_oferta['valor_descuento'],
                 cantidad_minima=datos_oferta['cantidad_minima'],
                 multiplos=datos_oferta.get('multiplos', False),
                 fecha_inicio=datos_oferta['fecha_inicio'],
                 fecha_fin=datos_oferta['fecha_fin'],
+                regla_seleccion=ReglaSeleccion(datos_oferta.get('regla_seleccion', 'no_aplica')),
                 es_condicion_compra=True
             )
             db.session.add(nueva_oferta)
             db.session.flush()
-
+            print('Creando: 2')
             # Crear las condiciones
             for condicion in condiciones:
                 nueva_condicion = OfertasCondiciones(
@@ -53,7 +55,7 @@ class OfertaService:
                     id_referencia=condicion['id_referencia']
                 )
                 db.session.add(nueva_condicion)
-
+            print('Creando: 3')
             db.session.commit()
             return nueva_oferta
         except Exception as e:
@@ -103,6 +105,7 @@ class OfertaService:
                 
             # Actualizar datos básicos
             oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_oferta = datos_oferta['tipo_oferta']
             oferta.tipo_descuento = datos_oferta['tipo_descuento']
             oferta.valor_descuento = datos_oferta['valor_descuento']
             oferta.cantidad_minima = datos_oferta['cantidad_minima']
@@ -129,7 +132,7 @@ class OfertaService:
             db.session.rollback()
             raise e
         
-    def actualizar_oferta_vinculada(id, datos_oferta, articulo_origen, articulo_destino):
+    def actualizar_oferta_vinculada(self, id, datos_oferta, articulo_origen, articulo_destino):
         try:
             oferta = Oferta.query.get(id)
             if not oferta:
@@ -137,6 +140,7 @@ class OfertaService:
 
             # Actualizar datos básicos
             oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_oferta = datos_oferta['tipo_oferta'],
             oferta.tipo_descuento = datos_oferta['tipo_descuento']
             oferta.valor_descuento = datos_oferta['valor_descuento']
             oferta.cantidad_minima = datos_oferta['cantidad_minima']
@@ -157,7 +161,7 @@ class OfertaService:
             db.session.rollback()
             raise e
         
-    def actualizar_oferta_regla_seleccion(id, datos_oferta, condiciones, regla):
+    def actualizar_oferta_regla_seleccion(self, id, datos_oferta, condiciones, regla):
         try:
             oferta = Oferta.query.get(id)
             if not oferta:
@@ -165,6 +169,7 @@ class OfertaService:
 
             # Actualizar datos básicos
             oferta.nombre = datos_oferta['nombre']
+            oferta.tipo_oferta = datos_oferta['tipo_oferta']
             oferta.tipo_descuento = datos_oferta['tipo_descuento']
             oferta.valor_descuento = datos_oferta['valor_descuento']
             oferta.cantidad_minima = datos_oferta['cantidad_minima']
@@ -273,12 +278,13 @@ class OfertaService:
             Oferta.fecha_inicio <= fecha_actual,
             Oferta.fecha_fin >= fecha_actual
         ).all()
-        
+    
+    """
     def obtener_referencias_por_tipo(self, tipo_condicion_id):
-        """
+        ""
         Obtiene las referencias según el tipo de condición
         Por ejemplo, si es tipo marca, devuelve todas las marcas
-        """
+        ""
         try:
             tipo = TipoCondiciones.query.get(tipo_condicion_id)
             if not tipo:
@@ -301,3 +307,47 @@ class OfertaService:
         except Exception as e:
             current_app.logger.error(f"Error obteniendo referencias: {str(e)}")
             return []
+    """            
+            
+
+    def buscarOfertas(self, articulos):
+        """
+        Busca ofertas aplicables para una lista de artículos
+        """
+        try:
+            articulosFacturados = {}
+            for articulo in articulos:
+                # Aquí se puede implementar la lógica para buscar ofertas
+                # que apliquen al artículo en cuestión
+                # 1 Ofertas vinculadas
+                id = articulo.get('id')
+                if id not in articulosFacturados:
+                    articulosFacturados[id] = {
+                        'idmarca': articulo.get('idmarca'),
+                        'idrubro': articulo.get('idrubro'),
+                        'cantidad': articulo.get('cantidad'),
+                        'precio': articulo.get('precio')
+                    }
+                else:
+                    articulosFacturados[id]['cantidad'] += articulo.get('cantidad')
+            # El procediienta almacenado recibe un JSON con los artículos y devuelve las ofertas aplicables
+            #aca armamos el JSON
+            jsonArticulos = []
+            for articulo in articulosFacturados:
+                jsonArticulos.append({
+                    'id': articulo,
+                    'idmarca': articulosFacturados[articulo]['idmarca'],
+                    'idrubro': articulosFacturados[articulo]['idrubro'],
+                    'cantidad': articulosFacturados[articulo]['cantidad'],
+                    'precio': articulosFacturados[articulo]['precio']
+                })
+            import json
+            jsonStr = json.dumps(jsonArticulos)
+            ofertasPorVinculo = db.session.execute(text("CALL get_ofertas_cierres(:jsonArticulos)"), {"jsonArticulos": jsonStr})
+            ofertasPorVinculo = ofertasPorVinculo.fetchall()
+            ofertas = jsonify([{'id': o.id, 'codigo': o.codigo, 'cantidad': o.cantidad, 'precio': o.precio, 'idoferta': o.idoferta, 'descuento': o.descuento, 'tipo_oferta': o.tipo_oferta} for o in ofertasPorVinculo])
+            
+            return ofertas
+        except Exception as e:
+            current_app.logger.error(f"Error buscando ofertas: {str(e)}")
+            return []   

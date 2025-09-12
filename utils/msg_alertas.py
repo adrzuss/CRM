@@ -5,6 +5,7 @@ from services.ctactecli import ctacte_vencida
 from services.sessions import alerta_mensajes_usuario, alerta_mensajes_sucursal, alerta_mensajes_creditos_nuevos, \
                               alerta_mensajes_creditos_pendientes, alerta_mensajes_creditos_rechazados, \
                               alerta_mensajes_creditos_aprobados
+from services.creditos import alerta_creditos_atrasados                              
 
 def obtener_alertas():
     try:
@@ -19,10 +20,15 @@ def obtener_alertas():
             cantidadAlertas += 1
             alertas.append(mensaje)
         cantidad, mensaje = alerta_precios_nuevos()
-        
         if cantidad > 0:
             cantidadAlertas += 1
             alertas.append(mensaje)
+        
+        cantidad, mensaje = alerta_creditos_atrasados()
+        if cantidad > 0:
+            cantidadAlertas += 1
+            alertas.append(mensaje)
+            
     except Exception as e:  
         print(f"Error al obtener alertas: {str(e)}")
         cantidad = 1

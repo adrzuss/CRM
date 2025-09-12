@@ -15,219 +15,40 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- Volcando estructura de base de datos para erp
-CREATE DATABASE IF NOT EXISTS `erp` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `erp`;
-
--- Volcando estructura para procedimiento erp.actualizar_precios_por_compra
-DELIMITER //
-CREATE PROCEDURE `actualizar_precios_por_compra`(
-
-	IN `idfacc` INT
-
-)
-BEGIN
-
-    DECLARE done INT DEFAULT 0;
-
-    DECLARE done_listas INT DEFAULT 0;
-
-    DECLARE v_idarticulo INT;
-
-    DECLARE v_costo DECIMAL(10,2);
-
-    DECLARE v_idlista INT;
-
-    DECLARE v_markup DECIMAL(10,2);
-
-
-
-    -- Cursor para recorrer la tabla de artículos
-
-    DECLARE compra_cursor CURSOR FOR
-
-        SELECT idarticulo, precio_unitario FROM itemsc
-
-        WHERE idfactura = idfacc;
-
-
-
-    -- Cursor para recorrer la tabla de listas de precios
-
-    DECLARE listas_cursor CURSOR FOR
-
-        SELECT id, markup FROM listas_precio;
-
-
-
-    -- Declaración de handler para salir del bucle del cursor
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND 
-
-    BEGIN
-
-        IF done = 0 THEN
-
-            SET done = 1;
-
-        ELSE
-
-            SET done_listas = 1;
-
-        END IF;
-
-    END;
-
-
-
-    OPEN compra_cursor;
-
-
-
-    leer_articulo: LOOP
-
-        FETCH compra_cursor INTO v_idarticulo, v_costo;
-
-
-
-        IF done THEN
-
-            LEAVE leer_articulo;
-
-        END IF;
-
-
-
-        -- Abrir el cursor de listas de precios
-
-        SET done_listas = 0;
-
-        OPEN listas_cursor;
-
-
-
-        leer_listas: LOOP
-
-            FETCH listas_cursor INTO v_idlista, v_markup;
-
-
-
-            IF done_listas THEN
-
-                LEAVE leer_listas;
-
-            END IF;
-
-
-
-            -- Insertar o actualizar el precio en la tabla de precios
-
-            INSERT INTO precios (idlista, idarticulo, precio)
-
-            VALUES (v_idlista, v_idarticulo, v_costo * v_markup)
-
-            ON DUPLICATE KEY UPDATE precio = v_costo * v_markup;
-
-        END LOOP;
-
-
-
-        CLOSE listas_cursor;
-
-    END LOOP;
-
-
-
-    CLOSE compra_cursor;
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento erp.actualizar_precios_por_lista
-DELIMITER //
-CREATE PROCEDURE `actualizar_precios_por_lista`(IN p_idlista INT, IN p_markup DECIMAL(10,2))
-BEGIN
-
-    DECLARE done INT DEFAULT 0;
-
-    DECLARE v_idarticulo INT;
-
-    DECLARE v_costo DECIMAL(10,2);
-
-    
-
-    -- Cursor para recorrer la tabla de artículos
-
-    DECLARE articulo_cursor CURSOR FOR
-
-        SELECT id, costo FROM articulos;
-
-
-
-    -- Declaración de handler para salir del bucle del cursor
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-
-
-    OPEN articulo_cursor;
-
-
-
-    leer_articulo: LOOP
-
-        FETCH articulo_cursor INTO v_idarticulo, v_costo;
-
-        
-
-        IF done THEN
-
-            LEAVE leer_articulo;
-
-        END IF;
-
-
-
-        -- Insertar o actualizar el precio en la tabla de precios
-
-        INSERT INTO precios (idlista, idarticulo, precio)
-
-        VALUES (p_idlista, v_idarticulo, v_costo * p_markup)
-
-        ON DUPLICATE KEY UPDATE precio = v_costo * p_markup;
-
-        
-
-    END LOOP;
-
-
-
-    CLOSE articulo_cursor;
-
-END//
-DELIMITER ;
-
--- Volcando estructura para tabla erp.alc_ib
+-- Volcando estructura de base de datos para erp-super2
+CREATE DATABASE IF NOT EXISTS `erp-super2` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `erp-super2`;
+
+-- Volcando estructura para tabla erp-super2.alc_ib
 CREATE TABLE IF NOT EXISTS `alc_ib` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `descripcion` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `descripcion` varchar(100) NOT NULL,
   `alicuota` decimal(20,6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.alc_ib: ~3 rows (aproximadamente)
+INSERT INTO `alc_ib` (`id`, `descripcion`, `alicuota`) VALUES
+	(0, 'Sin tasa', 0.000000),
+	(1, 'Tasa de comercio', 3.000000),
+	(2, 'Tasa de industria', 1.500000);
 
--- Volcando estructura para tabla erp.alc_iva
+-- Volcando estructura para tabla erp-super2.alc_iva
 CREATE TABLE IF NOT EXISTS `alc_iva` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `descripcion` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `alicuota` decimal(20,6) NOT NULL DEFAULT '0.000000',
+  `descripcion` varchar(100) NOT NULL,
+  `alicuota` decimal(20,6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.alc_iva: ~3 rows (aproximadamente)
+INSERT INTO `alc_iva` (`id`, `descripcion`, `alicuota`) VALUES
+	(0, 'Sin IVA', 0.000000),
+	(1, 'IVA 21', 21.000000),
+	(2, 'IVA 10,5', 10.500000),
+	(3, 'IVA 27', 27.000000);
 
--- Volcando estructura para tabla erp.articulos
+-- Volcando estructura para tabla erp-super2.articulos
 CREATE TABLE IF NOT EXISTS `articulos` (
   `id` int NOT NULL AUTO_INCREMENT,
   `codigo` varchar(50) NOT NULL,
@@ -242,6 +63,9 @@ CREATE TABLE IF NOT EXISTS `articulos` (
   `idtipoarticulo` int DEFAULT NULL,
   `imagen` varchar(255) DEFAULT NULL,
   `es_compuesto` tinyint(1) NOT NULL,
+  `pedir_en_ventas` enum('CANTIDAD','PRECIO','CANTIDAD_PRECIO') NOT NULL DEFAULT 'CANTIDAD',
+  `costo_total` decimal(20,6) NOT NULL,
+  `baja` date NOT NULL DEFAULT '1900-01-01',
   PRIMARY KEY (`id`),
   KEY `idiva` (`idiva`),
   KEY `idib` (`idib`),
@@ -253,11 +77,93 @@ CREATE TABLE IF NOT EXISTS `articulos` (
   CONSTRAINT `articulos_ibfk_3` FOREIGN KEY (`idmarca`) REFERENCES `marcas` (`id`),
   CONSTRAINT `articulos_ibfk_4` FOREIGN KEY (`idrubro`) REFERENCES `rubros` (`id`),
   CONSTRAINT `articulos_ibfk_5` FOREIGN KEY (`idtipoarticulo`) REFERENCES `tipo_articulos` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=560230 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.articulos: ~79 rows (aproximadamente)
+INSERT INTO `articulos` (`id`, `codigo`, `detalle`, `costo`, `idiva`, `exento`, `impint`, `idib`, `idmarca`, `idrubro`, `idtipoarticulo`, `imagen`, `es_compuesto`, `pedir_en_ventas`, `costo_total`, `baja`) VALUES
+	(1, '7791290795570', 'Antigrasa gatillo 500ml', 4200.000000, 1, 0.000000, 0.000000, 1, 8, 6, 1, 'cif-limpiador-liquido-gatillo-antigrasa.jpg', 0, 'CANTIDAD', 5082.000000, '1900-01-01'),
+	(2, '7798065440154', 'Vinagre de alcohol 1lt', 2300.000000, 1, 0.000000, 0.000000, 1, 9, 3, 1, 'Ambali_vinagre_alcohol.webp', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(3, '7791290793750', 'Suavizante 900 ml', 1230.000000, 1, 0.000000, 0.000000, 1, 10, 6, 1, 'Suavizante-Vivere-Clasico-900ml.webp', 0, 'CANTIDAD', 1185.800000, '1900-01-01'),
+	(4, '4005900773821', 'Agua Micelar Rose Care quita maquillaje 400ml', 6780.000000, 1, 0.000000, 0.000000, 1, 11, 5, 1, 'agua_micelar_rose_careg.webp', 0, 'CANTIDAD', 8203.800000, '1900-01-01'),
+	(5, '4005808555727', 'Protector solar 30 fps', 4700.000000, 1, 0.000000, 0.000000, 1, 11, 5, 1, 'protector-solar-nivea-sun-protect-hydrate-fps-30-x-400-ml_imagen-1.webp', 0, 'CANTIDAD', 5687.000000, '1900-01-01'),
+	(6, '7792389000551', 'Mata mosca y mosquitos aerosol', 8700.000000, 1, 0.000000, 0.000000, 1, 12, 7, 1, 'aero-matamoscas-x5.png', 0, 'CANTIDAD', 10527.000000, '1900-01-01'),
+	(7, '7793147009199', 'Cerveza lata 473 cm3', 2300.000000, 1, 0.000000, 0.000000, 1, 13, 8, 1, 'Heineken_473s.jpeg', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(8, '7790895003202', 'Agua Tónica 310ml', 2800.000000, 1, 0.000000, 0.000000, 1, 14, 9, 1, 'Agua-Tonica-Schweppes-310-Ml-_1.webp', 0, 'CANTIDAD', 3388.000000, '1900-01-01'),
+	(9, '7790990003138', 'Detergente 500ml', 3510.000000, 1, 0.000000, 0.000000, 1, 15, 6, 1, 'Magistral_500ml.webp', 0, 'CANTIDAD', 4222.900000, '1900-01-01'),
+	(10, '7702018913688', 'Desodorante gel power rusn', 6700.000000, 1, 0.000000, 0.000000, 1, 17, 5, 1, 'gillette_specialized_power_rusn.jpg', 0, 'CANTIDAD', 8107.000000, '1900-01-01'),
+	(11, '7790520981967', 'Limpiahornos', 7800.000000, 1, 0.000000, 0.000000, 1, 16, 6, 1, 'Mr.Musculo_limpiahornos.jpeg', 0, 'CANTIDAD', 9438.000000, '1900-01-01'),
+	(12, '7791290796058', 'Detergente desengrasante Bioactive Limon 1,25', 7800.000000, 1, 0.000000, 0.000000, 1, 8, 6, 1, 'detergente_cif_125.jpeg', 0, 'CANTIDAD', 9438.000000, '1900-01-01'),
+	(13, '7791290795792', 'Desinfectante de ambientes y superficies frescura citrica', 2980.000000, 1, 0.000000, 0.000000, 1, 8, 6, 1, 'Cif_desinfectante_frescura_citrica.png', 0, 'CANTIDAD', 3509.000000, '1900-01-01'),
+	(14, '77939113013689', 'Yogur sabor natural 140g', 670.000000, 1, 0.000000, 0.000000, 1, 19, 1, 1, 'YOGUR-ENTERO-SABOR-NATURAL-TREGAR-140-GR-1-49841.webp', 0, 'CANTIDAD', 810.700000, '1900-01-01'),
+	(15, '7791337007390', 'Yogur con cereales clásico 159g', 1200.000000, 1, 0.000000, 0.000000, 1, 7, 1, 1, 'YogurClasicoLS.jpg', 0, 'CANTIDAD', 1452.000000, '1900-01-01'),
+	(16, '7790360720122', 'Picadillo de carne 90g', 1200.000000, 1, 0.000000, 0.000000, 0, 21, 10, 1, 'picadillo_de_carne_la_blanca.webp', 0, 'CANTIDAD', 1452.000000, '1900-01-01'),
+	(17, '7791100000399', 'Bicarbonato de sodio 50g', 990.000000, 1, 0.000000, 0.000000, 1, 18, 3, 1, 'bicarbonato_chango.png', 0, 'CANTIDAD', 1197.900000, '1900-01-01'),
+	(18, '7794000006478', 'Mostaza original 250g', 4500.000000, 1, 0.000000, 0.000000, 1, 22, 3, 1, 'savora_original_250.webp', 0, 'CANTIDAD', 5445.000000, '1900-01-01'),
+	(19, '7790072001038', 'Salero x 500g Celusal', 3500.000000, 1, 0.000000, 0.000000, 1, 4, 3, 1, 'Salero500Celusal.jpg', 0, 'CANTIDAD', 4235.000000, '1900-01-01'),
+	(20, '7794000006072', 'Mayonesa clásica x 500g', 3500.000000, 1, 0.000000, 0.000000, 1, 24, 3, 1, 'helmanns_500g.webp', 0, 'CANTIDAD', 4235.000000, '1900-01-01'),
+	(21, '7794980362953', 'Pimienta en grano negra 25g', 780.000000, 1, 0.000000, 0.000000, 1, 23, 3, 1, 'Pimineta_yuspe.jpg', 0, 'CANTIDAD', 943.800000, '1900-01-01'),
+	(22, '7792104000163', 'Sal fina 500g', 690.000000, 1, 0.000000, 0.000000, 1, 25, 3, 1, 'Donasal_500.jpg', 0, 'CANTIDAD', 834.900000, '1900-01-01'),
+	(23, '7791176218711', 'Garbanzos 400g', 670.000000, 1, 0.000000, 0.000000, 1, 27, 11, 1, 'garbanzos_cadea.webp', 0, 'CANTIDAD', 810.700000, '1900-01-01'),
+	(24, '7790220000043', 'Harina de trigo 000 1 kg', 1200.000000, 1, 0.000000, 0.000000, 1, 5, 2, 1, 'GracielaReal_000_1.jpg', 0, 'CANTIDAD', 1452.000000, '1900-01-01'),
+	(25, '7791290795471', 'Ultra brillo multisuperficies 400ml', 3200.000000, 1, 0.000000, 0.000000, 1, 8, 6, 1, 'cif-limpiador-liquido-ultra-brillo-anti-polvo.jpg', 0, 'CANTIDAD', 3872.000000, '1900-01-01'),
+	(26, '7790150330166', 'Te Manzanilla 25 saquitos', 2300.000000, 1, 0.000000, 0.000000, 1, 3, 12, 1, 'Manzanilla_25_squitos.jpg', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(27, '7790150310267', 'Te Boldo 25 saquitos', 2300.000000, 1, 0.000000, 0.000000, 1, 3, 12, 1, 'images.jpeg', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(28, '7790150250327', 'Te rosa mosqueta y manzanilla x 25', 2300.000000, 1, 0.000000, 0.000000, 1, 3, 12, 1, 'La_virginia_te_mansanilla_y_rosa_mosquetas.webp', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(29, '7790387800159', 'Te en saquitos x 100', 6800.000000, 1, 0.000000, 0.000000, 1, 20, 12, 1, 'Te_taragui_100.webp', 0, 'CANTIDAD', 8228.000000, '1900-01-01'),
+	(30, '7790070318381', 'Fideos letritas 500g', 1500.000000, 1, 0.000000, 0.000000, 1, 6, 13, 1, 'Lucchetti-fideos-letritas-x-500-grs-1596117028-0-0.png', 0, 'CANTIDAD', 1815.000000, '1900-01-01'),
+	(31, '7790070336453', 'Fideos tirabuzón x 500g', 2450.000000, 1, 0.000000, 0.000000, 1, 29, 13, 1, 'fideos-tirabuzon-terrabusi-500g.jpg', 0, 'CANTIDAD', 2964.500000, '1900-01-01'),
+	(32, '7790070318671', 'Fideos nido fettuccine x 500g', 2450.000000, 1, 0.000000, 0.000000, 1, 30, 13, 1, 'fettuccine_nido.webp', 0, 'CANTIDAD', 2964.500000, '1900-01-01'),
+	(33, '7798028020508', 'Yerba mate 1kg', 3870.000000, 1, 0.000000, 0.000000, 1, 2, 12, 1, '7721_0.jpeg', 0, 'CANTIDAD', 4682.700000, '1900-01-01'),
+	(34, '7793913013214', 'Queso crema light 190g', 3500.000000, 1, 0.000000, 0.000000, 1, 19, 1, 1, 'queso_crema_tregar.webp', 0, 'CANTIDAD', 4235.000000, '1900-01-01'),
+	(35, '7791337061439', 'Queso untable clásico 290g', 5230.000000, 1, 0.000000, 0.000000, 1, 7, 1, 1, 'La_sereinisima_queso_untable.png', 0, 'CANTIDAD', 6328.300000, '1900-01-01'),
+	(36, 'Trincha', 'Pan trincha unidad', 670.000000, 1, 0.000000, 0.000000, 0, 31, 4, 1, 'aumento-del-pan.jpg', 0, 'CANTIDAD', 810.700000, '1900-01-01'),
+	(37, 'caserito', 'Pan estilo casero', 1300.000000, 1, 0.000000, 0.000000, 1, 31, 4, 1, '', 0, 'CANTIDAD', 1573.000000, '1900-01-01'),
+	(38, 'semita', 'Semita por unidad', 90.000000, 1, 0.000000, 0.000000, 0, 31, 4, 1, 'semitas.jpg', 0, 'CANTIDAD', 108.900000, '1900-01-01'),
+	(39, '7509552922318', 'Shampoo aloe hidra celan', 7900.000000, 1, 0.000000, 0.000000, 1, 32, 5, 1, 'Fructis__aloehidraclean.webp', 0, 'CANTIDAD', 9559.000000, '1900-01-01'),
+	(40, '7509552922295', 'Acondicionador aloe hidra celan', 7900.000000, 1, 0.000000, 0.000000, 1, 32, 5, 1, 'acondicionador_aleohidraclean.jpeg', 0, 'CANTIDAD', 9559.000000, '1900-01-01'),
+	(41, '7509552876536', 'Acondicionador hidra lyss', 7890.000000, 1, 0.000000, 0.000000, 1, 32, 5, 1, 'Fructis__hidralyss.webp', 0, 'CANTIDAD', 9546.900000, '1900-01-01'),
+	(42, '7790033285484', 'Acondicionador recarga nutritiva 600ml', 9800.000000, 1, 0.000000, 0.000000, 1, 32, 5, 1, 'Fructis_Recarganutritiva.webp', 0, 'CANTIDAD', 11858.000000, '1900-01-01'),
+	(43, '7500435162586', 'Shampoo protección caida 650ml', 12300.000000, 1, 0.000000, 0.000000, 1, 33, 5, 1, 'HeadShoulder_proteccioncaida.jpg', 0, 'CANTIDAD', 14883.000000, '1900-01-01'),
+	(44, '7790040147720', 'Galletas surtido', 4700.000000, 0, 0.000000, 0.000000, 1, 34, 14, 1, 'surtido_bagley.jpg', 0, 'CANTIDAD', 5687.000000, '1900-01-01'),
+	(45, 'maple grandre', 'Maple huevos grandes', 4620.000000, 0, 0.000000, 0.000000, 0, 35, 15, 1, 'maple-huevo.jpg', 0, 'CANTIDAD', 4620.000000, '1900-01-01'),
+	(46, 'maple super', 'Maple huevos super', 4400.000000, 0, 0.000000, 0.000000, 0, 35, 15, 1, 'maple-huevo.jpg', 0, 'CANTIDAD', 5324.000000, '1900-01-01'),
+	(47, 'maple mediano', 'Maple huevos medianos', 4200.000000, 0, 0.000000, 0.000000, 0, 35, 15, 1, 'maple-huevo.jpg', 0, 'CANTIDAD', 5082.000000, '1900-01-01'),
+	(48, '7790070012050', 'Aceite girasol 900ml', 1200.000000, 1, 0.000000, 0.000000, 1, 36, 3, 1, 'Aceite-Cocinero-Girasol-X-900-Cc-1-244.jpg', 0, 'CANTIDAD', 1452.000000, '1900-01-01'),
+	(49, '7791664000033', 'Tapas para pacualina de hojaldre', 2300.000000, 1, 0.000000, 0.000000, 1, 37, 16, 1, 'pascualina-hojaldre.png', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(50, '7790036006727', 'Extracto de tomate 133g', 2340.000000, 1, 0.000000, 0.000000, 1, 38, 17, 1, 'Extracto_tomate_baggio_133.jpeg', 0, 'CANTIDAD', 2831.400000, '1900-01-01'),
+	(51, '7798057860045', 'Espuma limpiadora', 3400.000000, 1, 0.000000, 0.000000, 1, 43, 6, 1, 'lem_espuma_limpiadora.webp', 0, 'CANTIDAD', 4114.000000, '1900-01-01'),
+	(52, '7791120032561', 'arroz largo fino 500g', 890.000000, 1, 0.000000, 0.000000, 1, 42, 11, 1, 'arroz_53_largo_fino_500.jpg', 0, 'CANTIDAD', 1076.900000, '1900-01-01'),
+	(53, '7790895000218', 'Retornable 2L sabor original', 1900.000000, 1, 0.000000, 0.000000, 1, 39, 9, 1, 'coca-cola-retornable-2-lt-.jpg', 0, 'CANTIDAD', 2299.000000, '1900-01-01'),
+	(54, '7791293027760', 'Eficient tlco desodorante', 2800.000000, 1, 0.000000, 0.000000, 1, 41, 5, 1, 'exona_eficient_200g.jpg', 0, 'CANTIDAD', 3388.000000, '1900-01-01'),
+	(55, '7790645002363', 'Atun desmenuzado al natural', 1200.000000, 1, 0.000000, 0.000000, 1, 40, 10, 1, 'Atun-Caracas-Desmenuzado-Natural-170-Gr-1-1633.webp', 0, 'CANTIDAD', 1452.000000, '1900-01-01'),
+	(56, '7790645001786', 'Atun en aceite y agua', 2300.000000, 1, 0.000000, 0.000000, 1, 40, 10, 1, 'atun_en_aceite_agua_caracas.jpg', 0, 'CANTIDAD', 2783.000000, '1900-01-01'),
+	(57, 'prepizza', 'Pre pizza 2 unidades', 3500.000000, 1, 0.000000, 0.000000, 1, 31, 4, 1, '', 0, 'CANTIDAD', 4235.000000, '1900-01-01'),
+	(58, '7794940000833', 'Edulcorante 200ml', 3450.000000, 1, 0.000000, 0.000000, 1, 45, 18, 1, 'hiletet_1200x1200.webp', 0, 'CANTIDAD', 4174.500000, '1900-01-01'),
+	(59, '7891000350157', 'Café instantaneo tradicional lata 120g', 7600.000000, 1, 0.000000, 0.000000, 1, 44, 12, 1, 'lata_nescafe.jpg', 0, 'CANTIDAD', 9196.000000, '1900-01-01'),
+	(60, '7793147570606', 'Cerveza lata 710 cm3', 2100.000000, 0, 0.000000, 0.000000, 0, 46, 8, 1, 'schneider-7101-8a77e272365c9e84a816205734295015-640-0.jpg', 0, 'CANTIDAD', 2100.000000, '1900-01-01'),
+	(61, '7790398100088', 'Manteca x 200g', 1540.000000, 1, 0.000000, 0.000000, 0, 3338, 1, 1, 'La_paulina_manteca_200.webp', 0, 'CANTIDAD', 1863.400000, '1900-01-01'),
+	(62, '7791293050836', 'Jabon botanicals 3x120g', 890.000000, 1, 0.000000, 0.000000, 1, 6, 5, 1, 'Jabon-Rosas-Francesas-Lux-Botanicals-3-x-120-Gr-_1.webp', 0, 'CANTIDAD', 1076.900000, '1900-01-01'),
+	(63, '7790139000400', 'Alcohol etilico bi alcohol x 1lt', 1200.000000, 0, 0.000000, 0.000000, 0, 3340, 5, 1, '7790139000400-bialcohol_porta.png', 0, 'CANTIDAD', 1200.000000, '1900-01-01'),
+	(64, '7791293048499', 'Desodorante Go Fresh 150ml', 2345.000000, 0, 0.000000, 0.000000, 0, 3341, 5, 1, 'dove-go-fresh-granada-y-verbena-desodorante-antitranspirante-en-aerosol-150-ml.jpg', 0, 'CANTIDAD', 2345.000000, '1900-01-01'),
+	(65, '7790250015529', 'Papel higienico Duo 50mts x 4', 3200.000000, 1, 0.000000, 0.000000, 1, 3342, 5, 1, 'fic-ph-higienol-duo-dh-50m-x4-id23-ar-para-ar.png', 0, 'CANTIDAD', 3872.000000, '1900-01-01'),
+	(66, '7500435124638', 'Pasta dental anticaries 150g', 4320.000000, 1, 0.000000, 0.000000, 1, 3343, 5, 1, 'Crema-Dental-Anticaries-Oral-B-150-Gr-_2.webp', 0, 'CANTIDAD', 5227.200000, '1900-01-01'),
+	(67, '7500435189453', 'Prestobarba 3 por unidad', 650.000000, 1, 0.000000, 0.000000, 1, 17, 5, 1, 'gillette-prestobarba-3-sensecare-maquina-de-afeitar-x1un.jpg', 0, 'CANTIDAD', 786.500000, '1900-01-01'),
+	(68, '7790950133318', 'Aramrgo serrano 1,35 lts', 1245.000000, 1, 0.000000, 0.000000, 1, 3344, 9, 1, 'Amargo_Serrano_terma.jpg', 0, 'CANTIDAD', 1506.450000, '1900-01-01'),
+	(69, '7790150433423', 'Sabor en polvo verdura 7,5g', 580.000000, 1, 0.000000, 0.000000, 0, 3345, 3, 1, 'sab-polvo-mkt-1200x1500.png', 0, 'CANTIDAD', 701.800000, '1900-01-01'),
+	(70, 'verdura', 'Productos de verdulería', 1.000000, 1, 0.000000, 0.000000, 0, 1, 43, 1, 'verduras_y_frutas.jpg', 0, 'PRECIO', 1.210000, '1900-01-01'),
+	(560219, 'costillas', 'Tira de costilla de vaca', 6700.000000, 1, 0.000000, 0.000000, 1, 1, 44, 1, 'asado-costillar1.jpg', 0, 'CANTIDAD', 8107.000000, '1900-01-01'),
+	(560220, 'Molida', 'Molida de vaca', 4800.000000, 1, 0.000000, 0.000000, 1, 1, 44, 1, 'Molida.jpg', 0, 'CANTIDAD', 5808.000000, '1900-01-01'),
+	(560221, 'Osobuco', 'Osobuco de vaca', 6300.000000, 1, 0.000000, 0.000000, 1, 1, 44, 1, 'osobuco.jpg', 0, 'CANTIDAD', 7623.000000, '1900-01-01'),
+	(560222, 'CremosoPA', 'Queso cremoso', 4300.000000, 1, 0.000000, 0.000000, 0, 1, 1, 1, 'cremoso-punta-del-agua.png', 0, 'CANTIDAD', 5203.000000, '1900-01-01'),
+	(560223, 'dambopa', 'Queso Dambo', 4800.000000, 1, 0.000000, 0.000000, 1, 3346, 1, 1, 'Dambo-punta-del-agua.jpg', 0, 'CANTIDAD', 5808.000000, '1900-01-01'),
+	(560224, 'paleta lario', 'Paleta cocida de cerdo', 4400.000000, 1, 0.000000, 0.000000, 1, 3349, 45, 1, 'Paleta-cocida-Lario.webp', 0, 'CANTIDAD', 5324.000000, '1900-01-01'),
+	(560225, 'mortadela paladini', 'Mortadela', 4200.000000, 1, 0.000000, 0.000000, 1, 3348, 45, 1, 'mortadela-paladini.jpg', 0, 'CANTIDAD', 5082.000000, '1900-01-01'),
+	(560226, 'salame milan', 'Salame tipo milan', 4250.000000, 1, 0.000000, 0.000000, 1, 3347, 45, 1, 'salame-fox.jpg', 0, 'CANTIDAD', 5142.500000, '1900-01-01'),
+	(560227, 'jamon crudo', 'Jamon de cerdo crudo', 6800.000000, 1, 0.000000, 0.000000, 1, 3350, 45, 1, 'jamon-crudo-campo-austral.png', 0, 'CANTIDAD', 8228.000000, '1900-01-01'),
+	(560228, 'huevo grande', 'Huevo grande por unidad', 180.000000, 0, 0.000000, 0.000000, 0, 42, 3, 1, 'huevos.jpg', 0, 'CANTIDAD', 180.000000, '1900-01-01'),
+	(560229, 'Cortes varios', 'Cortes varios vacunos', 1.000000, 1, 0.000000, 0.000000, 1, 1, 44, 1, 'cortes-varios-carne.jpg', 0, 'PRECIO', 1.210000, '1900-01-01');
 
--- Volcando estructura para tabla erp.art_compuesto
+-- Volcando estructura para tabla erp-super2.art_compuesto
 CREATE TABLE IF NOT EXISTS `art_compuesto` (
   `idarticulo` int NOT NULL,
   `idart_comp` int NOT NULL,
@@ -268,9 +174,9 @@ CREATE TABLE IF NOT EXISTS `art_compuesto` (
   CONSTRAINT `art_compuesto_ibfk_2` FOREIGN KEY (`idart_comp`) REFERENCES `articulos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.art_compuesto: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.balance
+-- Volcando estructura para tabla erp-super2.balance
 CREATE TABLE IF NOT EXISTS `balance` (
   `id` int NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
@@ -284,11 +190,59 @@ CREATE TABLE IF NOT EXISTS `balance` (
   CONSTRAINT `balance_ibfk_1` FOREIGN KEY (`idtipo_balance`) REFERENCES `tipo_balances` (`id`),
   CONSTRAINT `balance_ibfk_2` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
   CONSTRAINT `balance_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.balance: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.bancos
+CREATE TABLE IF NOT EXISTS `bancos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `nro_cta` varchar(50) NOT NULL,
+  `direccion` varchar(50) NOT NULL,
+  `telefono` varchar(50) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `baja` date NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.bancos: ~2 rows (aproximadamente)
+INSERT INTO `bancos` (`id`, `nombre`, `nro_cta`, `direccion`, `telefono`, `email`, `baja`) VALUES
+	(1, 'San Juan', '1234-5', 'Av. I de la roza Este', '254-4223212', 'cuentas@bsj.com', '1900-01-01'),
+	(2, 'Santander', '6789-0', 'Av. Libertador 3240 oeste', '264 4332678', 'santander_suc234@santander.com', '1900-01-01');
+
+-- Volcando estructura para tabla erp-super2.bancos_propios
+CREATE TABLE IF NOT EXISTS `bancos_propios` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `fecha_emision` date NOT NULL,
+  `fecha_vencimiento` date NOT NULL,
+  `tipo_movimiento` int NOT NULL,
+  `nro_movimiento` varchar(50) NOT NULL,
+  `monto` decimal(20,6) NOT NULL,
+  `id_banco` int NOT NULL,
+  `baja` date NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tipo_movimiento` (`tipo_movimiento`),
+  KEY `id_banco` (`id_banco`),
+  CONSTRAINT `bancos_propios_ibfk_1` FOREIGN KEY (`tipo_movimiento`) REFERENCES `tipo_mov_bancos` (`id`),
+  CONSTRAINT `bancos_propios_ibfk_2` FOREIGN KEY (`id_banco`) REFERENCES `bancos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.bancos_propios: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.banco_propio_proveedor
+CREATE TABLE IF NOT EXISTS `banco_propio_proveedor` (
+  `id_banco_propio` int NOT NULL,
+  `id_proveedor` int NOT NULL,
+  PRIMARY KEY (`id_banco_propio`,`id_proveedor`),
+  KEY `id_proveedor` (`id_proveedor`),
+  CONSTRAINT `banco_propio_proveedor_ibfk_1` FOREIGN KEY (`id_banco_propio`) REFERENCES `bancos_propios` (`id`),
+  CONSTRAINT `banco_propio_proveedor_ibfk_2` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.banco_propio_proveedor: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.cambio_precios
+-- Volcando estructura para tabla erp-super2.cambio_precios
 CREATE TABLE IF NOT EXISTS `cambio_precios` (
   `id` int NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
@@ -302,20 +256,64 @@ CREATE TABLE IF NOT EXISTS `cambio_precios` (
   CONSTRAINT `cambio_precios_ibfk_1` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
   CONSTRAINT `cambio_precios_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `cambio_precios_ibfk_3` FOREIGN KEY (`idlista`) REFERENCES `listas_precio` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.cambio_precios: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.clientes
-CREATE TABLE IF NOT EXISTS `clientes` (
+-- Volcando estructura para tabla erp-super2.categorias
+CREATE TABLE IF NOT EXISTS `categorias` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(80) DEFAULT NULL,
-  `documento` varchar(13) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.categorias: ~8 rows (aproximadamente)
+INSERT INTO `categorias` (`id`, `nombre`) VALUES
+	(1, 'Sin Categoria'),
+	(2, 'Normal'),
+	(3, 'A1'),
+	(4, 'A2'),
+	(5, 'B1'),
+	(6, 'B2'),
+	(7, 'C1'),
+	(8, 'C2');
+
+-- Volcando estructura para tabla erp-super2.categorias_creditos
+CREATE TABLE IF NOT EXISTS `categorias_creditos` (
+  `idplan` int NOT NULL,
+  `idcategoria` int NOT NULL,
+  PRIMARY KEY (`idplan`,`idcategoria`),
+  KEY `idcategoria` (`idcategoria`),
+  CONSTRAINT `categorias_creditos_ibfk_1` FOREIGN KEY (`idplan`) REFERENCES `planes_creditos` (`id`),
+  CONSTRAINT `categorias_creditos_ibfk_2` FOREIGN KEY (`idcategoria`) REFERENCES `categorias` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.categorias_creditos: ~10 rows (aproximadamente)
+INSERT INTO `categorias_creditos` (`idplan`, `idcategoria`) VALUES
+	(2, 2),
+	(3, 2),
+	(4, 2),
+	(1, 3),
+	(2, 5),
+	(4, 5),
+	(2, 6),
+	(4, 6),
+	(3, 7),
+	(3, 8);
+
+-- Volcando estructura para tabla erp-super2.clientes
+CREATE TABLE IF NOT EXISTS `clientes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `documento` varchar(13) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `email` varchar(100) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `direccion` varchar(100) DEFAULT NULL,
+  `idlocalidad` int NOT NULL,
+  `idprovincia` int NOT NULL,
   `ctacte` tinyint(1) DEFAULT NULL,
-  `baja` datetime NOT NULL,
+  `baja` date NOT NULL,
+  `idcategoria` int NOT NULL DEFAULT (0),
   `id_tipo_doc` int DEFAULT NULL,
   `id_tipo_iva` int DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -323,72 +321,182 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   KEY `id_tipo_iva` (`id_tipo_iva`),
   CONSTRAINT `clientes_ibfk_1` FOREIGN KEY (`id_tipo_doc`) REFERENCES `tipo_doc` (`id`),
   CONSTRAINT `clientes_ibfk_2` FOREIGN KEY (`id_tipo_iva`) REFERENCES `tipo_iva` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.clientes: ~13 rows (aproximadamente)
+INSERT INTO `clientes` (`id`, `nombre`, `documento`, `email`, `telefono`, `direccion`, `idlocalidad`, `idprovincia`, `ctacte`, `baja`, `idcategoria`, `id_tipo_doc`, `id_tipo_iva`) VALUES
+	(1, 'Consumidor final', '11111111', '', '', 'nada', 1735, 19, 0, '1900-01-01', 1, 1, 3),
+	(2, 'Adrian Zussino', '20218767401', '', '', 'Saavedra', 1735, 19, 0, '1900-01-01', 2, 3, 2),
+	(3, 'Ricardo Castro', '22786345', '', '', 'San Luis', 0, 0, 1, '1900-01-01', 3, 1, 3),
+	(4, 'Miguel Perez', '11111111', '', '', 'sn', 0, 0, 1, '1900-01-01', 2, 1, 3),
+	(5, 'Mario Irrazabal', '11111111', '', '', 'sn', 0, 0, 1, '1900-01-01', 0, 1, 3),
+	(6, 'Carlos Vila', '31674324', '', '', 'mitre 38', 0, 0, 1, '1900-01-01', 3, 1, 3),
+	(7, 'Valeria Mosquera', '11111111', '', '', 'su casa', 0, 0, 0, '1900-01-01', 7, 1, 2),
+	(8, 'Victor Castro', '34567321', '', '264763287', 'Rio negro 324', 0, 0, 0, '1900-01-01', 8, 1, 3),
+	(9, 'Miguel Yacante', '32065732', '', '264956382', 'J.V. Gonzalez sur 241', 0, 0, 0, '1900-01-01', 6, 1, 3),
+	(10, 'Daniel Salinas', '26982438', '', '264864382', 'Ridao 234 norte', 0, 0, 0, '1900-01-01', 7, 1, 3),
+	(11, 'Corina Gallardo', '35675323', '', '264578354', 'Neuquen 234', 0, 0, 0, '1900-01-01', 5, 1, 3),
+	(12, 'Lucas Poblete', '38153285', '', '2648673456', 'cochabamba 432 ', 0, 0, 0, '1900-01-01', 7, 1, 3),
+	(13, 'Ivan Castro', '26987632', '', '2649887521', 'Adan Quiroga 123', 0, 0, 0, '1900-01-01', 2, 1, 2);
 
--- Volcando estructura para tabla erp.configuracion
+-- Volcando estructura para tabla erp-super2.configuracion
 CREATE TABLE IF NOT EXISTS `configuracion` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre_propietario` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `nombre_fantasia` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre_propietario` varchar(100) NOT NULL,
+  `nombre_fantasia` varchar(100) NOT NULL,
+  `direccion` varchar(200) NOT NULL,
+  `localidad` varchar(100) NOT NULL,
+  `provincia` varchar(100) NOT NULL,
   `tipo_iva` int NOT NULL,
   `tipo_documento` int NOT NULL,
-  `documento` varchar(13) COLLATE utf8mb4_general_ci NOT NULL,
-  `telefono` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
-  `mail` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `clave` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `documento` varchar(13) NOT NULL,
+  `telefono` varchar(30) NOT NULL,
+  `mail` varchar(100) NOT NULL,
+  `clave` varchar(100) NOT NULL,
   `vencimiento` date NOT NULL,
-  `licencia` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `licencia` varchar(200) NOT NULL,
+  `paso_cert` varchar(200) DEFAULT NULL,
+  `paso_key` varchar(200) DEFAULT NULL,
+  `dias_vto_cta_cte` smallint NOT NULL DEFAULT '0',
+  `caja_con_apertura` tinyint NOT NULL DEFAULT '0',
+  `idplan_sistema` int NOT NULL DEFAULT (0),
+  `interes_mora_creditos` decimal(20,6) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.configuracion: ~0 rows (aproximadamente)
+INSERT INTO `configuracion` (`id`, `nombre_propietario`, `nombre_fantasia`, `direccion`, `localidad`, `provincia`, `tipo_iva`, `tipo_documento`, `documento`, `telefono`, `mail`, `clave`, `vencimiento`, `licencia`, `paso_cert`, `paso_key`, `dias_vto_cta_cte`, `caja_con_apertura`, `idplan_sistema`, `interes_mora_creditos`) VALUES
+	(1, 'José Perez', 'La tienda', 'Siempre Viva 123', 'Localidad', 'San Juan', 2, 1, '20218767401', '264', 'latienda@elsupermercado.com.ar', 'lvzp dana lypt gxqd', '2025-09-13', '1234', 'AdrianZussino_55300e84f645e58b.crt', 'privada.key', 30, 0, 4, 0.010000);
 
--- Volcando estructura para tabla erp.cta_cte_cli
+-- Volcando estructura para tabla erp-super2.creditos
+CREATE TABLE IF NOT EXISTS `creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idsucursal` int NOT NULL DEFAULT '0',
+  `idcliente` int NOT NULL,
+  `idplan` int NOT NULL,
+  `cuotas` int NOT NULL,
+  `monto_total` decimal(20,6) NOT NULL,
+  `estado` int NOT NULL,
+  `fecha_solicitud` date NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `idfactura` int DEFAULT NULL,
+  `observaciones` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idcliente` (`idcliente`),
+  KEY `idplan` (`idplan`),
+  KEY `estado` (`estado`),
+  KEY `idfactura` (`idfactura`),
+  KEY `creditos_ibfk_5` (`idsucursal`),
+  CONSTRAINT `creditos_ibfk_1` FOREIGN KEY (`idcliente`) REFERENCES `clientes` (`id`),
+  CONSTRAINT `creditos_ibfk_2` FOREIGN KEY (`idplan`) REFERENCES `planes_creditos` (`id`),
+  CONSTRAINT `creditos_ibfk_3` FOREIGN KEY (`estado`) REFERENCES `estados_creditos` (`id`),
+  CONSTRAINT `creditos_ibfk_4` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`),
+  CONSTRAINT `creditos_ibfk_5` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.creditos: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.cta_cte_cli
 CREATE TABLE IF NOT EXISTS `cta_cte_cli` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idcliente` int NOT NULL,
   `fecha` date NOT NULL,
   `debe` decimal(20,6) DEFAULT NULL,
   `haber` decimal(20,6) DEFAULT NULL,
+  `idcomp` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idcliente` (`idcliente`),
   CONSTRAINT `cta_cte_cli_ibfk_1` FOREIGN KEY (`idcliente`) REFERENCES `clientes` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.cta_cte_cli: ~0 rows (aproximadamente)
+INSERT INTO `cta_cte_cli` (`id`, `idcliente`, `fecha`, `debe`, `haber`, `idcomp`) VALUES
+	(31, 3, '2025-08-26', 19118.000000, 0.000000, 286);
 
--- Volcando estructura para tabla erp.cta_cte_prov
+-- Volcando estructura para tabla erp-super2.cta_cte_prov
 CREATE TABLE IF NOT EXISTS `cta_cte_prov` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idproveedor` int NOT NULL,
   `fecha` date NOT NULL,
   `debe` decimal(20,6) NOT NULL,
   `haber` decimal(20,6) NOT NULL,
+  `idfactura` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `idproveedor` (`idproveedor`),
   CONSTRAINT `cta_cte_prov_ibfk_1` FOREIGN KEY (`idproveedor`) REFERENCES `proveedores` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.cta_cte_prov: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.entidades
+-- Volcando estructura para tabla erp-super2.documentos_creditos
+CREATE TABLE IF NOT EXISTS `documentos_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.documentos_creditos: ~3 rows (aproximadamente)
+INSERT INTO `documentos_creditos` (`id`, `nombre`) VALUES
+	(1, 'Fotocopia de documento'),
+	(2, 'Recibos de sueldo'),
+	(3, 'Boleta de servicio');
+
+-- Volcando estructura para tabla erp-super2.documentos_del_creditos
+CREATE TABLE IF NOT EXISTS `documentos_del_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idcredito` int NOT NULL,
+  `iddocumento_credito` int NOT NULL,
+  `documento` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idcredito` (`idcredito`),
+  KEY `iddocumento_credito` (`iddocumento_credito`),
+  CONSTRAINT `documentos_del_creditos_ibfk_1` FOREIGN KEY (`idcredito`) REFERENCES `creditos` (`id`),
+  CONSTRAINT `documentos_del_creditos_ibfk_2` FOREIGN KEY (`iddocumento_credito`) REFERENCES `documentos_creditos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.documentos_del_creditos: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.entidades
 CREATE TABLE IF NOT EXISTS `entidades` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `entidad` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
-  `telefono` varchar(200) COLLATE utf8mb4_general_ci NOT NULL,
+  `entidad` varchar(200) NOT NULL,
+  `telefono` varchar(200) NOT NULL,
   `baja` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.entidades: ~4 rows (aproximadamente)
+INSERT INTO `entidades` (`id`, `entidad`, `telefono`, `baja`) VALUES
+	(1, 'Visa', '1234', '0000-00-00'),
+	(2, 'Master', '231221323', '0000-00-00'),
+	(3, 'Mercado pago', '1234', '1900-01-01'),
+	(4, 'Naranja', '12345', '1900-01-01');
 
--- Volcando estructura para tabla erp.facturac
+-- Volcando estructura para tabla erp-super2.estados_creditos
+CREATE TABLE IF NOT EXISTS `estados_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `descripcion` varchar(200) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.estados_creditos: ~7 rows (aproximadamente)
+INSERT INTO `estados_creditos` (`id`, `nombre`, `descripcion`) VALUES
+	(1, 'Nuevo', 'Nuevo pedido de crédito'),
+	(2, 'Pendiente', 'Pendiente de documentación'),
+	(3, 'Aprobado', 'Credito aprobado'),
+	(4, 'Rechazado', 'Crédito rechazado'),
+	(5, 'Facturado', 'Crédito facturado'),
+	(6, 'Actualizar datos', 'Pedido de actualización de datos'),
+	(7, 'Datos actualizados', 'Pedido de actualización de datos resuelto');
+
+-- Volcando estructura para tabla erp-super2.facturac
 CREATE TABLE IF NOT EXISTS `facturac` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idproveedor` int NOT NULL,
   `fecha` date NOT NULL,
+  `periodo` date NOT NULL,
   `total` decimal(20,6) NOT NULL,
   `iva` decimal(20,6) NOT NULL,
   `exento` decimal(20,6) NOT NULL,
@@ -409,17 +517,18 @@ CREATE TABLE IF NOT EXISTS `facturac` (
   CONSTRAINT `facturac_ibfk_3` FOREIGN KEY (`idtipocomprobante`) REFERENCES `tipo_comprobantes` (`id`),
   CONSTRAINT `facturac_ibfk_4` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `facturac_ibfk_5` FOREIGN KEY (`idplancuenta`) REFERENCES `plan_ctas` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=99 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.facturac: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.facturav
+-- Volcando estructura para tabla erp-super2.facturav
 CREATE TABLE IF NOT EXISTS `facturav` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idcliente` int NOT NULL,
   `idlista` int NOT NULL,
   `fecha` date NOT NULL,
   `total` decimal(20,6) NOT NULL,
+  `bonificacion` decimal(20,6) NOT NULL,
   `iva` decimal(20,6) NOT NULL,
   `exento` decimal(20,6) NOT NULL,
   `impint` decimal(20,6) NOT NULL,
@@ -427,6 +536,10 @@ CREATE TABLE IF NOT EXISTS `facturav` (
   `idsucursal` int DEFAULT NULL,
   `idusuario` int DEFAULT NULL,
   `nro_comprobante` varchar(13) NOT NULL,
+  `punto_vta` int NOT NULL DEFAULT (0),
+  `cae` varchar(20) DEFAULT NULL,
+  `cae_vto` date DEFAULT NULL,
+  `fecha_emision` date DEFAULT (curdate()),
   PRIMARY KEY (`id`),
   KEY `idcliente` (`idcliente`),
   KEY `idlista` (`idlista`),
@@ -438,129 +551,63 @@ CREATE TABLE IF NOT EXISTS `facturav` (
   CONSTRAINT `facturav_ibfk_3` FOREIGN KEY (`idtipocomprobante`) REFERENCES `tipo_comprobantes` (`id`),
   CONSTRAINT `facturav_ibfk_4` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
   CONSTRAINT `facturav_ibfk_5` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=298 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.facturav: ~17 rows (aproximadamente)
+INSERT INTO `facturav` (`id`, `idcliente`, `idlista`, `fecha`, `total`, `bonificacion`, `iva`, `exento`, `impint`, `idtipocomprobante`, `idsucursal`, `idusuario`, `nro_comprobante`, `punto_vta`, `cae`, `cae_vto`, `fecha_emision`) VALUES
+	(277, 1, 1, '2025-08-25', 3593.700000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000042', 3, NULL, NULL, NULL),
+	(278, 1, 1, '2025-08-25', 16819.000000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000043', 3, NULL, NULL, NULL),
+	(279, 1, 1, '2025-08-25', 4706.900000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000044', 3, NULL, NULL, NULL),
+	(280, 1, 1, '2025-08-25', 2407.900000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000045', 3, NULL, NULL, NULL),
+	(281, 1, 1, '2025-08-25', 9776.800000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000046', 3, NULL, NULL, NULL),
+	(282, 1, 1, '2025-08-25', 12559.800000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000047', 3, NULL, NULL, NULL),
+	(283, 1, 1, '2025-08-25', 8881.400000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000048', 3, NULL, NULL, NULL),
+	(284, 1, 1, '2025-08-26', 810.700000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000049', 3, NULL, NULL, NULL),
+	(285, 2, 1, '2025-08-26', 5360.300000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000050', 3, NULL, NULL, NULL),
+	(286, 3, 1, '2025-08-26', 19118.000000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000051', 3, NULL, NULL, NULL),
+	(287, 1, 1, '2025-08-26', 7423.350000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000052', 3, NULL, NULL, NULL),
+	(288, 1, 1, '2025-08-26', 6848.600000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000053', 3, NULL, NULL, NULL),
+	(289, 1, 1, '2025-08-26', 4264.500000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000054', 3, NULL, NULL, NULL),
+	(290, 1, 1, '2025-08-26', 7220.000000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000055', 3, NULL, NULL, NULL),
+	(291, 1, 1, '2025-08-26', 18265.600000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000056', 3, NULL, NULL, NULL),
+	(292, 1, 1, '2025-08-26', 32040.700000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000057', 3, NULL, NULL, NULL),
+	(293, 1, 1, '2025-08-26', 10188.200000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000058', 3, NULL, NULL, NULL),
+	(294, 1, 1, '2025-08-26', 10841.150000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 2, 5, '0002-00000023', 2, NULL, NULL, NULL),
+	(295, 1, 1, '2025-08-26', 45617.250000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 2, 5, '0002-00000024', 2, NULL, NULL, NULL),
+	(297, 1, 1, '2025-09-11', 6388.800000, 0.000000, 0.000000, 0.000000, 0.000000, 3, 1, 2, '0003-00000004', 3, '75371271887174', '2025-09-21', '2025-09-11');
+
+-- Volcando estructura para tabla erp-super2.financiacion_ent
+CREATE TABLE IF NOT EXISTS `financiacion_ent` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_entidad` int NOT NULL,
+  `cuotas` int NOT NULL,
+  `coeficiente` decimal(20,6) NOT NULL DEFAULT (0),
+  `acreditacion_dias` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_entidad` (`id_entidad`),
+  CONSTRAINT `financiacion_ent_ibfk_1` FOREIGN KEY (`id_entidad`) REFERENCES `entidades` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.financiacion_ent: ~4 rows (aproximadamente)
+INSERT INTO `financiacion_ent` (`id`, `id_entidad`, `cuotas`, `coeficiente`, `acreditacion_dias`) VALUES
+	(6, 1, 6, 1.037000, 0),
+	(7, 1, 12, 1.043000, 0),
+	(8, 2, 6, 1.032000, 0),
+	(9, 2, 12, 1.047000, 0);
+
+-- Volcando estructura para tabla erp-super2.garantes_creditos
+CREATE TABLE IF NOT EXISTS `garantes_creditos` (
+  `idcredito` int NOT NULL,
+  `idgarante` int NOT NULL,
+  PRIMARY KEY (`idcredito`,`idgarante`),
+  KEY `idgarante` (`idgarante`),
+  CONSTRAINT `garantes_creditos_ibfk_1` FOREIGN KEY (`idcredito`) REFERENCES `creditos` (`id`),
+  CONSTRAINT `garantes_creditos_ibfk_2` FOREIGN KEY (`idgarante`) REFERENCES `clientes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.garantes_creditos: ~0 rows (aproximadamente)
 
--- Volcando estructura para procedimiento erp.get_stock_faltantes
-DELIMITER //
-CREATE PROCEDURE `get_stock_faltantes`(
-
-	IN `sucursal` INT
-
-)
-BEGIN
-
-  SELECT a.id, a.codigo, a.detalle, s.actual
-
-  FROM articulos a
-
-  JOIN stocks s
-
-    ON a.id = s.idarticulo
-
-  where
-
-    a.idtipoarticulo IN (1, 3) AND /*solo productos e insumos*/
-
-	 s.idsucursal = sucursal AND 
-
-	 s.actual > 0 AND 
-
-	 s.deseable > 0 AND
-
-	 s.deseable > s.actual;  
-
-
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento erp.get_stock_negativos
-DELIMITER //
-CREATE PROCEDURE `get_stock_negativos`(
-
-	IN `sucursal` INT
-
-)
-BEGIN
-
-  SELECT a.id, a.codigo, a.detalle, s.actual
-
-  FROM articulos a
-
-  JOIN stocks s
-
-    ON a.id = s.idarticulo
-
-  where
-
-    a.idtipoarticulo IN (1, 3) AND /*solo productos e insumos*/
-
-	 s.idsucursal = sucursal AND 
-
-	 s.actual < 0;  
-
-
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento erp.get_vta_sucursales
-DELIMITER //
-CREATE PROCEDURE `get_vta_sucursales`(
-
-	IN `desde` DATE,
-
-	IN `hasta` DATE
-
-)
-BEGIN
-
-  SELECT s.nombre, SUM(v.total) as total, COUNT(v.id) AS operaciones, AVG(v.total) op_promedio
-
-  FROM facturav v
-
-  JOIN sucursales s ON v.idsucursal = s.id
-
-  where
-
-    v.fecha BETWEEN desde AND hasta
-
-  GROUP BY s.nombre;  
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento erp.get_vta_vendedores
-DELIMITER //
-CREATE PROCEDURE `get_vta_vendedores`(
-
-	IN `desde` DATE,
-
-	IN `hasta` DATE
-
-)
-BEGIN
-
-  SELECT u.nombre, SUM(v.total) as total, COUNT(v.id) AS operaciones, AVG(v.total) op_promedio
-
-  FROM facturav v
-
-  JOIN usuarios u ON v.idusuario = u.id
-
-  where
-
-    v.fecha BETWEEN desde AND hasta
-
-  GROUP BY u.nombre; 
-
-
-
-END//
-DELIMITER ;
-
--- Volcando estructura para tabla erp.itemsc
+-- Volcando estructura para tabla erp-super2.itemsc
 CREATE TABLE IF NOT EXISTS `itemsc` (
   `idfactura` int NOT NULL,
   `id` int NOT NULL,
@@ -580,9 +627,25 @@ CREATE TABLE IF NOT EXISTS `itemsc` (
   CONSTRAINT `itemsc_ibfk_3` FOREIGN KEY (`idalciva`) REFERENCES `alc_iva` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.itemsc: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.itemsv
+-- Volcando estructura para tabla erp-super2.itemsp
+CREATE TABLE IF NOT EXISTS `itemsp` (
+  `idpresupuesto` int NOT NULL,
+  `id` int NOT NULL,
+  `idarticulo` int NOT NULL,
+  `cantidad` decimal(20,6) NOT NULL,
+  `precio_unitario` decimal(20,6) NOT NULL,
+  `precio_total` decimal(20,6) NOT NULL,
+  PRIMARY KEY (`idpresupuesto`,`id`),
+  KEY `idarticulo` (`idarticulo`),
+  CONSTRAINT `itemsp_ibfk_1` FOREIGN KEY (`idpresupuesto`) REFERENCES `presupuesto` (`id`),
+  CONSTRAINT `itemsp_ibfk_2` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.itemsp: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.itemsv
 CREATE TABLE IF NOT EXISTS `itemsv` (
   `idfactura` int NOT NULL,
   `id` int NOT NULL,
@@ -590,12 +653,14 @@ CREATE TABLE IF NOT EXISTS `itemsv` (
   `cantidad` decimal(20,6) NOT NULL,
   `precio_unitario` decimal(20,6) NOT NULL,
   `precio_total` decimal(20,6) NOT NULL,
+  `bonificacion` decimal(20,6) NOT NULL,
   `iva` decimal(20,6) NOT NULL,
   `idalciva` int NOT NULL,
   `ingbto` decimal(20,6) NOT NULL,
   `idingbto` int NOT NULL,
   `exento` decimal(20,6) NOT NULL,
   `impint` decimal(20,6) NOT NULL,
+  `idoferta` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`idfactura`,`id`),
   KEY `idarticulo` (`idarticulo`),
   KEY `idalciva` (`idalciva`),
@@ -606,9 +671,99 @@ CREATE TABLE IF NOT EXISTS `itemsv` (
   CONSTRAINT `itemsv_ibfk_4` FOREIGN KEY (`idingbto`) REFERENCES `alc_ib` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.itemsv: ~56 rows (aproximadamente)
+INSERT INTO `itemsv` (`idfactura`, `id`, `idarticulo`, `cantidad`, `precio_unitario`, `precio_total`, `bonificacion`, `iva`, `idalciva`, `ingbto`, `idingbto`, `exento`, `impint`, `idoferta`) VALUES
+	(277, 2, 7, 1.000000, 2783.000000, 2783.000000, 0.000000, 0.000000, 0, 69.000000, 1, 0.000000, 0.000000, 0),
+	(277, 3, 36, 1.000000, 810.700000, 810.700000, 0.000000, 0.000000, 0, 20.100000, 1, 0.000000, 0.000000, 0),
+	(278, 0, 12, 1.000000, 9438.000000, 9438.000000, 0.000000, 0.000000, 0, 234.000000, 1, 0.000000, 0.000000, 0),
+	(278, 1, 32, 1.000000, 2964.500000, 2964.500000, 0.000000, 0.000000, 0, 73.500000, 1, 0.000000, 0.000000, 0),
+	(278, 2, 31, 1.000000, 2964.500000, 2964.500000, 0.000000, 0.000000, 0, 73.500000, 1, 0.000000, 0.000000, 0),
+	(278, 3, 48, 1.000000, 1452.000000, 1452.000000, 0.000000, 0.000000, 0, 36.000000, 1, 0.000000, 0.000000, 0),
+	(279, 0, 30, 1.000000, 1815.000000, 1815.000000, 0.000000, 0.000000, 0, 45.000000, 1, 0.000000, 0.000000, 0),
+	(279, 1, 56, 1.000000, 2783.000000, 2783.000000, 0.000000, 0.000000, 0, 69.000000, 1, 0.000000, 0.000000, 0),
+	(279, 2, 38, 1.000000, 108.900000, 108.900000, 0.000000, 0.000000, 0, 2.700000, 1, 0.000000, 0.000000, 0),
+	(280, 0, 37, 1.000000, 1573.000000, 1573.000000, 0.000000, 0.000000, 0, 39.000000, 1, 0.000000, 0.000000, 0),
+	(280, 1, 22, 1.000000, 834.900000, 834.900000, 0.000000, 0.000000, 0, 20.700000, 1, 0.000000, 0.000000, 0),
+	(281, 0, 38, 6.000000, 108.900000, 653.400000, 0.000000, 0.000000, 0, 16.200000, 1, 0.000000, 0.000000, 0),
+	(281, 1, 560209, 1.000000, 2795.100000, 2795.100000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(281, 2, 35, 1.000000, 6328.300000, 6328.300000, 0.000000, 0.000000, 0, 156.900000, 1, 0.000000, 0.000000, 0),
+	(282, 0, 28, 1.000000, 2783.000000, 2783.000000, 0.000000, 0.000000, 0, 69.000000, 1, 0.000000, 0.000000, 0),
+	(282, 1, 38, 6.000000, 108.900000, 653.400000, 0.000000, 0.000000, 0, 16.200000, 1, 0.000000, 0.000000, 0),
+	(282, 2, 560209, 1.000000, 2795.100000, 2795.100000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(282, 3, 35, 1.000000, 6328.300000, 6328.300000, 0.000000, 0.000000, 0, 156.900000, 1, 0.000000, 0.000000, 0),
+	(283, 0, 50, 1.000000, 2831.400000, 2831.400000, 0.000000, 0.000000, 0, 70.200000, 1, 0.000000, 0.000000, 0),
+	(283, 1, 30, 1.000000, 1815.000000, 1815.000000, 0.000000, 0.000000, 0, 45.000000, 1, 0.000000, 0.000000, 0),
+	(283, 2, 57, 1.000000, 4235.000000, 4235.000000, 0.000000, 0.000000, 0, 105.000000, 1, 0.000000, 0.000000, 0),
+	(284, 0, 14, 1.000000, 810.700000, 810.700000, 0.000000, 0.000000, 0, 20.100000, 1, 0.000000, 0.000000, 0),
+	(285, 0, 52, 1.000000, 1076.900000, 1076.900000, 0.000000, 0.000000, 0, 26.700000, 1, 0.000000, 0.000000, 0),
+	(285, 1, 50, 1.000000, 2831.400000, 2831.400000, 0.000000, 0.000000, 0, 70.200000, 1, 0.000000, 0.000000, 0),
+	(285, 2, 48, 1.000000, 1452.000000, 1452.000000, 0.000000, 0.000000, 0, 36.000000, 1, 0.000000, 0.000000, 0),
+	(286, 0, 39, 1.000000, 9559.000000, 9559.000000, 0.000000, 0.000000, 0, 237.000000, 1, 0.000000, 0.000000, 0),
+	(286, 1, 40, 1.000000, 9559.000000, 9559.000000, 0.000000, 0.000000, 0, 237.000000, 1, 0.000000, 0.000000, 0),
+	(287, 0, 560210, 1.000000, 1615.350000, 1615.350000, 0.000000, 0.000000, 0, 40.050000, 1, 0.000000, 0.000000, 0),
+	(287, 1, 560213, 1.000000, 5808.000000, 5808.000000, 0.000000, 0.000000, 0, 144.000000, 1, 0.000000, 0.000000, 0),
+	(288, 0, 31, 1.000000, 2964.500000, 2964.500000, 0.000000, 0.000000, 0, 73.500000, 1, 0.000000, 0.000000, 0),
+	(288, 1, 560217, 1.000000, 1052.700000, 1052.700000, 0.000000, 0.000000, 0, 26.100000, 1, 0.000000, 0.000000, 0),
+	(288, 2, 50, 1.000000, 2831.400000, 2831.400000, 0.000000, 0.000000, 0, 70.200000, 1, 0.000000, 0.000000, 0),
+	(289, 0, 70, 1.000000, 1300.000000, 1300.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(289, 1, 31, 1.000000, 2964.500000, 2964.500000, 0.000000, 0.000000, 0, 73.500000, 1, 0.000000, 0.000000, 0),
+	(290, 0, 560229, 1.000000, 5600.000000, 5600.000000, 0.000000, 0.000000, 0, 138.842975, 1, 0.000000, 0.000000, 0),
+	(290, 1, 560228, 6.000000, 270.000000, 1620.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(291, 0, 560219, 1.200000, 12160.500000, 14592.600000, 0.000000, 0.000000, 0, 361.800000, 1, 0.000000, 0.000000, 0),
+	(291, 1, 60, 1.000000, 2100.000000, 2100.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(291, 2, 37, 1.000000, 1573.000000, 1573.000000, 0.000000, 0.000000, 0, 39.000000, 1, 0.000000, 0.000000, 0),
+	(292, 0, 560221, 2.200000, 11434.500000, 25155.900000, 0.000000, 0.000000, 0, 623.700000, 1, 0.000000, 0.000000, 0),
+	(292, 3, 70, 1.000000, 3400.000000, 3400.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(292, 4, 69, 1.000000, 1052.700000, 1052.700000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(292, 5, 36, 3.000000, 810.700000, 2432.100000, 0.000000, 0.000000, 0, 60.300000, 1, 0.000000, 0.000000, 0),
+	(293, 0, 57, 1.000000, 4235.000000, 4235.000000, 0.000000, 0.000000, 0, 105.000000, 1, 0.000000, 0.000000, 0),
+	(293, 1, 560222, 0.400000, 7804.500000, 3121.800000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(293, 2, 50, 1.000000, 2831.400000, 2831.400000, 0.000000, 0.000000, 0, 70.200000, 1, 0.000000, 0.000000, 0),
+	(294, 0, 38, 6.000000, 108.900000, 653.400000, 0.000000, 0.000000, 0, 16.200000, 1, 0.000000, 0.000000, 0),
+	(294, 1, 560226, 0.200000, 7713.750000, 1542.750000, 0.000000, 0.000000, 0, 38.250000, 1, 0.000000, 0.000000, 0),
+	(294, 2, 560223, 0.200000, 8712.000000, 1742.400000, 0.000000, 0.000000, 0, 43.200000, 1, 0.000000, 0.000000, 0),
+	(294, 3, 560227, 0.300000, 12342.000000, 3702.600000, 0.000000, 0.000000, 0, 91.800000, 1, 0.000000, 0.000000, 0),
+	(294, 4, 70, 1.000000, 3200.000000, 3200.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(295, 0, 560219, 2.500000, 12160.500000, 30401.250000, 0.000000, 0.000000, 0, 753.750000, 1, 0.000000, 0.000000, 0),
+	(295, 1, 70, 1.000000, 3600.000000, 3600.000000, 0.000000, 0.000000, 0, 0.000000, 0, 0.000000, 0.000000, 0),
+	(295, 2, 37, 2.000000, 1573.000000, 3146.000000, 0.000000, 0.000000, 0, 78.000000, 1, 0.000000, 0.000000, 0),
+	(295, 3, 48, 1.000000, 1452.000000, 1452.000000, 0.000000, 0.000000, 0, 36.000000, 1, 0.000000, 0.000000, 0),
+	(295, 4, 2, 1.000000, 2783.000000, 2783.000000, 0.000000, 0.000000, 0, 69.000000, 1, 0.000000, 0.000000, 0),
+	(295, 5, 19, 1.000000, 4235.000000, 4235.000000, 0.000000, 0.000000, 0, 105.000000, 1, 0.000000, 0.000000, 0),
+	(297, 0, 50, 1.000000, 2831.400000, 2831.400000, 0.000000, 0.000000, 0, 70.200000, 1, 0.000000, 0.000000, 0),
+	(297, 1, 1, 1.000000, 3557.400000, 3557.400000, 0.000000, 0.000000, 0, 88.200000, 1, 0.000000, 0.000000, 19);
 
--- Volcando estructura para tabla erp.item_balance
+-- Volcando estructura para tabla erp-super2.items_op
+CREATE TABLE IF NOT EXISTS `items_op` (
+  `idop` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idfactura` int DEFAULT NULL,
+  `pago` decimal(20,6) NOT NULL,
+  PRIMARY KEY (`id`,`idop`),
+  KEY `idop` (`idop`),
+  KEY `idfactura` (`idfactura`),
+  CONSTRAINT `items_op_ibfk_1` FOREIGN KEY (`idop`) REFERENCES `facturac` (`id`),
+  CONSTRAINT `items_op_ibfk_2` FOREIGN KEY (`idfactura`) REFERENCES `facturac` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.items_op: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.items_rendiciones_caja
+CREATE TABLE IF NOT EXISTS `items_rendiciones_caja` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idrendicion` int NOT NULL,
+  `idmoneda_billete` int NOT NULL,
+  `cantidad` decimal(20,6) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idrendicion` (`idrendicion`),
+  KEY `idmoneda_billete` (`idmoneda_billete`),
+  CONSTRAINT `items_rendiciones_caja_ibfk_1` FOREIGN KEY (`idrendicion`) REFERENCES `rendiciones_caja` (`id`),
+  CONSTRAINT `items_rendiciones_caja_ibfk_2` FOREIGN KEY (`idmoneda_billete`) REFERENCES `monedas_billetes` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.items_rendiciones_caja: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.item_balance
 CREATE TABLE IF NOT EXISTS `item_balance` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idbalance` int DEFAULT NULL,
@@ -621,11 +776,11 @@ CREATE TABLE IF NOT EXISTS `item_balance` (
   KEY `idarticulo` (`idarticulo`),
   CONSTRAINT `item_balance_ibfk_1` FOREIGN KEY (`idbalance`) REFERENCES `balance` (`id`),
   CONSTRAINT `item_balance_ibfk_2` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.item_balance: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.item_cambio_precios
+-- Volcando estructura para tabla erp-super2.item_cambio_precios
 CREATE TABLE IF NOT EXISTS `item_cambio_precios` (
   `idcambioprecio` int NOT NULL,
   `id` int NOT NULL,
@@ -638,9 +793,9 @@ CREATE TABLE IF NOT EXISTS `item_cambio_precios` (
   CONSTRAINT `item_cambio_precios_ibfk_2` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.item_cambio_precios: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.item_remito_sucs
+-- Volcando estructura para tabla erp-super2.item_remito_sucs
 CREATE TABLE IF NOT EXISTS `item_remito_sucs` (
   `idremito` int NOT NULL,
   `id` int NOT NULL,
@@ -652,104 +807,2691 @@ CREATE TABLE IF NOT EXISTS `item_remito_sucs` (
   CONSTRAINT `item_remito_sucs_ibfk_2` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.item_remito_sucs: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.listas_precio
+-- Volcando estructura para tabla erp-super2.listas_precio
 CREATE TABLE IF NOT EXISTS `listas_precio` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `markup` decimal(20,6) NOT NULL DEFAULT '0.000000',
+  `nombre` varchar(100) NOT NULL,
+  `markup` decimal(20,6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.listas_precio: ~3 rows (aproximadamente)
+INSERT INTO `listas_precio` (`id`, `nombre`, `markup`) VALUES
+	(1, 'Contado', 1.500000),
+	(2, 'Tarjeta', 2.000000),
+	(3, 'Mercado libre', 2.200000);
 
--- Volcando estructura para procedimiento erp.lst_compuesto
-DELIMITER //
-CREATE PROCEDURE `lst_compuesto`()
-    COMMENT 'lista los artículos compuesto'
-BEGIN
+-- Volcando estructura para tabla erp-super2.localidades
+CREATE TABLE IF NOT EXISTS `localidades` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_provincia` int NOT NULL,
+  `localidad` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2383 DEFAULT CHARSET=latin1;
 
+-- Volcando datos para la tabla erp-super2.localidades: 2.382 rows
+/*!40000 ALTER TABLE `localidades` DISABLE KEYS */;
+INSERT INTO `localidades` (`id`, `id_provincia`, `localidad`) VALUES
+	(1, 1, '25 de Mayo'),
+	(2, 1, '3 de febrero'),
+	(3, 1, 'A. Alsina'),
+	(4, 1, 'A. Gonzáles Cháves'),
+	(5, 1, 'Aguas Verdes'),
+	(6, 1, 'Alberti'),
+	(7, 1, 'Arrecifes'),
+	(8, 1, 'Ayacucho'),
+	(9, 1, 'Azul'),
+	(10, 1, 'Bahía Blanca'),
+	(11, 1, 'Balcarce'),
+	(12, 1, 'Baradero'),
+	(13, 1, 'Benito Juárez'),
+	(14, 1, 'Berisso'),
+	(15, 1, 'Bolívar'),
+	(16, 1, 'Bragado'),
+	(17, 1, 'Brandsen'),
+	(18, 1, 'Campana'),
+	(19, 1, 'Cañuelas'),
+	(20, 1, 'Capilla del Señor'),
+	(21, 1, 'Capitán Sarmiento'),
+	(22, 1, 'Carapachay'),
+	(23, 1, 'Carhue'),
+	(24, 1, 'Cariló'),
+	(25, 1, 'Carlos Casares'),
+	(26, 1, 'Carlos Tejedor'),
+	(27, 1, 'Carmen de Areco'),
+	(28, 1, 'Carmen de Patagones'),
+	(29, 1, 'Castelli'),
+	(30, 1, 'Chacabuco'),
+	(31, 1, 'Chascomús'),
+	(32, 1, 'Chivilcoy'),
+	(33, 1, 'Colón'),
+	(34, 1, 'Coronel Dorrego'),
+	(35, 1, 'Coronel Pringles'),
+	(36, 1, 'Coronel Rosales'),
+	(37, 1, 'Coronel Suarez'),
+	(38, 1, 'Costa Azul'),
+	(39, 1, 'Costa Chica'),
+	(40, 1, 'Costa del Este'),
+	(41, 1, 'Costa Esmeralda'),
+	(42, 1, 'Daireaux'),
+	(43, 1, 'Darregueira'),
+	(44, 1, 'Del Viso'),
+	(45, 1, 'Dolores'),
+	(46, 1, 'Don Torcuato'),
+	(47, 1, 'Ensenada'),
+	(48, 1, 'Escobar'),
+	(49, 1, 'Exaltación de la Cruz'),
+	(50, 1, 'Florentino Ameghino'),
+	(51, 1, 'Garín'),
+	(52, 1, 'Gral. Alvarado'),
+	(53, 1, 'Gral. Alvear'),
+	(54, 1, 'Gral. Arenales'),
+	(55, 1, 'Gral. Belgrano'),
+	(56, 1, 'Gral. Guido'),
+	(57, 1, 'Gral. Lamadrid'),
+	(58, 1, 'Gral. Las Heras'),
+	(59, 1, 'Gral. Lavalle'),
+	(60, 1, 'Gral. Madariaga'),
+	(61, 1, 'Gral. Pacheco'),
+	(62, 1, 'Gral. Paz'),
+	(63, 1, 'Gral. Pinto'),
+	(64, 1, 'Gral. Pueyrredón'),
+	(65, 1, 'Gral. Rodríguez'),
+	(66, 1, 'Gral. Viamonte'),
+	(67, 1, 'Gral. Villegas'),
+	(68, 1, 'Guaminí'),
+	(69, 1, 'Guernica'),
+	(70, 1, 'Hipólito Yrigoyen'),
+	(71, 1, 'Ing. Maschwitz'),
+	(72, 1, 'Junín'),
+	(73, 1, 'La Plata'),
+	(74, 1, 'Laprida'),
+	(75, 1, 'Las Flores'),
+	(76, 1, 'Las Toninas'),
+	(77, 1, 'Leandro N. Alem'),
+	(78, 1, 'Lincoln'),
+	(79, 1, 'Loberia'),
+	(80, 1, 'Lobos'),
+	(81, 1, 'Los Cardales'),
+	(82, 1, 'Los Toldos'),
+	(83, 1, 'Lucila del Mar'),
+	(84, 1, 'Luján'),
+	(85, 1, 'Magdalena'),
+	(86, 1, 'Maipú'),
+	(87, 1, 'Mar Chiquita'),
+	(88, 1, 'Mar de Ajó'),
+	(89, 1, 'Mar de las Pampas'),
+	(90, 1, 'Mar del Plata'),
+	(91, 1, 'Mar del Tuyú'),
+	(92, 1, 'Marcos Paz'),
+	(93, 1, 'Mercedes'),
+	(94, 1, 'Miramar'),
+	(95, 1, 'Monte'),
+	(96, 1, 'Monte Hermoso'),
+	(97, 1, 'Munro'),
+	(98, 1, 'Navarro'),
+	(99, 1, 'Necochea'),
+	(100, 1, 'Olavarría'),
+	(101, 1, 'Partido de la Costa'),
+	(102, 1, 'Pehuajó'),
+	(103, 1, 'Pellegrini'),
+	(104, 1, 'Pergamino'),
+	(105, 1, 'Pigüé'),
+	(106, 1, 'Pila'),
+	(107, 1, 'Pilar'),
+	(108, 1, 'Pinamar'),
+	(109, 1, 'Pinar del Sol'),
+	(110, 1, 'Polvorines'),
+	(111, 1, 'Pte. Perón'),
+	(112, 1, 'Puán'),
+	(113, 1, 'Punta Indio'),
+	(114, 1, 'Ramallo'),
+	(115, 1, 'Rauch'),
+	(116, 1, 'Rivadavia'),
+	(117, 1, 'Rojas'),
+	(118, 1, 'Roque Pérez'),
+	(119, 1, 'Saavedra'),
+	(120, 1, 'Saladillo'),
+	(121, 1, 'Salliqueló'),
+	(122, 1, 'Salto'),
+	(123, 1, 'San Andrés de Giles'),
+	(124, 1, 'San Antonio de Areco'),
+	(125, 1, 'San Antonio de Padua'),
+	(126, 1, 'San Bernardo'),
+	(127, 1, 'San Cayetano'),
+	(128, 1, 'San Clemente del Tuyú'),
+	(129, 1, 'San Nicolás'),
+	(130, 1, 'San Pedro'),
+	(131, 1, 'San Vicente'),
+	(132, 1, 'Santa Teresita'),
+	(133, 1, 'Suipacha'),
+	(134, 1, 'Tandil'),
+	(135, 1, 'Tapalqué'),
+	(136, 1, 'Tordillo'),
+	(137, 1, 'Tornquist'),
+	(138, 1, 'Trenque Lauquen'),
+	(139, 1, 'Tres Lomas'),
+	(140, 1, 'Villa Gesell'),
+	(141, 1, 'Villarino'),
+	(142, 1, 'Zárate'),
+	(143, 2, '11 de Septiembre'),
+	(144, 2, '20 de Junio'),
+	(145, 2, '25 de Mayo'),
+	(146, 2, 'Acassuso'),
+	(147, 2, 'Adrogué'),
+	(148, 2, 'Aldo Bonzi'),
+	(149, 2, 'Área Reserva Cinturón Ecológico'),
+	(150, 2, 'Avellaneda'),
+	(151, 2, 'Banfield'),
+	(152, 2, 'Barrio Parque'),
+	(153, 2, 'Barrio Santa Teresita'),
+	(154, 2, 'Beccar'),
+	(155, 2, 'Bella Vista'),
+	(156, 2, 'Berazategui'),
+	(157, 2, 'Bernal Este'),
+	(158, 2, 'Bernal Oeste'),
+	(159, 2, 'Billinghurst'),
+	(160, 2, 'Boulogne'),
+	(161, 2, 'Burzaco'),
+	(162, 2, 'Carapachay'),
+	(163, 2, 'Caseros'),
+	(164, 2, 'Castelar'),
+	(165, 2, 'Churruca'),
+	(166, 2, 'Ciudad Evita'),
+	(167, 2, 'Ciudad Madero'),
+	(168, 2, 'Ciudadela'),
+	(169, 2, 'Claypole'),
+	(170, 2, 'Crucecita'),
+	(171, 2, 'Dock Sud'),
+	(172, 2, 'Don Bosco'),
+	(173, 2, 'Don Orione'),
+	(174, 2, 'El Jagüel'),
+	(175, 2, 'El Libertador'),
+	(176, 2, 'El Palomar'),
+	(177, 2, 'El Tala'),
+	(178, 2, 'El Trébol'),
+	(179, 2, 'Ezeiza'),
+	(180, 2, 'Ezpeleta'),
+	(181, 2, 'Florencio Varela'),
+	(182, 2, 'Florida'),
+	(183, 2, 'Francisco Álvarez'),
+	(184, 2, 'Gerli'),
+	(185, 2, 'Glew'),
+	(186, 2, 'González Catán'),
+	(187, 2, 'Gral. Lamadrid'),
+	(188, 2, 'Grand Bourg'),
+	(189, 2, 'Gregorio de Laferrere'),
+	(190, 2, 'Guillermo Enrique Hudson'),
+	(191, 2, 'Haedo'),
+	(192, 2, 'Hurlingham'),
+	(193, 2, 'Ing. Sourdeaux'),
+	(194, 2, 'Isidro Casanova'),
+	(195, 2, 'Ituzaingó'),
+	(196, 2, 'José C. Paz'),
+	(197, 2, 'José Ingenieros'),
+	(198, 2, 'José Marmol'),
+	(199, 2, 'La Lucila'),
+	(200, 2, 'La Reja'),
+	(201, 2, 'La Tablada'),
+	(202, 2, 'Lanús'),
+	(203, 2, 'Llavallol'),
+	(204, 2, 'Loma Hermosa'),
+	(205, 2, 'Lomas de Zamora'),
+	(206, 2, 'Lomas del Millón'),
+	(207, 2, 'Lomas del Mirador'),
+	(208, 2, 'Longchamps'),
+	(209, 2, 'Los Polvorines'),
+	(210, 2, 'Luis Guillón'),
+	(211, 2, 'Malvinas Argentinas'),
+	(212, 2, 'Martín Coronado'),
+	(213, 2, 'Martínez'),
+	(214, 2, 'Merlo'),
+	(215, 2, 'Ministro Rivadavia'),
+	(216, 2, 'Monte Chingolo'),
+	(217, 2, 'Monte Grande'),
+	(218, 2, 'Moreno'),
+	(219, 2, 'Morón'),
+	(220, 2, 'Muñiz'),
+	(221, 2, 'Olivos'),
+	(222, 2, 'Pablo Nogués'),
+	(223, 2, 'Pablo Podestá'),
+	(224, 2, 'Paso del Rey'),
+	(225, 2, 'Pereyra'),
+	(226, 2, 'Piñeiro'),
+	(227, 2, 'Plátanos'),
+	(228, 2, 'Pontevedra'),
+	(229, 2, 'Quilmes'),
+	(230, 2, 'Rafael Calzada'),
+	(231, 2, 'Rafael Castillo'),
+	(232, 2, 'Ramos Mejía'),
+	(233, 2, 'Ranelagh'),
+	(234, 2, 'Remedios de Escalada'),
+	(235, 2, 'Sáenz Peña'),
+	(236, 2, 'San Antonio de Padua'),
+	(237, 2, 'San Fernando'),
+	(238, 2, 'San Francisco Solano'),
+	(239, 2, 'San Isidro'),
+	(240, 2, 'San José'),
+	(241, 2, 'San Justo'),
+	(242, 2, 'San Martín'),
+	(243, 2, 'San Miguel'),
+	(244, 2, 'Santos Lugares'),
+	(245, 2, 'Sarandí'),
+	(246, 2, 'Sourigues'),
+	(247, 2, 'Tapiales'),
+	(248, 2, 'Temperley'),
+	(249, 2, 'Tigre'),
+	(250, 2, 'Tortuguitas'),
+	(251, 2, 'Tristán Suárez'),
+	(252, 2, 'Trujui'),
+	(253, 2, 'Turdera'),
+	(254, 2, 'Valentín Alsina'),
+	(255, 2, 'Vicente López'),
+	(256, 2, 'Villa Adelina'),
+	(257, 2, 'Villa Ballester'),
+	(258, 2, 'Villa Bosch'),
+	(259, 2, 'Villa Caraza'),
+	(260, 2, 'Villa Celina'),
+	(261, 2, 'Villa Centenario'),
+	(262, 2, 'Villa de Mayo'),
+	(263, 2, 'Villa Diamante'),
+	(264, 2, 'Villa Domínico'),
+	(265, 2, 'Villa España'),
+	(266, 2, 'Villa Fiorito'),
+	(267, 2, 'Villa Guillermina'),
+	(268, 2, 'Villa Insuperable'),
+	(269, 2, 'Villa José León Suárez'),
+	(270, 2, 'Villa La Florida'),
+	(271, 2, 'Villa Luzuriaga'),
+	(272, 2, 'Villa Martelli'),
+	(273, 2, 'Villa Obrera'),
+	(274, 2, 'Villa Progreso'),
+	(275, 2, 'Villa Raffo'),
+	(276, 2, 'Villa Sarmiento'),
+	(277, 2, 'Villa Tesei'),
+	(278, 2, 'Villa Udaondo'),
+	(279, 2, 'Virrey del Pino'),
+	(280, 2, 'Wilde'),
+	(281, 2, 'William Morris'),
+	(282, 3, 'Agronomía'),
+	(283, 3, 'Almagro'),
+	(284, 3, 'Balvanera'),
+	(285, 3, 'Barracas'),
+	(286, 3, 'Belgrano'),
+	(287, 3, 'Boca'),
+	(288, 3, 'Boedo'),
+	(289, 3, 'Caballito'),
+	(290, 3, 'Chacarita'),
+	(291, 3, 'Coghlan'),
+	(292, 3, 'Colegiales'),
+	(293, 3, 'Constitución'),
+	(294, 3, 'Flores'),
+	(295, 3, 'Floresta'),
+	(296, 3, 'La Paternal'),
+	(297, 3, 'Liniers'),
+	(298, 3, 'Mataderos'),
+	(299, 3, 'Monserrat'),
+	(300, 3, 'Monte Castro'),
+	(301, 3, 'Nueva Pompeya'),
+	(302, 3, 'Núñez'),
+	(303, 3, 'Palermo'),
+	(304, 3, 'Parque Avellaneda'),
+	(305, 3, 'Parque Chacabuco'),
+	(306, 3, 'Parque Chas'),
+	(307, 3, 'Parque Patricios'),
+	(308, 3, 'Puerto Madero'),
+	(309, 3, 'Recoleta'),
+	(310, 3, 'Retiro'),
+	(311, 3, 'Saavedra'),
+	(312, 3, 'San Cristóbal'),
+	(313, 3, 'San Nicolás'),
+	(314, 3, 'San Telmo'),
+	(315, 3, 'Vélez Sársfield'),
+	(316, 3, 'Versalles'),
+	(317, 3, 'Villa Crespo'),
+	(318, 3, 'Villa del Parque'),
+	(319, 3, 'Villa Devoto'),
+	(320, 3, 'Villa Gral. Mitre'),
+	(321, 3, 'Villa Lugano'),
+	(322, 3, 'Villa Luro'),
+	(323, 3, 'Villa Ortúzar'),
+	(324, 3, 'Villa Pueyrredón'),
+	(325, 3, 'Villa Real'),
+	(326, 3, 'Villa Riachuelo'),
+	(327, 3, 'Villa Santa Rita'),
+	(328, 3, 'Villa Soldati'),
+	(329, 3, 'Villa Urquiza'),
+	(330, 4, 'Aconquija'),
+	(331, 4, 'Ancasti'),
+	(332, 4, 'Andalgalá'),
+	(333, 4, 'Antofagasta'),
+	(334, 4, 'Belén'),
+	(335, 4, 'Capayán'),
+	(336, 4, 'Capital'),
+	(337, 4, '4'),
+	(338, 4, 'Corral Quemado'),
+	(339, 4, 'El Alto'),
+	(340, 4, 'El Rodeo'),
+	(341, 4, 'F.Mamerto Esquiú'),
+	(342, 4, 'Fiambalá'),
+	(343, 4, 'Hualfín'),
+	(344, 4, 'Huillapima'),
+	(345, 4, 'Icaño'),
+	(346, 4, 'La Puerta'),
+	(347, 4, 'Las Juntas'),
+	(348, 4, 'Londres'),
+	(349, 4, 'Los Altos'),
+	(350, 4, 'Los Varela'),
+	(351, 4, 'Mutquín'),
+	(352, 4, 'Paclín'),
+	(353, 4, 'Poman'),
+	(354, 4, 'Pozo de La Piedra'),
+	(355, 4, 'Puerta de Corral'),
+	(356, 4, 'Puerta San José'),
+	(357, 4, 'Recreo'),
+	(358, 4, 'S.F.V de 4'),
+	(359, 4, 'San Fernando'),
+	(360, 4, 'San Fernando del Valle'),
+	(361, 4, 'San José'),
+	(362, 4, 'Santa María'),
+	(363, 4, 'Santa Rosa'),
+	(364, 4, 'Saujil'),
+	(365, 4, 'Tapso'),
+	(366, 4, 'Tinogasta'),
+	(367, 4, 'Valle Viejo'),
+	(368, 4, 'Villa Vil'),
+	(369, 5, 'Aviá Teraí'),
+	(370, 5, 'Barranqueras'),
+	(371, 5, 'Basail'),
+	(372, 5, 'Campo Largo'),
+	(373, 5, 'Capital'),
+	(374, 5, 'Capitán Solari'),
+	(375, 5, 'Charadai'),
+	(376, 5, 'Charata'),
+	(377, 5, 'Chorotis'),
+	(378, 5, 'Ciervo Petiso'),
+	(379, 5, 'Cnel. Du Graty'),
+	(380, 5, 'Col. Benítez'),
+	(381, 5, 'Col. Elisa'),
+	(382, 5, 'Col. Popular'),
+	(383, 5, 'Colonias Unidas'),
+	(384, 5, 'Concepción'),
+	(385, 5, 'Corzuela'),
+	(386, 5, 'Cote Lai'),
+	(387, 5, 'El Sauzalito'),
+	(388, 5, 'Enrique Urien'),
+	(389, 5, 'Fontana'),
+	(390, 5, 'Fte. Esperanza'),
+	(391, 5, 'Gancedo'),
+	(392, 5, 'Gral. Capdevila'),
+	(393, 5, 'Gral. Pinero'),
+	(394, 5, 'Gral. San Martín'),
+	(395, 5, 'Gral. Vedia'),
+	(396, 5, 'Hermoso Campo'),
+	(397, 5, 'I. del Cerrito'),
+	(398, 5, 'J.J. Castelli'),
+	(399, 5, 'La Clotilde'),
+	(400, 5, 'La Eduvigis'),
+	(401, 5, 'La Escondida'),
+	(402, 5, 'La Leonesa'),
+	(403, 5, 'La Tigra'),
+	(404, 5, 'La Verde'),
+	(405, 5, 'Laguna Blanca'),
+	(406, 5, 'Laguna Limpia'),
+	(407, 5, 'Lapachito'),
+	(408, 5, 'Las Breñas'),
+	(409, 5, 'Las Garcitas'),
+	(410, 5, 'Las Palmas'),
+	(411, 5, 'Los Frentones'),
+	(412, 5, 'Machagai'),
+	(413, 5, 'Makallé'),
+	(414, 5, 'Margarita Belén'),
+	(415, 5, 'Miraflores'),
+	(416, 5, 'Misión N. Pompeya'),
+	(417, 5, 'Napenay'),
+	(418, 5, 'Pampa Almirón'),
+	(419, 5, 'Pampa del Indio'),
+	(420, 5, 'Pampa del Infierno'),
+	(421, 5, 'Pdcia. de La Plaza'),
+	(422, 5, 'Pdcia. Roca'),
+	(423, 5, 'Pdcia. Roque Sáenz Peña'),
+	(424, 5, 'Pto. Bermejo'),
+	(425, 5, 'Pto. Eva Perón'),
+	(426, 5, 'Puero Tirol'),
+	(427, 5, 'Puerto Vilelas'),
+	(428, 5, 'Quitilipi'),
+	(429, 5, 'Resistencia'),
+	(430, 5, 'Sáenz Peña'),
+	(431, 5, 'Samuhú'),
+	(432, 5, 'San Bernardo'),
+	(433, 5, 'Santa Sylvina'),
+	(434, 5, 'Taco Pozo'),
+	(435, 5, 'Tres Isletas'),
+	(436, 5, 'Villa Ángela'),
+	(437, 5, 'Villa Berthet'),
+	(438, 5, 'Villa R. Bermejito'),
+	(439, 6, 'Aldea Apeleg'),
+	(440, 6, 'Aldea Beleiro'),
+	(441, 6, 'Aldea Epulef'),
+	(442, 6, 'Alto Río Sengerr'),
+	(443, 6, 'Buen Pasto'),
+	(444, 6, 'Camarones'),
+	(445, 6, 'Carrenleufú'),
+	(446, 6, 'Cholila'),
+	(447, 6, 'Co. Centinela'),
+	(448, 6, 'Colan Conhué'),
+	(449, 6, 'Comodoro Rivadavia'),
+	(450, 6, 'Corcovado'),
+	(451, 6, 'Cushamen'),
+	(452, 6, 'Dique F. Ameghino'),
+	(453, 6, 'Dolavón'),
+	(454, 6, 'Dr. R. Rojas'),
+	(455, 6, 'El Hoyo'),
+	(456, 6, 'El Maitén'),
+	(457, 6, 'Epuyén'),
+	(458, 6, 'Esquel'),
+	(459, 6, 'Facundo'),
+	(460, 6, 'Gaimán'),
+	(461, 6, 'Gan Gan'),
+	(462, 6, 'Gastre'),
+	(463, 6, 'Gdor. Costa'),
+	(464, 6, 'Gualjaina'),
+	(465, 6, 'J. de San Martín'),
+	(466, 6, 'Lago Blanco'),
+	(467, 6, 'Lago Puelo'),
+	(468, 6, 'Lagunita Salada'),
+	(469, 6, 'Las Plumas'),
+	(470, 6, 'Los Altares'),
+	(471, 6, 'Paso de los Indios'),
+	(472, 6, 'Paso del Sapo'),
+	(473, 6, 'Pto. Madryn'),
+	(474, 6, 'Pto. Pirámides'),
+	(475, 6, 'Rada Tilly'),
+	(476, 6, 'Rawson'),
+	(477, 6, 'Río Mayo'),
+	(478, 6, 'Río Pico'),
+	(479, 6, 'Sarmiento'),
+	(480, 6, 'Tecka'),
+	(481, 6, 'Telsen'),
+	(482, 6, 'Trelew'),
+	(483, 6, 'Trevelin'),
+	(484, 6, 'Veintiocho de Julio'),
+	(485, 7, 'Achiras'),
+	(486, 7, 'Adelia Maria'),
+	(487, 7, 'Agua de Oro'),
+	(488, 7, 'Alcira Gigena'),
+	(489, 7, 'Aldea Santa Maria'),
+	(490, 7, 'Alejandro Roca'),
+	(491, 7, 'Alejo Ledesma'),
+	(492, 7, 'Alicia'),
+	(493, 7, 'Almafuerte'),
+	(494, 7, 'Alpa Corral'),
+	(495, 7, 'Alta Gracia'),
+	(496, 7, 'Alto Alegre'),
+	(497, 7, 'Alto de Los Quebrachos'),
+	(498, 7, 'Altos de Chipion'),
+	(499, 7, 'Amboy'),
+	(500, 7, 'Ambul'),
+	(501, 7, 'Ana Zumaran'),
+	(502, 7, 'Anisacate'),
+	(503, 7, 'Arguello'),
+	(504, 7, 'Arias'),
+	(505, 7, 'Arroyito'),
+	(506, 7, 'Arroyo Algodon'),
+	(507, 7, 'Arroyo Cabral'),
+	(508, 7, 'Arroyo Los Patos'),
+	(509, 7, 'Assunta'),
+	(510, 7, 'Atahona'),
+	(511, 7, 'Ausonia'),
+	(512, 7, 'Avellaneda'),
+	(513, 7, 'Ballesteros'),
+	(514, 7, 'Ballesteros Sud'),
+	(515, 7, 'Balnearia'),
+	(516, 7, 'Bañado de Soto'),
+	(517, 7, 'Bell Ville'),
+	(518, 7, 'Bengolea'),
+	(519, 7, 'Benjamin Gould'),
+	(520, 7, 'Berrotaran'),
+	(521, 7, 'Bialet Masse'),
+	(522, 7, 'Bouwer'),
+	(523, 7, 'Brinkmann'),
+	(524, 7, 'Buchardo'),
+	(525, 7, 'Bulnes'),
+	(526, 7, 'Cabalango'),
+	(527, 7, 'Calamuchita'),
+	(528, 7, 'Calchin'),
+	(529, 7, 'Calchin Oeste'),
+	(530, 7, 'Calmayo'),
+	(531, 7, 'Camilo Aldao'),
+	(532, 7, 'Caminiaga'),
+	(533, 7, 'Cañada de Luque'),
+	(534, 7, 'Cañada de Machado'),
+	(535, 7, 'Cañada de Rio Pinto'),
+	(536, 7, 'Cañada del Sauce'),
+	(537, 7, 'Canals'),
+	(538, 7, 'Candelaria Sud'),
+	(539, 7, 'Capilla de Remedios'),
+	(540, 7, 'Capilla de Siton'),
+	(541, 7, 'Capilla del Carmen'),
+	(542, 7, 'Capilla del Monte'),
+	(543, 7, 'Capital'),
+	(544, 7, 'Capitan Gral B. O´Higgins'),
+	(545, 7, 'Carnerillo'),
+	(546, 7, 'Carrilobo'),
+	(547, 7, 'Casa Grande'),
+	(548, 7, 'Cavanagh'),
+	(549, 7, 'Cerro Colorado'),
+	(550, 7, 'Chaján'),
+	(551, 7, 'Chalacea'),
+	(552, 7, 'Chañar Viejo'),
+	(553, 7, 'Chancaní'),
+	(554, 7, 'Charbonier'),
+	(555, 7, 'Charras'),
+	(556, 7, 'Chazón'),
+	(557, 7, 'Chilibroste'),
+	(558, 7, 'Chucul'),
+	(559, 7, 'Chuña'),
+	(560, 7, 'Chuña Huasi'),
+	(561, 7, 'Churqui Cañada'),
+	(562, 7, 'Cienaga Del Coro'),
+	(563, 7, 'Cintra'),
+	(564, 7, 'Col. Almada'),
+	(565, 7, 'Col. Anita'),
+	(566, 7, 'Col. Barge'),
+	(567, 7, 'Col. Bismark'),
+	(568, 7, 'Col. Bremen'),
+	(569, 7, 'Col. Caroya'),
+	(570, 7, 'Col. Italiana'),
+	(571, 7, 'Col. Iturraspe'),
+	(572, 7, 'Col. Las Cuatro Esquinas'),
+	(573, 7, 'Col. Las Pichanas'),
+	(574, 7, 'Col. Marina'),
+	(575, 7, 'Col. Prosperidad'),
+	(576, 7, 'Col. San Bartolome'),
+	(577, 7, 'Col. San Pedro'),
+	(578, 7, 'Col. Tirolesa'),
+	(579, 7, 'Col. Vicente Aguero'),
+	(580, 7, 'Col. Videla'),
+	(581, 7, 'Col. Vignaud'),
+	(582, 7, 'Col. Waltelina'),
+	(583, 7, 'Colazo'),
+	(584, 7, 'Comechingones'),
+	(585, 7, 'Conlara'),
+	(586, 7, 'Copacabana'),
+	(587, 7, '7'),
+	(588, 7, 'Coronel Baigorria'),
+	(589, 7, 'Coronel Moldes'),
+	(590, 7, 'Corral de Bustos'),
+	(591, 7, 'Corralito'),
+	(592, 7, 'Cosquín'),
+	(593, 7, 'Costa Sacate'),
+	(594, 7, 'Cruz Alta'),
+	(595, 7, 'Cruz de Caña'),
+	(596, 7, 'Cruz del Eje'),
+	(597, 7, 'Cuesta Blanca'),
+	(598, 7, 'Dean Funes'),
+	(599, 7, 'Del Campillo'),
+	(600, 7, 'Despeñaderos'),
+	(601, 7, 'Devoto'),
+	(602, 7, 'Diego de Rojas'),
+	(603, 7, 'Dique Chico'),
+	(604, 7, 'El Arañado'),
+	(605, 7, 'El Brete'),
+	(606, 7, 'El Chacho'),
+	(607, 7, 'El Crispín'),
+	(608, 7, 'El Fortín'),
+	(609, 7, 'El Manzano'),
+	(610, 7, 'El Rastreador'),
+	(611, 7, 'El Rodeo'),
+	(612, 7, 'El Tío'),
+	(613, 7, 'Elena'),
+	(614, 7, 'Embalse'),
+	(615, 7, 'Esquina'),
+	(616, 7, 'Estación Gral. Paz'),
+	(617, 7, 'Estación Juárez Celman'),
+	(618, 7, 'Estancia de Guadalupe'),
+	(619, 7, 'Estancia Vieja'),
+	(620, 7, 'Etruria'),
+	(621, 7, 'Eufrasio Loza'),
+	(622, 7, 'Falda del Carmen'),
+	(623, 7, 'Freyre'),
+	(624, 7, 'Gral. Baldissera'),
+	(625, 7, 'Gral. Cabrera'),
+	(626, 7, 'Gral. Deheza'),
+	(627, 7, 'Gral. Fotheringham'),
+	(628, 7, 'Gral. Levalle'),
+	(629, 7, 'Gral. Roca'),
+	(630, 7, 'Guanaco Muerto'),
+	(631, 7, 'Guasapampa'),
+	(632, 7, 'Guatimozin'),
+	(633, 7, 'Gutenberg'),
+	(634, 7, 'Hernando'),
+	(635, 7, 'Huanchillas'),
+	(636, 7, 'Huerta Grande'),
+	(637, 7, 'Huinca Renanco'),
+	(638, 7, 'Idiazabal'),
+	(639, 7, 'Impira'),
+	(640, 7, 'Inriville'),
+	(641, 7, 'Isla Verde'),
+	(642, 7, 'Italó'),
+	(643, 7, 'James Craik'),
+	(644, 7, 'Jesús María'),
+	(645, 7, 'Jovita'),
+	(646, 7, 'Justiniano Posse'),
+	(647, 7, 'Km 658'),
+	(648, 7, 'L. V. Mansilla'),
+	(649, 7, 'La Batea'),
+	(650, 7, 'La Calera'),
+	(651, 7, 'La Carlota'),
+	(652, 7, 'La Carolina'),
+	(653, 7, 'La Cautiva'),
+	(654, 7, 'La Cesira'),
+	(655, 7, 'La Cruz'),
+	(656, 7, 'La Cumbre'),
+	(657, 7, 'La Cumbrecita'),
+	(658, 7, 'La Falda'),
+	(659, 7, 'La Francia'),
+	(660, 7, 'La Granja'),
+	(661, 7, 'La Higuera'),
+	(662, 7, 'La Laguna'),
+	(663, 7, 'La Paisanita'),
+	(664, 7, 'La Palestina'),
+	(665, 7, '12'),
+	(666, 7, 'La Paquita'),
+	(667, 7, 'La Para'),
+	(668, 7, 'La Paz'),
+	(669, 7, 'La Playa'),
+	(670, 7, 'La Playosa'),
+	(671, 7, 'La Población'),
+	(672, 7, 'La Posta'),
+	(673, 7, 'La Puerta'),
+	(674, 7, 'La Quinta'),
+	(675, 7, 'La Rancherita'),
+	(676, 7, 'La Rinconada'),
+	(677, 7, 'La Serranita'),
+	(678, 7, 'La Tordilla'),
+	(679, 7, 'Laborde'),
+	(680, 7, 'Laboulaye'),
+	(681, 7, 'Laguna Larga'),
+	(682, 7, 'Las Acequias'),
+	(683, 7, 'Las Albahacas'),
+	(684, 7, 'Las Arrias'),
+	(685, 7, 'Las Bajadas'),
+	(686, 7, 'Las Caleras'),
+	(687, 7, 'Las Calles'),
+	(688, 7, 'Las Cañadas'),
+	(689, 7, 'Las Gramillas'),
+	(690, 7, 'Las Higueras'),
+	(691, 7, 'Las Isletillas'),
+	(692, 7, 'Las Junturas'),
+	(693, 7, 'Las Palmas'),
+	(694, 7, 'Las Peñas'),
+	(695, 7, 'Las Peñas Sud'),
+	(696, 7, 'Las Perdices'),
+	(697, 7, 'Las Playas'),
+	(698, 7, 'Las Rabonas'),
+	(699, 7, 'Las Saladas'),
+	(700, 7, 'Las Tapias'),
+	(701, 7, 'Las Varas'),
+	(702, 7, 'Las Varillas'),
+	(703, 7, 'Las Vertientes'),
+	(704, 7, 'Leguizamón'),
+	(705, 7, 'Leones'),
+	(706, 7, 'Los Cedros'),
+	(707, 7, 'Los Cerrillos'),
+	(708, 7, 'Los Chañaritos (C.E)'),
+	(709, 7, 'Los Chanaritos (R.S)'),
+	(710, 7, 'Los Cisnes'),
+	(711, 7, 'Los Cocos'),
+	(712, 7, 'Los Cóndores'),
+	(713, 7, 'Los Hornillos'),
+	(714, 7, 'Los Hoyos'),
+	(715, 7, 'Los Mistoles'),
+	(716, 7, 'Los Molinos'),
+	(717, 7, 'Los Pozos'),
+	(718, 7, 'Los Reartes'),
+	(719, 7, 'Los Surgentes'),
+	(720, 7, 'Los Talares'),
+	(721, 7, 'Los Zorros'),
+	(722, 7, 'Lozada'),
+	(723, 7, 'Luca'),
+	(724, 7, 'Luque'),
+	(725, 7, 'Luyaba'),
+	(726, 7, 'Malagueño'),
+	(727, 7, 'Malena'),
+	(728, 7, 'Malvinas Argentinas'),
+	(729, 7, 'Manfredi'),
+	(730, 7, 'Maquinista Gallini'),
+	(731, 7, 'Marcos Juárez'),
+	(732, 7, 'Marull'),
+	(733, 7, 'Matorrales'),
+	(734, 7, 'Mattaldi'),
+	(735, 7, 'Mayu Sumaj'),
+	(736, 7, 'Media Naranja'),
+	(737, 7, 'Melo'),
+	(738, 7, 'Mendiolaza'),
+	(739, 7, 'Mi Granja'),
+	(740, 7, 'Mina Clavero'),
+	(741, 7, 'Miramar'),
+	(742, 7, 'Morrison'),
+	(743, 7, 'Morteros'),
+	(744, 7, 'Mte. Buey'),
+	(745, 7, 'Mte. Cristo'),
+	(746, 7, 'Mte. De Los Gauchos'),
+	(747, 7, 'Mte. Leña'),
+	(748, 7, 'Mte. Maíz'),
+	(749, 7, 'Mte. Ralo'),
+	(750, 7, 'Nicolás Bruzone'),
+	(751, 7, 'Noetinger'),
+	(752, 7, 'Nono'),
+	(753, 7, 'Nueva 7'),
+	(754, 7, 'Obispo Trejo'),
+	(755, 7, 'Olaeta'),
+	(756, 7, 'Oliva'),
+	(757, 7, 'Olivares San Nicolás'),
+	(758, 7, 'Onagolty'),
+	(759, 7, 'Oncativo'),
+	(760, 7, 'Ordoñez'),
+	(761, 7, 'Pacheco De Melo'),
+	(762, 7, 'Pampayasta N.'),
+	(763, 7, 'Pampayasta S.'),
+	(764, 7, 'Panaholma'),
+	(765, 7, 'Pascanas'),
+	(766, 7, 'Pasco'),
+	(767, 7, 'Paso del Durazno'),
+	(768, 7, 'Paso Viejo'),
+	(769, 7, 'Pilar'),
+	(770, 7, 'Pincén'),
+	(771, 7, 'Piquillín'),
+	(772, 7, 'Plaza de Mercedes'),
+	(773, 7, 'Plaza Luxardo'),
+	(774, 7, 'Porteña'),
+	(775, 7, 'Potrero de Garay'),
+	(776, 7, 'Pozo del Molle'),
+	(777, 7, 'Pozo Nuevo'),
+	(778, 7, 'Pueblo Italiano'),
+	(779, 7, 'Puesto de Castro'),
+	(780, 7, 'Punta del Agua'),
+	(781, 7, 'Quebracho Herrado'),
+	(782, 7, 'Quilino'),
+	(783, 7, 'Rafael García'),
+	(784, 7, 'Ranqueles'),
+	(785, 7, 'Rayo Cortado'),
+	(786, 7, 'Reducción'),
+	(787, 7, 'Rincón'),
+	(788, 7, 'Río Bamba'),
+	(789, 7, 'Río Ceballos'),
+	(790, 7, 'Río Cuarto'),
+	(791, 7, 'Río de Los Sauces'),
+	(792, 7, 'Río Primero'),
+	(793, 7, 'Río Segundo'),
+	(794, 7, 'Río Tercero'),
+	(795, 7, 'Rosales'),
+	(796, 7, 'Rosario del Saladillo'),
+	(797, 7, 'Sacanta'),
+	(798, 7, 'Sagrada Familia'),
+	(799, 7, 'Saira'),
+	(800, 7, 'Saladillo'),
+	(801, 7, 'Saldán'),
+	(802, 7, 'Salsacate'),
+	(803, 7, 'Salsipuedes'),
+	(804, 7, 'Sampacho'),
+	(805, 7, 'San Agustín'),
+	(806, 7, 'San Antonio de Arredondo'),
+	(807, 7, 'San Antonio de Litín'),
+	(808, 7, 'San Basilio'),
+	(809, 7, 'San Carlos Minas'),
+	(810, 7, 'San Clemente'),
+	(811, 7, 'San Esteban'),
+	(812, 7, 'San Francisco'),
+	(813, 7, 'San Ignacio'),
+	(814, 7, 'San Javier'),
+	(815, 7, 'San Jerónimo'),
+	(816, 7, 'San Joaquín'),
+	(817, 7, 'San José de La Dormida'),
+	(818, 7, 'San José de Las Salinas'),
+	(819, 7, 'San Lorenzo'),
+	(820, 7, 'San Marcos Sierras'),
+	(821, 7, 'San Marcos Sud'),
+	(822, 7, 'San Pedro'),
+	(823, 7, 'San Pedro N.'),
+	(824, 7, 'San Roque'),
+	(825, 7, 'San Vicente'),
+	(826, 7, 'Santa Catalina'),
+	(827, 7, 'Santa Elena'),
+	(828, 7, 'Santa Eufemia'),
+	(829, 7, 'Santa Maria'),
+	(830, 7, 'Sarmiento'),
+	(831, 7, 'Saturnino M.Laspiur'),
+	(832, 7, 'Sauce Arriba'),
+	(833, 7, 'Sebastián Elcano'),
+	(834, 7, 'Seeber'),
+	(835, 7, 'Segunda Usina'),
+	(836, 7, 'Serrano'),
+	(837, 7, 'Serrezuela'),
+	(838, 7, 'Sgo. Temple'),
+	(839, 7, 'Silvio Pellico'),
+	(840, 7, 'Simbolar'),
+	(841, 7, 'Sinsacate'),
+	(842, 7, 'Sta. Rosa de Calamuchita'),
+	(843, 7, 'Sta. Rosa de Río Primero'),
+	(844, 7, 'Suco'),
+	(845, 7, 'Tala Cañada'),
+	(846, 7, 'Tala Huasi'),
+	(847, 7, 'Talaini'),
+	(848, 7, 'Tancacha'),
+	(849, 7, 'Tanti'),
+	(850, 7, 'Ticino'),
+	(851, 7, 'Tinoco'),
+	(852, 7, 'Tío Pujio'),
+	(853, 7, 'Toledo'),
+	(854, 7, 'Toro Pujio'),
+	(855, 7, 'Tosno'),
+	(856, 7, 'Tosquita'),
+	(857, 7, 'Tránsito'),
+	(858, 7, 'Tuclame'),
+	(859, 7, 'Tutti'),
+	(860, 7, 'Ucacha'),
+	(861, 7, 'Unquillo'),
+	(862, 7, 'Valle de Anisacate'),
+	(863, 7, 'Valle Hermoso'),
+	(864, 7, 'Vélez Sarfield'),
+	(865, 7, 'Viamonte'),
+	(866, 7, 'Vicuña Mackenna'),
+	(867, 7, 'Villa Allende'),
+	(868, 7, 'Villa Amancay'),
+	(869, 7, 'Villa Ascasubi'),
+	(870, 7, 'Villa Candelaria N.'),
+	(871, 7, 'Villa Carlos Paz'),
+	(872, 7, 'Villa Cerro Azul'),
+	(873, 7, 'Villa Ciudad de América'),
+	(874, 7, 'Villa Ciudad Pque Los Reartes'),
+	(875, 7, 'Villa Concepción del Tío'),
+	(876, 7, 'Villa Cura Brochero'),
+	(877, 7, 'Villa de Las Rosas'),
+	(878, 7, 'Villa de María'),
+	(879, 7, 'Villa de Pocho'),
+	(880, 7, 'Villa de Soto'),
+	(881, 7, 'Villa del Dique'),
+	(882, 7, 'Villa del Prado'),
+	(883, 7, 'Villa del Rosario'),
+	(884, 7, 'Villa del Totoral'),
+	(885, 7, 'Villa Dolores'),
+	(886, 7, 'Villa El Chancay'),
+	(887, 7, 'Villa Elisa'),
+	(888, 7, 'Villa Flor Serrana'),
+	(889, 7, 'Villa Fontana'),
+	(890, 7, 'Villa Giardino'),
+	(891, 7, 'Villa Gral. Belgrano'),
+	(892, 7, 'Villa Gutierrez'),
+	(893, 7, 'Villa Huidobro'),
+	(894, 7, 'Villa La Bolsa'),
+	(895, 7, 'Villa Los Aromos'),
+	(896, 7, 'Villa Los Patos'),
+	(897, 7, 'Villa María'),
+	(898, 7, 'Villa Nueva'),
+	(899, 7, 'Villa Pque. Santa Ana'),
+	(900, 7, 'Villa Pque. Siquiman'),
+	(901, 7, 'Villa Quillinzo'),
+	(902, 7, 'Villa Rossi'),
+	(903, 7, 'Villa Rumipal'),
+	(904, 7, 'Villa San Esteban'),
+	(905, 7, 'Villa San Isidro'),
+	(906, 7, 'Villa 21'),
+	(907, 7, 'Villa Sarmiento (G.R)'),
+	(908, 7, 'Villa Sarmiento (S.A)'),
+	(909, 7, 'Villa Tulumba'),
+	(910, 7, 'Villa Valeria'),
+	(911, 7, 'Villa Yacanto'),
+	(912, 7, 'Washington'),
+	(913, 7, 'Wenceslao Escalante'),
+	(914, 7, 'Ycho Cruz Sierras'),
+	(915, 8, 'Alvear'),
+	(916, 8, 'Bella Vista'),
+	(917, 8, 'Berón de Astrada'),
+	(918, 8, 'Bonpland'),
+	(919, 8, 'Caá Cati'),
+	(920, 8, 'Capital'),
+	(921, 8, 'Chavarría'),
+	(922, 8, 'Col. C. Pellegrini'),
+	(923, 8, 'Col. Libertad'),
+	(924, 8, 'Col. Liebig'),
+	(925, 8, 'Col. Sta Rosa'),
+	(926, 8, 'Concepción'),
+	(927, 8, 'Cruz de Los Milagros'),
+	(928, 8, 'Curuzú-Cuatiá'),
+	(929, 8, 'Empedrado'),
+	(930, 8, 'Esquina'),
+	(931, 8, 'Estación Torrent'),
+	(932, 8, 'Felipe Yofré'),
+	(933, 8, 'Garruchos'),
+	(934, 8, 'Gdor. Agrónomo'),
+	(935, 8, 'Gdor. Martínez'),
+	(936, 8, 'Goya'),
+	(937, 8, 'Guaviravi'),
+	(938, 8, 'Herlitzka'),
+	(939, 8, 'Ita-Ibate'),
+	(940, 8, 'Itatí'),
+	(941, 8, 'Ituzaingó'),
+	(942, 8, 'José Rafael Gómez'),
+	(943, 8, 'Juan Pujol'),
+	(944, 8, 'La Cruz'),
+	(945, 8, 'Lavalle'),
+	(946, 8, 'Lomas de Vallejos'),
+	(947, 8, 'Loreto'),
+	(948, 8, 'Mariano I. Loza'),
+	(949, 8, 'Mburucuyá'),
+	(950, 8, 'Mercedes'),
+	(951, 8, 'Mocoretá'),
+	(952, 8, 'Mte. Caseros'),
+	(953, 8, 'Nueve de Julio'),
+	(954, 8, 'Palmar Grande'),
+	(955, 8, 'Parada Pucheta'),
+	(956, 8, 'Paso de La Patria'),
+	(957, 8, 'Paso de Los Libres'),
+	(958, 8, 'Pedro R. Fernandez'),
+	(959, 8, 'Perugorría'),
+	(960, 8, 'Pueblo Libertador'),
+	(961, 8, 'Ramada Paso'),
+	(962, 8, 'Riachuelo'),
+	(963, 8, 'Saladas'),
+	(964, 8, 'San Antonio'),
+	(965, 8, 'San Carlos'),
+	(966, 8, 'San Cosme'),
+	(967, 8, 'San Lorenzo'),
+	(968, 8, '20 del Palmar'),
+	(969, 8, 'San Miguel'),
+	(970, 8, 'San Roque'),
+	(971, 8, 'Santa Ana'),
+	(972, 8, 'Santa Lucía'),
+	(973, 8, 'Santo Tomé'),
+	(974, 8, 'Sauce'),
+	(975, 8, 'Tabay'),
+	(976, 8, 'Tapebicuá'),
+	(977, 8, 'Tatacua'),
+	(978, 8, 'Virasoro'),
+	(979, 8, 'Yapeyú'),
+	(980, 8, 'Yataití Calle'),
+	(981, 9, 'Alarcón'),
+	(982, 9, 'Alcaraz'),
+	(983, 9, 'Alcaraz N.'),
+	(984, 9, 'Alcaraz S.'),
+	(985, 9, 'Aldea Asunción'),
+	(986, 9, 'Aldea Brasilera'),
+	(987, 9, 'Aldea Elgenfeld'),
+	(988, 9, 'Aldea Grapschental'),
+	(989, 9, 'Aldea Ma. Luisa'),
+	(990, 9, 'Aldea Protestante'),
+	(991, 9, 'Aldea Salto'),
+	(992, 9, 'Aldea San Antonio (G)'),
+	(993, 9, 'Aldea San Antonio (P)'),
+	(994, 9, 'Aldea 19'),
+	(995, 9, 'Aldea San Miguel'),
+	(996, 9, 'Aldea San Rafael'),
+	(997, 9, 'Aldea Spatzenkutter'),
+	(998, 9, 'Aldea Sta. María'),
+	(999, 9, 'Aldea Sta. Rosa'),
+	(1000, 9, 'Aldea Valle María'),
+	(1001, 9, 'Altamirano Sur'),
+	(1002, 9, 'Antelo'),
+	(1003, 9, 'Antonio Tomás'),
+	(1004, 9, 'Aranguren'),
+	(1005, 9, 'Arroyo Barú'),
+	(1006, 9, 'Arroyo Burgos'),
+	(1007, 9, 'Arroyo Clé'),
+	(1008, 9, 'Arroyo Corralito'),
+	(1009, 9, 'Arroyo del Medio'),
+	(1010, 9, 'Arroyo Maturrango'),
+	(1011, 9, 'Arroyo Palo Seco'),
+	(1012, 9, 'Banderas'),
+	(1013, 9, 'Basavilbaso'),
+	(1014, 9, 'Betbeder'),
+	(1015, 9, 'Bovril'),
+	(1016, 9, 'Caseros'),
+	(1017, 9, 'Ceibas'),
+	(1018, 9, 'Cerrito'),
+	(1019, 9, 'Chajarí'),
+	(1020, 9, 'Chilcas'),
+	(1021, 9, 'Clodomiro Ledesma'),
+	(1022, 9, 'Col. Alemana'),
+	(1023, 9, 'Col. Avellaneda'),
+	(1024, 9, 'Col. Avigdor'),
+	(1025, 9, 'Col. Ayuí'),
+	(1026, 9, 'Col. Baylina'),
+	(1027, 9, 'Col. Carrasco'),
+	(1028, 9, 'Col. Celina'),
+	(1029, 9, 'Col. Cerrito'),
+	(1030, 9, 'Col. Crespo'),
+	(1031, 9, 'Col. Elia'),
+	(1032, 9, 'Col. Ensayo'),
+	(1033, 9, 'Col. Gral. Roca'),
+	(1034, 9, 'Col. La Argentina'),
+	(1035, 9, 'Col. Merou'),
+	(1036, 9, 'Col. Oficial Nª3'),
+	(1037, 9, 'Col. Oficial Nº13'),
+	(1038, 9, 'Col. Oficial Nº14'),
+	(1039, 9, 'Col. Oficial Nº5'),
+	(1040, 9, 'Col. Reffino'),
+	(1041, 9, 'Col. Tunas'),
+	(1042, 9, 'Col. Viraró'),
+	(1043, 9, 'Colón'),
+	(1044, 9, 'Concepción del Uruguay'),
+	(1045, 9, 'Concordia'),
+	(1046, 9, 'Conscripto Bernardi'),
+	(1047, 9, 'Costa Grande'),
+	(1048, 9, 'Costa San Antonio'),
+	(1049, 9, 'Costa Uruguay N.'),
+	(1050, 9, 'Costa Uruguay S.'),
+	(1051, 9, 'Crespo'),
+	(1052, 9, 'Crucecitas 3ª'),
+	(1053, 9, 'Crucecitas 7ª'),
+	(1054, 9, 'Crucecitas 8ª'),
+	(1055, 9, 'Cuchilla Redonda'),
+	(1056, 9, 'Curtiembre'),
+	(1057, 9, 'Diamante'),
+	(1058, 9, 'Distrito 6º'),
+	(1059, 9, 'Distrito Chañar'),
+	(1060, 9, 'Distrito Chiqueros'),
+	(1061, 9, 'Distrito Cuarto'),
+	(1062, 9, 'Distrito Diego López'),
+	(1063, 9, 'Distrito Pajonal'),
+	(1064, 9, 'Distrito Sauce'),
+	(1065, 9, 'Distrito Tala'),
+	(1066, 9, 'Distrito Talitas'),
+	(1067, 9, 'Don Cristóbal 1ª Sección'),
+	(1068, 9, 'Don Cristóbal 2ª Sección'),
+	(1069, 9, 'Durazno'),
+	(1070, 9, 'El Cimarrón'),
+	(1071, 9, 'El Gramillal'),
+	(1072, 9, 'El Palenque'),
+	(1073, 9, 'El Pingo'),
+	(1074, 9, 'El Quebracho'),
+	(1075, 9, 'El Redomón'),
+	(1076, 9, 'El Solar'),
+	(1077, 9, 'Enrique Carbo'),
+	(1078, 9, '9'),
+	(1079, 9, 'Espinillo N.'),
+	(1080, 9, 'Estación Campos'),
+	(1081, 9, 'Estación Escriña'),
+	(1082, 9, 'Estación Lazo'),
+	(1083, 9, 'Estación Raíces'),
+	(1084, 9, 'Estación Yerúa'),
+	(1085, 9, 'Estancia Grande'),
+	(1086, 9, 'Estancia Líbaros'),
+	(1087, 9, 'Estancia Racedo'),
+	(1088, 9, 'Estancia Solá'),
+	(1089, 9, 'Estancia Yuquerí'),
+	(1090, 9, 'Estaquitas'),
+	(1091, 9, 'Faustino M. Parera'),
+	(1092, 9, 'Febre'),
+	(1093, 9, 'Federación'),
+	(1094, 9, 'Federal'),
+	(1095, 9, 'Gdor. Echagüe'),
+	(1096, 9, 'Gdor. Mansilla'),
+	(1097, 9, 'Gilbert'),
+	(1098, 9, 'González Calderón'),
+	(1099, 9, 'Gral. Almada'),
+	(1100, 9, 'Gral. Alvear'),
+	(1101, 9, 'Gral. Campos'),
+	(1102, 9, 'Gral. Galarza'),
+	(1103, 9, 'Gral. Ramírez'),
+	(1104, 9, 'Gualeguay'),
+	(1105, 9, 'Gualeguaychú'),
+	(1106, 9, 'Gualeguaycito'),
+	(1107, 9, 'Guardamonte'),
+	(1108, 9, 'Hambis'),
+	(1109, 9, 'Hasenkamp'),
+	(1110, 9, 'Hernandarias'),
+	(1111, 9, 'Hernández'),
+	(1112, 9, 'Herrera'),
+	(1113, 9, 'Hinojal'),
+	(1114, 9, 'Hocker'),
+	(1115, 9, 'Ing. Sajaroff'),
+	(1116, 9, 'Irazusta'),
+	(1117, 9, 'Isletas'),
+	(1118, 9, 'J.J De Urquiza'),
+	(1119, 9, 'Jubileo'),
+	(1120, 9, 'La Clarita'),
+	(1121, 9, 'La Criolla'),
+	(1122, 9, 'La Esmeralda'),
+	(1123, 9, 'La Florida'),
+	(1124, 9, 'La Fraternidad'),
+	(1125, 9, 'La Hierra'),
+	(1126, 9, 'La Ollita'),
+	(1127, 9, 'La Paz'),
+	(1128, 9, 'La Picada'),
+	(1129, 9, 'La Providencia'),
+	(1130, 9, 'La Verbena'),
+	(1131, 9, 'Laguna Benítez'),
+	(1132, 9, 'Larroque'),
+	(1133, 9, 'Las Cuevas'),
+	(1134, 9, 'Las Garzas'),
+	(1135, 9, 'Las Guachas'),
+	(1136, 9, 'Las Mercedes'),
+	(1137, 9, 'Las Moscas'),
+	(1138, 9, 'Las Mulitas'),
+	(1139, 9, 'Las Toscas'),
+	(1140, 9, 'Laurencena'),
+	(1141, 9, 'Libertador San Martín'),
+	(1142, 9, 'Loma Limpia'),
+	(1143, 9, 'Los Ceibos'),
+	(1144, 9, 'Los Charruas'),
+	(1145, 9, 'Los Conquistadores'),
+	(1146, 9, 'Lucas González'),
+	(1147, 9, 'Lucas N.'),
+	(1148, 9, 'Lucas S. 1ª'),
+	(1149, 9, 'Lucas S. 2ª'),
+	(1150, 9, 'Maciá'),
+	(1151, 9, 'María Grande'),
+	(1152, 9, 'María Grande 2ª'),
+	(1153, 9, 'Médanos'),
+	(1154, 9, 'Mojones N.'),
+	(1155, 9, 'Mojones S.'),
+	(1156, 9, 'Molino Doll'),
+	(1157, 9, 'Monte Redondo'),
+	(1158, 9, 'Montoya'),
+	(1159, 9, 'Mulas Grandes'),
+	(1160, 9, 'Ñancay'),
+	(1161, 9, 'Nogoyá'),
+	(1162, 9, 'Nueva Escocia'),
+	(1163, 9, 'Nueva Vizcaya'),
+	(1164, 9, 'Ombú'),
+	(1165, 9, 'Oro Verde'),
+	(1166, 9, 'Paraná'),
+	(1167, 9, 'Pasaje Guayaquil'),
+	(1168, 9, 'Pasaje Las Tunas'),
+	(1169, 9, 'Paso de La Arena'),
+	(1170, 9, 'Paso de La Laguna'),
+	(1171, 9, 'Paso de Las Piedras'),
+	(1172, 9, 'Paso Duarte'),
+	(1173, 9, 'Pastor Britos'),
+	(1174, 9, 'Pedernal'),
+	(1175, 9, 'Perdices'),
+	(1176, 9, 'Picada Berón'),
+	(1177, 9, 'Piedras Blancas'),
+	(1178, 9, 'Primer Distrito Cuchilla'),
+	(1179, 9, 'Primero de Mayo'),
+	(1180, 9, 'Pronunciamiento'),
+	(1181, 9, 'Pto. Algarrobo'),
+	(1182, 9, 'Pto. Ibicuy'),
+	(1183, 9, 'Pueblo Brugo'),
+	(1184, 9, 'Pueblo Cazes'),
+	(1185, 9, 'Pueblo Gral. Belgrano'),
+	(1186, 9, 'Pueblo Liebig'),
+	(1187, 9, 'Puerto Yeruá'),
+	(1188, 9, 'Punta del Monte'),
+	(1189, 9, 'Quebracho'),
+	(1190, 9, 'Quinto Distrito'),
+	(1191, 9, 'Raices Oeste'),
+	(1192, 9, 'Rincón de Nogoyá'),
+	(1193, 9, 'Rincón del Cinto'),
+	(1194, 9, 'Rincón del Doll'),
+	(1195, 9, 'Rincón del Gato'),
+	(1196, 9, 'Rocamora'),
+	(1197, 9, 'Rosario del Tala'),
+	(1198, 9, 'San Benito'),
+	(1199, 9, 'San Cipriano'),
+	(1200, 9, 'San Ernesto'),
+	(1201, 9, 'San Gustavo'),
+	(1202, 9, 'San Jaime'),
+	(1203, 9, 'San José'),
+	(1204, 9, 'San José de Feliciano'),
+	(1205, 9, 'San Justo'),
+	(1206, 9, 'San Marcial'),
+	(1207, 9, 'San Pedro'),
+	(1208, 9, 'San Ramírez'),
+	(1209, 9, 'San Ramón'),
+	(1210, 9, 'San Roque'),
+	(1211, 9, 'San Salvador'),
+	(1212, 9, 'San Víctor'),
+	(1213, 9, 'Santa Ana'),
+	(1214, 9, 'Santa Anita'),
+	(1215, 9, 'Santa Elena'),
+	(1216, 9, 'Santa Lucía'),
+	(1217, 9, 'Santa Luisa'),
+	(1218, 9, 'Sauce de Luna'),
+	(1219, 9, 'Sauce Montrull'),
+	(1220, 9, 'Sauce Pinto'),
+	(1221, 9, 'Sauce Sur'),
+	(1222, 9, 'Seguí'),
+	(1223, 9, 'Sir Leonard'),
+	(1224, 9, 'Sosa'),
+	(1225, 9, 'Tabossi'),
+	(1226, 9, 'Tezanos Pinto'),
+	(1227, 9, 'Ubajay'),
+	(1228, 9, 'Urdinarrain'),
+	(1229, 9, 'Veinte de Septiembre'),
+	(1230, 9, 'Viale'),
+	(1231, 9, 'Victoria'),
+	(1232, 9, 'Villa Clara'),
+	(1233, 9, 'Villa del Rosario'),
+	(1234, 9, 'Villa Domínguez'),
+	(1235, 9, 'Villa Elisa'),
+	(1236, 9, 'Villa Fontana'),
+	(1237, 9, 'Villa Gdor. Etchevehere'),
+	(1238, 9, 'Villa Mantero'),
+	(1239, 9, 'Villa Paranacito'),
+	(1240, 9, 'Villa Urquiza'),
+	(1241, 9, 'Villaguay'),
+	(1242, 9, 'Walter Moss'),
+	(1243, 9, 'Yacaré'),
+	(1244, 9, 'Yeso Oeste'),
+	(1245, 10, 'Buena Vista'),
+	(1246, 10, 'Clorinda'),
+	(1247, 10, 'Col. Pastoril'),
+	(1248, 10, 'Cte. Fontana'),
+	(1249, 10, 'El Colorado'),
+	(1250, 10, 'El Espinillo'),
+	(1251, 10, 'Estanislao Del Campo'),
+	(1252, 10, '10'),
+	(1253, 10, 'Fortín Lugones'),
+	(1254, 10, 'Gral. Lucio V. Mansilla'),
+	(1255, 10, 'Gral. Manuel Belgrano'),
+	(1256, 10, 'Gral. Mosconi'),
+	(1257, 10, 'Gran Guardia'),
+	(1258, 10, 'Herradura'),
+	(1259, 10, 'Ibarreta'),
+	(1260, 10, 'Ing. Juárez'),
+	(1261, 10, 'Laguna Blanca'),
+	(1262, 10, 'Laguna Naick Neck'),
+	(1263, 10, 'Laguna Yema'),
+	(1264, 10, 'Las Lomitas'),
+	(1265, 10, 'Los Chiriguanos'),
+	(1266, 10, 'Mayor V. Villafañe'),
+	(1267, 10, 'Misión San Fco.'),
+	(1268, 10, 'Palo Santo'),
+	(1269, 10, 'Pirané'),
+	(1270, 10, 'Pozo del Maza'),
+	(1271, 10, 'Riacho He-He'),
+	(1272, 10, 'San Hilario'),
+	(1273, 10, 'San Martín II'),
+	(1274, 10, 'Siete Palmas'),
+	(1275, 10, 'Subteniente Perín'),
+	(1276, 10, 'Tres Lagunas'),
+	(1277, 10, 'Villa Dos Trece'),
+	(1278, 10, 'Villa Escolar'),
+	(1279, 10, 'Villa Gral. Güemes'),
+	(1280, 11, 'Abdon Castro Tolay'),
+	(1281, 11, 'Abra Pampa'),
+	(1282, 11, 'Abralaite'),
+	(1283, 11, 'Aguas Calientes'),
+	(1284, 11, 'Arrayanal'),
+	(1285, 11, 'Barrios'),
+	(1286, 11, 'Caimancito'),
+	(1287, 11, 'Calilegua'),
+	(1288, 11, 'Cangrejillos'),
+	(1289, 11, 'Caspala'),
+	(1290, 11, 'Catuá'),
+	(1291, 11, 'Cieneguillas'),
+	(1292, 11, 'Coranzulli'),
+	(1293, 11, 'Cusi-Cusi'),
+	(1294, 11, 'El Aguilar'),
+	(1295, 11, 'El Carmen'),
+	(1296, 11, 'El Cóndor'),
+	(1297, 11, 'El Fuerte'),
+	(1298, 11, 'El Piquete'),
+	(1299, 11, 'El Talar'),
+	(1300, 11, 'Fraile Pintado'),
+	(1301, 11, 'Hipólito Yrigoyen'),
+	(1302, 11, 'Huacalera'),
+	(1303, 11, 'Humahuaca'),
+	(1304, 11, 'La Esperanza'),
+	(1305, 11, 'La Mendieta'),
+	(1306, 11, 'La Quiaca'),
+	(1307, 11, 'Ledesma'),
+	(1308, 11, 'Libertador Gral. San Martin'),
+	(1309, 11, 'Maimara'),
+	(1310, 11, 'Mina Pirquitas'),
+	(1311, 11, 'Monterrico'),
+	(1312, 11, 'Palma Sola'),
+	(1313, 11, 'Palpalá'),
+	(1314, 11, 'Pampa Blanca'),
+	(1315, 11, 'Pampichuela'),
+	(1316, 11, 'Perico'),
+	(1317, 11, 'Puesto del Marqués'),
+	(1318, 11, 'Puesto Viejo'),
+	(1319, 11, 'Pumahuasi'),
+	(1320, 11, 'Purmamarca'),
+	(1321, 11, 'Rinconada'),
+	(1322, 11, 'Rodeitos'),
+	(1323, 11, 'Rosario de Río Grande'),
+	(1324, 11, 'San Antonio'),
+	(1325, 11, 'San Francisco'),
+	(1326, 11, 'San Pedro'),
+	(1327, 11, 'San Rafael'),
+	(1328, 11, 'San Salvador'),
+	(1329, 11, 'Santa Ana'),
+	(1330, 11, 'Santa Catalina'),
+	(1331, 11, 'Santa Clara'),
+	(1332, 11, 'Susques'),
+	(1333, 11, 'Tilcara'),
+	(1334, 11, 'Tres Cruces'),
+	(1335, 11, 'Tumbaya'),
+	(1336, 11, 'Valle Grande'),
+	(1337, 11, 'Vinalito'),
+	(1338, 11, 'Volcán'),
+	(1339, 11, 'Yala'),
+	(1340, 11, 'Yaví'),
+	(1341, 11, 'Yuto'),
+	(1342, 12, 'Abramo'),
+	(1343, 12, 'Adolfo Van Praet'),
+	(1344, 12, 'Agustoni'),
+	(1345, 12, 'Algarrobo del Aguila'),
+	(1346, 12, 'Alpachiri'),
+	(1347, 12, 'Alta Italia'),
+	(1348, 12, 'Anguil'),
+	(1349, 12, 'Arata'),
+	(1350, 12, 'Ataliva Roca'),
+	(1351, 12, 'Bernardo Larroude'),
+	(1352, 12, 'Bernasconi'),
+	(1353, 12, 'Caleufú'),
+	(1354, 12, 'Carro Quemado'),
+	(1355, 12, 'Catriló'),
+	(1356, 12, 'Ceballos'),
+	(1357, 12, 'Chacharramendi'),
+	(1358, 12, 'Col. Barón'),
+	(1359, 12, 'Col. Santa María'),
+	(1360, 12, 'Conhelo'),
+	(1361, 12, 'Coronel Hilario Lagos'),
+	(1362, 12, 'Cuchillo-Có'),
+	(1363, 12, 'Doblas'),
+	(1364, 12, 'Dorila'),
+	(1365, 12, 'Eduardo Castex'),
+	(1366, 12, 'Embajador Martini'),
+	(1367, 12, 'Falucho'),
+	(1368, 12, 'Gral. Acha'),
+	(1369, 12, 'Gral. Manuel Campos'),
+	(1370, 12, 'Gral. Pico'),
+	(1371, 12, 'Guatraché'),
+	(1372, 12, 'Ing. Luiggi'),
+	(1373, 12, 'Intendente Alvear'),
+	(1374, 12, 'Jacinto Arauz'),
+	(1375, 12, 'La Adela'),
+	(1376, 12, 'La Humada'),
+	(1377, 12, 'La Maruja'),
+	(1378, 12, '12'),
+	(1379, 12, 'La Reforma'),
+	(1380, 12, 'Limay Mahuida'),
+	(1381, 12, 'Lonquimay'),
+	(1382, 12, 'Loventuel'),
+	(1383, 12, 'Luan Toro'),
+	(1384, 12, 'Macachín'),
+	(1385, 12, 'Maisonnave'),
+	(1386, 12, 'Mauricio Mayer'),
+	(1387, 12, 'Metileo'),
+	(1388, 12, 'Miguel Cané'),
+	(1389, 12, 'Miguel Riglos'),
+	(1390, 12, 'Monte Nievas'),
+	(1391, 12, 'Parera'),
+	(1392, 12, 'Perú'),
+	(1393, 12, 'Pichi-Huinca'),
+	(1394, 12, 'Puelches'),
+	(1395, 12, 'Puelén'),
+	(1396, 12, 'Quehue'),
+	(1397, 12, 'Quemú Quemú'),
+	(1398, 12, 'Quetrequén'),
+	(1399, 12, 'Rancul'),
+	(1400, 12, 'Realicó'),
+	(1401, 12, 'Relmo'),
+	(1402, 12, 'Rolón'),
+	(1403, 12, 'Rucanelo'),
+	(1404, 12, 'Sarah'),
+	(1405, 12, 'Speluzzi'),
+	(1406, 12, 'Sta. Isabel'),
+	(1407, 12, 'Sta. Rosa'),
+	(1408, 12, 'Sta. Teresa'),
+	(1409, 12, 'Telén'),
+	(1410, 12, 'Toay'),
+	(1411, 12, 'Tomas M. de Anchorena'),
+	(1412, 12, 'Trenel'),
+	(1413, 12, 'Unanue'),
+	(1414, 12, 'Uriburu'),
+	(1415, 12, 'Veinticinco de Mayo'),
+	(1416, 12, 'Vertiz'),
+	(1417, 12, 'Victorica'),
+	(1418, 12, 'Villa Mirasol'),
+	(1419, 12, 'Winifreda'),
+	(1420, 13, 'Arauco'),
+	(1421, 13, 'Capital'),
+	(1422, 13, 'Castro Barros'),
+	(1423, 13, 'Chamical'),
+	(1424, 13, 'Chilecito'),
+	(1425, 13, 'Coronel F. Varela'),
+	(1426, 13, 'Famatina'),
+	(1427, 13, 'Gral. A.V.Peñaloza'),
+	(1428, 13, 'Gral. Belgrano'),
+	(1429, 13, 'Gral. J.F. Quiroga'),
+	(1430, 13, 'Gral. Lamadrid'),
+	(1431, 13, 'Gral. Ocampo'),
+	(1432, 13, 'Gral. San Martín'),
+	(1433, 13, 'Independencia'),
+	(1434, 13, 'Rosario Penaloza'),
+	(1435, 13, 'San Blas de Los Sauces'),
+	(1436, 13, 'Sanagasta'),
+	(1437, 13, 'Vinchina'),
+	(1438, 14, 'Capital'),
+	(1439, 14, 'Chacras de Coria'),
+	(1440, 14, 'Dorrego'),
+	(1441, 14, 'Gllen'),
+	(1442, 14, 'Godoy Cruz'),
+	(1443, 14, 'Gral. Alvear'),
+	(1444, 14, 'Guaymallén'),
+	(1445, 14, 'Junín'),
+	(1446, 14, 'La Paz'),
+	(1447, 14, 'Las Heras'),
+	(1448, 14, 'Lavalle'),
+	(1449, 14, 'Luján'),
+	(1450, 14, 'Luján De Cuyo'),
+	(1451, 14, 'Maipú'),
+	(1452, 14, 'Malargüe'),
+	(1453, 14, 'Rivadavia'),
+	(1454, 14, 'San Carlos'),
+	(1455, 14, 'San Martín'),
+	(1456, 14, 'San Rafael'),
+	(1457, 14, 'Sta. Rosa'),
+	(1458, 14, 'Tunuyán'),
+	(1459, 14, 'Tupungato'),
+	(1460, 14, 'Villa Nueva'),
+	(1461, 15, 'Alba Posse'),
+	(1462, 15, 'Almafuerte'),
+	(1463, 15, 'Apóstoles'),
+	(1464, 15, 'Aristóbulo Del Valle'),
+	(1465, 15, 'Arroyo Del Medio'),
+	(1466, 15, 'Azara'),
+	(1467, 15, 'Bdo. De Irigoyen'),
+	(1468, 15, 'Bonpland'),
+	(1469, 15, 'Caá Yari'),
+	(1470, 15, 'Campo Grande'),
+	(1471, 15, 'Campo Ramón'),
+	(1472, 15, 'Campo Viera'),
+	(1473, 15, 'Candelaria'),
+	(1474, 15, 'Capioví'),
+	(1475, 15, 'Caraguatay'),
+	(1476, 15, 'Cdte. Guacurarí'),
+	(1477, 15, 'Cerro Azul'),
+	(1478, 15, 'Cerro Corá'),
+	(1479, 15, 'Col. Alberdi'),
+	(1480, 15, 'Col. Aurora'),
+	(1481, 15, 'Col. Delicia'),
+	(1482, 15, 'Col. Polana'),
+	(1483, 15, 'Col. Victoria'),
+	(1484, 15, 'Col. Wanda'),
+	(1485, 15, 'Concepción De La Sierra'),
+	(1486, 15, 'Corpus'),
+	(1487, 15, 'Dos Arroyos'),
+	(1488, 15, 'Dos de Mayo'),
+	(1489, 15, 'El Alcázar'),
+	(1490, 15, 'El Dorado'),
+	(1491, 15, 'El Soberbio'),
+	(1492, 15, 'Esperanza'),
+	(1493, 15, 'F. Ameghino'),
+	(1494, 15, 'Fachinal'),
+	(1495, 15, 'Garuhapé'),
+	(1496, 15, 'Garupá'),
+	(1497, 15, 'Gdor. López'),
+	(1498, 15, 'Gdor. Roca'),
+	(1499, 15, 'Gral. Alvear'),
+	(1500, 15, 'Gral. Urquiza'),
+	(1501, 15, 'Guaraní'),
+	(1502, 15, 'H. Yrigoyen'),
+	(1503, 15, 'Iguazú'),
+	(1504, 15, 'Itacaruaré'),
+	(1505, 15, 'Jardín América'),
+	(1506, 15, 'Leandro N. Alem'),
+	(1507, 15, 'Libertad'),
+	(1508, 15, 'Loreto'),
+	(1509, 15, 'Los Helechos'),
+	(1510, 15, 'Mártires'),
+	(1511, 15, '15'),
+	(1512, 15, 'Mojón Grande'),
+	(1513, 15, 'Montecarlo'),
+	(1514, 15, 'Nueve de Julio'),
+	(1515, 15, 'Oberá'),
+	(1516, 15, 'Olegario V. Andrade'),
+	(1517, 15, 'Panambí'),
+	(1518, 15, 'Posadas'),
+	(1519, 15, 'Profundidad'),
+	(1520, 15, 'Pto. Iguazú'),
+	(1521, 15, 'Pto. Leoni'),
+	(1522, 15, 'Pto. Piray'),
+	(1523, 15, 'Pto. Rico'),
+	(1524, 15, 'Ruiz de Montoya'),
+	(1525, 15, 'San Antonio'),
+	(1526, 15, 'San Ignacio'),
+	(1527, 15, 'San Javier'),
+	(1528, 15, 'San José'),
+	(1529, 15, 'San Martín'),
+	(1530, 15, 'San Pedro'),
+	(1531, 15, 'San Vicente'),
+	(1532, 15, 'Santiago De Liniers'),
+	(1533, 15, 'Santo Pipo'),
+	(1534, 15, 'Sta. Ana'),
+	(1535, 15, 'Sta. María'),
+	(1536, 15, 'Tres Capones'),
+	(1537, 15, 'Veinticinco de Mayo'),
+	(1538, 15, 'Wanda'),
+	(1539, 16, 'Aguada San Roque'),
+	(1540, 16, 'Aluminé'),
+	(1541, 16, 'Andacollo'),
+	(1542, 16, 'Añelo'),
+	(1543, 16, 'Bajada del Agrio'),
+	(1544, 16, 'Barrancas'),
+	(1545, 16, 'Buta Ranquil'),
+	(1546, 16, 'Capital'),
+	(1547, 16, 'Caviahué'),
+	(1548, 16, 'Centenario'),
+	(1549, 16, 'Chorriaca'),
+	(1550, 16, 'Chos Malal'),
+	(1551, 16, 'Cipolletti'),
+	(1552, 16, 'Covunco Abajo'),
+	(1553, 16, 'Coyuco Cochico'),
+	(1554, 16, 'Cutral Có'),
+	(1555, 16, 'El Cholar'),
+	(1556, 16, 'El Huecú'),
+	(1557, 16, 'El Sauce'),
+	(1558, 16, 'Guañacos'),
+	(1559, 16, 'Huinganco'),
+	(1560, 16, 'Las Coloradas'),
+	(1561, 16, 'Las Lajas'),
+	(1562, 16, 'Las Ovejas'),
+	(1563, 16, 'Loncopué'),
+	(1564, 16, 'Los Catutos'),
+	(1565, 16, 'Los Chihuidos'),
+	(1566, 16, 'Los Miches'),
+	(1567, 16, 'Manzano Amargo'),
+	(1568, 16, '16'),
+	(1569, 16, 'Octavio Pico'),
+	(1570, 16, 'Paso Aguerre'),
+	(1571, 16, 'Picún Leufú'),
+	(1572, 16, 'Piedra del Aguila'),
+	(1573, 16, 'Pilo Lil'),
+	(1574, 16, 'Plaza Huincul'),
+	(1575, 16, 'Plottier'),
+	(1576, 16, 'Quili Malal'),
+	(1577, 16, 'Ramón Castro'),
+	(1578, 16, 'Rincón de Los Sauces'),
+	(1579, 16, 'San Martín de Los Andes'),
+	(1580, 16, 'San Patricio del Chañar'),
+	(1581, 16, 'Santo Tomás'),
+	(1582, 16, 'Sauzal Bonito'),
+	(1583, 16, 'Senillosa'),
+	(1584, 16, 'Taquimilán'),
+	(1585, 16, 'Tricao Malal'),
+	(1586, 16, 'Varvarco'),
+	(1587, 16, 'Villa Curí Leuvu'),
+	(1588, 16, 'Villa del Nahueve'),
+	(1589, 16, 'Villa del Puente Picún Leuvú'),
+	(1590, 16, 'Villa El Chocón'),
+	(1591, 16, 'Villa La Angostura'),
+	(1592, 16, 'Villa Pehuenia'),
+	(1593, 16, 'Villa Traful'),
+	(1594, 16, 'Vista Alegre'),
+	(1595, 16, 'Zapala'),
+	(1596, 17, 'Aguada Cecilio'),
+	(1597, 17, 'Aguada de Guerra'),
+	(1598, 17, 'Allén'),
+	(1599, 17, 'Arroyo de La Ventana'),
+	(1600, 17, 'Arroyo Los Berros'),
+	(1601, 17, 'Bariloche'),
+	(1602, 17, 'Calte. Cordero'),
+	(1603, 17, 'Campo Grande'),
+	(1604, 17, 'Catriel'),
+	(1605, 17, 'Cerro Policía'),
+	(1606, 17, 'Cervantes'),
+	(1607, 17, 'Chelforo'),
+	(1608, 17, 'Chimpay'),
+	(1609, 17, 'Chinchinales'),
+	(1610, 17, 'Chipauquil'),
+	(1611, 17, 'Choele Choel'),
+	(1612, 17, 'Cinco Saltos'),
+	(1613, 17, 'Cipolletti'),
+	(1614, 17, 'Clemente Onelli'),
+	(1615, 17, 'Colán Conhue'),
+	(1616, 17, 'Comallo'),
+	(1617, 17, 'Comicó'),
+	(1618, 17, 'Cona Niyeu'),
+	(1619, 17, 'Coronel Belisle'),
+	(1620, 17, 'Cubanea'),
+	(1621, 17, 'Darwin'),
+	(1622, 17, 'Dina Huapi'),
+	(1623, 17, 'El Bolsón'),
+	(1624, 17, 'El Caín'),
+	(1625, 17, 'El Manso'),
+	(1626, 17, 'Gral. Conesa'),
+	(1627, 17, 'Gral. Enrique Godoy'),
+	(1628, 17, 'Gral. Fernandez Oro'),
+	(1629, 17, 'Gral. Roca'),
+	(1630, 17, 'Guardia Mitre'),
+	(1631, 17, 'Ing. Huergo'),
+	(1632, 17, 'Ing. Jacobacci'),
+	(1633, 17, 'Laguna Blanca'),
+	(1634, 17, 'Lamarque'),
+	(1635, 17, 'Las Grutas'),
+	(1636, 17, 'Los Menucos'),
+	(1637, 17, 'Luis Beltrán'),
+	(1638, 17, 'Mainqué'),
+	(1639, 17, 'Mamuel Choique'),
+	(1640, 17, 'Maquinchao'),
+	(1641, 17, 'Mencué'),
+	(1642, 17, 'Mtro. Ramos Mexia'),
+	(1643, 17, 'Nahuel Niyeu'),
+	(1644, 17, 'Naupa Huen'),
+	(1645, 17, 'Ñorquinco'),
+	(1646, 17, 'Ojos de Agua'),
+	(1647, 17, 'Paso de Agua'),
+	(1648, 17, 'Paso Flores'),
+	(1649, 17, 'Peñas Blancas'),
+	(1650, 17, 'Pichi Mahuida'),
+	(1651, 17, 'Pilcaniyeu'),
+	(1652, 17, 'Pomona'),
+	(1653, 17, 'Prahuaniyeu'),
+	(1654, 17, 'Rincón Treneta'),
+	(1655, 17, 'Río Chico'),
+	(1656, 17, 'Río Colorado'),
+	(1657, 17, 'Roca'),
+	(1658, 17, 'San Antonio Oeste'),
+	(1659, 17, 'San Javier'),
+	(1660, 17, 'Sierra Colorada'),
+	(1661, 17, 'Sierra Grande'),
+	(1662, 17, 'Sierra Pailemán'),
+	(1663, 17, 'Valcheta'),
+	(1664, 17, 'Valle Azul'),
+	(1665, 17, 'Viedma'),
+	(1666, 17, 'Villa Llanquín'),
+	(1667, 17, 'Villa Mascardi'),
+	(1668, 17, 'Villa Regina'),
+	(1669, 17, 'Yaminué'),
+	(1670, 18, 'A. Saravia'),
+	(1671, 18, 'Aguaray'),
+	(1672, 18, 'Angastaco'),
+	(1673, 18, 'Animaná'),
+	(1674, 18, 'Cachi'),
+	(1675, 18, 'Cafayate'),
+	(1676, 18, 'Campo Quijano'),
+	(1677, 18, 'Campo Santo'),
+	(1678, 18, 'Capital'),
+	(1679, 18, 'Cerrillos'),
+	(1680, 18, 'Chicoana'),
+	(1681, 18, 'Col. Sta. Rosa'),
+	(1682, 18, 'Coronel Moldes'),
+	(1683, 18, 'El Bordo'),
+	(1684, 18, 'El Carril'),
+	(1685, 18, 'El Galpón'),
+	(1686, 18, 'El Jardín'),
+	(1687, 18, 'El Potrero'),
+	(1688, 18, 'El Quebrachal'),
+	(1689, 18, 'El Tala'),
+	(1690, 18, 'Embarcación'),
+	(1691, 18, 'Gral. Ballivian'),
+	(1692, 18, 'Gral. Güemes'),
+	(1693, 18, 'Gral. Mosconi'),
+	(1694, 18, 'Gral. Pizarro'),
+	(1695, 18, 'Guachipas'),
+	(1696, 18, 'Hipólito Yrigoyen'),
+	(1697, 18, 'Iruyá'),
+	(1698, 18, 'Isla De Cañas'),
+	(1699, 18, 'J. V. Gonzalez'),
+	(1700, 18, 'La Caldera'),
+	(1701, 18, 'La Candelaria'),
+	(1702, 18, 'La Merced'),
+	(1703, 18, 'La Poma'),
+	(1704, 18, 'La Viña'),
+	(1705, 18, 'Las Lajitas'),
+	(1706, 18, 'Los Toldos'),
+	(1707, 18, 'Metán'),
+	(1708, 18, 'Molinos'),
+	(1709, 18, 'Nazareno'),
+	(1710, 18, 'Orán'),
+	(1711, 18, 'Payogasta'),
+	(1712, 18, 'Pichanal'),
+	(1713, 18, 'Prof. S. Mazza'),
+	(1714, 18, 'Río Piedras'),
+	(1715, 18, 'Rivadavia Banda Norte'),
+	(1716, 18, 'Rivadavia Banda Sur'),
+	(1717, 18, 'Rosario de La Frontera'),
+	(1718, 18, 'Rosario de Lerma'),
+	(1719, 18, 'Saclantás'),
+	(1720, 18, '18'),
+	(1721, 18, 'San Antonio'),
+	(1722, 18, 'San Carlos'),
+	(1723, 18, 'San José De Metán'),
+	(1724, 18, 'San Ramón'),
+	(1725, 18, 'Santa Victoria E.'),
+	(1726, 18, 'Santa Victoria O.'),
+	(1727, 18, 'Tartagal'),
+	(1728, 18, 'Tolar Grande'),
+	(1729, 18, 'Urundel'),
+	(1730, 18, 'Vaqueros'),
+	(1731, 18, 'Villa San Lorenzo'),
+	(1732, 19, 'Albardón'),
+	(1733, 19, 'Angaco'),
+	(1734, 19, 'Calingasta'),
+	(1735, 19, 'Capital'),
+	(1736, 19, 'Caucete'),
+	(1737, 19, 'Chimbas'),
+	(1738, 19, 'Iglesia'),
+	(1739, 19, 'Jachal'),
+	(1740, 19, 'Nueve de Julio'),
+	(1741, 19, 'Pocito'),
+	(1742, 19, 'Rawson'),
+	(1743, 19, 'Rivadavia'),
+	(1744, 19, '19'),
+	(1745, 19, 'San Martín'),
+	(1746, 19, 'Santa Lucía'),
+	(1747, 19, 'Sarmiento'),
+	(1748, 19, 'Ullum'),
+	(1749, 19, 'Valle Fértil'),
+	(1750, 19, 'Veinticinco de Mayo'),
+	(1751, 19, 'Zonda'),
+	(1752, 20, 'Alto Pelado'),
+	(1753, 20, 'Alto Pencoso'),
+	(1754, 20, 'Anchorena'),
+	(1755, 20, 'Arizona'),
+	(1756, 20, 'Bagual'),
+	(1757, 20, 'Balde'),
+	(1758, 20, 'Batavia'),
+	(1759, 20, 'Beazley'),
+	(1760, 20, 'Buena Esperanza'),
+	(1761, 20, 'Candelaria'),
+	(1762, 20, 'Capital'),
+	(1763, 20, 'Carolina'),
+	(1764, 20, 'Carpintería'),
+	(1765, 20, 'Concarán'),
+	(1766, 20, 'Cortaderas'),
+	(1767, 20, 'El Morro'),
+	(1768, 20, 'El Trapiche'),
+	(1769, 20, 'El Volcán'),
+	(1770, 20, 'Fortín El Patria'),
+	(1771, 20, 'Fortuna'),
+	(1772, 20, 'Fraga'),
+	(1773, 20, 'Juan Jorba'),
+	(1774, 20, 'Juan Llerena'),
+	(1775, 20, 'Juana Koslay'),
+	(1776, 20, 'Justo Daract'),
+	(1777, 20, 'La Calera'),
+	(1778, 20, 'La Florida'),
+	(1779, 20, 'La Punilla'),
+	(1780, 20, 'La Toma'),
+	(1781, 20, 'Lafinur'),
+	(1782, 20, 'Las Aguadas'),
+	(1783, 20, 'Las Chacras'),
+	(1784, 20, 'Las Lagunas'),
+	(1785, 20, 'Las Vertientes'),
+	(1786, 20, 'Lavaisse'),
+	(1787, 20, 'Leandro N. Alem'),
+	(1788, 20, 'Los Molles'),
+	(1789, 20, 'Luján'),
+	(1790, 20, 'Mercedes'),
+	(1791, 20, 'Merlo'),
+	(1792, 20, 'Naschel'),
+	(1793, 20, 'Navia'),
+	(1794, 20, 'Nogolí'),
+	(1795, 20, 'Nueva Galia'),
+	(1796, 20, 'Papagayos'),
+	(1797, 20, 'Paso Grande'),
+	(1798, 20, 'Potrero de Los Funes'),
+	(1799, 20, 'Quines'),
+	(1800, 20, 'Renca'),
+	(1801, 20, 'Saladillo'),
+	(1802, 20, 'San Francisco'),
+	(1803, 20, 'San Gerónimo'),
+	(1804, 20, 'San Martín'),
+	(1805, 20, 'San Pablo'),
+	(1806, 20, 'Santa Rosa de Conlara'),
+	(1807, 20, 'Talita'),
+	(1808, 20, 'Tilisarao'),
+	(1809, 20, 'Unión'),
+	(1810, 20, 'Villa de La Quebrada'),
+	(1811, 20, 'Villa de Praga'),
+	(1812, 20, 'Villa del Carmen'),
+	(1813, 20, 'Villa Gral. Roca'),
+	(1814, 20, 'Villa Larca'),
+	(1815, 20, 'Villa Mercedes'),
+	(1816, 20, 'Zanjitas'),
+	(1817, 21, 'Calafate'),
+	(1818, 21, 'Caleta Olivia'),
+	(1819, 21, 'Cañadón Seco'),
+	(1820, 21, 'Comandante Piedrabuena'),
+	(1821, 21, 'El Calafate'),
+	(1822, 21, 'El Chaltén'),
+	(1823, 21, 'Gdor. Gregores'),
+	(1824, 21, 'Hipólito Yrigoyen'),
+	(1825, 21, 'Jaramillo'),
+	(1826, 21, 'Koluel Kaike'),
+	(1827, 21, 'Las Heras'),
+	(1828, 21, 'Los Antiguos'),
+	(1829, 21, 'Perito Moreno'),
+	(1830, 21, 'Pico Truncado'),
+	(1831, 21, 'Pto. Deseado'),
+	(1832, 21, 'Pto. San Julián'),
+	(1833, 21, 'Pto. 21'),
+	(1834, 21, 'Río Cuarto'),
+	(1835, 21, 'Río Gallegos'),
+	(1836, 21, 'Río Turbio'),
+	(1837, 21, 'Tres Lagos'),
+	(1838, 21, 'Veintiocho De Noviembre'),
+	(1839, 22, 'Aarón Castellanos'),
+	(1840, 22, 'Acebal'),
+	(1841, 22, 'Aguará Grande'),
+	(1842, 22, 'Albarellos'),
+	(1843, 22, 'Alcorta'),
+	(1844, 22, 'Aldao'),
+	(1845, 22, 'Alejandra'),
+	(1846, 22, 'Álvarez'),
+	(1847, 22, 'Ambrosetti'),
+	(1848, 22, 'Amenábar'),
+	(1849, 22, 'Angélica'),
+	(1850, 22, 'Angeloni'),
+	(1851, 22, 'Arequito'),
+	(1852, 22, 'Arminda'),
+	(1853, 22, 'Armstrong'),
+	(1854, 22, 'Arocena'),
+	(1855, 22, 'Arroyo Aguiar'),
+	(1856, 22, 'Arroyo Ceibal'),
+	(1857, 22, 'Arroyo Leyes'),
+	(1858, 22, 'Arroyo Seco'),
+	(1859, 22, 'Arrufó'),
+	(1860, 22, 'Arteaga'),
+	(1861, 22, 'Ataliva'),
+	(1862, 22, 'Aurelia'),
+	(1863, 22, 'Avellaneda'),
+	(1864, 22, 'Barrancas'),
+	(1865, 22, 'Bauer Y Sigel'),
+	(1866, 22, 'Bella Italia'),
+	(1867, 22, 'Berabevú'),
+	(1868, 22, 'Berna'),
+	(1869, 22, 'Bernardo de Irigoyen'),
+	(1870, 22, 'Bigand'),
+	(1871, 22, 'Bombal'),
+	(1872, 22, 'Bouquet'),
+	(1873, 22, 'Bustinza'),
+	(1874, 22, 'Cabal'),
+	(1875, 22, 'Cacique Ariacaiquin'),
+	(1876, 22, 'Cafferata'),
+	(1877, 22, 'Calchaquí'),
+	(1878, 22, 'Campo Andino'),
+	(1879, 22, 'Campo Piaggio'),
+	(1880, 22, 'Cañada de Gómez'),
+	(1881, 22, 'Cañada del Ucle'),
+	(1882, 22, 'Cañada Rica'),
+	(1883, 22, 'Cañada Rosquín'),
+	(1884, 22, 'Candioti'),
+	(1885, 22, 'Capital'),
+	(1886, 22, 'Capitán Bermúdez'),
+	(1887, 22, 'Capivara'),
+	(1888, 22, 'Carcarañá'),
+	(1889, 22, 'Carlos Pellegrini'),
+	(1890, 22, 'Carmen'),
+	(1891, 22, 'Carmen Del Sauce'),
+	(1892, 22, 'Carreras'),
+	(1893, 22, 'Carrizales'),
+	(1894, 22, 'Casalegno'),
+	(1895, 22, 'Casas'),
+	(1896, 22, 'Casilda'),
+	(1897, 22, 'Castelar'),
+	(1898, 22, 'Castellanos'),
+	(1899, 22, 'Cayastá'),
+	(1900, 22, 'Cayastacito'),
+	(1901, 22, 'Centeno'),
+	(1902, 22, 'Cepeda'),
+	(1903, 22, 'Ceres'),
+	(1904, 22, 'Chabás'),
+	(1905, 22, 'Chañar Ladeado'),
+	(1906, 22, 'Chapuy'),
+	(1907, 22, 'Chovet'),
+	(1908, 22, 'Christophersen'),
+	(1909, 22, 'Classon'),
+	(1910, 22, 'Cnel. Arnold'),
+	(1911, 22, 'Cnel. Bogado'),
+	(1912, 22, 'Cnel. Dominguez'),
+	(1913, 22, 'Cnel. Fraga'),
+	(1914, 22, 'Col. Aldao'),
+	(1915, 22, 'Col. Ana'),
+	(1916, 22, 'Col. Belgrano'),
+	(1917, 22, 'Col. Bicha'),
+	(1918, 22, 'Col. Bigand'),
+	(1919, 22, 'Col. Bossi'),
+	(1920, 22, 'Col. Cavour'),
+	(1921, 22, 'Col. Cello'),
+	(1922, 22, 'Col. Dolores'),
+	(1923, 22, 'Col. Dos Rosas'),
+	(1924, 22, 'Col. Durán'),
+	(1925, 22, 'Col. Iturraspe'),
+	(1926, 22, 'Col. Margarita'),
+	(1927, 22, 'Col. Mascias'),
+	(1928, 22, 'Col. Raquel'),
+	(1929, 22, 'Col. Rosa'),
+	(1930, 22, 'Col. San José'),
+	(1931, 22, 'Constanza'),
+	(1932, 22, 'Coronda'),
+	(1933, 22, 'Correa'),
+	(1934, 22, 'Crispi'),
+	(1935, 22, 'Cululú'),
+	(1936, 22, 'Curupayti'),
+	(1937, 22, 'Desvio Arijón'),
+	(1938, 22, 'Diaz'),
+	(1939, 22, 'Diego de Alvear'),
+	(1940, 22, 'Egusquiza'),
+	(1941, 22, 'El Arazá'),
+	(1942, 22, 'El Rabón'),
+	(1943, 22, 'El Sombrerito'),
+	(1944, 22, 'El Trébol'),
+	(1945, 22, 'Elisa'),
+	(1946, 22, 'Elortondo'),
+	(1947, 22, 'Emilia'),
+	(1948, 22, 'Empalme San Carlos'),
+	(1949, 22, 'Empalme Villa Constitucion'),
+	(1950, 22, 'Esmeralda'),
+	(1951, 22, 'Esperanza'),
+	(1952, 22, 'Estación Alvear'),
+	(1953, 22, 'Estacion Clucellas'),
+	(1954, 22, 'Esteban Rams'),
+	(1955, 22, 'Esther'),
+	(1956, 22, 'Esustolia'),
+	(1957, 22, 'Eusebia'),
+	(1958, 22, 'Felicia'),
+	(1959, 22, 'Fidela'),
+	(1960, 22, 'Fighiera'),
+	(1961, 22, 'Firmat'),
+	(1962, 22, 'Florencia'),
+	(1963, 22, 'Fortín Olmos'),
+	(1964, 22, 'Franck'),
+	(1965, 22, 'Fray Luis Beltrán'),
+	(1966, 22, 'Frontera'),
+	(1967, 22, 'Fuentes'),
+	(1968, 22, 'Funes'),
+	(1969, 22, 'Gaboto'),
+	(1970, 22, 'Galisteo'),
+	(1971, 22, 'Gálvez'),
+	(1972, 22, 'Garabalto'),
+	(1973, 22, 'Garibaldi'),
+	(1974, 22, 'Gato Colorado'),
+	(1975, 22, 'Gdor. Crespo'),
+	(1976, 22, 'Gessler'),
+	(1977, 22, 'Godoy'),
+	(1978, 22, 'Golondrina'),
+	(1979, 22, 'Gral. Gelly'),
+	(1980, 22, 'Gral. Lagos'),
+	(1981, 22, 'Granadero Baigorria'),
+	(1982, 22, 'Gregoria Perez De Denis'),
+	(1983, 22, 'Grutly'),
+	(1984, 22, 'Guadalupe N.'),
+	(1985, 22, 'Gödeken'),
+	(1986, 22, 'Helvecia'),
+	(1987, 22, 'Hersilia'),
+	(1988, 22, 'Hipatía'),
+	(1989, 22, 'Huanqueros'),
+	(1990, 22, 'Hugentobler'),
+	(1991, 22, 'Hughes'),
+	(1992, 22, 'Humberto 1º'),
+	(1993, 22, 'Humboldt'),
+	(1994, 22, 'Ibarlucea'),
+	(1995, 22, 'Ing. Chanourdie'),
+	(1996, 22, 'Intiyaco'),
+	(1997, 22, 'Ituzaingó'),
+	(1998, 22, 'Jacinto L. Aráuz'),
+	(1999, 22, 'Josefina'),
+	(2000, 22, 'Juan B. Molina'),
+	(2001, 22, 'Juan de Garay'),
+	(2002, 22, 'Juncal'),
+	(2003, 22, 'La Brava'),
+	(2004, 22, 'La Cabral'),
+	(2005, 22, 'La Camila'),
+	(2006, 22, 'La Chispa'),
+	(2007, 22, 'La Clara'),
+	(2008, 22, 'La Criolla'),
+	(2009, 22, 'La Gallareta'),
+	(2010, 22, 'La Lucila'),
+	(2011, 22, 'La Pelada'),
+	(2012, 22, 'La Penca'),
+	(2013, 22, 'La Rubia'),
+	(2014, 22, 'La Sarita'),
+	(2015, 22, 'La Vanguardia'),
+	(2016, 22, 'Labordeboy'),
+	(2017, 22, 'Laguna Paiva'),
+	(2018, 22, 'Landeta'),
+	(2019, 22, 'Lanteri'),
+	(2020, 22, 'Larrechea'),
+	(2021, 22, 'Las Avispas'),
+	(2022, 22, 'Las Bandurrias'),
+	(2023, 22, 'Las Garzas'),
+	(2024, 22, 'Las Palmeras'),
+	(2025, 22, 'Las Parejas'),
+	(2026, 22, 'Las Petacas'),
+	(2027, 22, 'Las Rosas'),
+	(2028, 22, 'Las Toscas'),
+	(2029, 22, 'Las Tunas'),
+	(2030, 22, 'Lazzarino'),
+	(2031, 22, 'Lehmann'),
+	(2032, 22, 'Llambi Campbell'),
+	(2033, 22, 'Logroño'),
+	(2034, 22, 'Loma Alta'),
+	(2035, 22, 'López'),
+	(2036, 22, 'Los Amores'),
+	(2037, 22, 'Los Cardos'),
+	(2038, 22, 'Los Laureles'),
+	(2039, 22, 'Los Molinos'),
+	(2040, 22, 'Los Quirquinchos'),
+	(2041, 22, 'Lucio V. Lopez'),
+	(2042, 22, 'Luis Palacios'),
+	(2043, 22, 'Ma. Juana'),
+	(2044, 22, 'Ma. Luisa'),
+	(2045, 22, 'Ma. Susana'),
+	(2046, 22, 'Ma. Teresa'),
+	(2047, 22, 'Maciel'),
+	(2048, 22, 'Maggiolo'),
+	(2049, 22, 'Malabrigo'),
+	(2050, 22, 'Marcelino Escalada'),
+	(2051, 22, 'Margarita'),
+	(2052, 22, 'Matilde'),
+	(2053, 22, 'Mauá'),
+	(2054, 22, 'Máximo Paz'),
+	(2055, 22, 'Melincué'),
+	(2056, 22, 'Miguel Torres'),
+	(2057, 22, 'Moisés Ville'),
+	(2058, 22, 'Monigotes'),
+	(2059, 22, 'Monje'),
+	(2060, 22, 'Monte Obscuridad'),
+	(2061, 22, 'Monte Vera'),
+	(2062, 22, 'Montefiore'),
+	(2063, 22, 'Montes de Oca'),
+	(2064, 22, 'Murphy'),
+	(2065, 22, 'Ñanducita'),
+	(2066, 22, 'Naré'),
+	(2067, 22, 'Nelson'),
+	(2068, 22, 'Nicanor E. Molinas'),
+	(2069, 22, 'Nuevo Torino'),
+	(2070, 22, 'Oliveros'),
+	(2071, 22, 'Palacios'),
+	(2072, 22, 'Pavón'),
+	(2073, 22, 'Pavón Arriba'),
+	(2074, 22, 'Pedro Gómez Cello'),
+	(2075, 22, 'Pérez'),
+	(2076, 22, 'Peyrano'),
+	(2077, 22, 'Piamonte'),
+	(2078, 22, 'Pilar'),
+	(2079, 22, 'Piñero'),
+	(2080, 22, 'Plaza Clucellas'),
+	(2081, 22, 'Portugalete'),
+	(2082, 22, 'Pozo Borrado'),
+	(2083, 22, 'Progreso'),
+	(2084, 22, 'Providencia'),
+	(2085, 22, 'Pte. Roca'),
+	(2086, 22, 'Pueblo Andino'),
+	(2087, 22, 'Pueblo Esther'),
+	(2088, 22, 'Pueblo Gral. San Martín'),
+	(2089, 22, 'Pueblo Irigoyen'),
+	(2090, 22, 'Pueblo Marini'),
+	(2091, 22, 'Pueblo Muñoz'),
+	(2092, 22, 'Pueblo Uranga'),
+	(2093, 22, 'Pujato'),
+	(2094, 22, 'Pujato N.'),
+	(2095, 22, 'Rafaela'),
+	(2096, 22, 'Ramayón'),
+	(2097, 22, 'Ramona'),
+	(2098, 22, 'Reconquista'),
+	(2099, 22, 'Recreo'),
+	(2100, 22, 'Ricardone'),
+	(2101, 22, 'Rivadavia'),
+	(2102, 22, 'Roldán'),
+	(2103, 22, 'Romang'),
+	(2104, 22, 'Rosario'),
+	(2105, 22, 'Rueda'),
+	(2106, 22, 'Rufino'),
+	(2107, 22, 'Sa Pereira'),
+	(2108, 22, 'Saguier'),
+	(2109, 22, 'Saladero M. Cabal'),
+	(2110, 22, 'Salto Grande'),
+	(2111, 22, 'San Agustín'),
+	(2112, 22, 'San Antonio de Obligado'),
+	(2113, 22, 'San Bernardo (N.J.)'),
+	(2114, 22, 'San Bernardo (S.J.)'),
+	(2115, 22, 'San Carlos Centro'),
+	(2116, 22, 'San Carlos N.'),
+	(2117, 22, 'San Carlos S.'),
+	(2118, 22, 'San Cristóbal'),
+	(2119, 22, 'San Eduardo'),
+	(2120, 22, 'San Eugenio'),
+	(2121, 22, 'San Fabián'),
+	(2122, 22, 'San Fco. de Santa Fé'),
+	(2123, 22, 'San Genaro'),
+	(2124, 22, 'San Genaro N.'),
+	(2125, 22, 'San Gregorio'),
+	(2126, 22, 'San Guillermo'),
+	(2127, 22, 'San Javier'),
+	(2128, 22, 'San Jerónimo del Sauce'),
+	(2129, 22, 'San Jerónimo N.'),
+	(2130, 22, 'San Jerónimo S.'),
+	(2131, 22, 'San Jorge'),
+	(2132, 22, 'San José de La Esquina'),
+	(2133, 22, 'San José del Rincón'),
+	(2134, 22, 'San Justo'),
+	(2135, 22, 'San Lorenzo'),
+	(2136, 22, 'San Mariano'),
+	(2137, 22, 'San Martín de Las Escobas'),
+	(2138, 22, 'San Martín N.'),
+	(2139, 22, 'San Vicente'),
+	(2140, 22, 'Sancti Spititu'),
+	(2141, 22, 'Sanford'),
+	(2142, 22, 'Santo Domingo'),
+	(2143, 22, 'Santo Tomé'),
+	(2144, 22, 'Santurce'),
+	(2145, 22, 'Sargento Cabral'),
+	(2146, 22, 'Sarmiento'),
+	(2147, 22, 'Sastre'),
+	(2148, 22, 'Sauce Viejo'),
+	(2149, 22, 'Serodino'),
+	(2150, 22, 'Silva'),
+	(2151, 22, 'Soldini'),
+	(2152, 22, 'Soledad'),
+	(2153, 22, 'Soutomayor'),
+	(2154, 22, 'Sta. Clara de Buena Vista'),
+	(2155, 22, 'Sta. Clara de Saguier'),
+	(2156, 22, 'Sta. Isabel'),
+	(2157, 22, 'Sta. Margarita'),
+	(2158, 22, 'Sta. Maria Centro'),
+	(2159, 22, 'Sta. María N.'),
+	(2160, 22, 'Sta. Rosa'),
+	(2161, 22, 'Sta. Teresa'),
+	(2162, 22, 'Suardi'),
+	(2163, 22, 'Sunchales'),
+	(2164, 22, 'Susana'),
+	(2165, 22, 'Tacuarendí'),
+	(2166, 22, 'Tacural'),
+	(2167, 22, 'Tartagal'),
+	(2168, 22, 'Teodelina'),
+	(2169, 22, 'Theobald'),
+	(2170, 22, 'Timbúes'),
+	(2171, 22, 'Toba'),
+	(2172, 22, 'Tortugas'),
+	(2173, 22, 'Tostado'),
+	(2174, 22, 'Totoras'),
+	(2175, 22, 'Traill'),
+	(2176, 22, 'Venado Tuerto'),
+	(2177, 22, 'Vera'),
+	(2178, 22, 'Vera y Pintado'),
+	(2179, 22, 'Videla'),
+	(2180, 22, 'Vila'),
+	(2181, 22, 'Villa Amelia'),
+	(2182, 22, 'Villa Ana'),
+	(2183, 22, 'Villa Cañas'),
+	(2184, 22, 'Villa Constitución'),
+	(2185, 22, 'Villa Eloísa'),
+	(2186, 22, 'Villa Gdor. Gálvez'),
+	(2187, 22, 'Villa Guillermina'),
+	(2188, 22, 'Villa Minetti'),
+	(2189, 22, 'Villa Mugueta'),
+	(2190, 22, 'Villa Ocampo'),
+	(2191, 22, 'Villa San José'),
+	(2192, 22, 'Villa Saralegui'),
+	(2193, 22, 'Villa Trinidad'),
+	(2194, 22, 'Villada'),
+	(2195, 22, 'Virginia'),
+	(2196, 22, 'Wheelwright'),
+	(2197, 22, 'Zavalla'),
+	(2198, 22, 'Zenón Pereira'),
+	(2199, 23, 'Añatuya'),
+	(2200, 23, 'Árraga'),
+	(2201, 23, 'Bandera'),
+	(2202, 23, 'Bandera Bajada'),
+	(2203, 23, 'Beltrán'),
+	(2204, 23, 'Brea Pozo'),
+	(2205, 23, 'Campo Gallo'),
+	(2206, 23, 'Capital'),
+	(2207, 23, 'Chilca Juliana'),
+	(2208, 23, 'Choya'),
+	(2209, 23, 'Clodomira'),
+	(2210, 23, 'Col. Alpina'),
+	(2211, 23, 'Col. Dora'),
+	(2212, 23, 'Col. El Simbolar Robles'),
+	(2213, 23, 'El Bobadal'),
+	(2214, 23, 'El Charco'),
+	(2215, 23, 'El Mojón'),
+	(2216, 23, 'Estación Atamisqui'),
+	(2217, 23, 'Estación Simbolar'),
+	(2218, 23, 'Fernández'),
+	(2219, 23, 'Fortín Inca'),
+	(2220, 23, 'Frías'),
+	(2221, 23, 'Garza'),
+	(2222, 23, 'Gramilla'),
+	(2223, 23, 'Guardia Escolta'),
+	(2224, 23, 'Herrera'),
+	(2225, 23, 'Icaño'),
+	(2226, 23, 'Ing. Forres'),
+	(2227, 23, 'La Banda'),
+	(2228, 23, 'La Cañada'),
+	(2229, 23, 'Laprida'),
+	(2230, 23, 'Lavalle'),
+	(2231, 23, 'Loreto'),
+	(2232, 23, 'Los Juríes'),
+	(2233, 23, 'Los Núñez'),
+	(2234, 23, 'Los Pirpintos'),
+	(2235, 23, 'Los Quiroga'),
+	(2236, 23, 'Los Telares'),
+	(2237, 23, 'Lugones'),
+	(2238, 23, 'Malbrán'),
+	(2239, 23, 'Matara'),
+	(2240, 23, 'Medellín'),
+	(2241, 23, 'Monte Quemado'),
+	(2242, 23, 'Nueva Esperanza'),
+	(2243, 23, 'Nueva Francia'),
+	(2244, 23, 'Palo Negro'),
+	(2245, 23, 'Pampa de Los Guanacos'),
+	(2246, 23, 'Pinto'),
+	(2247, 23, 'Pozo Hondo'),
+	(2248, 23, 'Quimilí'),
+	(2249, 23, 'Real Sayana'),
+	(2250, 23, 'Sachayoj'),
+	(2251, 23, 'San Pedro de Guasayán'),
+	(2252, 23, 'Selva'),
+	(2253, 23, 'Sol de Julio'),
+	(2254, 23, 'Sumampa'),
+	(2255, 23, 'Suncho Corral'),
+	(2256, 23, 'Taboada'),
+	(2257, 23, 'Tapso'),
+	(2258, 23, 'Termas de Rio Hondo'),
+	(2259, 23, 'Tintina'),
+	(2260, 23, 'Tomas Young'),
+	(2261, 23, 'Vilelas'),
+	(2262, 23, 'Villa Atamisqui'),
+	(2263, 23, 'Villa La Punta'),
+	(2264, 23, 'Villa Ojo de Agua'),
+	(2265, 23, 'Villa Río Hondo'),
+	(2266, 23, 'Villa Salavina'),
+	(2267, 23, 'Villa Unión'),
+	(2268, 23, 'Vilmer'),
+	(2269, 23, 'Weisburd'),
+	(2270, 24, 'Río Grande'),
+	(2271, 24, 'Tolhuin'),
+	(2272, 24, 'Ushuaia'),
+	(2273, 25, 'Acheral'),
+	(2274, 25, 'Agua Dulce'),
+	(2275, 25, 'Aguilares'),
+	(2276, 25, 'Alderetes'),
+	(2277, 25, 'Alpachiri'),
+	(2278, 25, 'Alto Verde'),
+	(2279, 25, 'Amaicha del Valle'),
+	(2280, 25, 'Amberes'),
+	(2281, 25, 'Ancajuli'),
+	(2282, 25, 'Arcadia'),
+	(2283, 25, 'Atahona'),
+	(2284, 25, 'Banda del Río Sali'),
+	(2285, 25, 'Bella Vista'),
+	(2286, 25, 'Buena Vista'),
+	(2287, 25, 'Burruyacú'),
+	(2288, 25, 'Capitán Cáceres'),
+	(2289, 25, 'Cevil Redondo'),
+	(2290, 25, 'Choromoro'),
+	(2291, 25, 'Ciudacita'),
+	(2292, 25, 'Colalao del Valle'),
+	(2293, 25, 'Colombres'),
+	(2294, 25, 'Concepción'),
+	(2295, 25, 'Delfín Gallo'),
+	(2296, 25, 'El Bracho'),
+	(2297, 25, 'El Cadillal'),
+	(2298, 25, 'El Cercado'),
+	(2299, 25, 'El Chañar'),
+	(2300, 25, 'El Manantial'),
+	(2301, 25, 'El Mojón'),
+	(2302, 25, 'El Mollar'),
+	(2303, 25, 'El Naranjito'),
+	(2304, 25, 'El Naranjo'),
+	(2305, 25, 'El Polear'),
+	(2306, 25, 'El Puestito'),
+	(2307, 25, 'El Sacrificio'),
+	(2308, 25, 'El Timbó'),
+	(2309, 25, 'Escaba'),
+	(2310, 25, 'Esquina'),
+	(2311, 25, 'Estación Aráoz'),
+	(2312, 25, 'Famaillá'),
+	(2313, 25, 'Gastone'),
+	(2314, 25, 'Gdor. Garmendia'),
+	(2315, 25, 'Gdor. Piedrabuena'),
+	(2316, 25, 'Graneros'),
+	(2317, 25, 'Huasa Pampa'),
+	(2318, 25, 'J. B. Alberdi'),
+	(2319, 25, 'La Cocha'),
+	(2320, 25, 'La Esperanza'),
+	(2321, 25, 'La Florida'),
+	(2322, 25, 'La Ramada'),
+	(2323, 25, 'La Trinidad'),
+	(2324, 25, 'Lamadrid'),
+	(2325, 25, 'Las Cejas'),
+	(2326, 25, 'Las Talas'),
+	(2327, 25, 'Las Talitas'),
+	(2328, 25, 'Los Bulacio'),
+	(2329, 25, 'Los Gómez'),
+	(2330, 25, 'Los Nogales'),
+	(2331, 25, 'Los Pereyra'),
+	(2332, 25, 'Los Pérez'),
+	(2333, 25, 'Los Puestos'),
+	(2334, 25, 'Los Ralos'),
+	(2335, 25, 'Los Sarmientos'),
+	(2336, 25, 'Los Sosa'),
+	(2337, 25, 'Lules'),
+	(2338, 25, 'M. García Fernández'),
+	(2339, 25, 'Manuela Pedraza'),
+	(2340, 25, 'Medinas'),
+	(2341, 25, 'Monte Bello'),
+	(2342, 25, 'Monteagudo'),
+	(2343, 25, 'Monteros'),
+	(2344, 25, 'Padre Monti'),
+	(2345, 25, 'Pampa Mayo'),
+	(2346, 25, 'Quilmes'),
+	(2347, 25, 'Raco'),
+	(2348, 25, 'Ranchillos'),
+	(2349, 25, 'Río Chico'),
+	(2350, 25, 'Río Colorado'),
+	(2351, 25, 'Río Seco'),
+	(2352, 25, 'Rumi Punco'),
+	(2353, 25, 'San Andrés'),
+	(2354, 25, 'San Felipe'),
+	(2355, 25, 'San Ignacio'),
+	(2356, 25, 'San Javier'),
+	(2357, 25, 'San José'),
+	(2358, 25, 'San Miguel de 25'),
+	(2359, 25, 'San Pedro'),
+	(2360, 25, 'San Pedro de Colalao'),
+	(2361, 25, 'Santa Rosa de Leales'),
+	(2362, 25, 'Sgto. Moya'),
+	(2363, 25, 'Siete de Abril'),
+	(2364, 25, 'Simoca'),
+	(2365, 25, 'Soldado Maldonado'),
+	(2366, 25, 'Sta. Ana'),
+	(2367, 25, 'Sta. Cruz'),
+	(2368, 25, 'Sta. Lucía'),
+	(2369, 25, 'Taco Ralo'),
+	(2370, 25, 'Tafí del Valle'),
+	(2371, 25, 'Tafí Viejo'),
+	(2372, 25, 'Tapia'),
+	(2373, 25, 'Teniente Berdina'),
+	(2374, 25, 'Trancas'),
+	(2375, 25, 'Villa Belgrano'),
+	(2376, 25, 'Villa Benjamín Araoz'),
+	(2377, 25, 'Villa Chiligasta'),
+	(2378, 25, 'Villa de Leales'),
+	(2379, 25, 'Villa Quinteros'),
+	(2380, 25, 'Yánima'),
+	(2381, 25, 'Yerba Buena'),
+	(2382, 25, 'Yerba Buena (S)');
+/*!40000 ALTER TABLE `localidades` ENABLE KEYS */;
 
-
-		SELECT distinct a.id, a.codigo, a.detalle, m.nombre AS marca, r.nombre AS rubro
-
-		FROM articulos a
-
-		JOIN art_compuesto ac
-
-			ON ac.idarticulo = a.id
-
-		LEFT JOIN marcas m
-
-			ON m.id = a.idmarca
-
-		LEFT JOIN rubros r
-
-			ON r.id = a.idrubro;
-
-END//
-DELIMITER ;
-
--- Volcando estructura para tabla erp.marcas
+-- Volcando estructura para tabla erp-super2.marcas
 CREATE TABLE IF NOT EXISTS `marcas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3351 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.marcas: ~53 rows (aproximadamente)
+INSERT INTO `marcas` (`id`, `nombre`) VALUES
+	(1, 'El Super Mercado'),
+	(2, 'La Posadeña'),
+	(3, 'La Virginia'),
+	(4, 'Celusal'),
+	(5, 'Graciela Real'),
+	(6, 'Lucchetti'),
+	(7, 'La Serenisima'),
+	(8, 'Cif'),
+	(9, 'Ambalí'),
+	(10, 'Vivere'),
+	(11, 'Nivea'),
+	(12, 'X-5'),
+	(13, 'Heineken'),
+	(14, 'Schweppes'),
+	(15, 'Magistral'),
+	(16, 'Mr. Musculo'),
+	(17, 'Gillette'),
+	(18, 'Chango'),
+	(19, 'Tregar'),
+	(20, 'Taragüí'),
+	(21, 'La Blanca'),
+	(22, 'Savora'),
+	(23, 'Yuspe'),
+	(24, 'Hellmann\'s'),
+	(25, 'Doña sal'),
+	(26, 'Graciela Real'),
+	(27, 'Cadea'),
+	(28, 'Legumpack'),
+	(29, 'Terrabusi'),
+	(30, 'Matarazzo'),
+	(31, 'Panadería Lucia'),
+	(32, 'Garnier'),
+	(33, 'Head & Shoulders'),
+	(34, 'Bagley'),
+	(35, 'Avicola Gilardi'),
+	(36, 'Cocinero'),
+	(37, 'La Italiana'),
+	(38, 'Baggio'),
+	(39, 'Coca Cola'),
+	(40, 'Caracas'),
+	(41, 'Rexona'),
+	(42, '53'),
+	(43, 'Lem'),
+	(44, 'Nescafe'),
+	(45, 'Hileret'),
+	(46, 'Schneider'),
+	(3338, 'La Paulina'),
+	(3339, 'Lux'),
+	(3340, 'Porta'),
+	(3341, 'Dove'),
+	(3342, 'Higienol'),
+	(3343, 'Oral-B'),
+	(3344, 'Terma'),
+	(3345, 'Alicante'),
+	(3346, 'Punta del agua'),
+	(3347, 'Fox'),
+	(3348, 'Paladini'),
+	(3349, 'Lario'),
+	(3350, 'Campo Austral');
+
+-- Volcando estructura para tabla erp-super2.mensajes
+CREATE TABLE IF NOT EXISTS `mensajes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idsucursal` int NOT NULL,
+  `idusuario` int NOT NULL,
+  `fecha` date NOT NULL,
+  `hora` time NOT NULL,
+  `tipo` varchar(10) NOT NULL DEFAULT '',
+  `titulo` varchar(80) NOT NULL DEFAULT '',
+  `subtitulo` varchar(80) DEFAULT '',
+  `mensaje` varchar(300) NOT NULL DEFAULT '',
+  `idusr_destino` int DEFAULT NULL,
+  `idsuc_destino` int DEFAULT NULL,
+  `leido` smallint NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.mensajes: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.monedas_billetes
+CREATE TABLE IF NOT EXISTS `monedas_billetes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `descripcion` varchar(100) NOT NULL,
+  `valor` decimal(20,6) NOT NULL,
+  `baja` date NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.monedas_billetes: ~10 rows (aproximadamente)
+INSERT INTO `monedas_billetes` (`id`, `descripcion`, `valor`, `baja`) VALUES
+	(1, 'Billete de $10', 10.000000, '1900-01-01'),
+	(2, 'Billete de $20', 20.000000, '1900-01-01'),
+	(3, 'Billete de $50', 50.000000, '1900-01-01'),
+	(4, 'Billete de $100', 100.000000, '1900-01-01'),
+	(5, 'Billete de $200', 200.000000, '1900-01-01'),
+	(6, 'Billete $500', 500.000000, '1900-01-01'),
+	(7, 'Billete de $1000', 1000.000000, '1900-01-01'),
+	(8, 'Billete de $2000', 2000.000000, '1900-01-01'),
+	(9, 'Billete de $10000', 10000.000000, '1900-01-01'),
+	(10, 'Billete de $20000', 20000.000000, '1900-01-01');
+
+-- Volcando estructura para tabla erp-super2.mov_entidades
+CREATE TABLE IF NOT EXISTS `mov_entidades` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idfactura` int NOT NULL,
+  `identidad` int NOT NULL,
+  `cuotas` int NOT NULL,
+  `total` decimal(20,6) NOT NULL,
+  `intereses` decimal(20,6) NOT NULL,
+  `documento` varchar(20) NOT NULL,
+  `telefono` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idfactura` (`idfactura`),
+  KEY `identidad` (`identidad`),
+  CONSTRAINT `mov_entidades_ibfk_1` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`),
+  CONSTRAINT `mov_entidades_ibfk_2` FOREIGN KEY (`identidad`) REFERENCES `entidades` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.mov_entidades: ~8 rows (aproximadamente)
+INSERT INTO `mov_entidades` (`id`, `idfactura`, `identidad`, `cuotas`, `total`, `intereses`, `documento`, `telefono`) VALUES
+	(3, 278, 1, 1, 16819.000000, 16819.000000, '123', '123'),
+	(4, 280, 3, 1, 2407.900000, 2407.900000, '1', '1'),
+	(5, 282, 3, 1, 12559.800000, 12559.800000, '1', '1'),
+	(6, 285, 3, 1, 5360.300000, 5360.300000, '', ''),
+	(7, 287, 3, 1, 7423.350000, 7423.350000, '', ''),
+	(8, 291, 3, 1, 18265.600000, 18265.600000, '', ''),
+	(9, 293, 3, 1, 10188.200000, 10188.200000, '', ''),
+	(10, 295, 3, 1, 45617.250000, 45617.250000, '', '');
+
+-- Volcando estructura para tabla erp-super2.ofertas
+CREATE TABLE IF NOT EXISTS `ofertas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `tipo_oferta` enum('NORMAL','VINCULADA','MAYOR_MENOR_VALOR') NOT NULL DEFAULT 'NORMAL',
+  `tipo_descuento` enum('PORCENTAJE','MONTO_FIJO') NOT NULL,
+  `valor_descuento` decimal(10,2) NOT NULL,
+  `cantidad_minima` decimal(10,2) NOT NULL,
+  `multiplos` tinyint(1) DEFAULT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `regla_seleccion` enum('NO_APLICA','MENOR_VALOR','MAYOR_VALOR','ESPECIFICO') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'MENOR_VALOR',
+  `es_condicion_compra` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.ofertas: ~0 rows (aproximadamente)
+INSERT INTO `ofertas` (`id`, `nombre`, `tipo_oferta`, `tipo_descuento`, `valor_descuento`, `cantidad_minima`, `multiplos`, `fecha_inicio`, `fecha_fin`, `regla_seleccion`, `es_condicion_compra`) VALUES
+	(19, 'Art. de limpieza 30% ', 'NORMAL', 'PORCENTAJE', 30.00, 1.00, 0, '2025-09-01', '2025-09-30', 'NO_APLICA', 1);
+
+-- Volcando estructura para tabla erp-super2.ofertas_condiciones
+CREATE TABLE IF NOT EXISTS `ofertas_condiciones` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_oferta` int NOT NULL,
+  `id_tipo_condicion` int NOT NULL,
+  `id_referencia` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_oferta` (`id_oferta`),
+  KEY `id_tipo_condicion` (`id_tipo_condicion`),
+  CONSTRAINT `ofertas_condiciones_ibfk_1` FOREIGN KEY (`id_oferta`) REFERENCES `ofertas` (`id`),
+  CONSTRAINT `ofertas_condiciones_ibfk_2` FOREIGN KEY (`id_tipo_condicion`) REFERENCES `tipo_condiciones` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.ofertas_condiciones: ~0 rows (aproximadamente)
+INSERT INTO `ofertas_condiciones` (`id`, `id_oferta`, `id_tipo_condicion`, `id_referencia`) VALUES
+	(34, 19, 2, 6);
+
+-- Volcando estructura para tabla erp-super2.ofertas_vinculadas
+CREATE TABLE IF NOT EXISTS `ofertas_vinculadas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_oferta` int NOT NULL,
+  `id_articulo_origen` int NOT NULL,
+  `id_articulo_destino` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_oferta` (`id_oferta`),
+  KEY `id_articulo_origen` (`id_articulo_origen`),
+  KEY `id_articulo_destino` (`id_articulo_destino`),
+  CONSTRAINT `ofertas_vinculadas_ibfk_1` FOREIGN KEY (`id_oferta`) REFERENCES `ofertas` (`id`),
+  CONSTRAINT `ofertas_vinculadas_ibfk_2` FOREIGN KEY (`id_articulo_origen`) REFERENCES `articulos` (`id`),
+  CONSTRAINT `ofertas_vinculadas_ibfk_3` FOREIGN KEY (`id_articulo_destino`) REFERENCES `articulos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.ofertas_vinculadas: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.opciones_menu
+CREATE TABLE IF NOT EXISTS `opciones_menu` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(50) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` varchar(200) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.opciones_menu: ~0 rows (aproximadamente)
 
--- Volcando estructura para procedimiento erp.mas_vendidos
-DELIMITER //
-CREATE PROCEDURE `mas_vendidos`(
+-- Volcando estructura para tabla erp-super2.opciones_plan_sistema
+CREATE TABLE IF NOT EXISTS `opciones_plan_sistema` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_plan_sistema` int NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `habilitada` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_plan_sistema` (`id_plan_sistema`),
+  CONSTRAINT `opciones_plan_sistema_ibfk_1` FOREIGN KEY (`id_plan_sistema`) REFERENCES `planes_sistema` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-	IN `sucursal` INT,
+-- Volcando datos para la tabla erp-super2.opciones_plan_sistema: ~17 rows (aproximadamente)
+INSERT INTO `opciones_plan_sistema` (`id`, `id_plan_sistema`, `nombre`, `habilitada`) VALUES
+	(1, 1, 'Artículos hasta 100', 1),
+	(2, 1, 'Ventas hasta 100 op.', 1),
+	(3, 2, 'Articulos hasta 500', 1),
+	(4, 2, 'Ventas hasta 500 op.', 1),
+	(5, 2, 'Compras y gastos', 1),
+	(6, 1, 'Compras y gastos', 1),
+	(7, 3, 'Articulos libres', 1),
+	(8, 3, 'Ventas hasta 5000 operaciones', 1),
+	(9, 3, 'Compras y gastos', 1),
+	(10, 3, 'Cta. Cte. de clientes', 1),
+	(11, 3, 'Cta. Cte. proveedores', 1),
+	(12, 4, 'Articulos libres', 1),
+	(13, 4, 'Ventas ilimitadas', 1),
+	(14, 4, 'Compras y gastos', 1),
+	(15, 4, 'Cta. Cte. de clientes', 1),
+	(16, 4, 'Cta. Cte. proveedores', 1),
+	(17, 4, 'Créditos personales', 1);
 
-	IN `desde` DATE,
-
-	IN `hasta` DATE,
-
-	IN `cant_registros` INT
-
-)
-BEGIN
-
-	SELECT  a.codigo, a.detalle, SUM(i.cantidad) AS cantidad
-
-	FROM articulos a
-
-	JOIN itemsv i ON a.id = i.idarticulo
-
-	JOIN facturav f ON i.idfactura = f.id
-
-	where
-
-	   f.idsucursal = sucursal AND
-
-		f.fecha BETWEEN desde AND hasta
-
-	GROUP BY a.codigo, a.detalle
-
-	ORDER BY cantidad desc
-
-	LIMIT cant_registros;
-
-
-
-END//
-DELIMITER ;
-
--- Volcando estructura para tabla erp.pagos_cobros
+-- Volcando estructura para tabla erp-super2.pagos_cobros
 CREATE TABLE IF NOT EXISTS `pagos_cobros` (
   `id` int NOT NULL AUTO_INCREMENT,
   `pagos_cobros` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.pagos_cobros: ~7 rows (aproximadamente)
+INSERT INTO `pagos_cobros` (`id`, `pagos_cobros`) VALUES
+	(1, 'Efectivo'),
+	(2, 'Tarjeta de crédito'),
+	(3, 'Cta. Cte.'),
+	(4, 'Bonificación'),
+	(5, 'Crédito'),
+	(6, 'Cheques'),
+	(7, 'Valores de 3°');
 
--- Volcando estructura para tabla erp.pagos_fc
+-- Volcando estructura para tabla erp-super2.pagos_creditos
+CREATE TABLE IF NOT EXISTS `pagos_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idcredito` int NOT NULL,
+  `idvencimiento` int NOT NULL,
+  `idfactura` int DEFAULT NULL,
+  `fecha_pago` date NOT NULL,
+  `monto` decimal(20,6) NOT NULL,
+  `punitorios` decimal(20,6) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idcredito` (`idcredito`),
+  KEY `idvencimiento` (`idvencimiento`),
+  KEY `idfactura` (`idfactura`),
+  CONSTRAINT `pagos_creditos_ibfk_1` FOREIGN KEY (`idcredito`) REFERENCES `creditos` (`id`),
+  CONSTRAINT `pagos_creditos_ibfk_2` FOREIGN KEY (`idvencimiento`) REFERENCES `vencimientos_creditos` (`id`),
+  CONSTRAINT `pagos_creditos_ibfk_3` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.pagos_creditos: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.pagos_fc
 CREATE TABLE IF NOT EXISTS `pagos_fc` (
   `idfactura` int NOT NULL,
   `idpago` int NOT NULL,
@@ -759,9 +3501,9 @@ CREATE TABLE IF NOT EXISTS `pagos_fc` (
   CONSTRAINT `pagos_fc_ibfk_1` FOREIGN KEY (`idfactura`) REFERENCES `facturac` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.pagos_fc: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.pagos_fv
+-- Volcando estructura para tabla erp-super2.pagos_fv
 CREATE TABLE IF NOT EXISTS `pagos_fv` (
   `idfactura` int NOT NULL,
   `idpago` int NOT NULL,
@@ -772,35 +3514,324 @@ CREATE TABLE IF NOT EXISTS `pagos_fv` (
   CONSTRAINT `pagos_fv_ibfk_1` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.pagos_fv: ~17 rows (aproximadamente)
+INSERT INTO `pagos_fv` (`idfactura`, `idpago`, `tipo`, `total`, `entidad`) VALUES
+	(277, 1, 1, 11000.000000, 0),
+	(278, 2, 2, 16819.000000, 1),
+	(279, 1, 1, 5000.000000, 0),
+	(280, 2, 2, 2407.900000, 3),
+	(281, 1, 1, 10000.000000, 0),
+	(282, 2, 2, 12559.800000, 3),
+	(283, 1, 1, 9000.000000, 0),
+	(284, 1, 1, 900.000000, 0),
+	(285, 2, 2, 5360.300000, 3),
+	(286, 3, 3, 19118.000000, 0),
+	(287, 2, 2, 7423.350000, 3),
+	(288, 1, 1, 6848.600000, 0),
+	(289, 1, 1, 4264.500000, 0),
+	(290, 1, 1, 7220.000000, 0),
+	(291, 2, 2, 18265.600000, 3),
+	(292, 1, 1, 32040.700000, 0),
+	(293, 2, 2, 10188.200000, 3),
+	(294, 1, 1, 10841.150000, 0),
+	(295, 2, 2, 45617.250000, 3),
+	(297, 1, 1, 6388.800000, 0),
+	(297, 99, 1, 611.200000, 0);
 
--- Volcando estructura para tabla erp.plan_ctas
+-- Volcando estructura para tabla erp-super2.permisos_menu
+CREATE TABLE IF NOT EXISTS `permisos_menu` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_opcion_menu` int NOT NULL,
+  `id_tarea` int NOT NULL,
+  `activo` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_opcion_menu` (`id_opcion_menu`),
+  KEY `id_tarea` (`id_tarea`),
+  CONSTRAINT `permisos_menu_ibfk_1` FOREIGN KEY (`id_opcion_menu`) REFERENCES `opciones_menu` (`id`),
+  CONSTRAINT `permisos_menu_ibfk_2` FOREIGN KEY (`id_tarea`) REFERENCES `tareas` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.permisos_menu: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.planes_creditos
+CREATE TABLE IF NOT EXISTS `planes_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` varchar(500) NOT NULL,
+  `tasa_interes` float NOT NULL,
+  `cuotas` int NOT NULL,
+  `anticipo` tinyint(1) DEFAULT NULL,
+  `garantes` smallint NOT NULL,
+  `baja` date DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.planes_creditos: ~6 rows (aproximadamente)
+INSERT INTO `planes_creditos` (`id`, `nombre`, `descripcion`, `tasa_interes`, `cuotas`, `anticipo`, `garantes`, `baja`) VALUES
+	(1, 'Plan A', 'Plan A', 5, 12, 1, 1, '1900-01-01'),
+	(2, 'Plan B', 'Plan B', 6, 18, 1, 1, '1900-01-01'),
+	(3, 'Plan C', 'Plan B', 10, 18, 1, 2, '1900-01-01'),
+	(4, 'Plan B2', 'Plan B2', 6.5, 12, 0, 1, '1900-01-01'),
+	(5, 'C2', 'Plan C2', 7, 12, 0, 1, '1900-01-01'),
+	(6, 'Plan A Super', 'Plan A para clientes calificacion AAA', 3, 24, 1, 1, '1900-01-01');
+
+-- Volcando estructura para tabla erp-super2.planes_creditos_documentos
+CREATE TABLE IF NOT EXISTS `planes_creditos_documentos` (
+  `iddocumento_credito` int NOT NULL,
+  `idplan_credito` int NOT NULL,
+  PRIMARY KEY (`iddocumento_credito`,`idplan_credito`),
+  KEY `idplan_credito` (`idplan_credito`),
+  CONSTRAINT `planes_creditos_documentos_ibfk_1` FOREIGN KEY (`iddocumento_credito`) REFERENCES `documentos_creditos` (`id`),
+  CONSTRAINT `planes_creditos_documentos_ibfk_2` FOREIGN KEY (`idplan_credito`) REFERENCES `planes_creditos` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.planes_creditos_documentos: ~9 rows (aproximadamente)
+INSERT INTO `planes_creditos_documentos` (`iddocumento_credito`, `idplan_credito`) VALUES
+	(1, 1),
+	(1, 2),
+	(2, 2),
+	(1, 3),
+	(2, 3),
+	(3, 3),
+	(1, 4),
+	(2, 4),
+	(3, 4);
+
+-- Volcando estructura para tabla erp-super2.planes_sistema
+CREATE TABLE IF NOT EXISTS `planes_sistema` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.planes_sistema: ~4 rows (aproximadamente)
+INSERT INTO `planes_sistema` (`id`, `nombre`) VALUES
+	(1, 'Inicial'),
+	(2, 'Intermedio'),
+	(3, 'Plus'),
+	(4, 'Empresa');
+
+-- Volcando estructura para tabla erp-super2.plan_ctas
 CREATE TABLE IF NOT EXISTS `plan_ctas` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.plan_ctas: ~7 rows (aproximadamente)
+INSERT INTO `plan_ctas` (`id`, `nombre`) VALUES
+	(0, 'Sin cuenta'),
+	(1, 'Alquileres'),
+	(2, 'Telefono'),
+	(3, 'Energia electrica'),
+	(4, 'Libreria'),
+	(5, 'Limpieza'),
+	(6, 'Mercadería');
 
--- Volcando estructura para tabla erp.precios
+-- Volcando estructura para tabla erp-super2.precios
 CREATE TABLE IF NOT EXISTS `precios` (
   `idlista` int NOT NULL,
   `idarticulo` int NOT NULL,
   `precio` decimal(20,6) NOT NULL,
-  `ult_modificacion` datetime NOT NULL,
+  `ult_modificacion` date NOT NULL,
   PRIMARY KEY (`idlista`,`idarticulo`),
   KEY `idarticulo` (`idarticulo`),
   CONSTRAINT `precios_ibfk_1` FOREIGN KEY (`idlista`) REFERENCES `listas_precio` (`id`),
   CONSTRAINT `precios_ibfk_2` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.precios: ~129 rows (aproximadamente)
+INSERT INTO `precios` (`idlista`, `idarticulo`, `precio`, `ult_modificacion`) VALUES
+	(1, 1, 5082.000000, '2025-08-25'),
+	(1, 2, 2783.000000, '2025-08-25'),
+	(1, 3, 1185.800000, '2025-08-25'),
+	(1, 4, 8203.800000, '2025-08-25'),
+	(1, 5, 5687.000000, '2025-08-25'),
+	(1, 6, 10527.000000, '2025-08-25'),
+	(1, 7, 2783.000000, '2025-08-25'),
+	(1, 8, 3388.000000, '2025-08-25'),
+	(1, 9, 4222.900000, '2025-08-25'),
+	(1, 10, 8107.000000, '2025-08-25'),
+	(1, 11, 9438.000000, '2025-08-25'),
+	(1, 12, 9438.000000, '2025-08-25'),
+	(1, 13, 3509.000000, '2025-08-25'),
+	(1, 14, 810.700000, '2025-08-25'),
+	(1, 15, 1452.000000, '2025-08-25'),
+	(1, 16, 1452.000000, '2025-08-25'),
+	(1, 17, 1197.900000, '2025-08-25'),
+	(1, 18, 5445.000000, '2025-08-25'),
+	(1, 19, 4235.000000, '2025-08-25'),
+	(1, 20, 4235.000000, '2025-08-25'),
+	(1, 21, 943.800000, '2025-08-25'),
+	(1, 22, 834.900000, '2025-08-25'),
+	(1, 23, 810.700000, '2025-08-25'),
+	(1, 24, 1452.000000, '2025-08-25'),
+	(1, 25, 3872.000000, '2025-08-25'),
+	(1, 26, 2783.000000, '2025-08-25'),
+	(1, 27, 2783.000000, '2025-08-25'),
+	(1, 28, 2783.000000, '2025-08-25'),
+	(1, 29, 8228.000000, '2025-08-25'),
+	(1, 30, 1815.000000, '2025-08-25'),
+	(1, 31, 2964.500000, '2025-08-25'),
+	(1, 32, 2964.500000, '2025-08-25'),
+	(1, 33, 4682.700000, '2025-08-25'),
+	(1, 34, 4235.000000, '2025-08-25'),
+	(1, 35, 6328.300000, '2025-08-25'),
+	(1, 36, 810.700000, '2025-09-11'),
+	(1, 37, 1573.000000, '2025-08-25'),
+	(1, 38, 108.900000, '2025-09-11'),
+	(1, 39, 9559.000000, '2025-08-25'),
+	(1, 40, 9559.000000, '2025-08-25'),
+	(1, 41, 9546.900000, '2025-08-25'),
+	(1, 42, 11858.000000, '2025-08-25'),
+	(1, 43, 14883.000000, '2025-08-25'),
+	(1, 44, 5687.000000, '2025-08-25'),
+	(1, 45, 6930.000000, '2025-08-26'),
+	(1, 46, 5324.000000, '2025-08-26'),
+	(1, 47, 5082.000000, '2025-08-26'),
+	(1, 48, 1452.000000, '2025-08-25'),
+	(1, 49, 2783.000000, '2025-08-25'),
+	(1, 50, 2831.400000, '2025-08-25'),
+	(1, 51, 4114.000000, '2025-08-25'),
+	(1, 52, 1076.900000, '2025-08-25'),
+	(1, 53, 2299.000000, '2025-08-25'),
+	(1, 54, 3388.000000, '2025-08-25'),
+	(1, 55, 1452.000000, '2025-08-25'),
+	(1, 56, 2783.000000, '2025-08-25'),
+	(1, 57, 4235.000000, '2025-08-25'),
+	(1, 58, 4174.500000, '2025-08-25'),
+	(1, 59, 9196.000000, '2025-08-25'),
+	(1, 60, 2100.000000, '2025-08-25'),
+	(1, 69, 1052.700000, '2025-08-26'),
+	(1, 70, 0.000000, '2025-08-26'),
+	(1, 560209, 2795.100000, '2025-08-25'),
+	(1, 560210, 1615.350000, '2025-08-26'),
+	(1, 560211, 1800.000000, '2025-08-26'),
+	(1, 560212, 3517.500000, '2025-08-26'),
+	(1, 560213, 5808.000000, '2025-08-26'),
+	(1, 560214, 7840.800000, '2025-08-26'),
+	(1, 560215, 1179.750000, '2025-08-26'),
+	(1, 560216, 2259.680000, '2025-08-26'),
+	(1, 560217, 1052.700000, '2025-08-26'),
+	(1, 560218, 1.810000, '2025-08-26'),
+	(1, 560219, 12160.500000, '2025-08-26'),
+	(1, 560220, 8712.000000, '2025-08-26'),
+	(1, 560221, 11434.500000, '2025-08-26'),
+	(1, 560222, 7804.500000, '2025-08-26'),
+	(1, 560223, 8712.000000, '2025-08-26'),
+	(1, 560224, 7986.000000, '2025-08-26'),
+	(1, 560225, 7623.000000, '2025-08-26'),
+	(1, 560226, 7713.750000, '2025-08-26'),
+	(1, 560227, 12342.000000, '2025-08-26'),
+	(1, 560228, 270.000000, '2025-08-26'),
+	(1, 560229, 1.810000, '2025-08-26'),
+	(2, 16, 0.000000, '2025-08-25'),
+	(2, 36, 0.000000, '2025-09-11'),
+	(2, 38, 0.000000, '2025-09-11'),
+	(2, 45, 9240.000000, '2025-08-26'),
+	(2, 46, 0.000000, '2025-08-26'),
+	(2, 47, 0.000000, '2025-08-26'),
+	(2, 60, 0.000000, '2025-08-25'),
+	(2, 69, 1403.600000, '2025-08-26'),
+	(2, 70, 0.000000, '2025-08-26'),
+	(2, 560209, 3726.800000, '2025-08-25'),
+	(2, 560210, 2153.800000, '2025-08-26'),
+	(2, 560211, 2400.000000, '2025-08-26'),
+	(2, 560212, 4690.000000, '2025-08-26'),
+	(2, 560213, 7744.000000, '2025-08-26'),
+	(2, 560214, 10454.400000, '2025-08-26'),
+	(2, 560215, 1573.000000, '2025-08-26'),
+	(2, 560216, 3012.900000, '2025-08-26'),
+	(2, 560217, 1403.600000, '2025-08-26'),
+	(2, 560218, 2.420000, '2025-08-26'),
+	(2, 560219, 16214.000000, '2025-08-26'),
+	(2, 560220, 11616.000000, '2025-08-26'),
+	(2, 560221, 15246.000000, '2025-08-26'),
+	(2, 560222, 10406.000000, '2025-08-26'),
+	(2, 560223, 11616.000000, '2025-08-26'),
+	(2, 560224, 10648.000000, '2025-08-26'),
+	(2, 560225, 10164.000000, '2025-08-26'),
+	(2, 560226, 10285.000000, '2025-08-26'),
+	(2, 560227, 16456.000000, '2025-08-26'),
+	(2, 560228, 360.000000, '2025-08-26'),
+	(2, 560229, 2.420000, '2025-08-26'),
+	(3, 16, 0.000000, '2025-08-25'),
+	(3, 36, 0.000000, '2025-09-11'),
+	(3, 38, 0.000000, '2025-09-11'),
+	(3, 45, 10164.000000, '2025-08-26'),
+	(3, 46, 0.000000, '2025-08-26'),
+	(3, 47, 0.000000, '2025-08-26'),
+	(3, 60, 0.000000, '2025-08-25'),
+	(3, 69, 1543.960000, '2025-08-26'),
+	(3, 70, 0.000000, '2025-08-26'),
+	(3, 560209, 4099.480000, '2025-08-25'),
+	(3, 560210, 2369.180000, '2025-08-26'),
+	(3, 560211, 2640.000000, '2025-08-26'),
+	(3, 560212, 5159.000000, '2025-08-26'),
+	(3, 560213, 8518.400000, '2025-08-26'),
+	(3, 560214, 11499.840000, '2025-08-26'),
+	(3, 560215, 1730.300000, '2025-08-26'),
+	(3, 560216, 3314.190000, '2025-08-26'),
+	(3, 560217, 1543.960000, '2025-08-26'),
+	(3, 560218, 2.660000, '2025-08-26'),
+	(3, 560219, 17835.400000, '2025-08-26'),
+	(3, 560220, 12777.600000, '2025-08-26'),
+	(3, 560221, 16770.600000, '2025-08-26'),
+	(3, 560222, 11446.600000, '2025-08-26'),
+	(3, 560223, 12777.600000, '2025-08-26'),
+	(3, 560224, 11712.800000, '2025-08-26'),
+	(3, 560225, 11180.400000, '2025-08-26'),
+	(3, 560226, 11313.500000, '2025-08-26'),
+	(3, 560227, 18101.600000, '2025-08-26'),
+	(3, 560228, 396.000000, '2025-08-26'),
+	(3, 560229, 2.660000, '2025-08-26');
 
--- Volcando estructura para tabla erp.proveedores
+-- Volcando estructura para tabla erp-super2.presupuesto
+CREATE TABLE IF NOT EXISTS `presupuesto` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idcliente` int NOT NULL,
+  `idlista` int NOT NULL,
+  `fecha` date NOT NULL,
+  `validez` date NOT NULL,
+  `total` decimal(20,6) NOT NULL,
+  `idtipocomprobante` int DEFAULT NULL,
+  `idsucursal` int DEFAULT NULL,
+  `idusuario` int DEFAULT NULL,
+  `nro_comprobante` varchar(13) NOT NULL,
+  `punto_vta` int NOT NULL,
+  `estado` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idcliente` (`idcliente`),
+  KEY `idlista` (`idlista`),
+  KEY `idtipocomprobante` (`idtipocomprobante`),
+  KEY `idsucursal` (`idsucursal`),
+  KEY `idusuario` (`idusuario`),
+  CONSTRAINT `presupuesto_ibfk_1` FOREIGN KEY (`idcliente`) REFERENCES `clientes` (`id`),
+  CONSTRAINT `presupuesto_ibfk_2` FOREIGN KEY (`idlista`) REFERENCES `listas_precio` (`id`),
+  CONSTRAINT `presupuesto_ibfk_3` FOREIGN KEY (`idtipocomprobante`) REFERENCES `tipo_comprobantes` (`id`),
+  CONSTRAINT `presupuesto_ibfk_4` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
+  CONSTRAINT `presupuesto_ibfk_5` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.presupuesto: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.presupuestos_facturas
+CREATE TABLE IF NOT EXISTS `presupuestos_facturas` (
+  `idpresupuesto` int NOT NULL,
+  `idfactura` int NOT NULL,
+  PRIMARY KEY (`idpresupuesto`,`idfactura`),
+  KEY `idfactura` (`idfactura`),
+  CONSTRAINT `presupuestos_facturas_ibfk_1` FOREIGN KEY (`idpresupuesto`) REFERENCES `presupuesto` (`id`),
+  CONSTRAINT `presupuestos_facturas_ibfk_2` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.presupuestos_facturas: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.proveedores
 CREATE TABLE IF NOT EXISTS `proveedores` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(80) DEFAULT NULL,
+  `fantasia` varchar(80) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `documento` varchar(13) DEFAULT NULL,
@@ -812,15 +3843,65 @@ CREATE TABLE IF NOT EXISTS `proveedores` (
   KEY `id_tipo_iva` (`id_tipo_iva`),
   CONSTRAINT `proveedores_ibfk_1` FOREIGN KEY (`id_tipo_doc`) REFERENCES `tipo_doc` (`id`),
   CONSTRAINT `proveedores_ibfk_2` FOREIGN KEY (`id_tipo_iva`) REFERENCES `tipo_iva` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2780 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.proveedores: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.provincias
+CREATE TABLE IF NOT EXISTS `provincias` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provincia` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=26 DEFAULT CHARSET=latin1;
+
+-- Volcando datos para la tabla erp-super2.provincias: 25 rows
+/*!40000 ALTER TABLE `provincias` DISABLE KEYS */;
+INSERT INTO `provincias` (`id`, `provincia`) VALUES
+	(1, 'Buenos Aires'),
+	(2, 'Buenos Aires-GBA'),
+	(3, 'Capital Federal'),
+	(4, 'Catamarca'),
+	(5, 'Chaco'),
+	(6, 'Chubut'),
+	(7, 'Córdoba'),
+	(8, 'Corrientes'),
+	(9, 'Entre Ríos'),
+	(10, 'Formosa'),
+	(11, 'Jujuy'),
+	(12, 'La Pampa'),
+	(13, 'La Rioja'),
+	(14, 'Mendoza'),
+	(15, 'Misiones'),
+	(16, 'Neuquén'),
+	(17, 'Río Negro'),
+	(18, 'Salta'),
+	(19, 'San Juan'),
+	(20, 'San Luis'),
+	(21, 'Santa Cruz'),
+	(22, 'Santa Fe'),
+	(23, 'Santiago del Estero'),
+	(24, 'Tierra del Fuego'),
+	(25, 'Tucumán');
+/*!40000 ALTER TABLE `provincias` ENABLE KEYS */;
+
+-- Volcando estructura para tabla erp-super2.prov_by_art
+CREATE TABLE IF NOT EXISTS `prov_by_art` (
+  `idarticulo` int NOT NULL,
+  `idproveedor` int NOT NULL,
+  `cod_proveedor` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`idarticulo`,`idproveedor`),
+  KEY `idproveedor` (`idproveedor`),
+  CONSTRAINT `prov_by_art_ibfk_1` FOREIGN KEY (`idarticulo`) REFERENCES `articulos` (`id`),
+  CONSTRAINT `prov_by_art_ibfk_2` FOREIGN KEY (`idproveedor`) REFERENCES `proveedores` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.prov_by_art: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.puntos_venta
+-- Volcando estructura para tabla erp-super2.puntos_venta
 CREATE TABLE IF NOT EXISTS `puntos_venta` (
   `id` int NOT NULL AUTO_INCREMENT,
   `punto_vta` int NOT NULL,
-  `idsucursal` int NOT NULL,
+  `idsucursal` int DEFAULT NULL,
   `ultima_fac_a` int NOT NULL,
   `ultima_fac_b` int NOT NULL,
   `ultima_tkt` int NOT NULL,
@@ -833,14 +3914,50 @@ CREATE TABLE IF NOT EXISTS `puntos_venta` (
   `ultima_nc_c` int NOT NULL,
   `ultimo_rem_x` int NOT NULL,
   `ultimo_rec_x` int NOT NULL,
+  `certificado_p12` varchar(300) DEFAULT NULL,
+  `clave_certificado` varchar(50) DEFAULT NULL,
+  `token` varchar(1000) DEFAULT NULL,
+  `sign` varchar(500) DEFAULT NULL,
+  `expiration` datetime DEFAULT NULL,
+  `fac_electronica` smallint NOT NULL DEFAULT '0',
+  `pos_printer` varchar(100) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `idsucursal` (`idsucursal`),
   CONSTRAINT `puntos_venta_ibfk_1` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.puntos_venta: ~4 rows (aproximadamente)
+INSERT INTO `puntos_venta` (`id`, `punto_vta`, `idsucursal`, `ultima_fac_a`, `ultima_fac_b`, `ultima_tkt`, `ultima_fac_c`, `ultima_deb_a`, `ultima_deb_b`, `ultima_deb_c`, `ultima_nc_a`, `ultima_nc_b`, `ultima_nc_c`, `ultimo_rem_x`, `ultimo_rec_x`, `certificado_p12`, `clave_certificado`, `token`, `sign`, `expiration`, `fac_electronica`, `pos_printer`) VALUES
+	(1, 1, 1, 0, 0, 168, 45, 0, 0, 1, 0, 0, 8, 2, 1, 'alias.p12', 'clave123', 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgc3JjPSJDTj13c2FhaG9tbywgTz1BRklQLCBDPUFSLCBTRVJJQUxOVU1CRVI9Q1VJVCAzMzY5MzQ1MDIzOSIgZHN0PSJDTj13c2ZlLCBPPUFGSVAsIEM9QVIiIHVuaXF1ZV9pZD0iMTY4MDU1NzYwMSIgZ2VuX3RpbWU9IjE3NTI1Mjg1NTkiIGV4cF90aW1lPSIxNzUyNTcxODE5Ii8+CiAgICA8b3BlcmF0aW9uIHR5cGU9ImxvZ2luIiB2YWx1ZT0iZ3JhbnRlZCI+CiAgICAgICAgPGxvZ2luIGVudGl0eT0iMzM2OTM0NTAyMzkiIHNlcnZpY2U9IndzZmUiIHVpZD0iU0VSSUFMTlVNQkVSPUNVSVQgMjAyMTg3Njc0MDEsIENOPWFkcmlhbnp1c3Npbm8iIGF1dGhtZXRob2Q9ImNtcyIgcmVnbWV0aG9kPSIyMiI+CiAgICAgICAgICAgIDxyZWxhdGlvbnM+CiAgICAgICAgICAgICAgICA8cmVsYXRpb24ga2V5PSIyMDIxODc2NzQwMSIgcmVsdHlwZT0iNCIvPgogICAgICAgICAgICA8L3JlbGF0aW9ucz4KICAgICAgICA8L2xvZ2luPgogICAgPC9vcGVyYXRpb24+Cjwvc3NvPgo=', 'CDqJ0cI5sESLOnNOU0AiKsFVFefwixs+EbQYUODk/9ZyEkimI/oHI5SVUnD1VB5BYXefyFEkE7uz3EaoWjvotujl1635B6vmd4t+ytBDc75Xu3f84+kS41orvgWNAQcKg4EB6vYgsMj1nYP7wSZ2KPBVhVhoWPDcVOt7Vfyyz0Y=', '2025-07-15 06:30:19', 1, 'POS Printer 203DPI Series'),
+	(2, 2, 2, 0, 0, 25, 3, 0, 0, 1, 0, 0, 1, 2, 3, NULL, NULL, NULL, NULL, NULL, 0, 'POS Printer 203DPI Series'),
+	(3, 3, 1, 0, 0, 61, 4, 0, 0, 1, 0, 0, 1, 0, 0, 'alias.p12', 'clave123', 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgc3JjPSJDTj13c2FhaG9tbywgTz1BRklQLCBDPUFSLCBTRVJJQUxOVU1CRVI9Q1VJVCAzMzY5MzQ1MDIzOSIgZHN0PSJDTj13c2ZlLCBPPUFGSVAsIEM9QVIiIHVuaXF1ZV9pZD0iMzA1MzAwMzIwNiIgZ2VuX3RpbWU9IjE3NTc1OTMyNDIiIGV4cF90aW1lPSIxNzU3NjM2NTAyIi8+CiAgICA8b3BlcmF0aW9uIHR5cGU9ImxvZ2luIiB2YWx1ZT0iZ3JhbnRlZCI+CiAgICAgICAgPGxvZ2luIGVudGl0eT0iMzM2OTM0NTAyMzkiIHNlcnZpY2U9IndzZmUiIHVpZD0iU0VSSUFMTlVNQkVSPUNVSVQgMjAyMTg3Njc0MDEsIENOPWFkcmlhbnp1c3Npbm8iIGF1dGhtZXRob2Q9ImNtcyIgcmVnbWV0aG9kPSIyMiI+CiAgICAgICAgICAgIDxyZWxhdGlvbnM+CiAgICAgICAgICAgICAgICA8cmVsYXRpb24ga2V5PSIyMDIxODc2NzQwMSIgcmVsdHlwZT0iNCIvPgogICAgICAgICAgICA8L3JlbGF0aW9ucz4KICAgICAgICA8L2xvZ2luPgogICAgPC9vcGVyYXRpb24+Cjwvc3NvPgo=', 'EX+LGRgBxytPegSzdn4iZITAGMIPxJgH/Kc8SKxUnB6bakryqd84TJp25fL8XXjZGqVc/7Tz/Og6fnj80XpHYv2mCDhIlzbkXZZZ9P4mpyNqOdSdlpZXiRCI7+fIydobTmjwFoUnAUOZx7WC/BMpvMpjDnpAVdIO43aZPoaUjDg=', '2025-09-11 21:21:43', 1, ''),
+	(4, 4, 2, 0, 0, 1, 3, 0, 0, 1, 0, 0, 1, 0, 0, NULL, NULL, NULL, NULL, NULL, 0, '');
 
--- Volcando estructura para tabla erp.remito_sucursales
+-- Volcando estructura para tabla erp-super2.remitosvta_facturas
+CREATE TABLE IF NOT EXISTS `remitosvta_facturas` (
+  `idremito` int NOT NULL,
+  `idfactura` int NOT NULL,
+  PRIMARY KEY (`idremito`,`idfactura`),
+  KEY `idfactura` (`idfactura`),
+  CONSTRAINT `remitosvta_facturas_ibfk_1` FOREIGN KEY (`idremito`) REFERENCES `facturav` (`id`),
+  CONSTRAINT `remitosvta_facturas_ibfk_2` FOREIGN KEY (`idfactura`) REFERENCES `facturav` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.remitosvta_facturas: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.remito_facturas
+CREATE TABLE IF NOT EXISTS `remito_facturas` (
+  `idremito` int NOT NULL,
+  `idfactura` int NOT NULL,
+  PRIMARY KEY (`idremito`,`idfactura`),
+  KEY `idfactura` (`idfactura`),
+  CONSTRAINT `remito_facturas_ibfk_1` FOREIGN KEY (`idremito`) REFERENCES `facturac` (`id`),
+  CONSTRAINT `remito_facturas_ibfk_2` FOREIGN KEY (`idfactura`) REFERENCES `facturac` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.remito_facturas: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.remito_sucursales
 CREATE TABLE IF NOT EXISTS `remito_sucursales` (
   `id` int NOT NULL AUTO_INCREMENT,
   `idsucursal` int NOT NULL,
@@ -854,20 +3971,65 @@ CREATE TABLE IF NOT EXISTS `remito_sucursales` (
   CONSTRAINT `remito_sucursales_ibfk_1` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
   CONSTRAINT `remito_sucursales_ibfk_2` FOREIGN KEY (`iddestino`) REFERENCES `sucursales` (`id`),
   CONSTRAINT `remito_sucursales_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.remito_sucursales: ~0 rows (aproximadamente)
 
--- Volcando estructura para tabla erp.rubros
+-- Volcando estructura para tabla erp-super2.rendiciones_caja
+CREATE TABLE IF NOT EXISTS `rendiciones_caja` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `fecha` date NOT NULL,
+  `idusuario` int NOT NULL,
+  `idpunto_vta` int NOT NULL,
+  `idsucursal` int NOT NULL,
+  `idtipo_rendicion` int NOT NULL,
+  `total_ventas` decimal(20,6) NOT NULL,
+  `total_efectivo` decimal(20,6) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idusuario` (`idusuario`),
+  KEY `idpunto_vta` (`idpunto_vta`),
+  KEY `idsucursal` (`idsucursal`),
+  KEY `idtipo_rendicion` (`idtipo_rendicion`),
+  CONSTRAINT `rendiciones_caja_ibfk_1` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`id`),
+  CONSTRAINT `rendiciones_caja_ibfk_2` FOREIGN KEY (`idpunto_vta`) REFERENCES `puntos_venta` (`id`),
+  CONSTRAINT `rendiciones_caja_ibfk_3` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`),
+  CONSTRAINT `rendiciones_caja_ibfk_4` FOREIGN KEY (`idtipo_rendicion`) REFERENCES `tipo_rendiciones` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.rendiciones_caja: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla erp-super2.rubros
 CREATE TABLE IF NOT EXISTS `rubros` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.rubros: ~18 rows (aproximadamente)
+INSERT INTO `rubros` (`id`, `nombre`) VALUES
+	(1, 'Lacteos'),
+	(2, 'Harinas'),
+	(3, 'Aderezos'),
+	(4, 'Panificación'),
+	(5, 'Cuidado personal'),
+	(6, 'Art. de Limpieza'),
+	(7, 'Insecticidas y repelentes'),
+	(8, 'Cervezas'),
+	(9, 'Gaseosas, aguas saborizadas y amargos'),
+	(10, 'Conservas'),
+	(11, 'Cereales y legumbres'),
+	(12, 'Te, cafe y yerbas'),
+	(13, 'Fideos y pastas secas'),
+	(14, 'Galletas dulces'),
+	(15, 'Avicola'),
+	(16, 'Fideos y pastas frescas'),
+	(17, 'Salsas'),
+	(18, 'Azucares y edulcorantes'),
+	(43, 'Verdulería'),
+	(44, 'Carnes'),
+	(45, 'Fiambrería');
 
--- Volcando estructura para tabla erp.stocks
+-- Volcando estructura para tabla erp-super2.stocks
 CREATE TABLE IF NOT EXISTS `stocks` (
   `idstock` int NOT NULL,
   `idarticulo` int NOT NULL,
@@ -882,250 +4044,311 @@ CREATE TABLE IF NOT EXISTS `stocks` (
   CONSTRAINT `stocks_ibfk_2` FOREIGN KEY (`idsucursal`) REFERENCES `sucursales` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.stocks: ~38 rows (aproximadamente)
+INSERT INTO `stocks` (`idstock`, `idarticulo`, `idsucursal`, `actual`, `maximo`, `deseable`) VALUES
+	(1, 1, 1, -1.000000, 0.000000, 0.000000),
+	(1, 7, 1, -1.000000, 0.000000, 0.000000),
+	(1, 12, 1, -1.000000, 0.000000, 0.000000),
+	(1, 14, 1, -1.000000, 0.000000, 0.000000),
+	(1, 22, 1, -1.000000, 0.000000, 0.000000),
+	(1, 28, 1, -1.000000, 0.000000, 0.000000),
+	(1, 30, 1, -2.000000, 0.000000, 0.000000),
+	(1, 31, 1, -3.000000, 0.000000, 0.000000),
+	(1, 32, 1, -1.000000, 0.000000, 0.000000),
+	(1, 35, 1, -2.000000, 0.000000, 0.000000),
+	(1, 36, 1, -4.000000, 0.000000, 0.000000),
+	(1, 37, 1, -2.000000, 0.000000, 0.000000),
+	(1, 38, 1, -13.000000, 0.000000, 0.000000),
+	(1, 39, 1, -1.000000, 0.000000, 0.000000),
+	(1, 40, 1, -1.000000, 0.000000, 0.000000),
+	(1, 48, 1, -2.000000, 0.000000, 0.000000),
+	(1, 50, 1, -5.000000, 0.000000, 0.000000),
+	(1, 52, 1, -1.000000, 0.000000, 0.000000),
+	(1, 56, 1, -1.000000, 0.000000, 0.000000),
+	(1, 57, 1, -2.000000, 0.000000, 0.000000),
+	(1, 60, 1, -1.000000, 0.000000, 0.000000),
+	(1, 69, 1, -1.000000, 0.000000, 0.000000),
+	(1, 70, 1, -2.000000, 0.000000, 0.000000),
+	(1, 560209, 1, -2.000000, 0.000000, 0.000000),
+	(1, 560210, 1, -1.000000, 0.000000, 0.000000),
+	(1, 560213, 1, -1.000000, 0.000000, 0.000000),
+	(1, 560217, 1, -1.000000, 0.000000, 0.000000),
+	(1, 560219, 1, -1.200000, 0.000000, 0.000000),
+	(1, 560221, 1, -2.200000, 0.000000, 0.000000),
+	(1, 560222, 1, -0.400000, 0.000000, 0.000000),
+	(1, 560228, 1, -6.000000, 0.000000, 0.000000),
+	(1, 560229, 1, -1.000000, 0.000000, 0.000000),
+	(2, 2, 2, -1.000000, 0.000000, 0.000000),
+	(2, 19, 2, -1.000000, 0.000000, 0.000000),
+	(2, 37, 2, -2.000000, 0.000000, 0.000000),
+	(2, 38, 2, -6.000000, 0.000000, 0.000000),
+	(2, 48, 2, -1.000000, 0.000000, 0.000000),
+	(2, 70, 2, -2.000000, 0.000000, 0.000000),
+	(2, 560219, 2, -2.500000, 0.000000, 0.000000),
+	(2, 560223, 2, -0.200000, 0.000000, 0.000000),
+	(2, 560226, 2, -0.200000, 0.000000, 0.000000),
+	(2, 560227, 2, -0.300000, 0.000000, 0.000000);
 
--- Volcando estructura para tabla erp.sucursales
+-- Volcando estructura para tabla erp-super2.sucursales
 CREATE TABLE IF NOT EXISTS `sucursales` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `direccion` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `telefono` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `direccion` varchar(100) NOT NULL,
+  `telefono` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
   `alta` datetime NOT NULL,
   `baja` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.sucursales: ~2 rows (aproximadamente)
+INSERT INTO `sucursales` (`id`, `nombre`, `direccion`, `telefono`, `email`, `alta`, `baja`) VALUES
+	(1, 'Central', 'tucuman', '1234', 'el_super_mercado@elsupermercado.com.ar', '2024-11-27 15:00:17', '0000-00-00 00:00:00'),
+	(2, 'Rivadavia', 'tucuman', '12345', 'el_super_mercado@elsupermercado.com.ar', '2024-11-28 08:18:31', '0000-00-00 00:00:00');
 
--- Volcando estructura para tabla erp.tareas
+-- Volcando estructura para tabla erp-super2.tareas
 CREATE TABLE IF NOT EXISTS `tareas` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `tarea` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `tarea` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tareas: ~5 rows (aproximadamente)
+INSERT INTO `tareas` (`id`, `tarea`) VALUES
+	(1, 'Supervisor'),
+	(2, 'Administrativo'),
+	(3, 'Cajero'),
+	(4, 'Vendedor'),
+	(5, 'Deposito');
 
--- Volcando estructura para tabla erp.tareas_usuario
+-- Volcando estructura para tabla erp-super2.tareas_usuario
 CREATE TABLE IF NOT EXISTS `tareas_usuario` (
   `idtarea` int NOT NULL,
   `idusuario` int NOT NULL,
   PRIMARY KEY (`idtarea`,`idusuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tareas_usuario: ~0 rows (aproximadamente)
+INSERT INTO `tareas_usuario` (`idtarea`, `idusuario`) VALUES
+	(1, 2);
 
--- Volcando estructura para tabla erp.tipo_articulos
+-- Volcando estructura para tabla erp-super2.tipo_articulos
 CREATE TABLE IF NOT EXISTS `tipo_articulos` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_articulos: ~3 rows (aproximadamente)
+INSERT INTO `tipo_articulos` (`id`, `nombre`) VALUES
+	(1, 'Producto'),
+	(2, 'Servicio'),
+	(3, 'Insumo');
 
--- Volcando estructura para tabla erp.tipo_balances
+-- Volcando estructura para tabla erp-super2.tipo_balances
 CREATE TABLE IF NOT EXISTS `tipo_balances` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_balances: ~2 rows (aproximadamente)
+INSERT INTO `tipo_balances` (`id`, `nombre`) VALUES
+	(1, 'Balance'),
+	(2, 'Ajuste');
 
--- Volcando estructura para tabla erp.tipo_comprobantes
+-- Volcando estructura para tabla erp-super2.tipo_comprobantes
 CREATE TABLE IF NOT EXISTS `tipo_comprobantes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `id_afip` int NOT NULL DEFAULT '0',
-  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `id_afip` int DEFAULT NULL,
+  `nombre` varchar(50) DEFAULT NULL,
+  `letra` varchar(5) DEFAULT NULL,
+  `discrimina_iva` smallint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_comprobantes: ~14 rows (aproximadamente)
+INSERT INTO `tipo_comprobantes` (`id`, `id_afip`, `nombre`, `letra`, `discrimina_iva`) VALUES
+	(1, 1, 'A', 'A', 1),
+	(2, 6, 'B', 'B', 1),
+	(3, 11, 'C', 'C', 0),
+	(4, 0, 'TKT', 'TKT', 1),
+	(5, 3, 'CRED A', 'A', 1),
+	(6, 8, 'CRED B', 'B', 1),
+	(7, 0, 'CRED C', 'C', 0),
+	(8, 2, 'DEB A', 'A', 1),
+	(9, 7, 'DEB B', 'C', 1),
+	(10, 0, 'DEB C', 'C', 0),
+	(11, 0, 'REM X', 'X', 0),
+	(12, 0, 'REC X', 'X', 0),
+	(13, 0, 'PRESUPUESTO', 'P', 0),
+	(14, 0, 'ORDEN DE PAGO', 'OP', 0);
 
--- Volcando estructura para tabla erp.tipo_comp_aplica
+-- Volcando estructura para tabla erp-super2.tipo_comp_aplica
 CREATE TABLE IF NOT EXISTS `tipo_comp_aplica` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `id_iva_owner` int NOT NULL,
-  `id_iva_entidad` int NOT NULL,
-  `id_tipo_comp` int NOT NULL,
-  `id_tipo_oper` int NOT NULL,
+  `id_iva_owner` int DEFAULT NULL,
+  `id_iva_entidad` int DEFAULT NULL,
+  `id_tipo_comp` int DEFAULT NULL,
+  `id_tipo_oper` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_iva_owner` (`id_iva_owner`),
-  KEY `FK_iva_entidad` (`id_iva_entidad`),
-  KEY `FK_tipo_oper` (`id_tipo_oper`),
-  KEY `FK_tipo_comp` (`id_tipo_comp`) USING BTREE,
-  CONSTRAINT `FK_iva_entidad` FOREIGN KEY (`id_iva_entidad`) REFERENCES `tipo_iva` (`id`),
-  CONSTRAINT `FK_iva_owner` FOREIGN KEY (`id_iva_owner`) REFERENCES `tipo_iva` (`id`),
-  CONSTRAINT `FK_tipo_comp` FOREIGN KEY (`id_tipo_comp`) REFERENCES `tipo_comprobantes` (`id`),
-  CONSTRAINT `FK_tipo_oper` FOREIGN KEY (`id_tipo_oper`) REFERENCES `tipo_operacion` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `id_iva_owner` (`id_iva_owner`),
+  KEY `id_iva_entidad` (`id_iva_entidad`),
+  KEY `id_tipo_comp` (`id_tipo_comp`),
+  KEY `id_tipo_oper` (`id_tipo_oper`),
+  CONSTRAINT `tipo_comp_aplica_ibfk_1` FOREIGN KEY (`id_iva_owner`) REFERENCES `tipo_iva` (`id`),
+  CONSTRAINT `tipo_comp_aplica_ibfk_2` FOREIGN KEY (`id_iva_entidad`) REFERENCES `tipo_iva` (`id`),
+  CONSTRAINT `tipo_comp_aplica_ibfk_3` FOREIGN KEY (`id_tipo_comp`) REFERENCES `tipo_comprobantes` (`id`),
+  CONSTRAINT `tipo_comp_aplica_ibfk_4` FOREIGN KEY (`id_tipo_oper`) REFERENCES `tipo_operacion` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_comp_aplica: ~17 rows (aproximadamente)
+INSERT INTO `tipo_comp_aplica` (`id`, `id_iva_owner`, `id_iva_entidad`, `id_tipo_comp`, `id_tipo_oper`) VALUES
+	(1, 2, 1, 3, 1),
+	(2, 2, 2, 3, 1),
+	(3, 2, 3, 3, 1),
+	(4, 2, 4, 3, 1),
+	(5, 2, 1, 1, 2),
+	(6, 2, 2, 3, 2),
+	(7, 2, 3, 4, 2),
+	(8, 2, 4, 2, 2),
+	(9, 2, 1, 12, 6),
+	(10, 2, 3, 11, 5),
+	(11, 2, 4, 11, 5),
+	(12, 2, 2, 11, 5),
+	(13, 2, 1, 11, 5),
+	(14, 2, 1, 13, 7),
+	(15, 2, 2, 13, 7),
+	(16, 2, 3, 13, 7),
+	(17, 2, 4, 13, 7);
 
--- Volcando estructura para tabla erp.tipo_doc
+-- Volcando estructura para tabla erp-super2.tipo_condiciones
+CREATE TABLE IF NOT EXISTS `tipo_condiciones` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `descripcion` varchar(200) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.tipo_condiciones: ~4 rows (aproximadamente)
+INSERT INTO `tipo_condiciones` (`id`, `nombre`, `descripcion`) VALUES
+	(1, 'Articulo', 'Ofertas por cód de artículo'),
+	(2, 'Rubro', 'Ofertas por rubro'),
+	(3, 'Marca', 'Ofertas por marca'),
+	(4, 'Cantidad', 'Ofertas por cantidad de articulos');
+
+-- Volcando estructura para tabla erp-super2.tipo_doc
 CREATE TABLE IF NOT EXISTS `tipo_doc` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nombre` varchar(30) DEFAULT NULL,
   `id_afip` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_doc: ~3 rows (aproximadamente)
+INSERT INTO `tipo_doc` (`id`, `nombre`, `id_afip`) VALUES
+	(1, 'DNI', 96),
+	(2, 'CUIL', 86),
+	(3, 'CUIT', 80);
 
--- Volcando estructura para tabla erp.tipo_iva
+-- Volcando estructura para tabla erp-super2.tipo_iva
 CREATE TABLE IF NOT EXISTS `tipo_iva` (
-  `id` int NOT NULL,
-  `descripcion` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `id` int NOT NULL AUTO_INCREMENT,
+  `descripcion` varchar(50) NOT NULL,
+  `id_afip` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_iva: ~4 rows (aproximadamente)
+INSERT INTO `tipo_iva` (`id`, `descripcion`, `id_afip`) VALUES
+	(1, 'Responsable inscripto', 1),
+	(2, 'Monotributista', 6),
+	(3, 'Consumidor final', 5),
+	(4, 'Exento', 4);
 
--- Volcando estructura para tabla erp.tipo_operacion
+-- Volcando estructura para tabla erp-super2.tipo_mov_bancos
+CREATE TABLE IF NOT EXISTS `tipo_mov_bancos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `descripcion` varchar(200) NOT NULL,
+  `tipo_operacion` varchar(1) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla erp-super2.tipo_mov_bancos: ~9 rows (aproximadamente)
+INSERT INTO `tipo_mov_bancos` (`id`, `nombre`, `descripcion`, `tipo_operacion`) VALUES
+	(1, 'Cheque', 'Cheque', 'D'),
+	(2, 'Depósito', 'Depósito', 'C'),
+	(3, 'Transferencia', 'Transferiencia', 'D'),
+	(4, 'Débitos', 'Débitos', 'D'),
+	(5, 'Créditos', 'Créditos', 'C'),
+	(6, 'Extracción', 'Extracciónes', 'D'),
+	(7, 'Impuestos', 'Impuestos', 'D'),
+	(8, 'Cred. IVA', 'Creditos de IVA', 'C'),
+	(9, 'Otros débitos', 'Otros débitos', 'D');
+
+-- Volcando estructura para tabla erp-super2.tipo_operacion
 CREATE TABLE IF NOT EXISTS `tipo_operacion` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `nombre` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.tipo_operacion: ~7 rows (aproximadamente)
+INSERT INTO `tipo_operacion` (`id`, `nombre`) VALUES
+	(1, 'VENTA'),
+	(2, 'COMPRA'),
+	(3, 'CREDITO'),
+	(4, 'DEBITO'),
+	(5, 'REMITO'),
+	(6, 'RECIBO'),
+	(7, 'PRESUPUESTO');
 
--- Volcando estructura para procedimiento erp.ultimas_10_ventas
-DELIMITER //
-CREATE PROCEDURE `ultimas_10_ventas`(
+-- Volcando estructura para tabla erp-super2.tipo_rendiciones
+CREATE TABLE IF NOT EXISTS `tipo_rendiciones` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-	IN `sucursal` INT
+-- Volcando datos para la tabla erp-super2.tipo_rendiciones: ~3 rows (aproximadamente)
+INSERT INTO `tipo_rendiciones` (`id`, `nombre`) VALUES
+	(1, 'Apertura'),
+	(2, 'Rendición'),
+	(3, 'Cierre');
 
-)
-BEGIN
-
-
-
-	SELECT f.id, c.nombre, f.total, u.nombre
-
-	FROM facturav f
-
-	JOIN clientes c
-
-		ON f.idcliente = c.id
-
-	JOIN usuarios u
-
-		ON f.idusuario = u.id	
-
-	where
-
-		f.fecha = CURDATE() and
-
-		f.idsucursal = sucursal
-
-	ORDER BY f.id	
-
-	DESC LIMIT 10;
-
-END//
-DELIMITER ;
-
--- Volcando estructura para tabla erp.usuarios
+-- Volcando estructura para tabla erp-super2.usuarios
 CREATE TABLE IF NOT EXISTS `usuarios` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `usuario` varchar(80) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `clave` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `documento` varchar(13) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `email` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `telefono` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `direccion` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nombre` varchar(80) DEFAULT NULL,
+  `usuario` varchar(80) DEFAULT NULL,
+  `clave` varchar(200) DEFAULT NULL,
+  `documento` varchar(13) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `direccion` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- La exportación de datos fue deseleccionada.
+-- Volcando datos para la tabla erp-super2.usuarios: ~3 rows (aproximadamente)
+INSERT INTO `usuarios` (`id`, `nombre`, `usuario`, `clave`, `documento`, `email`, `telefono`, `direccion`) VALUES
+	(2, 'Administrador', 'admin', '1234', '22117091', 'admin@latienda.com.ar', '22333444', 'Sta Lucia'),
+	(3, 'Vendedor Uno', 'vend1', '1234', '21876740', 'admin@latienda.com.ar', '22333444', 'Saavedra'),
+	(5, 'Vendedor Dos', 'vend2', '1234', '123456', 'admin@latienda.com.ar', '22333444', 'Saavedra');
 
--- Volcando estructura para procedimiento erp.venta_articulos
-DELIMITER //
-CREATE PROCEDURE `venta_articulos`(
+-- Volcando estructura para tabla erp-super2.vencimientos_creditos
+CREATE TABLE IF NOT EXISTS `vencimientos_creditos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idcredito` int NOT NULL,
+  `numero_cuota` int NOT NULL,
+  `fecha_vencimiento` date NOT NULL,
+  `monto` decimal(20,6) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idcredito` (`idcredito`),
+  CONSTRAINT `vencimientos_creditos_ibfk_1` FOREIGN KEY (`idcredito`) REFERENCES `creditos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=137 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-	IN `desde` DATE,
-
-	IN `hasta` DATE
-
-)
-BEGIN
-
-	SELECT
-
-		  a.id,
-
-		  a.codigo,
-
-		  a.detalle,
-
-        SUM(i.cantidad) AS cantidad_total,
-
-        SUM(i.precio_total) AS total_ventas
-
-    FROM
-
-        facturav f
-
-    INNER JOIN itemsv i ON f.id = i.idfactura
-
-    INNER JOIN articulos a ON i.idarticulo = a.id
-
-   WHERE
-
-      f.fecha BETWEEN DATE(desde) AND DATE(hasta)
-
-    GROUP BY
-
-        a.id, a.codigo, a.detalle;
-
-	
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento erp.venta_clientes
-DELIMITER //
-CREATE PROCEDURE `venta_clientes`(
-
-	IN `desde` DATE,
-
-	IN `hasta` DATE
-
-)
-BEGIN
-
-	SELECT
-
-		  c.id,
-
-		  c.nombre,
-
-        COUNT(f.id) AS cantidad_total,
-
-        SUM(f.total) AS total_ventas
-
-    FROM
-
-        facturav f
-
-    INNER JOIN clientes c ON f.idcliente = c.id
-
-   WHERE
-
-      f.fecha BETWEEN DATE(desde) AND DATE(hasta)
-
-    GROUP BY
-
-        c.id, c.nombre;
-
-	
-
-END//
-DELIMITER ;
+-- Volcando datos para la tabla erp-super2.vencimientos_creditos: ~0 rows (aproximadamente)
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

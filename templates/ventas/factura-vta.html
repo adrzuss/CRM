@@ -92,15 +92,26 @@
                         </thead>
                         <tbody class="table-group-divider">
                             {% for item in items %}    
-                                <tr class="table-light">
-                                    <td scope="row">{{ item.codigo }}</td>
-                                    <td>{{ item.detalle }}</td>
-                                    <td>{{ item.cantidad|round(2) }}</td>
-                                    <td>{{ item.precio_unitario|round(2) }}</td>
-                                    <td>{{ item.bonificacion|round(2) }}</td>
-                                    <td>{{ item.precio_total|round(2) }}</td>
-                                </tr>
-                                {% endfor %}    
+                                {% if item.idoferta == 0 %}
+                                    <tr class="table-light">
+                                        <td scope="row">{{ item.codigo }}</td>
+                                        <td>{{ item.detalle }}</td>
+                                        <td>{{ item.cantidad|round(2) }}</td>
+                                        <td>{{ item.precio_unitario|round(2) }}</td>
+                                        <td>{{ item.bonificacion|round(2) }}</td>
+                                        <td>{{ item.precio_total|round(2) }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr class="table-info">
+                                        <td scope="row">{{ item.codigo }}</td>
+                                        <td>{{ item.detalle }} <span class="badge bg-success">Oferta</span></td>
+                                        <td>{{ item.cantidad|round(2) }}</td>
+                                        <td>{{ item.precio_unitario|round(2) }}</td>
+                                        <td>{{ item.bonificacion|round(2) }}</td>
+                                        <td>{{ item.precio_total|round(2) }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}    
                         </tbody>
                         <tfoot>
                             

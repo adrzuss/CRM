@@ -104,8 +104,6 @@
         $("#ptovtaModal").modal("show");
     }
 
-
-
     async function fetchCliente(input) {
         let response;
         // Determinar si la entrada es un ID numérico o un nombre
@@ -263,6 +261,26 @@ async function cuotasPendientes(idcliente) {
     }
 }
 
+// Función auxiliar para mostrar mensajes tipo flash
+function mostrarMensaje(mensaje, tipo) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insertar el mensaje al principio del contenedor principal
+    const container = document.querySelector('.container') || document.body;
+    container.insertBefore(alertDiv, container.firstChild);
+
+    // Remover el mensaje después de 5 segundos
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
 function calcularCuota() {
     let total = 0;
     // Selecciona todos los checkboxes de cuotas
@@ -272,9 +290,31 @@ function calcularCuota() {
     // Muestra el total donde quieras, por ejemplo en un elemento con id="total_cuotas"
     document.getElementById("total_cuotas").textContent = "$" + total.toFixed(2);
     document.getElementById("edt_total_cuotas").value = total.toFixed(2);
+    document.getElementById("total_factura").textContent = total.toFixed(2);
 }
 
-function cobrarCuotas() {
+
+function abrirModalPagos(){
+  //Comprobamos que haya cuotas seleccionadas
+  const total = document.getElementById("edt_total_cuotas").value;
+  if (total === "0.00") {
+      alert("Por favor, seleccione al menos una cuota para cobrar.");
+      return;
+  }
+  
+  // Enfocar el primer campo de pago
+
+  $("#pagosModal").modal("show");
+
+  // Cuando el modal se haya mostrado, enfocar el input
+    document.getElementById('pagosModal').addEventListener('shown.bs.modal', function () {
+      document.getElementById("efectivo").focus();
+    }, { once: true }); // once=true para que no se dispare más de una vez
+
+}
+
+
+async function cobrarCuotas() {
     //event.preventDefault();
     if (checkPagos() === false) {
         alert("El monto del pago es menor que el total de cuotas.");
@@ -303,19 +343,88 @@ function cobrarCuotas() {
             idCliente = document.getElementById("idcliente").value;
 
             // Aquí puedes enviar las cuotas seleccionadas al servidor o procesarlas como necesites
-            console.log("Cuotas seleccionadas:", cuotasSeleccionadas);
-            alert("Cuotas seleccionadas para cobro: " + cuotasSeleccionadas.map(c => c.numero).join(", "));
-            fetch(`${BASE_URL}/creditos/cobrar_cuotas`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ cuotas: cuotasSeleccionadas, idCliente: idCliente, totalCuotas: totalCuotas, efectivo: efectivo, tarjeta: tarjeta, entidad: entidad })
-            })
+            //console.log("Cuotas seleccionadas:", cuotasSeleccionadas);
+            //alert("Cuotas seleccionadas para cobro: " + cuotasSeleccionadas.map(c => c.numero).join(", "));
+            try{
+                const response = await fetch(`${BASE_URL}/creditos/cobrar_cuotas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cuotas: cuotasSeleccionadas, idCliente: idCliente, totalCuotas: totalCuotas, efectivo: efectivo, tarjeta: tarjeta, entidad: entidad })
+                })
+                const data = await response.json();
+        
+                if (data.success) {
+                    mostrarMensaje(data.message, "success");
+                    // Opcional: limpiar el formulario o actualizar la lista de cuotas
+                    $("#pagosModal").modal("hide");
+                    cuotasPendientes(idCliente); // Actualizar la lista de cuotas
+                } else {
+                    mostrarMensaje(data.message || "Error al procesar el pago", "error");
+                }
+            } catch (error) {
+                mostrarMensaje("Error al procesar la operación", "error");
+                console.error("Error:", error);
+            }
+                
             return;
         }    
     }    
 }    
+
+document.getElementById("efectivo").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+document.getElementById("tarjeta").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+document.getElementById("ctacte").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+document.getElementById("bonificacion").addEventListener("blur", function (event) {
+  calcSaldo();
+});
+
+
+function calcSaldo() {
+  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
+  const efectivo = parseFloat(document.getElementById("efectivo").value);
+  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
+  const ctacte = parseFloat(document.getElementById("ctacte").value);
+  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
+  if (isNaN(efectivo)) {
+    efectivo = 0;
+  }
+  if (isNaN(tarjeta)) {
+    tarjeta = 0;
+  }
+  else{
+    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
+    tarjeta = tarjeta / coeficiente;
+  }
+  if (isNaN(ctacte)) {
+    ctacte = 0;
+  }
+  if (isNaN(bonificacion)) {
+    bonificacion = 0;
+  }
+  
+  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion)).toFixed(2);
+  let lblSaldo = document.getElementById("saldo_factura");
+  lblSaldo.textContent = diferencia;
+  if (diferencia > 0) {
+    lblSaldo.className = "negativo";
+  } else if (diferencia === 0) {
+    lblSaldo.className = "neutro";
+  } else {
+    lblSaldo.className = "positivo";
+  }
+}
+
 
 function checkPagos() {
     let totalCuotas = 0;

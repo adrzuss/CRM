@@ -1,26 +1,39 @@
 
-    <div class="card">
-        <div class="card-body">
-            <h3>Ingreso de clientes</h3>
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-user-plus me-2"></i>Registro de Cliente
+            </h5>
+        </div>
+        <div class="card-body p-4">
             <form action="{{ url_for('clientes.add_cliente') }}" method="post">
-                <div class="row">
-                    <div class="col-1 mb-3"> 
-                        <label for="idcliente">Nombre</label>
-                        <input class="form-control" type="text" name="idcliente" id="idcliente" value="{{ cliente.id }}" readonly>
+                <div class="row g-3">
+                    <div class="col-lg-1 col-md-2"> 
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="idcliente" id="idcliente" 
+                                   value="{{ cliente.id }}" readonly placeholder="ID">
+                            <label for="idcliente"><i class="fas fa-hashtag me-2"></i>ID</label>
+                        </div>
                     </div>
-                    <div class="col-4 mb-3"> 
-                        <label for="nombre">Nombre <span style="color: red">*</span></label>
-                        <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ cliente.nombre }}" required>
+                    <div class="col-lg-5 col-md-10"> 
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="nombre" id="nombre" 
+                                   placeholder="Ingrese el nombre completo" value="{{ cliente.nombre }}" required>
+                            <label for="nombre"><i class="fas fa-user me-2"></i>Nombre Completo <span class="text-danger">*</span></label>
+                        </div>
                     </div>
                 
-                    <div class="col-2 mb-3"> 
-                        <label for="documento">Documento<span style="color: red">*</span></label>
-                        <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el documento" value="{{ cliente.documento }}" required>
+                    <div class="col-lg-3 col-md-6"> 
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="documento" id="documento" 
+                                   placeholder="Número de documento" value="{{ cliente.documento }}" required>
+                            <label for="documento"><i class="fas fa-id-card me-2"></i>Documento <span class="text-danger">*</span></label>
+                        </div>
                     </div>
-                    <div class="col-2 mb-3">
-                        <div class="mb-3">
-                            <label for="tipo_doc" class="form-label">Tipo documento<span style="color: red">*</span></label>
-                            <select class="form-select form-select" name="tipo_doc" id="tipo_doc" required>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="tipo_doc" id="tipo_doc" required>
+                                <option value="">Seleccionar...</option>
                                 {% for tipo_doc in tipo_docs %}
                                     {% if cliente.id_tipo_doc == tipo_doc.id %}
                                         <option value="{{ tipo_doc.id }}" selected>{{ tipo_doc.nombre }}</option>
@@ -29,12 +42,16 @@
                                     {% endif %}
                                 {% endfor %}
                             </select>
+                            <label for="tipo_doc"><i class="fas fa-file-alt me-2"></i>Tipo Documento <span class="text-danger">*</span></label>
                         </div>
                     </div>
-                    <div class="col-3 mb-3">
-                        <div class="mb-3">
-                            <label for="tipo_iva" class="form-label">Tipo responsabilidad IVA<span style="color: red">*</span></label>
-                            <select class="form-select form-select" name="tipo_iva" id="tipo_iva" required>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-4 col-md-12">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="tipo_iva" id="tipo_iva" required>
+                                <option value="">Seleccionar...</option>
                                 {% for tipo_iva in tipo_ivas %}
                                     {% if cliente.id_tipo_iva == tipo_iva.id %}
                                         <option value="{{ tipo_iva.id }}" selected>{{ tipo_iva.descripcion }}</option>
@@ -43,22 +60,31 @@
                                     {% endif %}
                                 {% endfor %}
                             </select>
+                            <label for="tipo_iva"><i class="fas fa-receipt me-2"></i>Responsabilidad IVA <span class="text-danger">*</span></label>
                         </div>
                     </div>
-                </div>    
-                <div class="row">
-                    <div class="col-3 mb-3">
-                        <label for="telefono">Teléfono</label>
-                        <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono" value="{{ cliente.telefono }}">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="tel" name="telefono" id="telefono" 
+                                   placeholder="Número de teléfono" value="{{ cliente.telefono }}">
+                            <label for="telefono"><i class="fas fa-phone me-2"></i>Teléfono</label>
+                        </div>
                     </div>
                 
-                    <div class="col-3 mb-3">
-                        <label for="mail">E-mail</label>
-                        <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail" value="{{ cliente.mail }}">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="email" name="mail" id="mail" 
+                                   placeholder="correo@ejemplo.com" value="{{ cliente.mail }}">
+                            <label for="mail"><i class="fas fa-envelope me-2"></i>Correo Electrónico</label>
+                        </div>
                     </div>    
-                    <div class="mb-3 col-3">
-                            <label for="categoria" class="form-label">Categoria<span style="color: red">*</span></label>
-                            <select class="form-select form-select" name="categoria" id="categoria" required>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="categoria" id="categoria" required>
+                                <option value="">Seleccionar...</option>
                                 {% for categoria in categorias %}
                                     {% if cliente.idcategoria == categoria.id %}
                                         <option value="{{ categoria.id }}" selected>{{ categoria.nombre }}</option>
@@ -67,51 +93,75 @@
                                     {% endif %}
                                 {% endfor %}
                             </select>
+                            <label for="categoria"><i class="fas fa-tags me-2"></i>Categoría <span class="text-danger">*</span></label>
+                        </div>
+                    </div>
+                    <div class="col-lg-8 col-md-6">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="direccion" id="direccion" 
+                                   placeholder="Calle, número, piso, departamento" value="{{ cliente.direccion }}" required>
+                            <label for="direccion"><i class="fas fa-home me-2"></i>Dirección <span class="text-danger">*</span></label>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label for="direccion">Dirección<span style="color: red">*</span></label>
-                        <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ cliente.direccion }}" required>
+                
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="provincia" id="provincia" required>
+                                <option value="">Seleccionar...</option>
+                                {% for provincia in provincias %}
+                                    {% if cliente.idprovincia == provincia.id %}
+                                        <option value="{{ provincia.id }}" selected>{{ provincia.provincia }}</option>
+                                    {% else %}
+                                        <option value="{{ provincia.id }}">{{ provincia.provincia }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>   
+                            <label for="provincia"><i class="fas fa-map-marked-alt me-2"></i>Provincia <span class="text-danger">*</span></label> 
+                        </div>    
                     </div>    
-                    
-                    <div class="col-3 mb-3">
-                        <label for="provincia">Provincia<span style="color: red">*</span></label>
-                        <select class="form-select form-select" name="provincia" id="provincia" required>
-                            {% for provincia in provincias %}
-                                {% if cliente.idprovincia == provincia.id %}
-                                    <option value="{{ provincia.id }}" selected>{{ provincia.provincia }}</option>
-                                {% else %}
-                                    <option value="{{ provincia.id }}">{{ provincia.provincia }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>    
-                    </div>    
-                    <div class="col-3 mb-3">
-                        <label for="localidad">Localidad<span style="color: red">*</span></label>
-                        <select class="form-select form-select" name="localidad" id="localidad" required>
-                            {% for localidad in localidades %}
-                                {% if cliente.idlocalidad == localidad.id %}
-                                    <option value="{{ localidad.id }}" selected>{{ localidad.localidad }}</option>
-                                {% else %}
-                                    <option value="{{ localidad.id }}">{{ localidad.nombre }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="localidad" id="localidad" required>
+                                <option value="">Seleccionar...</option>
+                                {% for localidad in localidades %}
+                                    {% if cliente.idlocalidad == localidad.id %}
+                                        <option value="{{ localidad.id }}" selected>{{ localidad.localidad }}</option>
+                                    {% else %}
+                                        <option value="{{ localidad.id }}">{{ localidad.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="localidad"><i class="fas fa-map-marker-alt me-2"></i>Localidad <span class="text-danger">*</span></label>
+                        </div>
                     </div>    
                 </div>
-                <div class="row">
-                    <div class="col-2 form-check ml-3">
-                        {% if cliente.ctacte == 1 %}
-                            <input class="form-check-input" type="checkbox" value="" name="ctacte" id="ctacte" checked>
-                        {% else %}    
-                            <input class="form-check-input" type="checkbox" value="" name="ctacte" id="ctacte">
-                        {% endif %}
-                        <label class="form-check-label" for="ctacte">Cliente con cta. cte.</label>
+                
+                <div class="row g-3 mt-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            {% if cliente.ctacte == 1 %}
+                                <input class="form-check-input" type="checkbox" role="switch" name="ctacte" id="ctacte" checked>
+                            {% else %}    
+                                <input class="form-check-input" type="checkbox" role="switch" name="ctacte" id="ctacte">
+                            {% endif %}
+                            <label class="form-check-label" for="ctacte">
+                                <i class="fas fa-credit-card me-2"></i>Cliente con Cuenta Corriente
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn-exito m-3" type="submit">Grabar</button>
-                <label class=""><span style="color: red">* Datos obligatorios</span></label>
+                
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span class="text-danger">*</span> Campos obligatorios
+                    </small>
+                    <button class="btn btn-primary btn-lg px-4" type="submit">
+                        <i class="fas fa-save me-2"></i>Guardar Cliente
+                    </button>
+                </div>
             </form>
         </div>    
     </div>   

@@ -1,20 +1,37 @@
-<div
-    class="table-responsive"
->
-    <table class="display table table-bordered table-striped" id="dataTable3" width="100%" >
-        <thead class="thead-dark">
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="dataTable3" width="100%">
+        <thead class="table-dark">
             <tr>
-                <th scope="col">Cliente</th>
-                <th scope="col">Cant. productos</th>
-                <th scope="col">Porcentaje</th>
+                <th scope="col"><i class="fas fa-user me-2"></i>Cliente</th>
+                <th scope="col" class="text-center"><i class="fas fa-boxes me-2"></i>Productos Diferentes</th>
+                <th scope="col" class="text-center"><i class="fas fa-percentage me-2"></i>Porcentaje</th>
             </tr>
         </thead>
         <tbody>
             {% for abc_producto in abc_productos %}
-                <tr class="">
-                    <td scope="row">{{ abc_producto.nombre }}</td>
-                    <td style="text-align: center;">{{ "%.2f"|format(abc_producto.cantidad) }}</td>
-                    <td style="text-align: center;">{{ "%.2f"|format(abc_producto.porcentaje) }} %</td>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <strong>{{ abc_producto.nombre }}</strong>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-info fs-6">{{ "%.0f"|format(abc_producto.cantidad) }}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="progress" style="width: 60px; height: 20px;">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ abc_producto.porcentaje }}%" 
+                                     aria-valuenow="{{ abc_producto.porcentaje }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="ms-2 fw-bold">{{ "%.2f"|format(abc_producto.porcentaje) }}%</span>
+                        </div>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

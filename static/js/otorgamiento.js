@@ -211,32 +211,15 @@
     }
 
     function mostrarModalSeleccionClientes(clientes) {
-    // Crear el contenido del modal con las opciones de cliente
-    const tituloModal = document.getElementById("clienteModalLabel");
-    tituloModal.textContent = "Seleccione un Cliente";
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = "";
-    const listaClientes = document.createElement("ul");
-    listaClientes.classList.add("list-group");
-    modalContent.appendChild(listaClientes);
-
-    clientes.forEach((cliente) => {
-        const clienteOption = document.createElement("li");
-        clienteOption.classList.add("cliente-option");
-        clienteOption.classList.add("list-group-item");
-        clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
-        clienteOption.onclick = () => {
-        asignarCliente(cliente);
-        $("#clienteModal").modal("hide");
-        // Enfocar el nuevo input de código
-        const clienteInput = document.getElementById("idcliente");
-        clienteInput.focus();
+        const callback = (cliente) => {
+            asignarCliente(cliente);
+            // Enfocar el nuevo input de código
+            const clienteInput = document.getElementById("idcliente");
+            if (clienteInput) clienteInput.focus();
         };
-        listaClientes.appendChild(clienteOption);
-    });
-
-    // Mostrar el modal
-    $("#clienteModal").modal("show");
+        
+        // Mostrar modal con los datos
+        window.universalSearchModal.show('clientes', clientes || [], callback);
     }
 
     async function fetchGarante(input) {
@@ -314,31 +297,14 @@
     }
 
     function mostrarModalSeleccionGarantes(garantes, input) {
-    // Crear el contenido del modal con las opciones de cliente
-    const tituloModal = document.getElementById("clienteModalLabel");
-    tituloModal.textContent = "Seleccione un Cliente";
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = "";
-    const listaClientes = document.createElement("ul");
-    listaClientes.classList.add("list-group");
-    modalContent.appendChild(listaClientes);
-
-    garantes.forEach((garante) => {
-        const clienteOption = document.createElement("li");
-        clienteOption.classList.add("cliente-option");
-        clienteOption.classList.add("list-group-item");
-        clienteOption.textContent = `${garante.nombre} - Tel/Cel: ${garante.telefono}`;
-        clienteOption.onclick = () => {
-        asignarGarante(input,garante);
-        $("#clienteModal").modal("hide");
-        // Enfocar el nuevo input de código
-        input.focus();
+        const callback = (garante) => {
+            asignarGarante(input, garante);
+            // Enfocar el nuevo input de código
+            if (input) input.focus();
         };
-        listaClientes.appendChild(clienteOption);
-    });
-
-    // Mostrar el modal
-    $("#clienteModal").modal("show");
+        
+        // Mostrar modal con los datos
+        window.universalSearchModal.show('garantes', garantes || [], callback);
     }
 
     async function planesParaCliente(categoria) {

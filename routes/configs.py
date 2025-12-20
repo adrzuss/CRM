@@ -3,7 +3,7 @@ from sqlalchemy import and_
 from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, \
                            TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema
 from models.sessions import Tareas
-from models.articulos import ListasPrecios
+from models.articulos import ListasPrecios, Colores, DetallesArticulos
 from models.sucursales import Sucursales
 from services.configs import grabar_configuracion, save_and_update_lista_precios, grabarDatosPtoVta, validar_cuit
 from utils.db import db
@@ -44,7 +44,9 @@ def configuraciones():
     planCtas = PlanCtas.query.all()
     categorias = Categorias.query.all()
     monedasBilletes = MonedasBilletes.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    colores = Colores.query.all()
+    detalles_articulos = DetallesArticulos.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes, colores=colores, detalles_articulos=detalles_articulos)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -249,3 +251,24 @@ def planes_opciones():
     planes = PlanesSistema.query.all()
     opciones = OpcionesPlanSistema.query.all()
     return render_template('planes-opciones.html', planes=planes, opciones=opciones, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_configuraciones.route('/add_color', methods=['POST'])
+@check_session
+def add_color():
+    nombre = request.form['nombreColor']
+    codColor = request.form['color']
+    color = Colores(nombre, codColor)
+    db.session.add(color)
+    db.session.commit()
+    flash('Color grabado')
+    return redirect('configuraciones')
+
+@bp_configuraciones.route('/add_detalle_articulo', methods=['POST'])
+@check_session
+def add_detalle_articulo():
+    nombre = request.form['nombreDetalleArticulo']
+    detalle_articulo = DetallesArticulos(nombre)
+    db.session.add(detalle_articulo)
+    db.session.commit()
+    flash('Detalle de artículo grabado')
+    return redirect('configuraciones')

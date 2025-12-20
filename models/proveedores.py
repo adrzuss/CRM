@@ -67,10 +67,12 @@ class ItemC(db.Model):
     idalciva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'), nullable=False)   
     exento = db.Column(db.Numeric(20,6), nullable=False)
     impint = db.Column(db.Numeric(20,6), nullable=False)
+    id_color = db.Column(db.Integer, db.ForeignKey('colores.id'), nullable=True)
+    id_detalle = db.Column(db.Integer, db.ForeignKey('detalles_articulos.id'), nullable=True)
     articulo = db.relationship('Articulo', backref=db.backref('itemsc', lazy=True))
     factura = db.relationship('FacturaC', backref=db.backref('itemsc', lazy=True))
     
-    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, iva=0, idalciva=0, exento=0, impint=0):
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, iva=0, idalciva=0, exento=0, impint=0, id_color=0, id_detalle=0):
         self.idfactura = idfactura
         self.id = id
         self.idarticulo = idarticulo
@@ -81,6 +83,8 @@ class ItemC(db.Model):
         self.idalciva = idalciva
         self.exento = exento
         self.impint = impint
+        self.id_color = id_color
+        self.id_detalle = id_detalle
 
 class ItemsOP(db.Model):
     __tablename__ = 'items_op'

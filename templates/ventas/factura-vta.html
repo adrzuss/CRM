@@ -1,68 +1,149 @@
 {% extends "base.html" %}
 
-
 {% block body %}
-<h3 class="m-3">Comprobante de venta</h3>
 
-<div class="m-3 card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Factura de ventas</h6>
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs modernos -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ventas.ventas') }}"><i class="fas fa-receipt"></i> Ventas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-file-invoice"></i> Comprobante #{{ factura.nro_comprobante }}
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice-dollar text-success"></i> Comprobante de Venta
+                </h1>
+                <p class="page-subtitle">
+                    {{ factura.tipo_comprobante }} {{ factura.nro_comprobante }} - {{ factura.nombre }}
+                </p>
+            </div>
+            <div class="header-actions">
+                <span class="badge bg-{% if factura.cae %}success{% else %}warning{% endif %} badge-lg">
+                    {% if factura.cae %}
+                        <i class="fas fa-check-circle"></i> Facturado
+                    {% else %}
+                        <i class="fas fa-clock"></i> Pendiente
+                    {% endif %}
+                </span>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class='input-group mb-3'>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-1">
-                        <label for="id">#id</label>
-                        <input type="number" class="form-control" name="id" id="id" value="{{ factura.id }}">
-                    </div>
-                    <div class="col-2">
-                        <label for="nroComprobante">N° comprobante</label>
-                        <input type="text" class="form-control" name="cliente" id="cliente" value="{{ factura.nro_comprobante }}">
-                    </div>    
-                    <div class="col-3">
-                        <label for="cliente">Cliente</label>
-                        <input type="text" class="form-control" name="cliente" id="cliente" value="{{ factura.nombre }}">
-                    </div>    
-                    <div class="col-2">
-                        <label for="tipo_comp">Comprobante</label>
-                        <input type="text" class="form-control" name="tipo_comp" id="tipo_comp" value="{{ factura.tipo_comprobante }}">
-                    </div>        
-                    <div class="col-2">
-                        <label for="fecha">Fecha</label>
-                        <input type="date" class="form-control" name="fecha" id="fecha" value="{{ factura.fecha }}">
-                    </div>        
-                    <div class="col-2">
-                        <label for="lista">Lista</label>
-                        {% if factura.lista == None %}
-                            <input type="text" class="form-control" name="lista" id="lista" value="No aplica">
-                        {% else %}
-                            <input type="text" class="form-control" name="lista" id="lista" value="{{ factura.lista }}" readonly>
-                        {% endif %}
-                    </div>        
+
+    <!-- Información principal del comprobante -->
+    <div class="card modern-card mb-4">
+        <div class="card-header modern-header">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-info-circle"></i>
                 </div>
-                <div class="row">
-                    <div class="col-3">
-                        <label for="total">Total</label>
-                        <input type="number" class="form-control precio-normal" name="total" id="total" step="0.01" value="{{ factura.total|round(2) }}">
-                    </div>    
-                    <div class="col-2">
-                        <label for="bonificacion">Bonificación</label>
-                        <input type="number" class="form-control precio-normal" name="bonificacion" id="bonificacion" step="0.01" value="{{ factura.bonificacion|round(2) }}">
-                    </div>    
-                    <div class="col-3">
-                        <label for="iva">IVA</label>
-                        <input type="number" class="form-control precio-normal" name="iva" id="iva" step="0.01" value="{{ factura.iva|round(2) }}">
-                    </div>    
-                    <div class="col-2">
-                        <label for="exento">Exento</label>
-                        <input type="number" class="form-control precio-normal" name="exento" id="exento" step="0.01" value="{{ factura.exento|round(2) }}">
-                    </div>    
-                    <div class="col-2">
-                        <label for="impint">Imp. int.</label>
-                        <input type="number" class="form-control precio-normal" name="impint" id="impint" step="0.01" value="{{ factura.impint|round(2) }}">   
-                    </div>    
-                </div>    
+                <div>
+                    <h5 class="card-title mb-0">Información del Comprobante</h5>
+                    <small class="text-muted">Datos principales de la transacción</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <!-- Fila 1: Información básica -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-3 col-sm-6">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern" name="id" id="id" 
+                               value="{{ factura.id }}" readonly placeholder="ID">
+                        <label for="id"><i class="fas fa-hashtag me-2"></i>ID</label>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-modern" name="nroComprobante" id="nroComprobante" 
+                               value="{{ factura.nro_comprobante }}" readonly placeholder="Número">
+                        <label for="nroComprobante"><i class="fas fa-receipt me-2"></i>N° Comprobante</label>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-5">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-modern" name="cliente" id="cliente" 
+                               value="{{ factura.nombre }}" readonly placeholder="Cliente">
+                        <label for="cliente"><i class="fas fa-user me-2"></i>Cliente</label>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-modern" name="tipo_comp" id="tipo_comp" 
+                               value="{{ factura.tipo_comprobante }}" readonly placeholder="Tipo">
+                        <label for="tipo_comp"><i class="fas fa-file-alt me-2"></i>Tipo</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 2: Fechas y configuración -->
+            <div class="row mb-3">
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <input type="date" class="form-control form-control-modern" name="fecha" id="fecha" 
+                               value="{{ factura.fecha }}" readonly placeholder="Fecha">
+                        <label for="fecha"><i class="fas fa-calendar me-2"></i>Fecha</label>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        {% if factura.lista == None %}
+                            <input type="text" class="form-control form-control-modern" name="lista" id="lista" 
+                                   value="No aplica" readonly placeholder="Lista">
+                        {% else %}
+                            <input type="text" class="form-control form-control-modern" name="lista" id="lista" 
+                                   value="{{ factura.lista }}" readonly placeholder="Lista">
+                        {% endif %}
+                        <label for="lista"><i class="fas fa-list-ol me-2"></i>Lista de Precios</label>
+                    </div>
+                </div>
+            </div>
+            <!-- Totales con diseño destacado -->
+            <div class="row mb-3">
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern calculated-field total-field" 
+                               name="total" id="total" step="0.01" value="{{ factura.total|round(2) }}" readonly placeholder="0.00">
+                        <label for="total"><i class="fas fa-calculator me-2"></i>Total</label>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern" name="bonificacion" id="bonificacion" 
+                               step="0.01" value="{{ factura.bonificacion|round(2) }}" readonly placeholder="0.00">
+                        <label for="bonificacion"><i class="fas fa-percentage me-2"></i>Bonificación</label>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern" name="iva" id="iva" 
+                               step="0.01" value="{{ factura.iva|round(2) }}" readonly placeholder="0.00">
+                        <label for="iva"><i class="fas fa-receipt me-2"></i>IVA</label>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern" name="exento" id="exento" 
+                               step="0.01" value="{{ factura.exento|round(2) }}" readonly placeholder="0.00">
+                        <label for="exento"><i class="fas fa-shield-alt me-2"></i>Exento</label>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-modern" name="impint" id="impint" 
+                               step="0.01" value="{{ factura.impint|round(2) }}" readonly placeholder="0.00">
+                        <label for="impint"><i class="fas fa-stamp me-2"></i>Imp. Internos</label>
+                    </div>
+                </div>
+            </div>    
             </div>    
         </div>
         {% if (factura.cae == None)and(factura.tipo_oper == 1) %}
@@ -85,6 +166,8 @@
                                 <th>Código</th>
                                 <th>Detalle</th>
                                 <th>Cantiad</th>
+                                <th>Det</th>
+                                <th>Color</th>
                                 <th>Precio U.</th>
                                 <th>Bonif.</th>
                                 <th>Precio F.</th>
@@ -97,6 +180,16 @@
                                         <td scope="row">{{ item.codigo }}</td>
                                         <td>{{ item.detalle }}</td>
                                         <td>{{ item.cantidad|round(2) }}</td>
+                                        {% if item.detalle_articulo == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td>{{ item.detalle_articulo }}</td>
+                                        {% endif %}
+                                        {% if item.color == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td> <span class="chip-color" style="background-color:{{item.codigo_color}}">{{ item.color }}</span></td>
+                                        {% endif %}
                                         <td>{{ item.precio_unitario|round(2) }}</td>
                                         <td>{{ item.bonificacion|round(2) }}</td>
                                         <td>{{ item.precio_total|round(2) }}</td>
@@ -106,6 +199,16 @@
                                         <td scope="row">{{ item.codigo }}</td>
                                         <td>{{ item.detalle }} <span class="badge bg-success">Oferta</span></td>
                                         <td>{{ item.cantidad|round(2) }}</td>
+                                        {% if item.detalle_articulo == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td>{{ item.detalle_articulo }}</td>
+                                        {% endif %}
+                                        {% if item.color == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td> <span class="chip-color" style="background-color:{{item.codigo_color}}">{{ item.color }}</span></td>
+                                        {% endif %}
                                         <td>{{ item.precio_unitario|round(2) }}</td>
                                         <td>{{ item.bonificacion|round(2) }}</td>
                                         <td>{{ item.precio_total|round(2) }}</td>
@@ -168,10 +271,29 @@
             </div>                  
         </div>
 
-        <a href="{{ url_for('ventas.imprimir_factura_vta', id=factura.id) }}" class="btn btn-primary"> Imprimir </a>
-        <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=factura.id, idcliente=factura.idcliente) }}" class="btn btn-success"> Enviar al mail </a>
+        <!-- Botones de acción con diseño moderno -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-auto">
+                <div class="btn-group shadow-sm" role="group">
+                    <a href="{{ url_for('ventas.imprimir_factura_vta', id=factura.id) }}" 
+                       class="btn btn-primary btn-lg">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </a>
+                    <a href="{{ url_for('ventas.imprimir_factura_vta2', id=factura.id) }}" 
+                       class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-file-alt me-2"></i>Imprimir 2
+                    </a>
+                    <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=factura.id, idcliente=factura.idcliente) }}" 
+                       class="btn btn-success btn-lg">
+                        <i class="fas fa-envelope me-2"></i>Enviar por Mail
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-
+<!-- Script para contraste automático de colores -->
+<script src="{{ url_for('static', filename='js/color-contrast.js') }}"></script>
 
 {% endblock %}

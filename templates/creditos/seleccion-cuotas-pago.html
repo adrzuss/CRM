@@ -1,92 +1,643 @@
 {% extends 'base.html' %}
+
+{% block head %}
+<style>
+/* Estilos personalizados para la página de cobranzas */
+.table th {
+    border-top: none;
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+}
+
+.table td {
+    padding: 1rem 0.5rem;
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,123,255,.075);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+.card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.card-header h6 {
+    color: white !important;
+}
+
+.badge-lg {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Animaciones suaves */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Checkbox personalizado */
+input[type="checkbox"] {
+    transform: scale(1.2);
+    margin: 0;
+}
+
+/* Estados de las filas según mora */
+.row-vencida {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545;
+}
+
+.row-por-vencer {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-left: 4px solid #ffc107;
+}
+
+.row-vigente {
+    background-color: rgba(40, 167, 69, 0.05) !important;
+    border-left: 4px solid #28a745;
+}
+
+/* Mejorar la apariencia del total */
+#total_cuotas {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+#total_cuotas.actualizado {
+    animation: pulseAmount 0.5s ease;
+}
+
+@keyframes pulseAmount {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Botón procesar cobro mejorado */
+#btn_procesar_cobro:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#btn_procesar_cobro:not(:disabled) {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Breadcrumb mejorado */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
 {% block body %}
 
-<div class="container">
+<div class="container-fluid">
     {% include 'partials/_modal-seleccion-ptovta.html' %}
-    <div class="row">
-        <div class="col-md-12">
-            <h1>Selección de cuotas a pagar</h1>
-            <h4> <span id="punto_vta" class="resaltado_span_1"></span></h4>  
+    
+    <!-- Header elegante -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 text-gray-800 mb-1">💵 Cobranza de Cuotas</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="/creditos">Créditos</a></li>
+                            <li class="breadcrumb-item active">Cobranza</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="text-right">
+                    <span id="punto_vta" class="badge badge-primary badge-lg resaltado_span_1"></span>
+                </div>
+            </div>
         </div>
     </div>
 
     <form id="seleccionCuotas" method="post">
-        {% include 'partials/_modal-cobranzas.html' %}
-        <div class="card">
-            <div class="card-title">
-                <h3 class="ml-3 mt-3">Cuotas a pagar</h3>
+        {% set modal_type = 'cobro' %}
+        {% set modal_context = 'cobranzas' %}
+        {% set modal_title = '💵 Métodos de Cobro' %}
+        {% include 'partials/_modal-transacciones.html' %}
+        
+        <!-- Panel de cliente mejorado -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user-circle text-gray-400"></i> Información del Cliente
+                </h6>
+                <button class="btn btn-success btn-sm" type="button" id="btnPagos" name="btnPagos" onclick="abrirModalPagos()" title="Abrir métodos de cobro">
+                    <i class="fas fa-credit-card"></i> F8 Procesar Cobro
+                </button>
             </div>
             <div class="card-body">
                 <div class="row">
                     {% if idcliente %}
-                        <div class="col-2 ">
-                            <label for="idcliente">Cliente</label>
-                            <input type="text" name="idcliente" id="idcliente" class="form-control" value="{{ idcliente }}">
+                        <div class="col-lg-2 col-md-3">
+                            <div class="form-group">
+                                <label for="idcliente" class="font-weight-bold text-xs text-uppercase text-gray-700">ID Cliente</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    </div>
+                                    <input type="text" name="idcliente" id="idcliente" class="form-control font-weight-bold" value="{{ idcliente }}" readonly>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-4">
-                            <label for="cliente_nombre">Nombre</label>
-                            <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" value="{{ nom_cliente }}">
+                        <div class="col-lg-6 col-md-9">
+                            <div class="form-group">
+                                <label for="cliente_nombre" class="font-weight-bold text-xs text-uppercase text-gray-700">Nombre del Cliente</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    </div>
+                                    <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control font-weight-bold text-primary" value="{{ nom_cliente }}" readonly>
+                                </div>
+                            </div>
                         </div>
                     {% else %}
-                        <div class="col-2 ">
-                            <label for="idcliente">Cliente</label>
-                            <input type="text" name="idcliente" id="idcliente" class="form-control">
+                        <div class="col-lg-2 col-md-3">
+                            <div class="form-group">
+                                <label for="idcliente" class="font-weight-bold text-xs text-uppercase text-gray-700">ID Cliente</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    </div>
+                                    <input type="text" name="idcliente" id="idcliente" class="form-control" placeholder="Ingrese ID">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-4">
-                            <label for="cliente_nombre">Nombre</label>
-                            <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" >
+                        <div class="col-lg-6 col-md-9">
+                            <div class="form-group">
+                                <label for="cliente_nombre" class="font-weight-bold text-xs text-uppercase text-gray-700">Nombre del Cliente</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    </div>
+                                    <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" placeholder="Buscar cliente...">
+                                </div>
+                            </div>
                         </div>
                     {% endif %}
-                </div>    
-                <div class="row mt-3 mb-3">
-                    <div class="col-3">
-                        <button class="btn btn-primario" type="button" id="btnPagos" name="btnPagos" onclick="abrirModalPagos()"> F8 Pagos </button>
+                    
+                    <!-- Panel de información adicional del cliente -->
+                    <div class="col-lg-4 col-md-12">
+                        <div class="card bg-gradient-info text-white shadow h-100">
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <h6 class="text-white-50 text-xs font-weight-bold">RESUMEN CLIENTE</h6>
+                                    <div class="mt-2">
+                                        <small id="cliente_resumen" class="text-white-75">
+                                            {% if idcliente %}
+                                                Cliente seleccionado
+                                            {% else %}
+                                                Seleccione un cliente para continuar
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>            
+                </div>
             </div>
         </div>    
 
-        <div class="card mt-3">
-            <div class="card-title">
-                <h3 class="ml-3 mt-3">Cuotas a pagar</h3>
+        <!-- Tabla de cuotas mejorada -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list-ul text-gray-400"></i> Cuotas Pendientes de Pago
+                </h6>
+                <div class="d-flex align-items-center">
+                    <!-- Botones de selección rápida -->
+                    <div class="btn-group btn-group-sm mr-2" role="group">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="seleccionarTodas()" title="Seleccionar todas">
+                            <i class="fas fa-check-double"></i> Todas
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="seleccionarVencidas()" title="Seleccionar solo vencidas">
+                            <i class="fas fa-exclamation-triangle"></i> Vencidas
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="limpiarSeleccion()" title="Limpiar selección">
+                            <i class="fas fa-times"></i> Ninguna
+                        </button>
+                    </div>
+                    
+                    <!-- Indicador de cuotas seleccionadas -->
+                    <span class="badge badge-info badge-pill" id="contador_seleccionadas">
+                        <i class="fas fa-check"></i> <span id="num_seleccionadas">0</span>
+                    </span>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-dark">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-dark">
                             <tr>
-                                <th scope="col"># Credito</th>
-                                <th scope="col">Monto crédito</th>
-                                <th scope="col"># Cuota</th>
-                                <th scope="col">Vencimiento</th>
-                                <th scope="col">Monto cuota</th>
-                                <th scope="col">Días mora</th>
-                                <th scope="col">Mora</th>
-                                <th scope="col">Total</th>
-                                <th scope="col">Seleccionar</th>
-                                <th scope="col">Acciones</th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-check-circle"></i>
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-credit-card text-primary"></i> Crédito
+                                </th>
+                                <th scope="col" class="text-right">
+                                    <i class="fas fa-dollar-sign text-success"></i> Monto Crédito
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-list-ol text-info"></i> # Cuota
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-calendar-alt text-warning"></i> Vencimiento
+                                </th>
+                                <th scope="col" class="text-right">
+                                    <i class="fas fa-money-bill text-success"></i> Cuota
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-clock text-danger"></i> Días Mora
+                                </th>
+                                <th scope="col" class="text-right">
+                                    <i class="fas fa-percent text-danger"></i> Mora
+                                </th>
+                                <th scope="col" class="text-right font-weight-bold">
+                                    <i class="fas fa-calculator text-primary"></i> Total
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-cogs text-gray-400"></i>
+                                </th>
                             </tr>
                         </thead>
-                        <tbody id="lst_cuotas">
-                            
+                        <tbody id="lst_cuotas" class="bg-white">
+                            <!-- Las cuotas se cargan dinámicamente aquí -->
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div class="card-footer">
-                <div class="row mt-3 mb-3">
-                    <div class="col-4">
-                        <label>Total a pagar:</label>
-                        <span id="total_cuotas" class="precio-destacado">$0.00</span>
-                        <input type="text" name="edt_total_cuotas" id="edt_total_cuotas" value="0.00" hidden>
+                
+                <!-- Estado cuando no hay cuotas -->
+                <div id="sin_cuotas" class="text-center py-5" style="display: none;">
+                    <div class="mb-3">
+                        <i class="fas fa-inbox fa-3x text-gray-300"></i>
                     </div>
-                </div>    
+                    <h5 class="text-gray-500">No hay cuotas pendientes</h5>
+                    <p class="text-muted">Seleccione un cliente para ver sus cuotas pendientes de pago.</p>
+                </div>
+            </div>
+            
+            <!-- Footer con totales elegante -->
+            <div class="card-footer bg-light border-left-primary">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calculator fa-2x text-primary mr-3"></i>
+                                <div>
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Seleccionado
+                                    </div>
+                                    <div class="h3 mb-0 font-weight-bold text-gray-800" id="total_cuotas">
+                                        $0.00
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-right">
+                        <div class="d-flex flex-column align-items-end">
+                            <!-- Información adicional -->
+                            <div class="text-xs text-uppercase text-gray-700 font-weight-bold mb-1">
+                                Cuotas Seleccionadas
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-success badge-pill mr-2" id="badge_seleccionadas">
+                                    <span id="display_seleccionadas">0</span> cuotas
+                                </span>
+                                <button type="button" class="btn btn-success" onclick="abrirModalPagos()" 
+                                        id="btn_procesar_cobro" disabled title="Seleccione al menos una cuota">
+                                    <i class="fas fa-credit-card"></i> Procesar Cobro
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos ocultos -->
+                <input type="text" name="edt_total_cuotas" id="edt_total_cuotas" value="0.00" hidden>
+                <span id="total_factura" style="display: none;">0.00</span>
             </div>
         </div>
     </form>    
     
 </div>
 
+<!-- Modal universal de búsqueda -->
+{% include 'partials/_modal-busqueda-universal.html' %}
+
+<script src="/static/js/universal-search-modal.js"></script>
+<script src="/static/js/modal-transacciones-universal.js"></script>
 <script src="/static/js/seleccion-cuotas-pagos.js"></script>
+
+<script>
+// Personalizar procesamiento para cobranzas
+function procesarTransaccion() {
+    console.log('💵 [COBRANZAS] procesarTransaccion() llamada');
+    
+    // Usar las funciones universales
+    if (!window.checkTotales || !window.checkTotales()) {
+        const diferencia = window.calcSaldo ? window.calcSaldo() : 0;
+        const mensaje = diferencia > 0 ? 
+            `Falta cobrar $${diferencia.toFixed(2)}` : 
+            `Sobra $${Math.abs(diferencia).toFixed(2)} - Se debe dar vuelto`;
+        
+        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+            return false;
+        }
+    }
+    
+    // Confirmar cobranza
+    if (!confirm('¿Procesar el cobro de las cuotas seleccionadas?')) {
+        return false;
+    }
+    
+    console.log('✅ [COBRANZAS] Usuario confirmó cobro, cerrando modal...');
+    
+    // Cerrar modal
+    $('#transaccionesModal').modal('hide');
+    
+    // Llamar a la función original de cobranza
+    cobrarCuotas();
+    return true;
+}
+
+// Hacer función disponible globalmente
+window.procesarTransaccion = procesarTransaccion;
+
+// ================================================================
+//                    FUNCIONES DE SELECCIÓN RÁPIDA
+// ================================================================
+
+/**
+ * Selecciona todas las cuotas disponibles
+ */
+function seleccionarTodas() {
+    console.log('🎯 Seleccionando todas las cuotas');
+    const checkboxes = document.querySelectorAll('input[name="cuotas"]:not(:disabled)');
+    console.log('🔍 Checkboxes encontrados:', checkboxes.length);
+    
+    let seleccionadas = 0;
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.checked = true;
+        seleccionadas++;
+        console.log(`✅ Checkbox ${index + 1} seleccionado`);
+        
+        // Agregar clase visual a la fila
+        const fila = checkbox.closest('tr');
+        if (fila) {
+            // Determinar el estado por días de mora
+            const diasMoraCell = fila.querySelector('td:nth-child(6)');
+            if (diasMoraCell) {
+                const diasMora = parseInt(diasMoraCell.textContent.trim()) || 0;
+                if (diasMora > 0) {
+                    fila.classList.add('row-vencida');
+                } else {
+                    fila.classList.add('row-vigente');
+                }
+            }
+        }
+    });
+    
+    // Actualizar contadores y totales
+    actualizarContadores();
+    calcularCuota();
+    
+    // Mostrar feedback
+    const mensaje = seleccionadas > 0 ? 
+        `✅ ${seleccionadas} cuotas seleccionadas` : 
+        'ℹ️ No hay cuotas disponibles para seleccionar';
+    mostrarNotificacion(mensaje, seleccionadas > 0 ? 'success' : 'info');
+    
+    console.log(`📊 Total seleccionadas: ${seleccionadas}`);
+}
+
+/**
+ * Selecciona solo las cuotas vencidas
+ */
+function seleccionarVencidas() {
+    console.log('⚠️ Seleccionando solo cuotas vencidas');
+    limpiarSeleccion(); // Primero limpiar
+    
+    let vencidasSeleccionadas = 0;
+    
+    // Buscar cuotas vencidas (días mora > 0)
+    const filas = document.querySelectorAll('#lst_cuotas tr');
+    console.log('🔍 Filas encontradas:', filas.length);
+    
+    filas.forEach((fila, index) => {
+        // Los días de mora están en la 6ta columna (índice 5: 0=crédito, 1=monto, 2=cuota, 3=vencimiento, 4=monto cuota, 5=días mora)
+        const diasMoraCell = fila.querySelector('td:nth-child(6)'); 
+        const checkbox = fila.querySelector('input[name="cuotas"]');
+        
+        if (diasMoraCell && checkbox && !checkbox.disabled) {
+            const diasMoraTexto = diasMoraCell.textContent.trim();
+            const diasMora = parseInt(diasMoraTexto) || 0;
+            
+            console.log(`🔍 Fila ${index + 1}: Días mora = "${diasMoraTexto}" (${diasMora})`);
+            
+            if (diasMora > 0) {
+                checkbox.checked = true;
+                vencidasSeleccionadas++;
+                console.log(`✅ Cuota vencida seleccionada: ${diasMora} días`);
+                
+                // Agregar clase visual para cuotas vencidas
+                fila.classList.add('row-vencida');
+            } else {
+                // Agregar clase visual para cuotas vigentes
+                fila.classList.add('row-vigente');
+            }
+        }
+    });
+    
+    // Actualizar contadores
+    actualizarContadores();
+    calcularCuota();
+    
+    // Mostrar feedback
+    const mensaje = vencidasSeleccionadas > 0 ? 
+        `⚠️ ${vencidasSeleccionadas} cuotas vencidas seleccionadas` : 
+        'ℹ️ No hay cuotas vencidas disponibles';
+    mostrarNotificacion(mensaje, vencidasSeleccionadas > 0 ? 'warning' : 'info');
+    
+    console.log(`📊 Total vencidas seleccionadas: ${vencidasSeleccionadas}`);
+}
+
+/**
+ * Limpia toda la selección
+ */
+function limpiarSeleccion() {
+    console.log('🧹 Limpiando selección de cuotas');
+    const checkboxes = document.querySelectorAll('input[name="cuotas"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Limpiar clases visuales de las filas
+    const filas = document.querySelectorAll('#lst_cuotas tr');
+    filas.forEach(fila => {
+        fila.classList.remove('row-vencida', 'row-vigente', 'row-por-vencer');
+    });
+    
+    // Actualizar contadores y totales
+    actualizarContadores();
+    calcularCuota();
+    
+    mostrarNotificacion('🧹 Selección limpiada', 'info');
+}
+
+/**
+ * Actualiza los contadores de cuotas seleccionadas
+ */
+function actualizarContadores() {
+    const seleccionadas = document.querySelectorAll('input[name="cuotas"]:checked').length;
+    
+    // Actualizar badges
+    document.getElementById('num_seleccionadas').textContent = seleccionadas;
+    document.getElementById('display_seleccionadas').textContent = seleccionadas;
+    
+    // Habilitar/deshabilitar botón de procesar
+    const btnProcesar = document.getElementById('btn_procesar_cobro');
+    if (btnProcesar) {
+        btnProcesar.disabled = seleccionadas === 0;
+        btnProcesar.title = seleccionadas === 0 ? 
+            'Seleccione al menos una cuota' : 
+            `Procesar cobro de ${seleccionadas} cuotas`;
+    }
+    
+    // Cambiar color del badge según cantidad
+    const badge = document.getElementById('badge_seleccionadas');
+    if (badge) {
+        badge.className = seleccionadas === 0 ? 
+            'badge badge-secondary badge-pill mr-2' : 
+            'badge badge-success badge-pill mr-2';
+    }
+}
+
+/**
+ * Muestra notificaciones elegantes
+ */
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Crear elemento de notificación
+    const notif = document.createElement('div');
+    notif.className = `alert alert-${tipo} alert-dismissible fade show position-fixed`;
+    notif.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notif.innerHTML = `
+        ${mensaje}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    `;
+    
+    // Agregar al DOM
+    document.body.appendChild(notif);
+    
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        if (notif.parentNode) {
+            notif.parentNode.removeChild(notif);
+        }
+    }, 3000);
+}
+
+// Interceptar cambios en checkboxes para actualizar contadores automáticamente
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'cuotas') {
+        actualizarContadores();
+    }
+});
+
+// Inicializar contadores al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarContadores();
+});
+
+/**
+ * Función de debugging para inspeccionar la estructura de la tabla
+ */
+function debugEstructuraTabla() {
+    console.log('🔍 === DEBUGGING ESTRUCTURA DE TABLA ===');
+    
+    const tabla = document.getElementById('lst_cuotas');
+    if (!tabla) {
+        console.log('❌ Tabla lst_cuotas no encontrada');
+        return;
+    }
+    
+    const filas = tabla.querySelectorAll('tr');
+    console.log(`📊 Filas encontradas: ${filas.length}`);
+    
+    filas.forEach((fila, index) => {
+        console.log(`\n🔍 --- FILA ${index + 1} ---`);
+        
+        const celdas = fila.querySelectorAll('td');
+        console.log(`📋 Celdas: ${celdas.length}`);
+        
+        celdas.forEach((celda, celdaIndex) => {
+            const contenido = celda.textContent.trim();
+            if (celdaIndex === 5) { // Días de mora
+                console.log(`📅 Celda ${celdaIndex + 1} (Días Mora): "${contenido}"`);
+            } else if (celdaIndex < 3) {
+                console.log(`📝 Celda ${celdaIndex + 1}: "${contenido}"`);
+            }
+        });
+        
+        const checkbox = fila.querySelector('input[name="cuotas"]');
+        if (checkbox) {
+            console.log(`✅ Checkbox encontrado: value="${checkbox.value}", checked=${checkbox.checked}`);
+        } else {
+            console.log('❌ Checkbox NO encontrado');
+        }
+    });
+    
+    console.log('🔍 === FIN DEBUG ===\n');
+}
+
+// Exponer función de debug globalmente
+window.debugEstructuraTabla = debugEstructuraTabla;
+</script>
 
 {% endblock %}

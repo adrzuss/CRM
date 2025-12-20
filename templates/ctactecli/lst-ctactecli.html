@@ -3,65 +3,112 @@
 
 {% include 'partials/_modal-seleccion-ptovta.html' %}
 
-<h3 class="m-3">Cuenta corriente: <span style="color:rebeccapurple">{{ nomCliente }}</span></h3>
-<div class="row justify-content-md-center m-3">
-    <div class="col-12">
-        {% include 'partials/_ctacte-cli.html' %}
-    </div>
-</div>
-<div class="row justify-content-md-center m-3"></div>
-    <div class="col-12">
-        <div class="card">
-            <div class="table-responsive" >
-                <table class="table table-striped table-hover table-borderless table-dark align-middle">
-                    <thead class="table-light">
-                        {% if saldoTotal > 0 %}
-                            <caption class="ml-3" style="font-style: italic; font-weight: bold; color:red">
-                                Movimientos de cuenta corriente de clientes. Saldo deudor: {{ "${:,.2f}".format(saldoTotal) }}
-                        {% else %}    
-                            <caption class="ml-3" style="font-style: italic; font-weight: bold;">    
-                                Movimientos de cuenta corriente de clientes. Saldo acreedor: {{ "${:,.2f}".format(saldoTotal) }}
-                        {% endif %}    
-                        </caption>
-                        <tr>
-                            <th>#ID</th>
-                            <th>Fecha</th>
-                            <th>Debe</th>
-                            <th>Haber</th>
-                            <th>Acciones</th>
-                        </tr>   
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for movimiento in movimientos %}
-                            <tr class="table-light">
-                                <td>{{ movimiento.id }}</td>
-                                <td>{{ movimiento.fecha.strftime('%d-%m-%Y') }}</td>
-                                <td>{{ "${:,.2f}".format(movimiento.debe) }}</td>
-                                <td>{{ "${:,.2f}".format(movimiento.haber) }}</td>
-                                {% if (movimiento.idcomp != None)and(movimiento.idcomp > 0) %}
-                                    {% if movimiento.debe > 0 %}
-                                        <td><a href="{{ url_for('ventas.ver_factura_vta', id=movimiento.idcomp) }}" class="btn btn-secondary">Ver factura</a></td>
-                                    {% else %}
-                                        <td><a href="{{ url_for('ventas.ver_factura_vta', id=movimiento.idcomp) }}" class="btn btn-secondary">Ver recibo</a></td>
-                                    {% endif %}
-                                {% else %}    
-                                  <td>Sin ref.</td>
-                                {% endif %}
-
-                            </tr>    
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
+<!-- Breadcrumb moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Formulario de carga de transacciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-success text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Gestión de Transacciones</h5>
+                        <small class="text-white-50">Registrar movimientos en la cuenta corriente</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% include 'partials/_ctacte-cli.html' %}
+                </div>
             </div>
-            
-            
+        </div>
+    </div>
+    <!-- Tabla de movimientos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-primary text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Movimientos de Cuenta Corriente</h5>
+                        <small class="text-white-50">Listado de transacciones</small>
+                    </div>
+                    {% if movimientos %}
+                        <span class="badge bg-light text-dark ms-2">{{ movimientos|length }} registros</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if movimientos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID</th>
+                                        <th class="text-center"><i class="fas fa-calendar me-1"></i>Fecha</th>
+                                        <th class="text-center"><i class="fas fa-arrow-up text-danger me-1"></i>Debe</th>
+                                        <th class="text-center"><i class="fas fa-arrow-down text-success me-1"></i>Haber</th>
+                                        <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for movimiento in movimientos %}
+                                        <tr>
+                                            <td class="text-center fw-bold">{{ movimiento.id }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ movimiento.fecha.strftime('%d/%m/%Y') }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if movimiento.debe > 0 %}
+                                                    <span class="badge bg-danger fs-6">{{ "${:,.2f}".format(movimiento.debe) }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if movimiento.haber > 0 %}
+                                                    <span class="badge bg-success fs-6">{{ "${:,.2f}".format(movimiento.haber) }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if (movimiento.idcomp != None) and (movimiento.idcomp > 0) %}
+                                                    {% if movimiento.debe > 0 %}
+                                                        <a href="{{ url_for('ventas.ver_factura_vta', id=movimiento.idcomp) }}" 
+                                                           class="btn btn-outline-primary btn-modern btn-sm">
+                                                            <i class="fas fa-file-invoice me-1"></i>Ver Factura
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('ventas.ver_factura_vta', id=movimiento.idcomp) }}" 
+                                                           class="btn btn-outline-success btn-modern btn-sm">
+                                                            <i class="fas fa-receipt me-1"></i>Ver Recibo
+                                                        </a>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-light text-muted">Sin referencia</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Sin movimientos registrados</h5>
+                            <p class="text-muted">No hay transacciones en la cuenta corriente de este cliente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-</div>
+
 
 <script src="{{ url_for('static', filename='js/recibo_ctacte_cli.js') }}"></script>
 

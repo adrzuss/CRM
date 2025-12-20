@@ -1,0 +1,136 @@
+<!-- ================================================================ -->
+<!--                    GUÍA DE USO DE MODAL UNIVERSAL              -->
+<!-- ================================================================ -->
+
+<!-- 
+    PARÁMETROS DISPONIBLES:
+    
+    modal_type: 'pago' | 'cobro' | 'transferencia'
+    modal_context: 'venta' | 'cobranza' | 'proveedor' 
+    modal_title: Título personalizado del modal
+    show_offers: true/false (solo para ventas)
+    modal_methods: Array de métodos específicos (opcional)
+-->
+
+<!-- ================================================================ -->
+<!--                         1. VENTAS                              -->
+<!-- ================================================================ -->
+<!-- Usar en: templates/ventas/nueva_venta.html -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='pago', 
+    modal_context='venta',
+    modal_title='💰 Métodos de Pago',
+    show_offers=true 
+%}
+
+<!-- Métodos habilitados automáticamente: -->
+<!-- ✅ Efectivo, Tarjetas, Cuenta Corriente, Crédito, Bonificación, Valores -->
+<!-- ✅ Sección de ofertas especiales visible -->
+<!-- ✅ Color: azul (primary) -->
+
+<!-- ================================================================ -->
+<!--                         2. COBRANZAS                           -->
+<!-- ================================================================ -->
+<!-- Usar en: templates/creditos/seleccion-cuotas-pago.html -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='cobro', 
+    modal_context='cobranza',
+    modal_title='💵 Métodos de Cobro'
+%}
+
+<!-- Métodos habilitados automáticamente: -->
+<!-- ✅ Efectivo, Tarjetas, Cuenta Corriente, Bonificación, Valores -->
+<!-- ❌ Crédito (excluido) -->
+<!-- ❌ Ofertas especiales (no visible) -->
+<!-- ✅ Color: verde (success) -->
+
+<!-- ================================================================ -->
+<!--                         3. PROVEEDORES                         -->
+<!-- ================================================================ -->
+
+<!-- 3A. NUEVA COMPRA -->
+<!-- Usar en: templates/proveedores/nueva_compra.html -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='pago', 
+    modal_context='proveedor',
+    modal_title='🏪 Pago a Proveedor'
+%}
+
+<!-- 3B. NUEVO GASTO -->
+<!-- Usar en: templates/proveedores/nuevo_gasto.html -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='pago', 
+    modal_context='proveedor',
+    modal_title='🏪 Pago de Gasto'
+%}
+
+<!-- 3C. NUEVA ORDEN DE PAGO (con cheques) -->
+<!-- Usar en: templates/proveedores/nueva_op.html -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='pago', 
+    modal_context='proveedor',
+    modal_title='🏪 Orden de Pago'
+%}
+
+<!-- Métodos habilitados automáticamente para TODOS los proveedores: -->
+<!-- ✅ Efectivo, Cuenta Corriente, Bonificación, Cheques -->
+<!-- ❌ Tarjetas, Crédito, Valores (excluidos) -->
+<!-- ❌ Ofertas especiales (no visible) -->
+<!-- ✅ Color: azul claro (info) -->
+
+<!-- ================================================================ -->
+<!--                    4. CONFIGURACIÓN PERSONALIZADA             -->
+<!-- ================================================================ -->
+
+<!-- Si necesitas métodos específicos, puedes sobrescribir: -->
+{% include 'partials/_modal-transacciones.html' with 
+    modal_type='pago', 
+    modal_context='proveedor',
+    modal_title='🔧 Configuración Custom',
+    modal_methods=['efectivo', 'ctacte']  <!-- Solo efectivo y cuenta corriente -->
+%}
+
+<!-- ================================================================ -->
+<!--                    5. JAVASCRIPT REQUERIDO                    -->
+<!-- ================================================================ -->
+
+<!-- 
+    IMPORTANTE: Cambiar el ID del modal en JavaScript existente
+    
+    ANTES: $('#pagosModal') 
+    DESPUÉS: $('#transaccionesModal')
+    
+    La función calcSaldo() sigue funcionando igual
+    Los nombres de campos son consistentes en todos los contextos
+-->
+
+<!-- Ejemplo de apertura del modal: -->
+<script>
+function abrirModalPagos() {
+    // Configurar totales antes de abrir
+    document.getElementById('total_factura').textContent = totalFactura.toFixed(2);
+    
+    // Abrir modal universal
+    $('#transaccionesModal').modal('show');
+    
+    // Enfocar primer campo disponible
+    setTimeout(() => {
+        const primerInput = document.querySelector('#transaccionesModal input:not([readonly])');
+        if (primerInput) primerInput.focus();
+    }, 300);
+}
+</script>
+
+<!-- ================================================================ -->
+<!--                    6. ATAJOS DE TECLADO                       -->
+<!-- ================================================================ -->
+
+<!-- 
+    Alt + E = Efectivo
+    Alt + T = Tarjetas  
+    Alt + C = Cuenta Corriente
+    Alt + R = CRédito (solo ventas)
+    Alt + B = Bonificación
+    Alt + Q = cheQues (solo proveedores)
+    Alt + V = Valores (ventas y cobranzas)
+-->

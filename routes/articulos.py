@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from flask import g
 from werkzeug.utils import secure_filename
 import os
-from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt, PedirEnVentas
+from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt, PedirEnVentas, Colores, ArticulosColores, DetallesArticulos, ArticulosDetalles
 from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB
 from models.sucursales import Sucursales
 from models.proveedores import Proveedores
@@ -20,6 +20,73 @@ from datetime import datetime, date
 from decimal import Decimal
 
 bp_articulos = Blueprint('articulos', __name__, template_folder='../templates/articulos')
+
+@bp_articulos.route('/api/<int:articulo_id>/colores-detalles')
+def get_articulo_colores_detalles(articulo_id):
+    """
+    Obtener colores y detalles disponibles para un artículo específico
+    """
+    # Verificar sesión para requests AJAX
+    if 'user_id' not in session:
+        return jsonify({
+            'success': False,
+            'message': 'Sesión no válida'
+        }), 401
+        
+    try:
+        # Verificar si el artículo existe
+        articulo = db.session.query(Articulo).filter_by(id=articulo_id).first()
+        if not articulo:
+            return jsonify({
+                'success': False,
+                'message': 'Artículo no encontrado'
+            }), 404
+        
+        # Obtener colores del artículo
+        colores_query = db.session.query(Colores)\
+            .join(ArticulosColores, Colores.id == ArticulosColores.id_color)\
+            .filter(ArticulosColores.id_articulo == articulo_id)\
+            .all()
+        
+        # Obtener detalles del artículo
+        detalles_query = db.session.query(DetallesArticulos)\
+            .join(ArticulosDetalles, DetallesArticulos.id == ArticulosDetalles.id_detalle)\
+            .filter(ArticulosDetalles.id_articulo == articulo_id)\
+            .all()
+        
+        # Formatear datos para JSON
+        colores_data = []
+        for color in colores_query:
+            colores_data.append({
+                'id': color.id,
+                'nombre': color.nombre,
+                'color': color.color
+            })
+        
+        detalles_data = []
+        for detalle in detalles_query:
+            detalles_data.append({
+                'id': detalle.id,
+                'nombre': detalle.nombre
+            })
+        
+        return jsonify({
+            'success': True,
+            'colores': colores_data,
+            'detalles': detalles_data,
+            'articulo': {
+                'id': articulo.id,
+                'codigo': articulo.codigo,
+                'detalle': articulo.detalle
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al obtener colores/detalles del artículo {articulo_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error al obtener colores y detalles'
+        }), 500
 
 @bp_articulos.route('/articulos')
 @check_session
@@ -117,7 +184,25 @@ def update_articulo(id):
                                    .join(Proveedores, ProvByArt.idproveedor == Proveedores.id) \
                                    .filter(ProvByArt.idarticulo == articulo.id).all()
         
-        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        # Obtener colores disponibles desde la base de datos
+        colores_disponibles = Colores.query.all()
+        
+        # Obtener colores del artículo si se está editando
+        colores_articulo = []
+        if id != '0' and articulo:
+            colores_articulo_query = db.session.query(ArticulosColores.id_color).filter_by(id_articulo=articulo.id).all()
+            colores_articulo = [color.id_color for color in colores_articulo_query]
+        
+        # Obtener detalles disponibles desde la base de datos
+        detalles_disponibles = DetallesArticulos.query.all()
+        
+        # Obtener detalles del artículo si se está editando
+        detalles_articulo = []
+        if id != '0' and articulo:
+            detalles_articulo_query = db.session.query(ArticulosDetalles.id_detalle).filter_by(id_articulo=articulo.id).all()
+            detalles_articulo = [detalle.id_detalle for detalle in detalles_articulo_query]
+        
+        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
     if request.method == 'POST':
         
@@ -135,8 +220,10 @@ def update_articulo(id):
                 idmarca=request.form['idmarca']
                 idTipoArticulo=request.form['idtipoarticulo']
                 esCompuesto=request.form.get("es_compuesto") != None
+                con_colores=request.form.get("con_colores") != None
+                con_talles=request.form.get("con_talles") != None
                 pedirEnVentas=request.form.get("pedir_en_ventas")
-                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto, pedir_en_ventas=pedirEnVentas) 
+                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto, pedir_en_ventas=pedirEnVentas, con_colores=con_colores, con_talles=con_talles) 
                 db.session.add(articulo)
                 
             except Exception as e:
@@ -155,6 +242,8 @@ def update_articulo(id):
                 articulo.idib = request.form['idib']
                 articulo.idtipoarticulo = request.form['idtipoarticulo']
                 articulo.es_compuesto = request.form.get("es_compuesto") != None
+                articulo.con_colores=request.form.get("con_colores") != None
+                articulo.con_talles=request.form.get("con_talles") != None
                 articulo.pedir_en_ventas = request.form.get("pedir_en_ventas")
                 articulo.idmarca = request.form['idmarca']
                 articulo.idrubro = request.form['idrubro']
@@ -199,7 +288,7 @@ def update_articulo(id):
                     else:    
                         precio = Precio(idlista, articulo.id, pvp, datetime.now())
                         db.session.add(precio)
-                    db.session.commit()
+                    db.session.flush()
             except Exception as e:
                 flash(f'Error grabando precios {e}', 'error')
                 
@@ -220,14 +309,74 @@ def update_articulo(id):
                     if stock:
                         stock.deseable = deseable
                         stock.maximo = maximo
-                        db.session.commit()
+                        db.session.flush()
                     else:    
                         stock = Stock(idstock, articulo.id, idsucstock, deseable, maximo)
                         db.session.add(stock)
-                    db.session.commit()
+                    db.session.flush()
             except Exception as e:
                 flash(f'Error grabando stocks {e}', 'error')
 
+        # Manejar colores del artículo
+        try:
+            # Debug: Imprimir todos los datos del formulario
+            if articulo.con_colores == None or articulo.con_colores == False:
+                ArticulosColores.query.filter_by(id_articulo=articulo.id).delete()
+            else:
+                for key, value in request.form.items():
+                    print(f"{key}: {value}")
+                
+                # Primero eliminar colores existentes si se está editando
+                if id != '0':
+                    ArticulosColores.query.filter_by(id_articulo=articulo.id).delete()
+                
+                # Procesar colores seleccionados
+                colores_data = request.form.get('colores', '')
+                if colores_data:
+                    import json
+                    try:
+                        colores_seleccionados = json.loads(colores_data)
+                        for color_data in colores_seleccionados:
+                            if isinstance(color_data, dict) and 'id' in color_data:
+                                color_id = color_data['id']
+                                # Verificar que el color existe
+                                if Colores.query.get(color_id):
+                                    articulo_color = ArticulosColores(id_articulo=articulo.id, id_color=color_id)
+                                    db.session.add(articulo_color)
+                                    db.session.flush()
+                    except (json.JSONDecodeError, KeyError, ValueError) as e:
+                        flash(f'Error procesando colores: {e}', 'warning')
+        except Exception as e:
+            flash(f'Error grabando colores: {e}', 'error')
+
+        # Manejar detalles del artículo
+        try:
+            if articulo.con_talles == None or articulo.con_talles == False:
+                ArticulosDetalles.query.filter_by(id_articulo=articulo.id).delete()
+            else:
+                # Primero eliminar detalles existentes si se está editando
+                if id != '0':
+                    ArticulosDetalles.query.filter_by(id_articulo=articulo.id).delete()
+                
+                # Procesar detalles seleccionados
+                detalles_data = request.form.get('detalles', '')
+                if detalles_data:
+                    import json
+                    try:
+                        detalles_seleccionados = json.loads(detalles_data)
+                        for detalle_data in detalles_seleccionados:
+                            if isinstance(detalle_data, dict) and 'id' in detalle_data:
+                                detalle_id = detalle_data['id']
+                                # Verificar que el detalle existe
+                                if DetallesArticulos.query.get(detalle_id):
+                                    articulo_detalle = ArticulosDetalles(id_articulo=articulo.id, id_detalle=detalle_id)
+                                    db.session.add(articulo_detalle)
+                                    db.session.flush()
+                    except (json.JSONDecodeError, KeyError, ValueError) as e:
+                        flash(f'Error procesando detalles: {e}', 'warning')
+        except Exception as e:
+            flash(f'Error grabando detalles: {e}', 'error')
+        db.session.commit()
         flash('Articulo grabado')
         return redirect(url_for('articulos.articulos'))
 

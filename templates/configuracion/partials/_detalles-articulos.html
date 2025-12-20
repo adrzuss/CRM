@@ -1,0 +1,21 @@
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    <h6>Ingreso de colores</h6>
+                    <form action="{{ url_for('configuraciones.add_detalle_articulo') }}" method="post">
+                        <div class="mb-3"> 
+                            <label for="nombreDetalleArticulo">Descripción</label>
+                            <input class="form-control" type="text" name="nombreDetalleArticulo" id="nombreDetalleArticulo" placeholder="Nombre del detalle del artículo">
+                        </div>
+
+                        <button class="btn btn-exito" type="submit">Grabar</button>
+                    </form>
+                </div>    
+            </div>   
+        </div>    
+        
+        <div class="col-md-7">
+            {% include 'partials/_lst-detalles-articulos.html' %}
+        </div>     
+    </div>      

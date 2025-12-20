@@ -12,6 +12,7 @@ static/img/ctacteprov/*
 static/img/entidades/*
 static/img/fondos/*
 cert_fe/*
+SQL/*
 *.pdf
 *.sql
 *.mwb

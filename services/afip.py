@@ -34,7 +34,8 @@ class AFIP:
                 return {'success': True, 'error': None}    
             except Exception as e:  
                 db.session.rollback()
-                print(f"Error al guardar datos de autenticación: {str(e)}")
+                #print(f"Error al guardar datos de autenticación: {str(e)}")
+                logging.error(f"Error al guardar datos de autenticación: {type(e).__name__}")
                 return {'success': False, 'error': str(e)}    
         else:        
             return {'success': False, 'error': f'No existe el punto de venta {self.punto_venta} en la base de datos'}    
@@ -88,7 +89,8 @@ class AFIP:
                             'Cuit': self._get_cuit_from_certificate()
                         }
                     except Exception as e:
-                        print(f"Error al obtener datos del CUIT: {str(e)}")
+                        #print(f"Error al obtener datos del CUIT: {str(e)}")
+                        logging.error(f"Error al obtener datos del CUIT: {type(e).__name__}")
                         return {'success': False, 'error': f'Error obteniendo datos del CUIT:{e}'}
                     print('Auth:', self.auth)
                     self.save_auth_data()    
@@ -142,7 +144,8 @@ class AFIP:
             print('------------------------------------------------')
             return response
         except Exception as e:
-            print('Error al obtener el último comprobante autorizado:', e)
+            #print('Error al obtener el último comprobante autorizado:', e)
+            logging.error(f"Error al obtener el último comprobante autorizado: {type(e).__name__}")
             return None
     
     def get_condicion_IVAReceptor(self, nro_doc, tipo_comprobante):
@@ -213,7 +216,7 @@ class AFIP:
                             'CbteFch': datetime.now().strftime("%Y%m%d"),
                             'ImpTotal': invoice_data['importe_total'],
                             'ImpTotConc': 0,  # Importe neto no gravado
-                            'ImpNeto': invoice_data['importe_neto'],
+                            'ImpNeto': invoice_data['importev_neto'],
                             'ImpOpEx': 0,  # Importe exento
                             'ImpIVA': invoice_data['importe_iva'],
                             'ImpTrib': 0,  # Importe de tributos
@@ -273,7 +276,8 @@ class AFIP:
             
             return self._process_response(response)
         except Exception as e:
-            print(f"Error al crear factura: {str(e)}")
+            #print(f"Error al crear factura: {str(e)}")
+            logging.error(f"Error al crear factura: {type(e).__name__}")
             return {"success": False, "error": str(e)}
     
                  
@@ -309,6 +313,7 @@ class AFIP:
                 'observaciones': observaciones
             }
         except Exception as e:
+            logging.error(f"Error: {type(e).__name__}")
             respuesta = {
                 'error': str(e)
             }    

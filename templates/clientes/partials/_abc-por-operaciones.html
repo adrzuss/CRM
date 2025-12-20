@@ -1,20 +1,37 @@
-<div
-    class="table-responsive"
->
-    <table class="display table table-bordered table-striped" id="dataTable" width="100%" >
-        <thead class="thead-dark">
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="dataTable" width="100%">
+        <thead class="table-dark">
             <tr>
-                <th scope="col">Cliente</th>
-                <th scope="col">Cant. oper</th>
-                <th scope="col">Porcentaje</th>
+                <th scope="col"><i class="fas fa-user me-2"></i>Cliente</th>
+                <th scope="col" class="text-center"><i class="fas fa-chart-line me-2"></i>Operaciones</th>
+                <th scope="col" class="text-center"><i class="fas fa-percentage me-2"></i>Porcentaje</th>
             </tr>
         </thead>
         <tbody>
             {% for abc_operacion in abc_operaciones %}
-                <tr class="">
-                    <td scope="row">{{ abc_operacion.nombre }}</td>
-                    <td style="text-align: center;">{{ abc_operacion.cantidad }}</td>
-                    <td style="text-align: center;">{{ "%.2f"|format(abc_operacion.porcentaje) }} %</td>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <strong>{{ abc_operacion.nombre }}</strong>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-primary fs-6">{{ abc_operacion.cantidad }}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="progress" style="width: 60px; height: 20px;">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {{ abc_operacion.porcentaje }}%" 
+                                     aria-valuenow="{{ abc_operacion.porcentaje }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="ms-2 fw-bold">{{ "%.2f"|format(abc_operacion.porcentaje) }}%</span>
+                        </div>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

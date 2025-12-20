@@ -1,6 +1,36 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
+// Función para asegurar que existan campos hidden de color/detalle
+function ensureColorDetalleFields() {
+  const rows = document.querySelectorAll("#tabla-items tbody tr");
+  
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector("td.id-articulo");
+    if (firstCell) {
+      // Verificar si ya tiene los campos
+      let colorInput = row.querySelector('[name*="id_color"]');
+      let detalleInput = row.querySelector('[name*="id_detalle"]');
+      
+      if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'hidden';
+        colorInput.name = `items[${index}][id_color]`;
+        colorInput.value = '0';
+        firstCell.appendChild(colorInput);
+      }
+      
+      if (!detalleInput) {
+        detalleInput = document.createElement('input');
+        detalleInput.type = 'hidden';
+        detalleInput.name = `items[${index}][id_detalle]`;
+        detalleInput.value = '0';
+        firstCell.appendChild(detalleInput);
+      }
+    }
+  });
+}
+
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
     return "¿Estás seguro de cerrar la compra sin guardar los cambios?";
@@ -120,32 +150,15 @@ async function fetchProveedor(input) {
 }
 
 function mostrarModalSeleccionProveedores(proveedores) {
-  // Crear el contenido del modal con las opciones de proveedor
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Proveedor";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaClientes = document.createElement("ul");
-  listaClientes.classList.add("list-group");
-  modalContent.appendChild(listaClientes);
-
-  proveedores.forEach((proveedor) => {
-    const clienteOption = document.createElement("li");
-    clienteOption.classList.add("cliente-option");
-    clienteOption.classList.add("list-group-item");
-    clienteOption.textContent = `${proveedor.nombre} - Tel/Cel: ${proveedor.telefono}`;
-    clienteOption.onclick = () => {
-      asignarProveedor(proveedor);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const proveedorInput = document.getElementById("idproveedor");
-      proveedorInput.focus();
-    };
-    listaClientes.appendChild(clienteOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  const callback = (proveedor) => {
+    asignarProveedor(proveedor);
+    // Enfocar el nuevo input de código
+    const proveedorInput = document.getElementById("idproveedor");
+    if (proveedorInput) proveedorInput.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('proveedores', proveedores || [], callback);
 } 
 
 
@@ -193,47 +206,89 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
-  itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  const row = itemDiv.target.closest("tr");
+  const tablaItems = document.getElementById("tabla-items").querySelector("tbody");
+  
+  row.querySelector(".id-articulo").textContent = articulo.id;
+  row.querySelector(".descripcion-articulo").textContent = articulo.detalle;
   const precioUnitario = parseFloat(articulo.precio);
-  const edtPrecio = itemDiv.target.closest("tr").querySelector(".precio-unitario")
+  const edtPrecio = row.querySelector(".precio-unitario");
   edtPrecio.value = precioUnitario.toFixed(2);
+  
+  // Asegurar que existan campos hidden antes de intentar mostrar modal
+  ensureColorDetalleFields();
+  
+  // Activar modal de color/detalle si está disponible
+  function tryShowModal() {
+      if (window.modalColorDetalleManager && articulo.id) {
+          const rowIndex = Array.from(tablaItems.querySelectorAll('tr')).indexOf(row);
+          
+          window.modalColorDetalleManager.mostrarModal(
+              articulo.id,
+              rowIndex,
+              articulo.detalle,
+              function(seleccion) {
+                  // Asegurar que existan los campos hidden
+                  ensureColorDetalleFields();
+                  
+                  // Buscar campos hidden
+                  let colorInput = row.querySelector('input[name*="id_color"]');
+                  let detalleInput = row.querySelector('input[name*="id_detalle"]');
+                  
+                  // Si no se encuentran, crearlos
+                  if (!colorInput || !detalleInput) {
+                      const firstCell = row.querySelector("td.id-articulo");
+                      if (firstCell) {
+                          if (!colorInput) {
+                              colorInput = document.createElement('input');
+                              colorInput.type = 'hidden';
+                              colorInput.name = `items[${seleccion.rowIndex}][id_color]`;
+                              colorInput.value = '0';
+                              firstCell.appendChild(colorInput);
+                          }
+                          
+                          if (!detalleInput) {
+                              detalleInput = document.createElement('input');
+                              detalleInput.type = 'hidden';
+                              detalleInput.name = `items[${seleccion.rowIndex}][id_detalle]`;
+                              detalleInput.value = '0';
+                              firstCell.appendChild(detalleInput);
+                          }
+                      }
+                  }
+                  
+                  // Asignar valores seleccionados
+                  if (colorInput && seleccion.colorId) {
+                      colorInput.value = seleccion.colorId;
+                  }
+                  
+                  if (detalleInput && seleccion.detalleId) {
+                      detalleInput.value = seleccion.detalleId;
+                  }
+              }
+          );
+      } else if (window.modalColorDetalleManager === undefined) {
+          // Reintentar después de un breve retraso si el manager no está disponible
+          setTimeout(tryShowModal, 50);
+      }
+  }
+  
+  // Intentar mostrar el modal después de un pequeño retraso
+  setTimeout(tryShowModal, 100);
+  
   updateItemTotal(itemDiv);
   updateTotalFactura();
   edtPrecio.focus();
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Artículo";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaArticulos = document.createElement("ul");
-  listaArticulos.classList.add("list-group");
-  modalContent.appendChild(listaArticulos);
-
-  articulos.forEach((articulo) => {
-    const articuloOption = document.createElement("li");
-    articuloOption.classList.add("cliente-option");
-    articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${
-      articulo.detalle
-    }</strong> - <span class="precio-normal">$${parseFloat(articulo.costo)
-      .toFixed(2)
-      .toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}</span>`;
-    articuloOption.onclick = () => {
-      asignarArticuloElegido(articulo, itemDiv);
-      $("#clienteModal").modal("hide");
-    };
-    listaArticulos.appendChild(articuloOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  // Callback para manejar la selección del artículo
+  const callback = (articulo) => {
+    asignarArticuloElegido(articulo, itemDiv);
+  };
+  
+  // Usar el modal universal para mostrar los artículos
+  window.universalSearchModal.show('articulos', articulos, callback);
 }
 
 function updateItemTotal(itemDiv) {
@@ -260,8 +315,13 @@ function updateTotalFactura() {
       totalFactura += precioTotal;
     }
   });
-  document.getElementById("total_factura").textContent = totalFactura.toFixed(2);
-  calcSaldo();
+  document.getElementById("totalFactura").value = totalFactura.toFixed(2);
+  
+  // Solo llamar calcSaldo si el modal está abierto y las funciones universales están disponibles
+  const modal = document.getElementById('transaccionesModal');
+  if (modal && modal.classList.contains('show') && window.calcSaldo) {
+    window.calcSaldo();
+  }
 }
 
 function removeItem(itemDiv) {
@@ -285,41 +345,11 @@ function renumberItems() {
   });
 }
 
-function calcSaldo() {
-  const totalFac = parseFloat(
-    document.getElementById("total_factura").textContent
-  );
-  const efectivo = parseFloat(document.getElementById("efectivo").value);
-  const ctacte = parseFloat(document.getElementById("ctacte").value);
-  let diferencia = totalFac - (efectivo + ctacte);
-  let lblSaldo = document.getElementById("saldo_factura");
-  lblSaldo.textContent = diferencia;
-  if (diferencia > 0) {
-    lblSaldo.className = "negativo";
-  } else if (diferencia === 0) {
-    lblSaldo.className = "neutro";
-  } else {
-    lblSaldo.className = "positivo";
-  }
-}
+// Funciones calcSaldo() y checkTotales() movidas a modal-transacciones-universal.js
+// para usar la implementación universal que funciona correctamente
 
-function checkTotales() {
-  const totalFac = parseFloat(
-    document.getElementById("total_factura").textContent
-  );
-  const efectivo = parseFloat(document.getElementById("efectivo").value);
-  const ctacte = parseFloat(document.getElementById("ctacte").value);
-  let HayDiferencia = totalFac == efectivo + ctacte;
-  return HayDiferencia;
-}
-
-document.getElementById("efectivo").addEventListener("input", function (event) {
-  calcSaldo();
-});
-
-document.getElementById("ctacte").addEventListener("input", function (event) {
-  calcSaldo();
-});
+// Event listeners para campos de pago movidos a modal-transacciones-universal.js
+// para evitar duplicación y usar la funcionalidad universal
 
 document.getElementById("idproveedor").addEventListener("blur", function () {
   const idproveedor = this.value;
@@ -402,3 +432,151 @@ document
       isFormSubmited = true;
     }
   });
+
+// ================================================================
+//                    FUNCIONES DE MODAL DE PAGOS
+// ================================================================
+
+function abrirModalPagos() {
+    // Configurar total antes de abrir modal
+    const totalElement = document.getElementById('totalFactura');
+    const totalFactura = totalElement ? (totalElement.value || totalElement.textContent) : '0';
+    
+    console.log('🚚 [COMPRAS] abrirModalPagos() - Total obtenido:', totalFactura, typeof totalFactura);
+    
+    // Verificar que la función universal esté disponible
+    if (window.cargarDatosModal) {
+        console.log('✅ [COMPRAS] cargarDatosModal está disponible');
+        window.cargarDatosModal(parseFloat(totalFactura) || 0);
+    } else {
+        console.error('❌ [COMPRAS] cargarDatosModal no está disponible');
+        console.log('🔍 [COMPRAS] window.cargarDatosModal:', typeof window.cargarDatosModal);
+    }
+    
+    $('#transaccionesModal').modal('show');
+    
+    // Cuando el modal se haya mostrado, hacer debug adicional
+    document.getElementById('transaccionesModal').addEventListener('shown.bs.modal', function () {
+        console.log('📋 [COMPRAS] Modal mostrado, verificando campos...');
+        
+        // Verificar campos de pago
+        const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion'];
+        paymentFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            console.log(`🔍 [COMPRAS] Campo ${fieldId}:`, field ? 'EXISTE' : 'NO EXISTE', field?.value || 'sin valor');
+        });
+        
+        // Verificar elemento total
+        const totalFacElement = document.getElementById('modal_total_factura');
+        console.log('💰 [COMPRAS] modal_total_factura:', totalFacElement ? 'EXISTE' : 'NO EXISTE', totalFacElement?.textContent || 'sin valor');
+        
+        // Enfocar primer input
+        const primerInput = document.querySelector('#transaccionesModal input:not([readonly]):not([type="hidden"])');
+        if (primerInput) {
+            primerInput.focus();
+            console.log('👆 [COMPRAS] Enfocando:', primerInput.id);
+        }
+        
+        // LISTENERS REMOVIDOS: Ahora se manejan exclusivamente en modal-transacciones-universal.js
+        // para evitar duplicaciones y conflictos
+        
+        // Agregar función de test para verificar funcionamiento
+        window.testCambiarEfectivo = function(valor) {
+            console.log('🧪 [TEST] Cambiando efectivo a:', valor);
+            const efectivo = document.getElementById('efectivo');
+            if (efectivo) {
+                const valorAnterior = efectivo.value;
+                efectivo.value = valor;
+                console.log(`🧪 [TEST] Valor cambiado de "${valorAnterior}" a "${valor}"`);
+                
+                // Disparar evento
+                const evento = new Event('input', { bubbles: true });
+                efectivo.dispatchEvent(evento);
+                console.log('🧪 [TEST] Evento input disparado');
+                
+                // Verificar listeners
+                console.log('🧪 [TEST] Verificando listeners en el elemento:', efectivo);
+                
+                // Verificar funciones globales
+                console.log('🧪 [TEST] window.calcSaldo disponible:', typeof window.calcSaldo);
+                console.log('🧪 [TEST] calcSaldo local disponible:', typeof calcSaldo);
+                
+            } else {
+                console.error('🧪 [TEST] Campo efectivo no encontrado');
+            }
+        };
+        
+        window.testCambiarCredito = function(valor) {
+            console.log('🧪 [TEST CREDITO] Cambiando credito a:', valor);
+            const credito = document.getElementById('credito');
+            if (credito) {
+                credito.value = valor;
+                credito.dispatchEvent(new Event('input', { bubbles: true }));
+                console.log('🧪 [TEST CREDITO] Evento disparado');
+            }
+        };
+        
+        console.log('🧪 [COMPRAS] Funciones de test disponibles:');
+        console.log('   - testCambiarEfectivo(1000)');
+        console.log('   - testCambiarCredito(500)');
+        
+    }, { once: true });
+}
+
+// Personalizar procesamiento para compras
+function procesarTransaccion() {
+    console.log('🚚 [COMPRAS] procesarTransaccion() llamada');
+    
+    // Usar las funciones universales para verificar totales
+    if (!window.checkTotales || !window.checkTotales()) {
+        const diferencia = window.calcSaldo ? window.calcSaldo() : 0;
+        const mensaje = diferencia > 0 ? 
+            `Falta pagar $${diferencia.toFixed(2)}` : 
+            `Sobra $${Math.abs(diferencia).toFixed(2)}`;
+        
+        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+            return false;
+        }
+    }
+    
+    // Confirmar grabado
+    if (!confirm('¿Grabar la compra?')) {
+        return false;
+    }
+    
+    console.log('✅ [COMPRAS] Usuario confirmó grabado, cerrando modal...');
+    
+    // Cerrar modal
+    $('#transaccionesModal').modal('hide');
+    
+    // Usar el comportamiento tradicional del formulario en lugar de AJAX
+    console.log('📋 [COMPRAS] Enviando formulario tradicional...');
+    
+    // Obtener formulario
+    const form = document.querySelector('form#invoice_form');
+    if (!form) {
+        console.error('❌ [COMPRAS] Formulario no encontrado');
+        alert('Error: No se pudo grabar la compra. Formulario no encontrado.');
+        return false;
+    }
+    
+    // Marcar que el formulario está siendo enviado para evitar el warning de beforeunload
+    isFormSubmited = true;
+    
+    // Enviar formulario de la manera tradicional (sin AJAX)
+    form.submit();
+    
+    return true;
+}
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F8') {
+        e.preventDefault();
+        abrirModalPagos();
+    }
+});
+
+// Hacer funciones disponibles globalmente
+window.abrirModalPagos = abrirModalPagos;
+window.procesarTransaccion = procesarTransaccion;

@@ -193,29 +193,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function mostrarModalSeleccionArticulos(articulos, itemDiv) {
-        // Crear el contenido del modal con las opciones de cliente
-        const tituloModal = document.getElementById('clienteModalLabel'); 
-        tituloModal.textContent = 'Seleccione un Artículo';
-        const modalContent = document.getElementById('modalContent');
-        modalContent.innerHTML = '';
-        const listaArticulos = document.createElement('ul');
-        listaArticulos.classList.add('list-group')
-        modalContent.appendChild(listaArticulos)
+        const callback = (articulo) => {
+            asignarArticuloElegido(articulo, itemDiv);
+        };
         
-        articulos.forEach(articulo => {
-            const articuloOption = document.createElement('li');
-            articuloOption.classList.add('cliente-option');
-            articuloOption.classList.add('list-group-item');
-            articuloOption.innerHTML = `<strong>${articulo.detalle}</strong> - <span class="precio-normal">$${articulo.precio.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
-            articuloOption.onclick = () => {
-                asignarArticuloElegido(articulo, itemDiv);
-                $('#clienteModal').modal('hide');
-            };
-            listaArticulos.appendChild(articuloOption);
-        });
-    
-        // Mostrar el modal
-        $('#clienteModal').modal('show');
+        // Mostrar modal con los datos
+        window.universalSearchModal.show('articulos', articulos || [], callback);
     }
 
     function asignarArticuloElegido(articulo, itemDiv) {

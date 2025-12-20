@@ -1,189 +1,424 @@
 {% extends 'base.html' %}
 {% block body %}
-    {% if articulo.id %}
-        <form action="{{ url_for('articulos.update_articulo', id=articulo.id) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" >
-    {% else %}
-        <form action="{{ url_for('articulos.update_articulo', id=0) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" >
-    {% endif %}
-    <div class="row justify-content-md-center m-3">
-        <div class="row">
-            <div class="col-8">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            {% if articulo.id %}
-                                <h3 class="m-3">Modificacion de artículos</h3>
-                            {% else %}
-                                <h3 class="m-3 text-uno-bold">Nuevo artículos</h3>
-                            {% endif %}
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="mb-3 col-1"> 
-                                        <label for="id">#</label>
-                                        <input class="form-control" type="text" name="id" id="id" value="{{ articulo.id }}" readonly>
-                                    </div>
-                                    <div class="mb-3 col-3"> 
-                                        <label for="codigo">Código<span style="color: red">*</span></label>
-                                        <input class="form-control" type="text" name="codigo" id="codigo" placeholder="Ingrese el código" value="{{ articulo.codigo }}" required>
-                                    </div>
-                                    <div class="mb-3 col-8">
-                                        <label for="detalle">Detalle<span style="color: red">*</span></label>
-                                        <input class="form-control" type="text" name="detalle" id="detalle" placeholder="Ingrese el detalle" value="{{ articulo.detalle }}" required>
-                                    </div>    
-                                </div>    
-                                
-                                <div class="row">
-                                    <div class="mb-3 col-3">
-                                        <label for="precio">Costo<span style="color: red">*</span></label>
-                                        <input class="form-control precio" type="number" step="0.01" min="0" name="costo" id="costo" placeholder="Ingrese el precio" value="{{ articulo.costo | default(0)| round(2) }}" required>
-                                    </div>
-                                    
-                                    <div class="col-2 mb-3">
-                                        <label for="impint">% Imp. int.<span style="color: red">*</span></label>
-                                        {% if articulo.impint %}
-                                            <input class="form-control precio" type="number" step="0.01" min="0" max="100" name="impint" id="impint" placeholder="Ingrese imp. internos" value="{{ articulo.impint }}" readonly>
-                                        {% else %}
-                                            <input class="form-control precio" type="number" step="0.01" min="0" max="100" name="impint" id="impint" placeholder="Ingrese imp. internos" value="0" required >
-                                        {% endif %}
-                                    </div>    
-                                    <div class="col-2 mb-3">
-                                        <label for="exento">% Exento<span style="color: red">*</span></label>
-                                        {% if articulo.exento %}
-                                            <input class="form-control precio" type="number" step="0.01" min="0" max="100" name="exento" id="exento" placeholder="Ingrese % exento" value="{{ articulo.exento }}" readonly>
-                                        {% else %}
-                                            <input class="form-control precio" type="number" step="0.01" min="0" max="100" name="exento" id="exento" placeholder="Ingrese % exento" value="0" required >
-                                        {% endif %}
-                                    </div>    
-                                
-                                    <div class="mb-3 col-2">
-                                        <label for="idiva">IVA:<span style="color: red">*</span></label>
-                                        <select class="form-control" id="idiva" name="idiva" required value="{{ articulo.idiva }}">
-                                        {% for iva in ivas %}
-                                            {% if iva.id == articulo.idiva %}
-                                                <option value="{{ iva.id }}" selected>{{ iva.descripcion }}</option>
-                                            {% else %}
-                                                <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </select>
-                                    </div>    
-                                    <div class="mb-3 col-2">
-                                        <label for="idib">Ing brutos:<span style="color: red">*</span></label>
-                                        <select class="form-control" id="idib" name="idib" required value="{{ articulo.idib }}">
-                                        {% for ib in ibs %}
-                                            <option value="{{ ib.id }}">{{ ib.descripcion }}</option>
-                                        {% endfor %}
-                                        </select>
-                                    </div>    
-                                </div>        
-                                <div class="row">
-                                    <div class="mb-3 col-5">
-                                        <label for="idmarca">Marca:</label>
-                                        <select class="form-control" id="idmarca" name="idmarca" required>
-                                        {% for marca in marcas %}
-                                            {% if marca.id == articulo.idmarca %}
-                                                <option value="{{ marca.id }}" selected>{{ marca.nombre }}</option>
-                                            {% else %}
-                                                <option value="{{ marca.id }}">{{ marca.nombre }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </select>
-                                    </div>    
-                                    <div class="col-5 mb-3">
-                                        <label for="idrubro">Rubro:<span style="color: red">*</span></label>
-                                        <select class="form-control" id="idrubro" name="idrubro" required>
-                                        {% for rubro in rubros %}
-                                            {% if rubro.id == articulo.idrubro %}
-                                                <option value="{{ rubro.id }}" selected>{{ rubro.nombre }}</option>
-                                            {% else %}
-                                                <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
-                                            {% endif %}    
-                                        {% endfor %}
-                                        </select>
-                                    </div>    
-                                </div>    
-                                <div class="row">
-                                    <div class="col-4 mb-3">
-                                        <label for="idtipoarticulo">Tipo de articulo:<span style="color: red">*</span></label>
-                                        <select class="form-select" id="idtipoarticulo" name="idtipoarticulo" required>
-                                        {% for tipoarticulo in tipoarticulos %}
-                                            {% if articulo.idtipoarticulo == tipoarticulo.id %}
-                                                <option value="{{ tipoarticulo.id }}" selected>{{ tipoarticulo.nombre }}</option>
-                                            {% else %}
-                                                <option value="{{ tipoarticulo.id }}">{{ tipoarticulo.nombre }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </select>
-                                    </div>    
-                                    <div class="col-3 mb-3 form-check">
-                                        {% if articulo.es_compuesto == 1 %}
-                                            <input class="form-check-input" type="checkbox" id="es_compuesto" name="es_compuesto" checked>
-                                        {% else %}
-                                            <input class="form-check-input" type="checkbox" id="es_compuesto" name="es_compuesto">
-                                        {% endif %}    
-                                        <label for="es_compuesto" class="form-check-label">Es Compuesto</label>
-                                    </div>    
-                                    <div class="col-4 mb-3">
-                                        <label for="pedir_en_ventas">Pedir en ventas:<span style="color: red">*</span></label>
-                                        <select class="form-select" id="pedir_en_ventas" name="pedir_en_ventas" required>
-                                        {% for opcion in pedirEnVentas %}
-                                            {% if articulo.pedir_en_ventas == opcion.name %}
-                                                <option value="{{ opcion.name }}" selected>{{ opcion.value }}</option>
-                                            {% else %}
-                                                <option value="{{ opcion.name }}">{{ opcion.value }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </select>
 
-                                    </div>
-                                </div>    
-                                
-                                <div class="row">
-                                    <div class="col-3">
-                                        <label for="costo_total">Costo total:</label>
-                                        <input class="form-control costo_total" style="color:blue;font-weight:bold" type="number" step="0.01" min="0" name="costo_total" id="costo_total" placeholder="Ingrese el costo total" value="{{ articulo.costo_total | default(0)| round(2) }}" readonly >
-                                    </div>    
-                                    <div class="col-3">
-                                        <label for="baja">Fecha de baja:</label>
-                                        {% if articulo.baja %}
-                                            {% if articulo.baja.strftime('%Y-%m-%d') == '1900-01-01' %}
-                                                <input class="form-control baja" type="text" name="baja" id="baja" value="Activo" readonly>
-                                            {% else %}
-                                                <input class="form-control baja" type="date" name="baja" id="baja" value="{{ articulo.baja }}" readonly>
-                                            {% endif %}
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs modernos -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('articulos.articulos') }}"><i class="fas fa-box"></i> Artículos</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-edit"></i> 
+                {% if articulo.id %}Modificar Artículo{% else %}Nuevo Artículo{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    {% if articulo.id %}
+                        <i class="fas fa-edit text-primary"></i> Modificar Artículo
+                    {% else %}
+                        <i class="fas fa-plus-circle text-success"></i> Nuevo Artículo
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">
+                    {% if articulo.id %}
+                        Actualiza la información del artículo #{{ articulo.id }}
+                    {% else %}
+                        Crea un nuevo artículo en el sistema
+                    {% endif %}
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('articulos.articulos') }}" class="btn btn-outline-secondary btn-modern">
+                    <i class="fas fa-arrow-left"></i> Volver al listado
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if articulo.id %}
+        <form action="{{ url_for('articulos.update_articulo', id=articulo.id) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" class="modern-form">
+    {% else %}
+        <form action="{{ url_for('articulos.update_articulo', id=0) }}" id="articulo_form" method="post" enctype="multipart/form-data" onsubmit="return validar();" class="modern-form">
+    {% endif %}
+    
+    <div class="row g-4">
+        <!-- Información básica del artículo -->
+        <div class="col-xl-8 col-lg-8">
+            <div class="card modern-card h-100">
+                <div class="card-header modern-header">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <small class="text-muted">Datos principales del artículo</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Fila 1: ID, Código y Detalle -->
+                    <div class="row mb-4">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input class="form-control form-control-modern" type="text" name="id" id="id" 
+                                       value="{{ articulo.id }}" readonly placeholder="ID">
+                                <label for="id"><i class="fas fa-hashtag me-2"></i>ID</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input class="form-control form-control-modern" type="text" name="codigo" id="codigo" 
+                                       placeholder="Código del artículo" value="{{ articulo.codigo }}" required>
+                                <label for="codigo"><i class="fas fa-barcode me-2"></i>Código <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input class="form-control form-control-modern" type="text" name="detalle" id="detalle" 
+                                       placeholder="Descripción del artículo" value="{{ articulo.detalle }}" required>
+                                <label for="detalle"><i class="fas fa-align-left me-2"></i>Detalle <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                    </div>    
+                    
+                    <!-- Fila 2: Costos e Impuestos -->
+                    <div class="row mb-4">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input class="form-control form-control-modern precio" type="number" step="0.01" min="0" 
+                                       name="costo" id="costo" placeholder="0.00" 
+                                       value="{{ articulo.costo | default(0)| round(2) }}" required>
+                                <label for="costo"><i class="fas fa-dollar-sign me-2"></i>Costo <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                {% if articulo.impint %}
+                                    <input class="form-control form-control-modern precio" type="number" step="0.01" min="0" max="100" 
+                                           name="impint" id="impint" placeholder="0.00" 
+                                           value="{{ articulo.impint }}" readonly>
+                                {% else %}
+                                    <input class="form-control form-control-modern precio" type="number" step="0.01" min="0" max="100" 
+                                           name="impint" id="impint" placeholder="0.00" value="0" required>
+                                {% endif %}
+                                <label for="impint"><i class="fas fa-percentage me-2"></i>Imp. Int. <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                {% if articulo.exento %}
+                                    <input class="form-control form-control-modern precio" type="number" step="0.01" min="0" max="100" 
+                                           name="exento" id="exento" placeholder="0.00" 
+                                           value="{{ articulo.exento }}" readonly>
+                                {% else %}
+                                    <input class="form-control form-control-modern precio" type="number" step="0.01" min="0" max="100" 
+                                           name="exento" id="exento" placeholder="0.00" value="0" required>
+                                {% endif %}
+                                <label for="exento"><i class="fas fa-percentage me-2"></i>% Exento <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="idiva" name="idiva" required>
+                                    {% for iva in ivas %}
+                                        {% if iva.id == articulo.idiva %}
+                                            <option value="{{ iva.id }}" selected>{{ iva.descripcion }}</option>
                                         {% else %}
-                                            <input class="form-control baja" type="text" name="baja" id="baja" value="Sin datos" readonly>
+                                            <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
                                         {% endif %}
-                                        
-                                    </div>
+                                    {% endfor %}
+                                </select>
+                                <label for="idiva"><i class="fas fa-receipt me-2"></i>IVA <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="idib" name="idib" required>
+                                    {% for ib in ibs %}
+                                        <option value="{{ ib.id }}"{% if ib.id == articulo.idib %} selected{% endif %}>{{ ib.descripcion }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="idib"><i class="fas fa-building me-2"></i>Ing. Brutos <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                    </div>        
+                    <!-- Fila 3: Marca y Rubro -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="idmarca" name="idmarca" required>
+                                    {% for marca in marcas %}
+                                        {% if marca.id == articulo.idmarca %}
+                                            <option value="{{ marca.id }}" selected>{{ marca.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ marca.id }}">{{ marca.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <label for="idmarca"><i class="fas fa-tags me-2"></i>Marca</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="idrubro" name="idrubro" required>
+                                    {% for rubro in rubros %}
+                                        {% if rubro.id == articulo.idrubro %}
+                                            <option value="{{ rubro.id }}" selected>{{ rubro.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ rubro.id }}">{{ rubro.nombre }}</option>
+                                        {% endif %}    
+                                    {% endfor %}
+                                </select>
+                                <label for="idrubro"><i class="fas fa-list me-2"></i>Rubro <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                    </div>    
+                    <!-- Fila 4: Configuraciones -->
+                    <div class="row mb-4">
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="idtipoarticulo" name="idtipoarticulo" required>
+                                    {% for tipoarticulo in tipoarticulos %}
+                                        {% if articulo.idtipoarticulo == tipoarticulo.id %}
+                                            <option value="{{ tipoarticulo.id }}" selected>{{ tipoarticulo.nombre }}</option>
+                                        {% else %}
+                                            <option value="{{ tipoarticulo.id }}">{{ tipoarticulo.nombre }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <label for="idtipoarticulo"><i class="fas fa-box me-2"></i>Tipo de Artículo <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" id="pedir_en_ventas" name="pedir_en_ventas" required>
+                                    {% for opcion in pedirEnVentas %}
+                                        {% if articulo.pedir_en_ventas == opcion.name %}
+                                            <option value="{{ opcion.name }}" selected>{{ opcion.value }}</option>
+                                        {% else %}
+                                            <option value="{{ opcion.name }}">{{ opcion.value }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <label for="pedir_en_ventas"><i class="fas fa-shopping-cart me-2"></i>Pedir en Ventas <span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="modern-checkbox-group">
+                                <div class="form-check modern-switch">
+                                    {% if articulo.es_compuesto == 1 %}
+                                        <input class="form-check-input" type="checkbox" id="es_compuesto" name="es_compuesto" checked>
+                                    {% else %}
+                                        <input class="form-check-input" type="checkbox" id="es_compuesto" name="es_compuesto">
+                                    {% endif %}    
+                                    <label for="es_compuesto" class="form-check-label">
+                                        <i class="fas fa-layer-group me-2"></i>Es Compuesto
+                                    </label>
                                 </div>
-                                <label class="text-dos-bold">Datos obligatorios <span style="color: red">*</span></label>
-                            </div>  
+                            </div>
+                        </div>
+                    </div>    
+                    <!-- Fila 5: Opciones de Variantes -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="form-check modern-switch">
+                                {% if articulo.con_colores %}
+                                    <input class="form-check-input" type="checkbox" id="con_colores" name="con_colores" checked>
+                                {% else %}  
+                                    <input class="form-check-input" type="checkbox" id="con_colores" name="con_colores">
+                                {% endif %} 
+                                <label for="con_colores" class="form-check-label">
+                                    <i class="fas fa-palette me-2"></i>Con Colores
+                                </label>    
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check modern-switch">
+                                {% if articulo.con_talles %}
+                                    <input class="form-check-input" type="checkbox" id="con_talles" name="con_talles" checked>
+                                {% else %}  
+                                    <input class="form-check-input" type="checkbox" id="con_talles" name="con_talles">
+                                {% endif %} 
+                                <label for="con_talles" class="form-check-label">
+                                    <i class="fas fa-ruler me-2"></i>Con Talles
+                                </label>    
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fila 6: Información Calculada -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input class="form-control form-control-modern costo_total calculated-field" type="number" 
+                                       step="0.01" min="0" name="costo_total" id="costo_total" 
+                                       placeholder="0.00" value="{{ articulo.costo_total | default(0)| round(2) }}" readonly>
+                                <label for="costo_total"><i class="fas fa-calculator me-2"></i>Costo Total</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                {% if articulo.baja %}
+                                    {% if articulo.baja.strftime('%Y-%m-%d') == '1900-01-01' %}
+                                        <input class="form-control form-control-modern baja status-active" type="text" 
+                                               name="baja" id="baja" value="Activo" readonly placeholder="Estado">
+                                    {% else %}
+                                        <input class="form-control form-control-modern baja status-inactive" type="date" 
+                                               name="baja" id="baja" value="{{ articulo.baja }}" readonly placeholder="Fecha">
+                                    {% endif %}
+                                {% else %}
+                                    <input class="form-control form-control-modern baja" type="text" 
+                                           name="baja" id="baja" value="Sin datos" readonly placeholder="Estado">
+                                {% endif %}
+                                <label for="baja"><i class="fas fa-calendar-times me-2"></i>Estado</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nota de campos obligatorios -->
+                    <div class="alert alert-info modern-alert d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de imagen -->
+        <div class="col-xl-4 col-lg-4">
+            <div class="card modern-card h-100">
+                <div class="card-header modern-header">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Imagen del Artículo</h5>
+                            <small class="text-muted">Fotografía o ilustración</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4 d-flex flex-column">
+                    <!-- Vista previa de imagen -->
+                    <div class="image-preview-container mb-4 flex-grow-1">
+                        {% if articulo.imagen %}
+                            <div class="image-preview">
+                                <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" 
+                                     alt="Imagen del artículo" class="img-fluid rounded shadow-sm">
+                            </div>
+                        {% else %}    
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-0">Sin imagen</p>
+                                <small class="text-muted">Sube una imagen para el artículo</small>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Campo de carga de archivo -->
+                    <div class="upload-section">
+                        <label for="imagen" class="form-label fw-medium">
+                            <i class="fas fa-upload me-2"></i>Seleccionar Imagen
+                        </label>
+                        <input class="form-control form-control-modern" type="file" id="imagen" name="imagen" 
+                               accept="image/*" value="{{ articulo.imagen }}">
+                        <small class="form-text text-muted mt-2">
+                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>  
+        <div class="row mt-3" id="seleccion-colores">
+            <div class="col-6 card-colores" style="display: none;">
+                <div class="card">
+                    <div class="card-header gradiente-cinco">
+                        <h5 class="card-title">Descripción de colores</h5>
+                    </div>    
+                    <div class="card-body">
+                        <!-- Grilla de colores desde base de datos -->
+                        <div class="colores-grid">
+                            {% if colores_disponibles %}
+                                {% for color in colores_disponibles %}
+                                <div class="color-item color-available" data-color="{{ color.color }}" data-id="{{ color.id }}">
+                                    <div class="color-preview{% if color.color.lower() == '#ffffff' %} white-color{% endif %}" style="background-color: {{ color.color }};"></div>
+                                    <span class="color-name">{{ color.nombre }}</span>
+                                    <button type="button" class="btn-toggle-color" title="Seleccionar/Deseleccionar">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No hay colores disponibles</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Input oculto para almacenar los colores seleccionados -->
+                        <input type="hidden" id="colores-seleccionados" name="colores" value="">
+                        
+                        <div class="selected-colors-info mt-2">
+                            <small class="text-muted">
+                                <i class="fa fa-info-circle"></i> 
+                                Haz clic en los colores para seleccionar/deseleccionar para este artículo
+                            </small>
                         </div>
                     </div>    
                 </div>
-            </div>    
-            <div class="col-4">
-                <div class="card">
+            </div>
+            <div class="col-6" id="seleccion-talles">
+                <div class="card card-talles" style="display: none;">
+                    <div class="card-header gradiente-seis">
+                        <h5 class="card-title">Detalles del artículo</h5>
+                    </div>
                     <div class="card-body">
-                        {% if articulo.imagen %}
-                            <img src="{{ url_for('static', filename='img/articulos/' + articulo.imagen) }}" alt="Imagen del artículo" class="img-fluid">
-                        {% else %}    
-                            <label>Artículo sin imagen</label>
-                        {% endif %}
-                        <div class="col-12 mb-3">
-                            <label for="imagen">Imagen:</label>
-                            <input class="form-control" type="file" id="imagen" name="imagen" value="{{ articulo.imagen }}">
-                        </div>    
+                        
+                        <!-- Grilla de detalles desde base de datos -->
+                        <div class="detalles-grid">
+                            {% if detalles_disponibles %}
+                                {% for detalle in detalles_disponibles %}
+                                <div class="detalle-item detalle-available" data-id="{{ detalle.id }}">
+                                    <div class="detalle-preview">
+                                        <i class="fa fa-tag"></i>
+                                    </div>
+                                    <span class="detalle-name">{{ detalle.nombre }}</span>
+                                    <button type="button" class="btn-toggle-detalle" title="Seleccionar/Deseleccionar">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No hay detalles disponibles</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Input oculto para almacenar los detalles seleccionados -->
+                        <input type="hidden" id="detalles-seleccionados" name="detalles" value="">
+                        
+                        <div class="selected-detalles-info mt-2">
+                            <small class="text-muted">
+                                <i class="fa fa-info-circle"></i> 
+                                Haz clic en los detalles para seleccionar/deseleccionar para este artículo
+                            </small>
+                        </div>
                     </div>    
                 </div>
-
             </div>
-        </div>        
+        </div>
+        
         <div class="row mt-3">
             <div class="col-6">
                 <div class="card mb-3">
-                    <h5 class="m-3">Precios de venta al público</h5>
+                    <div class="card-header gradiente-dos">
+                        <h5 class="m-3">Precios de venta al público</h5>
+                    </div>
                     <div class="card-body">
                         <div class="precios" id="precios">
                             {% for lista in listas_precio %}
@@ -220,7 +455,9 @@
             <div class="col-6">    
                 <div>
                     <div class="card">
-                        <h5 class="m-3">Stock de artículos</h5>
+                        <div class="card-header gradiente-tres">
+                            <h5 class="m-3">Stock de artículos</h5>
+                        </div>
                         <div class="card-body">
                             {% for stock in stocks %}
                                 <div class="row">
@@ -257,7 +494,9 @@
                     </div>
 
                     <div class="card mt-3">
-                        <h5 class="m-3">Proveedores de artículos</h5>
+                        <div class="card-header gradiente-cuatro">
+                            <h5 class="m-3">Proveedores de artículos</h5>
+                        </div>
                         <div class="card-body">
                             {% for prov in provByArt %}
                                 <div class="row">
@@ -283,19 +522,41 @@
     </div>
     <div class="card m-3">
         <div class="card-body">
-            <div class="row">
-                <button class="btn btn-exito col-2 m-3" type="submit">Grabar</button>
-                <a class="btn btn-peligro col-2 m-3" href="{{ url_for('articulos.articulos') }}">Cancelar</a>
+            <div class="row footer-actions">
+                <button class="btn btn-moderno btn-exito col-1 m-3 " type="submit">Grabar</button>
+                <a class="btn btn-moderno btn-peligro col-1 m-3" href="{{ url_for('articulos.articulos') }}">Cancelar</a>
                 {% if articulo.id %}
-                    <a class="btn btn-primario col-2 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
+                    <a class="btn btn-moderno btn-primario col-1 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
                 
                 {% endif %}
             </div>
         </div>
     </div>      
     </form>
-    <script src="{{ url_for('static', filename='js/utilidades.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/upd-articulos.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/utilidades.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/upd-articulos.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/color-manager.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/detail-manager.js')}}"></script>
+    
+    {% if colores_articulo or detalles_articulo %}
+    <script>
+        // Inicializar colores y detalles seleccionados del artículo
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                {% if colores_articulo %}
+                if (window.colorManager) {
+                    window.colorManager.selectColorsByIds({{ colores_articulo|safe }});
+                }
+                {% endif %}
+                {% if detalles_articulo %}
+                if (window.detailManager) {
+                    window.detailManager.selectDetailsByIds({{ detalles_articulo|safe }});
+                }
+                {% endif %}
+            }, 100);
+        });
+    </script>
+    {% endif %}
     
 {% endblock %}
 

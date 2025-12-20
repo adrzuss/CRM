@@ -34,17 +34,5 @@ class Clientes(db.Model):
     tipo_doc = db.relationship('TipoDocumento', back_populates='clientes')
     tipo_iva = db.relationship('TipoIva', back_populates='clientes')
     """
+   
     
-    def __init__(self, nombre, documento, email, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva):
-        self.nombre = nombre
-        self.documento = documento
-        self.email = email
-        self.idcategoria = categoria
-        self.telefono = telefono
-        self.direccion = direccion
-        self.localidad = localidad
-        self.provincia = provincia
-        self.ctacte = ctacte
-        self.id_tipo_doc = id_tipo_doc
-        self.id_tipo_iva = id_tipo_iva
-        self.baja = date(1900, 1, 1)

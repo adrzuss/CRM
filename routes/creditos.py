@@ -307,13 +307,35 @@ def descargar_documento(idcredito, iddocumento):
 def hay_credito(idcliente):
     # Lógica para verificar si hay crédito para el cliente
     try:
+        print(f"🔍 Endpoint hay_credito llamado para cliente: {idcliente}")
         credito = get_credito_by_idcliente(idcliente)
+        
         if credito:
-            return jsonify(success=True, credito={'idcredito': credito.id, 'estado': credito.estado, 'monto_credito': credito.monto_total, 'cuotas': credito.cuotas})
+            respuesta = {
+                'success': True, 
+                'credito': {
+                    'idcredito': credito.id, 
+                    'estado': credito.estado, 
+                    'monto_credito': float(credito.monto_total), 
+                    'cuotas': credito.cuotas
+                }
+            }
+            print(f"✅ Respuesta con crédito: {respuesta}")
+            return jsonify(respuesta)
         else:
-            return jsonify(success=False, credito={'idcredito': 0, 'estado': 0, 'monto_credito': 0, 'cuotas': 0})
+            respuesta = {
+                'success': True,  # Cambio: success=True pero sin crédito
+                'credito': {
+                    'idcredito': 0, 
+                    'estado': 0, 
+                    'monto_credito': 0, 
+                    'cuotas': 0
+                }
+            }
+            print(f"❌ Respuesta sin crédito: {respuesta}")
+            return jsonify(respuesta)
     except Exception as e:
-        print(f"Error al verificar crédito del cliente: {e}")
+        print(f"❌ Error al verificar crédito del cliente: {e}")
         return jsonify(success=False, mensaje='Error al verificar crédito del cliente.')    
 
 @bp_creditos.route('/vencimientos_cuotas', methods=['GET', 'POST'])
@@ -383,8 +405,11 @@ def cobrar_cuotas():
         if not resultado['success']:
             print(f"Error al cobrar cuotas: {resultado['mensaje']}")
             flash(f"Error al cobrar cuotas: {resultado['mensaje']}", 'error')
+            return jsonify(success=False, mensaje=resultado['mensaje'])
         else:    
             print("Cuotas cobradas exitosamente")    
             flash('Cuotas cobradas exitosamente.')
+            return jsonify(success=True, mensaje='Cuotas cobradas exitosamente.')
+    
     return jsonify(success=False, mensaje='Método no permitido.')
 

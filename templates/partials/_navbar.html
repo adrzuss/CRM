@@ -15,7 +15,7 @@
               Clientes
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{{ url_for('clientes.clientes') }}">Clientes</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('clientes.clientes', id=0) }}">Clientes</a></li>
               <li><a class="dropdown-item" href="{{ url_for('ctactecli.saldos') }}">Cuenta corrientes</a></li>
               <li><a class="dropdown-item" href="#">Something else here</a></li>
             </ul>
@@ -46,7 +46,7 @@
               Proveedores
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{{ url_for('proveedores.proveedores') }}">Proveedores</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('proveedores.proveedores', id=0) }}">Proveedores</a></li>
               <li><a class="dropdown-item" href="{{ url_for('proveedores.compras') }}">Compras</a></li>
               <li><a class="dropdown-item" href="#">Something else here</a></li>
             </ul>

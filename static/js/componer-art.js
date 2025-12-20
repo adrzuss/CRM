@@ -97,28 +97,11 @@ function asignarArticulo(articulo) {
 }
 
 function mostrarModalSeleccionArticulos(articulos) {
-    // Crear el contenido del modal con las opciones de cliente
-    const tituloModal = document.getElementById('clienteModalLabel'); 
-    tituloModal.textContent = 'Seleccione un Artículo';
-    const modalContent = document.getElementById('modalContent');
-    modalContent.innerHTML = '';
-    const listaArticulos = document.createElement('ul');
-    listaArticulos.classList.add('list-group')
-    modalContent.appendChild(listaArticulos)
+    const callback = (articulo) => {
+        asignarArticuloElegido(articulo);
+    };
     
-    articulos.forEach(articulo => {
-        const articuloOption = document.createElement('li');
-        articuloOption.classList.add('cliente-option');
-        articuloOption.classList.add('list-group-item');
-        articuloOption.innerHTML = `<strong>${articulo.detalle}</strong> - <span class="precio-normal">$${articulo.precio}</span>`;
-        articuloOption.onclick = () => {
-            asignarArticuloElegido(articulo);
-            $('#clienteModal').modal('hide');
-        };
-        listaArticulos.appendChild(articuloOption);
-    });
-
-    // Mostrar el modal
-    $('#clienteModal').modal('show');
+    // Mostrar modal con los datos
+    window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 

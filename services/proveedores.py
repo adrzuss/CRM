@@ -1,7 +1,7 @@
 from flask import request, session
 from datetime import date, datetime
 from models.proveedores import Proveedores, FacturaC, ItemC, ItemsOP, PagosFC, RemitoFacturas
-from models.articulos import Articulo, Stock
+from models.articulos import Articulo, Stock, Colores, DetallesArticulos
 from models.ctacteprov import CtaCteProv
 from models.configs import AlcIva
 from services.articulos import actualizarStock, get_articulo_by_codigo, actulizarProvByArt
@@ -83,6 +83,14 @@ def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=Fa
                     impint += Decimal(Decimal(articulo.impint) * precio_total / Decimal(100))
                     exento += Decimal(Decimal(articulo.exento) * precio_total / Decimal(100))
                     total += precio_total
+                    # Obtener color y detalle si están presentes
+                    id_color = form.get(f'items[{index}][id_color]')
+                    id_detalle = form.get(f'items[{index}][id_detalle]')
+                    
+                    # Convertir a int si tienen valor, sino None
+                    id_color = int(id_color) if id_color and id_color != '' else None
+                    id_detalle = int(id_detalle) if id_detalle and id_detalle != '' else None
+                    
                     nuevo_item = ItemC(
                         idfactura=idfactura,
                         id=index, 
@@ -93,7 +101,9 @@ def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=Fa
                         idalciva=articulo.idiva,
                         iva=Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100)),
                         exento=articulo.exento * cantidad,
-                        impint=articulo.impint * cantidad
+                        impint=articulo.impint * cantidad,
+                        id_color=id_color,
+                        id_detalle=id_detalle
                     )
                     db.session.add(nuevo_item)
                     if articulo.costo != precio_unitario:
@@ -190,9 +200,14 @@ def get_factura(id):
             ItemC.precio_unitario,
             ItemC.precio_total,
             ItemC.iva,
+            Colores.nombre.label('color'),
+            Colores.color.label('codigo_color'),
+            DetallesArticulos.nombre.label('detalle_articulo'),
             Articulo.codigo,
             Articulo.detalle) \
             .join(Articulo, Articulo.id == ItemC.idarticulo) \
+            .outerjoin(Colores, Colores.id == ItemC.id_color) \
+            .outerjoin(DetallesArticulos, DetallesArticulos.id == ItemC.id_detalle) \
             .filter(ItemC.idfactura == id)
     pagos = db.session.query(
             PagosFC.total,
@@ -222,9 +237,16 @@ def get_remito(id):
     items = db.session.query(
             ItemC.id,
             ItemC.cantidad,
+            ItemC.id_color,
+            ItemC.id_detalle,
             Articulo.codigo,
-            Articulo.detalle) \
+            Articulo.detalle,
+            Colores.nombre.label('color'),
+            Colores.color.label('codigo_color'),
+            DetallesArticulos.nombre.label('detalle_articulo')) \
             .join(Articulo, Articulo.id == ItemC.idarticulo) \
+            .outerjoin(Colores, Colores.id == ItemC.id_color) \
+            .outerjoin(DetallesArticulos, DetallesArticulos.id == ItemC.id_detalle) \
             .filter(ItemC.idfactura == id)
     return remito[0], items
 
@@ -258,6 +280,15 @@ def procesar_itemsR(form, idremito, id_sucursal, idproveedor):
                     codigo = value
                     cantidad = Decimal(form[f'items[{index}][cantidad]'])
                     articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
+                    
+                    # Obtener color y detalle si están presentes
+                    id_color = form.get(f'items[{index}][id_color]')
+                    id_detalle = form.get(f'items[{index}][id_detalle]')
+                    
+                    # Convertir a int si tienen valor, sino None
+                    id_color = int(id_color) if id_color and id_color != '' and id_color != '0' else 0
+                    id_detalle = int(id_detalle) if id_detalle and id_detalle != '' and id_detalle != '0' else 0
+                    
                     nuevo_item = ItemC(
                         idfactura=idremito,
                         id=index, 
@@ -265,6 +296,8 @@ def procesar_itemsR(form, idremito, id_sucursal, idproveedor):
                         cantidad=cantidad,
                         precio_unitario=0,
                         precio_total=0,
+                        id_color=id_color,
+                        id_detalle=id_detalle
                     )
                     db.session.add(nuevo_item)
                     # Actualizar el stock

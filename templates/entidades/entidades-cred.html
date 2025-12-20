@@ -1,40 +1,85 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="m-3">
-    <h3>Entidades de crédito</h3>
+<!-- Header Section -->
+<div class="page-header mb-4">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Entidades de Crédito</li>
+                    </ol>
+                </nav>
+                <h1 class="page-title">
+                    <i class="fas fa-credit-card me-3"></i>
+                    Entidades de Crédito
+                </h1>
+                <p class="page-subtitle">Gestión de entidades financieras y configuración de alícuotas</p>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="m-2">
-    <div class="row">
-        <div class="col-4">
-            <div class="card">
+
+<div class="container-fluid">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h5 class="section-title">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Nueva Entidad
+                    </h5>
+                    <p class="section-subtitle mb-0">Registrar nueva entidad financiera</p>
+                </div>
                 <div class="card-body">
-                    <h3>Ingreso de entidades</h3>
-                    <form action="{{ url_for('entidades.add_entidad') }}" method="post">
-                        <div class="row">
-                            <div class="mb-3 col-2"> 
-                                <label for="id"># Id</label>
-                                <input class="form-control" type="text" name="id" id="id" readonly value="{{ entidad.id }}">
-                            </div>    
-                            <div class="mb-3 col-10"> 
-                                <label for="entidad">Entidad</label>
-                                <input class="form-control" type="text" name="entidad" id="entidad" placeholder="Ingrese el nombre de la entidad" value="{{ entidad.entidad }}">
+                    <form action="{{ url_for('entidades.add_entidad') }}" method="post" class="modern-form">
+                        <div class="row g-3">
+                            <div class="col-3">
+                                <div class="form-floating">
+                                    <input class="form-control" type="text" name="id" id="id" readonly value="{{ entidad.id }}" placeholder="ID">
+                                    <label for="id"><i class="fas fa-hashtag me-1"></i>ID</label>
+                                </div>
                             </div>
-                        </div>    
-                        <div class="mb-3">
-                            <label for="telefono">Teléfono</label>
-                            <input class="form-control" type="text" name="telefono" id="detalle" placeholder="Ingrese el teléfono" value="{{ entidad.telefono }}">  
-                        </div>    
-                        
-                        <button class="btn btn-success" type="submit">Grabar</button>
+                            <div class="col-9">
+                                <div class="form-floating">
+                                    <input class="form-control" type="text" name="entidad" id="entidad" placeholder="Nombre de la entidad" value="{{ entidad.entidad }}" required>
+                                    <label for="entidad"><i class="fas fa-building me-1"></i>Nombre de Entidad</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-floating">
+                                <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Teléfono" value="{{ entidad.telefono }}">
+                                <label for="telefono"><i class="fas fa-phone me-1"></i>Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button class="btn btn-primary btn-modern" type="submit">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar Entidad
+                            </button>
+                        </div>
                     </form>
-                </div>    
-            </div>   
+                </div>
+            </div>
         </div>    
         
-        <div class="col-8">
-            {% include 'partials/_lst-entidades.html' %}
-        </div>     
-    </div>      
-</div>    
+        <div class="col-lg-8">
+            <div class="modern-card">
+                <div class="card-header">
+                    <h5 class="section-title">
+                        <i class="fas fa-list me-2"></i>
+                        Entidades Registradas
+                    </h5>
+                    <p class="section-subtitle mb-0">Lista de todas las entidades financieras</p>
+                </div>
+                <div class="card-body p-0">
+                    {% include 'entidades/partials/_lst-entidades.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

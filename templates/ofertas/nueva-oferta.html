@@ -1,130 +1,136 @@
+
 {% extends "base.html" %}
-
 {% block body %}
-<div class="container mt-4">
-    <h2>Nueva Oferta</h2>
-    <form method="POST" id="formOferta">
-        <!-- Datos básicos de la oferta -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="nombre">Nombre de la oferta</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ oferta.nombre }}" required>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumb moderno -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ofertas.ofertas') }}"><i class="fas fa-tags"></i> Ofertas</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-plus-circle"></i> Nueva Oferta</li>
+        </ol>
+    </nav>
+
+    <form method="POST" id="formOferta" class="modern-form">
+        <div class="card modern-card mb-4">
+            <div class="card-header modern-header bg-success text-white d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-gift"></i></div>
+                <div class="ms-3">
+                    <h5 class="card-title mb-0">Datos básicos de la oferta</h5>
+                    <small class="text-white-50">Completa los datos principales</small>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="tipo_oferta">Tipo de oferta </label>
-                    <select class="form-control" id="tipo_oferta" name="tipo_oferta" value="{{ oferta.tipo_oferta }}" required >
-                        
-                        {% for tipo in tipo_ofertas %}                       
-                            {% if tipo == oferta.tipo_oferta %}
-                                <option value="{{ tipo.value }}" selected>{{ tipo.name }}</option>
-                            {% else %}
-                                <option value="{{ tipo.value }}">{{ tipo.name }}</option>
-                            {% endif %}    
-                        {% endfor %}
-                    </select>
-                    {% if condiciones %}
-                        {% for condicion in condiciones %}
-                            <label for="">La selección {{condicion.id_oferta}}</label>
-                        {% endfor %}
-                    {% endif %}
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control form-control-modern" id="nombre" name="nombre" value="{{ oferta.nombre }}" required placeholder="Nombre de la oferta">
+                            <label for="nombre"><i class="fas fa-tag me-2"></i>Nombre de la oferta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" id="tipo_oferta" name="tipo_oferta" required>
+                                {% for tipo in tipo_ofertas %}
+                                    {% if tipo == oferta.tipo_oferta %}
+                                        <option value="{{ tipo.value }}" selected>{{ tipo.name }}</option>
+                                    {% else %}
+                                        <option value="{{ tipo.value }}">{{ tipo.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="tipo_oferta"><i class="fas fa-list-alt me-2"></i>Tipo de oferta</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="tipo_descuento">Tipo de descuento</label>
-                    <select class="form-control" id="tipo_descuento" name="tipo_descuento" value="{{ oferta.tipo_descuento }}" required>
-                        {% for tipo in tipos_descuento %}
-                            {% if tipo == oferta.tipo_descuento %}
-                                <option value="{{ tipo.value }}" selected>{{ tipo.name.replace('_', ' ') }}</option>
-                            {% else %}
-                                <option value="{{ tipo.value }}">{{ tipo.name.replace('_', ' ') }}</option>
-                            {% endif %}    
-                        {% endfor %}
-                    </select>
+        <div class="card modern-card mb-4">
+            <div class="card-header modern-header bg-info text-white d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-percent"></i></div>
+                <div class="ms-3">
+                    <h5 class="card-title mb-0">Descuento y condiciones</h5>
+                    <small class="text-white-50">Configura el descuento y las condiciones</small>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="valor_descuento">Valor del descuento</label>
-                    <input type="number" step="0.01" class="form-control" id="valor_descuento" name="valor_descuento" value="{{ oferta.valor_descuento }}" required>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" id="tipo_descuento" name="tipo_descuento" required>
+                                {% for tipo in tipos_descuento %}
+                                    {% if tipo == oferta.tipo_descuento %}
+                                        <option value="{{ tipo.value }}" selected>{{ tipo.name.replace('_', ' ') }}</option>
+                                    {% else %}
+                                        <option value="{{ tipo.value }}">{{ tipo.name.replace('_', ' ') }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="tipo_descuento"><i class="fas fa-percent me-2"></i>Tipo de descuento</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="number" step="0.01" class="form-control form-control-modern" id="valor_descuento" name="valor_descuento" value="{{ oferta.valor_descuento }}" required placeholder="Valor del descuento">
+                            <label for="valor_descuento"><i class="fas fa-dollar-sign me-2"></i>Valor del descuento</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="number" step="1" class="form-control form-control-modern" id="cantidad_minima" name="cantidad_minima" value="{{ oferta.cantidad_minima }}" required placeholder="Cantidad mínima">
+                            <label for="cantidad_minima"><i class="fas fa-sort-numeric-up me-2"></i>Cantidad mínima</label>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="cantidad_minima">Cantidad mínima</label>
-                    <input type="number" step="1" class="form-control" id="cantidad_minima" name="cantidad_minima" value="{{ oferta.cantidad_minima }}" required>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label for="fecha_inicio">Fecha de inicio</label>
-                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ oferta.fecha_inicio }}" required>
-                </div>
-            </div>
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label for="fecha_fin">Fecha de fin</label>
-                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ oferta.fecha_fin }}" required>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="form-check mt-4">
-                    <input type="checkbox" class="form-check-input" id="multiplos" name="multiplos" {% if oferta.multiplos %}checked{% endif %}>
-                    <label class="form-check-label" for="multiplos">Aplicar a múltiplos</label>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-5">
+                        <div class="form-floating">
+                            <input type="date" class="form-control form-control-modern" id="fecha_inicio" name="fecha_inicio" value="{{ oferta.fecha_inicio }}" required placeholder="Fecha de inicio">
+                            <label for="fecha_inicio"><i class="fas fa-calendar-alt me-2"></i>Fecha de inicio</label>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-floating">
+                            <input type="date" class="form-control form-control-modern" id="fecha_fin" name="fecha_fin" value="{{ oferta.fecha_fin }}" required placeholder="Fecha de fin">
+                            <label for="fecha_fin"><i class="fas fa-calendar-times me-2"></i>Fecha de fin</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-center">
+                        <div class="form-check modern-switch mt-2">
+                            <input type="checkbox" class="form-check-input" id="multiplos" name="multiplos" {% if oferta.multiplos %}checked{% endif %}>
+                            <label class="form-check-label" for="multiplos"><i class="fas fa-layer-group me-2"></i>Aplicar a múltiplos</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Sección de ofertas vinculadas -->
-        
-        <div id="seccion-vinculada" class="card mt-4" style="display: {% if tipo == 'vinculada' %}block{% else %}none{% endif %};">
-            <div class="card-header">
-                <h5>Artículos Vinculados</h5>
+        <div id="seccion-vinculada" class="card modern-card mb-4" style="display: {% if tipo == 'vinculada' %}block{% else %}none{% endif %};">
+            <div class="card-header modern-header bg-warning text-dark d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-link"></i></div>
+                <div class="ms-3">
+                    <h5 class="card-title mb-0">Artículos Vinculados</h5>
+                    <small class="text-dark-50">Configura los artículos vinculados</small>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="articulo_origen">Artículo que debe comprar</label>
-                            <div class="input-group">
-                                <input type="hidden" id="id_articulo_origen" name="id_articulo_origen" value="{{ vinculos.id_articulo_origen if vinculos else '' }}">
-                                <input type="text" class="form-control" id="codigo_articulo_origen" 
-                                    name="codigo_articulo_origen" placeholder="Código o descripción" 
-                                    value="{{ vinculos.codigo_origen if vinculos else '' }}">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="button" 
-                                            onclick="limpiarArticulo('origen')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="form-floating mb-3">
+                            <input type="hidden" id="id_articulo_origen" name="id_articulo_origen" value="{{ vinculos.id_articulo_origen if vinculos else '' }}">
+                            <input type="text" class="form-control form-control-modern" id="codigo_articulo_origen" name="codigo_articulo_origen" placeholder="Código o descripción" value="{{ vinculos.codigo_origen if vinculos else '' }}">
+                            <label for="codigo_articulo_origen"><i class="fas fa-arrow-right me-2"></i>Artículo que debe comprar</label>
                             <small id="desc_articulo_origen" class="form-text text-muted"></small>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="articulo_destino">Artículo con descuento</label>
-                            <div class="input-group">
-                                <input type="hidden" id="id_articulo_destino" name="id_articulo_destino" value="{{ vinculos.id_articulo_destino if vinculos else '' }}">
-                                <input type="text" class="form-control" id="codigo_articulo_destino" 
-                                    name="codigo_articulo_destino" placeholder="Código o descripción"
-                                    value="{{ vinculos.codigo_destino if vinculos else '' }}">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="button" 
-                                            onclick="limpiarArticulo('destino')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="form-floating mb-3">
+                            <input type="hidden" id="id_articulo_destino" name="id_articulo_destino" value="{{ vinculos.id_articulo_destino if vinculos else '' }}">
+                            <input type="text" class="form-control form-control-modern" id="codigo_articulo_destino" name="codigo_articulo_destino" placeholder="Código o descripción" value="{{ vinculos.codigo_destino if vinculos else '' }}">
+                            <label for="codigo_articulo_destino"><i class="fas fa-arrow-left me-2"></i>Artículo con descuento</label>
                             <small id="desc_articulo_destino" class="form-text text-muted"></small>
                         </div>
                     </div>
@@ -162,62 +168,65 @@
         </div>
 
         <!-- Sección de regla de selección -->
-        <div id="seccion-regla" class="card mt-4">
-            <div class="card-header">
-                <h5>Regla de Selección</h5>
+        <div id="seccion-regla" class="card modern-card mb-4">
+            <div class="card-header modern-header bg-info text-white d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-cogs"></i></div>
+                <div class="ms-3">
+                    <h5 class="card-title mb-0">Regla de Selección</h5>
+                    <small class="text-white-50">Configura la regla de aplicación</small>
+                </div>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label for="regla_seleccion">Aplicar descuento al artículo de:</label>
-                    <select class="form-control" id="regla_seleccion" name="regla_seleccion">
+                <div class="form-floating">
+                    <select class="form-select form-control-modern" id="regla_seleccion" name="regla_seleccion">
                         {% for regla in reglas_seleccion %}
-                        <option value="{{ regla.value }}" {% if oferta.regla_seleccion == regla %}selected{% endif %}>
-                            {{ regla.name }}
-                        </option>
+                            <option value="{{ regla.value }}" {% if oferta.regla_seleccion == regla %}selected{% endif %}>{{ regla.name }}</option>
                         {% endfor %}
                     </select>
+                    <label for="regla_seleccion"><i class="fas fa-cogs me-2"></i>Aplicar descuento al artículo de:</label>
                 </div>
             </div>
         </div>
 
         <!-- Sección de condiciones normales -->
-        <div id="seccion-normal" class="card mt-4">
-            <div class="card-header">
-                <h5>Condiciones de la oferta</h5>
+        <div id="seccion-normal" class="card modern-card mb-4">
+            <div class="card-header modern-header bg-primary text-white d-flex align-items-center">
+                <div class="header-icon"><i class="fas fa-list"></i></div>
+                <div class="ms-3">
+                    <h5 class="card-title mb-0">Condiciones de la oferta</h5>
+                    <small class="text-white-50">Agrega las condiciones necesarias</small>
+                </div>
             </div>
             <div class="card-body">
-                
                 <div id="condiciones-container">
                     {% if condiciones %}
                         {% for condicion in condiciones %}
                         <div class="condicion-item row mb-3">
                             <div class="col-md-5">
-                                <select class="form-control tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
-                                    <option value="">Seleccione tipo</option>
-                                    {% for tipo in tipos_condiciones %}
-                                    <option value="{{ tipo.id }}" {% if tipo.id == condicion.id_tipo_condicion %}selected{% endif %}>
-                                        {{ tipo.nombre }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                <div class="form-floating">
+                                    <select class="form-select tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
+                                        <option value="">Seleccione tipo</option>
+                                        {% for tipo in tipos_condiciones %}
+                                            <option value="{{ tipo.id }}" {% if tipo.id == condicion.id_tipo_condicion %}selected{% endif %}>{{ tipo.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="tipo_condicion"><i class="fas fa-list me-2"></i>Tipo de condición</label>
+                                </div>
                             </div>
                             <div class="col-md-5">
-                                <!-- Contenedor para el select normal -->
-                                <div class="select-container">
-                                    <select class="form-control referencia" name="referencia[]" required>
+                                <div class="form-floating select-container">
+                                    <select class="form-select referencia" name="referencia[]" required>
                                         <option value="">Primero seleccione un tipo</option>
                                         {% if condicion.id_referencia %}
                                             <option value="{{ condicion.id_referencia }}" selected>{{ condicion.nombre_referencia }}</option>
                                         {% endif %}
                                     </select>
+                                    <label for="referencia"><i class="fas fa-link me-2"></i>Referencia</label>
                                 </div>
-                                <!-- Contenedor para la búsqueda de artículos -->
                                 <div class="articulo-container" style="display: none;">
                                     <div class="input-group">
                                         <input type="hidden" class="id-articulo" name="referencia[]" value="{{ condicion.id_referencia if condicion.id_referencia else '' }}">
-                                        <input type="text" class="form-control codigo-articulo" 
-                                            name="codigo_articulo[]"
-                                            placeholder="Código o descripción">
+                                        <input type="text" class="form-control codigo-articulo" name="codigo_articulo[]" placeholder="Código o descripción">
                                         <div class="input-group-append">
                                             <button class="btn btn-outline-secondary limpiar-articulo" type="button">
                                                 <i class="fas fa-times"></i>
@@ -227,8 +236,8 @@
                                     <small class="form-text text-muted desc-articulo"></small>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-danger btn-sm remover-condicion">
+                            <div class="col-md-2 d-flex align-items-center">
+                                <button type="button" class="btn btn-danger btn-modern btn-sm remover-condicion">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -238,27 +247,27 @@
                         <!-- Template para nueva condición -->
                         <div class="condicion-item row mb-3">
                             <div class="col-md-5">
-                                <select class="form-control tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
-                                    <option value="">Seleccione tipo</option>
-                                    {% for tipo in tipos_condiciones %}
-                                    <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
-                                    {% endfor %}
-                                </select>
+                                <div class="form-floating">
+                                    <select class="form-select tipo-condicion" name="tipo_condicion[]" id="tipo_condicion" required>
+                                        <option value="">Seleccione tipo</option>
+                                        {% for tipo in tipos_condiciones %}
+                                            <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="tipo_condicion"><i class="fas fa-list me-2"></i>Tipo de condición</label>
+                                </div>
                             </div>
                             <div class="col-md-5">
-                                <!-- Contenedor para el select normal -->
-                                <div class="select-container">
-                                    <select class="form-control referencia" name="referencia[]" required>
+                                <div class="form-floating select-container">
+                                    <select class="form-select referencia" name="referencia[]" required>
                                         <option value="">Primero seleccione un tipo</option>
                                     </select>
+                                    <label for="referencia"><i class="fas fa-link me-2"></i>Referencia</label>
                                 </div>
-                                <!-- Contenedor para la búsqueda de artículos -->
                                 <div class="articulo-container" style="display: none;">
                                     <div class="input-group">
                                         <input type="hidden" class="id-articulo" name="referencia[]" value="">
-                                        <input type="text" class="form-control codigo-articulo" 
-                                            name="codigo_articulo[]"
-                                            placeholder="Código o descripción">
+                                        <input type="text" class="form-control codigo-articulo" name="codigo_articulo[]" placeholder="Código o descripción">
                                         <div class="input-group-append">
                                             <button class="btn btn-outline-secondary limpiar-articulo" type="button">
                                                 <i class="fas fa-times"></i>
@@ -268,27 +277,35 @@
                                     <small class="form-text text-muted desc-articulo"></small>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-danger btn-sm remover-condicion">
+                            <div class="col-md-2 d-flex align-items-center">
+                                <button type="button" class="btn btn-danger btn-modern btn-sm remover-condicion">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
                     {% endif %}
                 </div>
-                <button type="button" class="btn btn-secondary" id="agregar-condicion">
+                <button type="button" class="btn btn-secondary btn-modern" id="agregar-condicion">
                     <i class="fas fa-plus"></i> Agregar condición
                 </button>
             </div>
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Guardar Oferta</button>
-            <a href="{{ url_for('ofertas.ofertas') }}" class="btn btn-secondary">Cancelar</a>
+        <div class="row mt-4">
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success btn-modern"><i class="fas fa-save me-1"></i>Guardar Oferta</button>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('ofertas.ofertas') }}" class="btn btn-secondary btn-modern"><i class="fas fa-arrow-left me-1"></i>Cancelar</a>
+            </div>
         </div>
     </form>
-</div>
 
-<script src="{{ url_for('static', filename='js/nueva-oferta.js') }}"> </script>
+    <!-- Modal universal de búsqueda -->
+    {% include 'partials/_modal-busqueda-universal.html' %}
+
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nueva-oferta.js') }}"> </script>
+</div>
 
 {% endblock %}

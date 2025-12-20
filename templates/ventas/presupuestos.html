@@ -5,81 +5,960 @@
 {% endblock %}
 
 {% block body %}
-    <h2 class="m-3">Presupuestos a clientes</h2>
-    <div class="m-3">
-        <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-primario">Nuevo presupuesto</a>
-    </div>    
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="card m-3">
-                <h5 class="px-5 pt-2">Periodo</h5>
-                <div class="card-body">
-                    <form action="" method="post">
-                        <div class="row justify-content-md-center">
-                            <div class="col-md-3">
-                                <label for="desde">Desde</label>
-                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="hasta">Hasta</label>
-                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
-                            </div>    
-                            <div class="col-md-2 m-4">
-                                <button type="submit" class="btn btn-primario">Buscar</button>
-                            </div>    
-                        </div>
-                    </form>
-                </div>    
-            </div>
-        </div>    
-    </div>
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-10">
-            <div class="table-responsive m-3" >
-                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Validez</th>
-                            <th>Número</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for presupuesto in presupuestos %}        
-                            <tr class="table-light">
-                                <td scope="row">{{ presupuesto.cliente }}</td>
-                                <td>{{ presupuesto.fecha.strftime("%d-%m-%Y") }}</td>
-                                <td>{{ presupuesto.validez.strftime("%d-%m-%Y") }}</td>
-                                <td>{{ presupuesto.nro_comprobante }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(presupuesto.total) }}</td>
-                                <td style="text-align:center">{{ presupuesto.estado }}</td>
-                                <td>
-                                    <a href="{{ url_for('ventas.ver_presupuesto', id=presupuesto.id) }}" class="btn btn-secundario">Ver presupuesto</a>
-                                    {% if presupuesto.estado == 'Pendiente' %}
-                                        <a href="{{ url_for('ventas.facturar_presupuesto', id=presupuesto.id) }}" class="btn btn-primario">Facturar</a>                                        
-                                    {% else %}
-                                        <a href="{{ url_for('ventas.ver_factura_vta', id=presupuesto.idfactura) }}" class="btn btn-terciario">Ver Facturar</a>                                        
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
-            </div>
-        </div>    
-    </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/datatables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('ventas.ventas', id=0) }}">
+                <i class="fas fa-shopping-cart me-1"></i>Ventas
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-calculator me-1"></i>Presupuestos
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-warning text-dark">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <div class="ms-3 flex-grow-1">
+            <h1 class="page-title mb-0">Presupuestos a Clientes</h1>
+            <p class="page-subtitle text-muted mb-0">Gestión de cotizaciones y ofertas comerciales</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-warning">
+                <i class="fas fa-plus me-1"></i>Nuevo Presupuesto
+            </a>
+            <button class="btn btn-outline-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel me-1"></i>Exportar Excel
+            </button>
+            <button class="btn btn-outline-info" onclick="enviarMasivo()">
+                <i class="fas fa-envelope me-1"></i>Enviar Masivo
+            </button>
+            <button class="btn btn-outline-primary" onclick="analizarConversion()">
+                <i class="fas fa-chart-line me-1"></i>Análisis Conversión
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">    
+    <!-- Filtros de búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <h5 class="card-title mb-0">Filtros de Presupuestos</h5>
+                <div class="ms-auto">
+                    <button type="button" class="btn btn-outline-dark btn-sm" onclick="limpiarFiltros()">
+                        <i class="fas fa-broom me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form action="" method="post" id="filtrosForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <select class="form-select" id="filtroEstado" name="estado">
+                                <option value="">Todos los estados</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Rechazado">Rechazado</option>
+                                <option value="Vencido">Vencido</option>
+                                <option value="Facturado">Facturado</option>
+                            </select>
+                            <label for="filtroEstado"><i class="fas fa-flag me-2"></i>Estado</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <select class="form-select" id="filtroValidez" name="validez">
+                                <option value="">Todas las valideces</option>
+                                <option value="vigente">Vigentes</option>
+                                <option value="vencido">Vencidos</option>
+                                <option value="por_vencer">Por Vencer (7 días)</option>
+                            </select>
+                            <label for="filtroValidez"><i class="fas fa-clock me-2"></i>Validez</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="montoMinimo" name="monto_minimo" step="0.01" placeholder="Monto mínimo">
+                            <label for="montoMinimo"><i class="fas fa-dollar-sign me-2"></i>Monto Mínimo</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-warning h-100">
+                            <i class="fas fa-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Período seleccionado:</strong> 
+                            {{ desde }} al {{ hasta }}
+                            <span class="badge bg-warning text-dark ms-2">{{ presupuestos|length }} presupuestos</span>
+                            {% if presupuestos %}
+                                {% set pendientes = presupuestos|selectattr('estado', 'equalto', 'Pendiente')|list %}
+                                {% set valor_total = presupuestos|sum(attribute='total')|float %}
+                                <span class="badge bg-info ms-1">
+                                    {{ pendientes|length }} pendientes
+                                </span>
+                                <span class="badge bg-success ms-1">
+                                    Total: ${{ "{:,.0f}".format(valor_total) }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Estadísticas de presupuestos -->
+    {% if presupuestos %}
+    {% set pendientes = presupuestos|selectattr('estado', 'equalto', 'Pendiente')|list %}
+    {% set aprobados = presupuestos|selectattr('estado', 'equalto', 'Aprobado')|list %}
+    {% set facturados = presupuestos|selectattr('estado', 'equalto', 'Facturado')|list %}
+    {% set vencidos = presupuestos|selectattr('estado', 'equalto', 'Vencido')|list %}
+    {% set total_monto = presupuestos|sum(attribute='total')|float %}
+    {% set monto_pendiente = pendientes|sum(attribute='total')|float %}
     
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Total</h6>
+                            <h3 class="mb-0">{{ presupuestos|length }}</h3>
+                        </div>
+                        <i class="fas fa-calculator fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Pendientes</h6>
+                            <h3 class="mb-0">{{ pendientes|length }}</h3>
+                        </div>
+                        <i class="fas fa-hourglass-half fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Aprobados</h6>
+                            <h3 class="mb-0">{{ aprobados|length }}</h3>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Facturados</h6>
+                            <h3 class="mb-0">{{ facturados|length }}</h3>
+                        </div>
+                        <i class="fas fa-file-invoice fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Vencidos</h6>
+                            <h3 class="mb-0">{{ vencidos|length }}</h3>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Valor Total</h6>
+                            <h3 class="mb-0">${{ "{:,.0f}".format(total_monto) }}</h3>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Métricas de conversión -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-success"><i class="fas fa-percentage me-2"></i>Tasa de Conversión</h6>
+                    {% set tasa_conversion = ((facturados|length / presupuestos|length * 100) if presupuestos|length > 0 else 0)|round(1) %}
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="text-success mb-0">{{ tasa_conversion }}%</h2>
+                            <small class="text-muted">{{ facturados|length }} de {{ presupuestos|length }} facturados</small>
+                        </div>
+                        <div class="progress" style="width: 60px; height: 60px; border-radius: 50%;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ tasa_conversion }}%" 
+                                 aria-valuenow="{{ tasa_conversion }}" 
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-warning"><i class="fas fa-clock me-2"></i>Oportunidades Pendientes</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="text-warning mb-0">${{ "{:,.0f}".format(monto_pendiente) }}</h2>
+                            <small class="text-muted">{{ pendientes|length }} presupuestos pendientes</small>
+                        </div>
+                        <i class="fas fa-coins fa-2x text-warning opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info"><i class="fas fa-chart-bar me-2"></i>Valor Promedio</h6>
+                    {% set promedio = (total_monto / presupuestos|length) if presupuestos|length > 0 else 0 %}
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h2 class="text-info mb-0">${{ "{:,.0f}".format(promedio) }}</h2>
+                            <small class="text-muted">por presupuesto</small>
+                        </div>
+                        <i class="fas fa-calculator fa-2x text-info opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla de presupuestos -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>Lista de Presupuestos
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-dark btn-sm" onclick="seleccionarTodos()">
+                    <i class="fas fa-check-square me-1"></i>Seleccionar Todos
+                </button>
+                <button class="btn btn-outline-dark btn-sm" onclick="exportarExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-outline-dark btn-sm" onclick="imprimirTabla()">
+                    <i class="fas fa-print me-1"></i>Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if presupuestos %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="dataTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">
+                                    <input type="checkbox" id="selectAll" class="form-check-input" title="Seleccionar todos">
+                                </th>
+                                <th><i class="fas fa-user me-1"></i>Cliente</th>
+                                <th class="text-center"><i class="fas fa-calendar me-1"></i>Fecha</th>
+                                <th class="text-center"><i class="fas fa-clock me-1"></i>Validez</th>
+                                <th class="text-center"><i class="fas fa-hashtag me-1"></i>Número</th>
+                                <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                <th class="text-center"><i class="fas fa-flag me-1"></i>Estado</th>
+                                <th class="text-center"><i class="fas fa-stopwatch me-1"></i>Días</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for presupuesto in presupuestos %}
+                                {% set dias_validez = (presupuesto.validez - presupuesto.fecha).days %}
+                                {% set dias_restantes = (presupuesto.validez.date() - today)|attr('days') if today else 0 %}
+                                <tr class="{% if loop.index0 % 2 == 0 %}table-light{% else %}bg-white{% endif %}" 
+                                    data-presupuesto-id="{{ presupuesto.id }}" 
+                                    data-estado="{{ presupuesto.estado }}">
+                                    <td class="text-center">
+                                        <input type="checkbox" class="form-check-input presupuesto-checkbox" 
+                                               value="{{ presupuesto.id }}" 
+                                               data-estado="{{ presupuesto.estado }}">
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                {{ presupuesto.cliente[:1].upper() }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ presupuesto.cliente }}</strong>
+                                                <br>
+                                                <small class="text-muted">ID: {{ presupuesto.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">
+                                            {{ presupuesto.fecha.strftime("%d/%m/%Y") }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">{{ presupuesto.fecha.strftime("%A")[:3] }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {% if dias_restantes < 0 %}bg-danger{% elif dias_restantes <= 7 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                            {{ presupuesto.validez.strftime("%d/%m/%Y") }}
+                                        </span>
+                                        <br>
+                                        <small class="{% if dias_restantes < 0 %}text-danger{% elif dias_restantes <= 7 %}text-warning{% else %}text-success{% endif %}">
+                                            {% if dias_restantes < 0 %}
+                                                Vencido {{ dias_restantes|abs }} días
+                                            {% elif dias_restantes == 0 %}
+                                                Vence hoy
+                                            {% elif dias_restantes <= 7 %}
+                                                {{ dias_restantes }} días restantes
+                                            {% else %}
+                                                {{ dias_restantes }} días
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <code class="bg-light px-2 py-1 rounded">
+                                            {{ presupuesto.nro_comprobante }}
+                                        </code>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">
+                                            <i class="fas fa-dollar-sign me-1"></i>${{ "{:,.2f}".format(presupuesto.total|float) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if presupuesto.estado == 'Pendiente' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-hourglass-half me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% elif presupuesto.estado == 'Aprobado' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% elif presupuesto.estado == 'Facturado' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-file-invoice me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% elif presupuesto.estado == 'Rechazado' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% elif presupuesto.estado == 'Vencido' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-calendar-times me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-info me-1"></i>{{ presupuesto.estado }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <span class="badge {% if dias_restantes < 0 %}bg-danger{% elif dias_restantes <= 3 %}bg-warning text-dark{% else %}bg-light text-dark{% endif %}">
+                                                {{ dias_validez }} días validez
+                                            </span>
+                                            {% if dias_restantes >= 0 %}
+                                                <small class="text-muted mt-1">{{ dias_restantes }} restantes</small>
+                                            {% else %}
+                                                <small class="text-danger mt-1">Vencido</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('ventas.ver_presupuesto', id=presupuesto.id) }}" 
+                                               class="btn btn-outline-info btn-sm" 
+                                               title="Ver presupuesto">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if presupuesto.estado == 'Pendiente' or presupuesto.estado == 'Aprobado' %}
+                                                <a href="{{ url_for('ventas.facturar_presupuesto', id=presupuesto.id) }}" 
+                                                   class="btn btn-outline-success btn-sm" 
+                                                   title="Facturar presupuesto">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                            {% elif presupuesto.estado == 'Facturado' and presupuesto.idfactura %}
+                                                <a href="{{ url_for('ventas.ver_factura_vta', id=presupuesto.idfactura) }}" 
+                                                   class="btn btn-outline-primary btn-sm" 
+                                                   title="Ver factura">
+                                                    <i class="fas fa-receipt"></i>
+                                                </a>
+                                            {% endif %}
+                                            <button class="btn btn-outline-warning btn-sm" 
+                                                    onclick="enviarPresupuesto({{ presupuesto.id }}, '{{ presupuesto.cliente }}')" 
+                                                    title="Enviar por email">
+                                                <i class="fas fa-envelope"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm" 
+                                                    onclick="duplicarPresupuesto({{ presupuesto.id }})" 
+                                                    title="Duplicar presupuesto">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                            <button class="btn btn-outline-dark btn-sm" 
+                                                    onclick="cambiarEstado({{ presupuesto.id }}, '{{ presupuesto.estado }}')" 
+                                                    title="Cambiar estado">
+                                                <i class="fas fa-flag"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td></td>
+                                <td colspan="4" class="text-end fw-bold">Totales del período:</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary fs-5">
+                                        <i class="fas fa-calculator me-1"></i>
+                                        ${{ "{:,.2f}".format((presupuestos|sum(attribute='total'))|float) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <small class="text-muted">{{ presupuestos|length }} presupuestos</small>
+                                </td>
+                                <td class="text-center">
+                                    {% set pendientes = presupuestos|selectattr('estado', 'equalto', 'Pendiente')|list %}
+                                    <small class="text-warning">{{ pendientes|length }} pendientes</small>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="text-center py-5">
+                    <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No se encontraron presupuestos</h5>
+                    <p class="text-muted">No hay presupuestos en el período seleccionado</p>
+                    <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>Crear Primer Presupuesto
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Panel de acciones para selección múltiple -->
+    <div id="accionesPanel" class="card mt-3 border-warning" style="display: none;">
+        <div class="card-body bg-warning bg-opacity-10">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <strong><i class="fas fa-check-square me-2"></i>Acciones para presupuestos seleccionados:</strong>
+                    <span id="contadorSeleccionados" class="badge bg-warning text-dark ms-2">0</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" onclick="facturarSeleccionados()">
+                        <i class="fas fa-file-invoice me-1"></i>Facturar Masivo
+                    </button>
+                    <button class="btn btn-info" onclick="enviarSeleccionados()">
+                        <i class="fas fa-envelope me-1"></i>Enviar Emails
+                    </button>
+                    <button class="btn btn-warning" onclick="cambiarEstadoMasivo()">
+                        <i class="fas fa-flag me-1"></i>Cambiar Estado
+                    </button>
+                    <button class="btn btn-secondary" onclick="duplicarSeleccionados()">
+                        <i class="fas fa-copy me-1"></i>Duplicar Todos
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="limpiarSeleccion()">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let presupuestosSeleccionados = [];
+const today = new Date();
+
+// Funciones de utilidad
+function limpiarFiltros() {
+    document.getElementById('filtrosForm').reset();
+    // Establecer fechas por defecto (último mes)
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    document.getElementById('desde').value = hace30Dias.toISOString().split('T')[0];
+    document.getElementById('hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('filtroEstado').value = '';
+    document.getElementById('filtroValidez').value = '';
+    document.getElementById('montoMinimo').value = '';
+}
+
+function exportarExcel() {
+    // Función para exportar presupuestos a Excel
+    const params = new URLSearchParams({
+        desde: document.getElementById('desde').value,
+        hasta: document.getElementById('hasta').value,
+        estado: document.getElementById('filtroEstado').value,
+        validez: document.getElementById('filtroValidez').value,
+        monto_minimo: document.getElementById('montoMinimo').value || '',
+        formato: 'excel'
+    });
+    window.open(`${window.location.pathname}?${params.toString()}`, '_blank');
+}
+
+function imprimirTabla() {
+    // Función para imprimir la tabla de presupuestos
+    const contenido = document.querySelector('.table-responsive').innerHTML;
+    const estadisticas = document.querySelector('.row.mb-4')?.innerHTML || '';
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Lista de Presupuestos</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    @media print {
+                        .btn, .form-check-input { display: none !important; }
+                        body { font-size: 12px; }
+                        .badge { color: black !important; border: 1px solid #ddd; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h2 class="text-center mb-4">Lista de Presupuestos</h2>
+                    <p class="text-center text-muted">Período: {{ desde }} al {{ hasta }}</p>
+                    ${estadisticas}
+                    <hr>
+                    ${contenido}
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+function enviarMasivo() {
+    // Función para enviar múltiples presupuestos por email
+    if (presupuestosSeleccionados.length === 0) {
+        alert('Debe seleccionar al menos un presupuesto para enviar');
+        return;
+    }
+    
+    if (confirm(`¿Desea enviar ${presupuestosSeleccionados.length} presupuesto(s) por email?`)) {
+        window.location.href = `/ventas/enviar-presupuestos-masivo?presupuestos=${presupuestosSeleccionados.join(',')}`;
+    }
+}
+
+function analizarConversion() {
+    // Abrir análisis de conversión de presupuestos
+    window.open('/ventas/analisis-conversion-presupuestos', '_blank');
+}
+
+function enviarPresupuesto(presupuestoId, cliente) {
+    // Función para enviar un presupuesto específico por email
+    if (confirm(`¿Enviar presupuesto a ${cliente}?`)) {
+        fetch(`/ventas/enviar-presupuesto/${presupuestoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Presupuesto enviado correctamente');
+            } else {
+                alert('Error al enviar: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al enviar el presupuesto');
+        });
+    }
+}
+
+function duplicarPresupuesto(presupuestoId) {
+    // Función para duplicar un presupuesto
+    if (confirm('¿Desea crear una copia de este presupuesto?')) {
+        window.location.href = `/ventas/duplicar-presupuesto/${presupuestoId}`;
+    }
+}
+
+function cambiarEstado(presupuestoId, estadoActual) {
+    // Función para cambiar el estado de un presupuesto
+    const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Vencido', 'Facturado'];
+    
+    let opciones = 'Seleccione el nuevo estado:\n\n';
+    estados.forEach((estado, index) => {
+        opciones += `${index + 1}. ${estado}${estado === estadoActual ? ' (actual)' : ''}\n`;
+    });
+    
+    const seleccion = prompt(opciones + '\nIngrese el número del estado:');
+    
+    if (seleccion && !isNaN(seleccion) && seleccion >= 1 && seleccion <= estados.length) {
+        const nuevoEstado = estados[parseInt(seleccion) - 1];
+        
+        if (nuevoEstado !== estadoActual) {
+            fetch(`/ventas/cambiar-estado-presupuesto/${presupuestoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al cambiar estado: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cambiar el estado del presupuesto');
+            });
+        }
+    }
+}
+
+// Funciones de selección múltiple
+function seleccionarTodos() {
+    const checkboxes = document.querySelectorAll('.presupuesto-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    
+    selectAll.checked = !selectAll.checked;
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+    });
+    
+    actualizarSeleccion();
+}
+
+function actualizarSeleccion() {
+    const checkboxes = document.querySelectorAll('.presupuesto-checkbox:checked');
+    presupuestosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
+    
+    const panel = document.getElementById('accionesPanel');
+    const contador = document.getElementById('contadorSeleccionados');
+    
+    if (presupuestosSeleccionados.length > 0) {
+        panel.style.display = 'block';
+        contador.textContent = presupuestosSeleccionados.length;
+    } else {
+        panel.style.display = 'none';
+    }
+    
+    // Actualizar el estado del checkbox "Seleccionar todos"
+    const allCheckboxes = document.querySelectorAll('.presupuesto-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked = allCheckboxes.length > 0 && presupuestosSeleccionados.length === allCheckboxes.length;
+}
+
+function facturarSeleccionados() {
+    if (presupuestosSeleccionados.length === 0) {
+        alert('Debe seleccionar al menos un presupuesto');
+        return;
+    }
+    
+    // Filtrar solo presupuestos que pueden facturarse
+    const presupuestosFacturables = presupuestosSeleccionados.filter(id => {
+        const row = document.querySelector(`tr[data-presupuesto-id="${id}"]`);
+        const estado = row?.dataset.estado;
+        return estado === 'Pendiente' || estado === 'Aprobado';
+    });
+    
+    if (presupuestosFacturables.length === 0) {
+        alert('Los presupuestos seleccionados no pueden facturarse (deben estar Pendientes o Aprobados)');
+        return;
+    }
+    
+    if (confirm(`¿Desea facturar ${presupuestosFacturables.length} presupuesto(s)?`)) {
+        window.location.href = `/ventas/facturar-presupuestos-masivo?presupuestos=${presupuestosFacturables.join(',')}`;
+    }
+}
+
+function enviarSeleccionados() {
+    if (presupuestosSeleccionados.length === 0) {
+        alert('Debe seleccionar al menos un presupuesto');
+        return;
+    }
+    
+    if (confirm(`¿Desea enviar ${presupuestosSeleccionados.length} presupuesto(s) por email?`)) {
+        fetch('/ventas/enviar-presupuestos-masivo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ presupuestos: presupuestosSeleccionados })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Enviados ${data.enviados} presupuestos correctamente`);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al enviar presupuestos');
+        });
+    }
+}
+
+function cambiarEstadoMasivo() {
+    if (presupuestosSeleccionados.length === 0) {
+        alert('Debe seleccionar al menos un presupuesto');
+        return;
+    }
+    
+    const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Vencido'];
+    let opciones = 'Cambiar estado masivo:\n\n';
+    estados.forEach((estado, index) => {
+        opciones += `${index + 1}. ${estado}\n`;
+    });
+    
+    const seleccion = prompt(opciones + '\nIngrese el número del estado:');
+    
+    if (seleccion && !isNaN(seleccion) && seleccion >= 1 && seleccion <= estados.length) {
+        const nuevoEstado = estados[parseInt(seleccion) - 1];
+        
+        if (confirm(`¿Confirma cambiar el estado a "${nuevoEstado}" para ${presupuestosSeleccionados.length} presupuesto(s)?`)) {
+            fetch('/ventas/cambiar-estado-masivo-presupuestos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    presupuestos: presupuestosSeleccionados, 
+                    estado: nuevoEstado 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cambiar estados');
+            });
+        }
+    }
+}
+
+function duplicarSeleccionados() {
+    if (presupuestosSeleccionados.length === 0) {
+        alert('Debe seleccionar al menos un presupuesto');
+        return;
+    }
+    
+    if (confirm(`¿Desea duplicar ${presupuestosSeleccionados.length} presupuesto(s)?`)) {
+        window.location.href = `/ventas/duplicar-presupuestos-masivo?presupuestos=${presupuestosSeleccionados.join(',')}`;
+    }
+}
+
+function limpiarSeleccion() {
+    const checkboxes = document.querySelectorAll('.presupuesto-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    
+    checkboxes.forEach(cb => cb.checked = false);
+    selectAll.checked = false;
+    
+    actualizarSeleccion();
+}
+
+// Función para detectar presupuestos próximos a vencer
+function verificarVencimientos() {
+    const filas = document.querySelectorAll('tr[data-presupuesto-id]');
+    let proximosVencer = 0;
+    let vencidos = 0;
+    
+    filas.forEach(fila => {
+        const validezBadge = fila.querySelector('td:nth-child(4) .badge');
+        if (validezBadge) {
+            if (validezBadge.classList.contains('bg-danger')) {
+                vencidos++;
+            } else if (validezBadge.classList.contains('bg-warning')) {
+                proximosVencer++;
+            }
+        }
+    });
+    
+    if (vencidos > 0 || proximosVencer > 0) {
+        let mensaje = 'Alerta de vencimientos:\n';
+        if (vencidos > 0) mensaje += `• ${vencidos} presupuesto(s) vencido(s)\n`;
+        if (proximosVencer > 0) mensaje += `• ${proximosVencer} presupuesto(s) próximo(s) a vencer\n`;
+        mensaje += '\n¿Desea revisar estos presupuestos?';
+        
+        if (confirm(mensaje)) {
+            // Filtrar tabla por presupuestos con problemas de vencimiento
+            document.getElementById('filtroValidez').value = 'por_vencer';
+            document.getElementById('filtrosForm').submit();
+        }
+    }
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar fechas por defecto si están vacías
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    
+    if (!desdeInput.value || !hastaInput.value) {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        
+        if (!desdeInput.value) {
+            desdeInput.value = hace30Dias.toISOString().split('T')[0];
+        }
+        if (!hastaInput.value) {
+            hastaInput.value = hoy.toISOString().split('T')[0];
+        }
+    }
+    
+    // Configurar eventos de selección
+    const checkboxes = document.querySelectorAll('.presupuesto-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', actualizarSeleccion);
+    });
+    
+    // Verificar vencimientos después de 2 segundos
+    setTimeout(verificarVencimientos, 2000);
+    
+    // Inicializar DataTables
+    const table = document.getElementById('dataTable');
+    if (table && typeof $ !== 'undefined') {
+        $(table).DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            order: [[2, 'desc']], // Ordenar por fecha descendente
+            columnDefs: [
+                { targets: [0], orderable: false }, // Checkbox no ordenable
+                { targets: [2, 3, 4, 5, 6, 7, 8], className: 'text-center' },
+                { targets: [5], type: 'currency' },
+                { targets: [8], orderable: false } // Acciones no ordenables
+            ],
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i> Excel',
+                    className: 'btn btn-success btn-sm',
+                    exportOptions: {
+                        columns: [1, 2, 3, 4, 5, 6, 7] // Excluir checkbox y acciones
+                    },
+                    title: 'Presupuestos - {{ desde }} al {{ hasta }}'
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i> PDF',
+                    className: 'btn btn-danger btn-sm',
+                    exportOptions: {
+                        columns: [1, 2, 3, 4, 5, 6, 7]
+                    },
+                    title: 'Lista de Presupuestos',
+                    messageTop: 'Período: {{ desde }} al {{ hasta }}'
+                }
+            ]
+        });
+    }
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // F5 para actualizar
+    if (e.key === 'F5') {
+        e.preventDefault();
+        document.getElementById('filtrosForm').submit();
+    }
+    // F12 para exportar Excel
+    if (e.key === 'F12') {
+        e.preventDefault();
+        exportarExcel();
+    }
+    // Ctrl+P para imprimir
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        imprimirTabla();
+    }
+    // Ctrl+A para seleccionar todos
+    if (e.ctrlKey && e.key === 'a' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        seleccionarTodos();
+    }
+    // Ctrl+E para enviar masivo
+    if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        enviarMasivo();
+    }
+});
+</script>
+
+<script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+<script src="/static/vendor/datatable/datatables.js"></script>
+<script src="/static/js/dataTables.js"></script>
+
 {% endblock %}

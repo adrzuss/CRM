@@ -1,40 +1,95 @@
 {% extends 'base.html' %}
 {% block body %}
-
-
-<h3 class="m-3">Cuentas corriente vencidas</h3>
-<div class="row justify-content-md-center m-3"></div>
-    <div class="col-12">
-        <div class="card">
-            <div class="table-responsive" >
-                <table class="table table-striped table-hover table-borderless table-dark align-middle">
-                    <thead class="table-light">
-                        <caption class="ml-3" style="font-style: italic; font-weight: bold;"> Listado de clientes con cuntas corrientes vencidas </caption>
-                        <tr>
-                            <th>#ID</th>
-                            <th>Cliente</th>
-                            <th>Saldo</th>
-                            <th>Acciones</th>
-                        </tr>   
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for vencida in vencidas %}
-                            <tr class="table-light">
-                                <td>{{ vencida.id }}</td>
-                                <td>{{ vencida.nombre }}</td>
-                                <td>{{ "${:,.2f}".format(vencida.saldo) }}</td>
-                                <td>Sin ref.</td>
-                            </tr>    
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
+<div class="container-fluid px-4 py-3">
+    <div class="card modern-card shadow-sm">
+        <div class="card-header modern-header bg-danger text-white d-flex align-items-center">
+            <div class="header-icon">
+                <i class="fas fa-clock"></i>
             </div>
+            <div class="ms-3">
+                <h5 class="card-title mb-0">Cuentas Vencidas</h5>
+                <small class="text-white-50">Clientes con saldos fuera de término</small>
+            </div>
+            {% if vencidas %}
+                <span class="badge bg-light text-dark ms-2">{{ vencidas|length }} clientes</span>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            {% if vencidas %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID</th>
+                                <th><i class="fas fa-user me-1"></i>Cliente</th>
+                                <th class="text-center"><i class="fas fa-exclamation-triangle me-1"></i>Saldo Vencido</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vencida in vencidas %}
+                                <tr>
+                                    <td class="text-center fw-bold">{{ vencida.id }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                <i class="fas fa-exclamation"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ vencida.nombre }}</strong>
+                                                <div class="text-muted small">Cliente #{{ vencida.id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning text-dark fs-5">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>{{ "${:,.2f}".format(vencida.saldo) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-outline-primary btn-modern btn-sm" 
+                                               href="{{ url_for('ctactecli.lst_cta_cte_cli', id=vencida.id) }}" 
+                                               title="Ver cuenta corriente">
+                                                <i class="fas fa-eye me-1"></i>Ver Detalle
+                                            </a>
+                                            <button type="button" class="btn btn-outline-warning btn-modern btn-sm" 
+                                                    title="Contactar cliente">
+                                                <i class="fas fa-phone"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info btn-modern btn-sm" 
+                                                    title="Generar reporte">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="2" class="text-end">Total Vencido:</td>
+                                <td class="text-center">
+                                    {% set total_vencido = vencidas|map(attribute='saldo')|sum %}
+                                    <span class="badge bg-danger fs-5">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ "${:,.2f}".format(total_vencido) }}
+                                    </span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">¡Excelente!</h5>
+                    <p class="text-muted">No hay cuentas corrientes vencidas en este momento</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
-</div>
+
 
 {% endblock %}

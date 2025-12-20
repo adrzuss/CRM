@@ -1,6 +1,36 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
+// Función para asegurar que existan campos hidden de color/detalle
+function ensureColorDetalleFields() {
+  const rows = document.querySelectorAll("#tabla-items tbody tr");
+  
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector("td.id-articulo");
+    if (firstCell) {
+      // Verificar si ya tiene los campos
+      let colorInput = row.querySelector('[name*="id_color"]');
+      let detalleInput = row.querySelector('[name*="id_detalle"]');
+      
+      if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'hidden';
+        colorInput.name = `items[${index}][id_color]`;
+        colorInput.value = '0';
+        firstCell.appendChild(colorInput);
+      }
+      
+      if (!detalleInput) {
+        detalleInput = document.createElement('input');
+        detalleInput.type = 'hidden';
+        detalleInput.name = `items[${index}][id_detalle]`;
+        detalleInput.value = '0';
+        firstCell.appendChild(detalleInput);
+      }
+    }
+  });
+}
+
 window.onbeforeunload = function() {
     if (!isFormSubmited) {
         return '¿Estás seguro de cerrar la venta sin guardar los cambios?';
@@ -94,36 +124,84 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-    itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
-    itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
+    const row = itemDiv.target.closest("tr");
+    const tablaItems = document.getElementById("tabla-items").querySelector("tbody");
+    
+    row.querySelector(".id-articulo").textContent = articulo.id;
+    row.querySelector(".descripcion-articulo").textContent = articulo.detalle;
     const precioUnitario = parseFloat(articulo.precio);
-    itemDiv.target.closest("tr").querySelector(".precio-unitario").value = (precioUnitario).toFixed(2);
+    row.querySelector(".precio-unitario").value = (precioUnitario).toFixed(2);
+    
+    // Asegurar que existan campos hidden antes de intentar mostrar modal
+    ensureColorDetalleFields();
+    
+    // Activar modal de color/detalle si está disponible
+    function tryShowModal() {
+        if (window.modalColorDetalleManager && articulo.id) {
+            const rowIndex = Array.from(tablaItems.querySelectorAll('tr')).indexOf(row);
+            
+            window.modalColorDetalleManager.mostrarModal(
+                articulo.id,
+                rowIndex,
+                articulo.detalle,
+                function(seleccion) {
+                    // Asegurar que existan los campos hidden
+                    ensureColorDetalleFields();
+                    
+                    // Buscar campos hidden
+                    let colorInput = row.querySelector('input[name*="id_color"]');
+                    let detalleInput = row.querySelector('input[name*="id_detalle"]');
+                    
+                    // Si no se encuentran, crearlos
+                    if (!colorInput || !detalleInput) {
+                        const firstCell = row.querySelector("td.id-articulo");
+                        if (firstCell) {
+                            if (!colorInput) {
+                                colorInput = document.createElement('input');
+                                colorInput.type = 'hidden';
+                                colorInput.name = `items[${seleccion.rowIndex}][id_color]`;
+                                colorInput.value = '0';
+                                firstCell.appendChild(colorInput);
+                            }
+                            
+                            if (!detalleInput) {
+                                detalleInput = document.createElement('input');
+                                detalleInput.type = 'hidden';
+                                detalleInput.name = `items[${seleccion.rowIndex}][id_detalle]`;
+                                detalleInput.value = '0';
+                                firstCell.appendChild(detalleInput);
+                            }
+                        }
+                    }
+                    
+                    // Asignar valores seleccionados
+                    if (colorInput && seleccion.colorId) {
+                        colorInput.value = seleccion.colorId;
+                    }
+                    
+                    if (detalleInput && seleccion.detalleId) {
+                        detalleInput.value = seleccion.detalleId;
+                    }
+                }
+            );
+        } else if (window.modalColorDetalleManager === undefined) {
+            // Reintentar después de un breve retraso si el manager no está disponible
+            setTimeout(tryShowModal, 50);
+        }
+    }
+    
+    // Intentar mostrar el modal después de un pequeño retraso
+    setTimeout(tryShowModal, 100);
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
-    // Crear el contenido del modal con las opciones de cliente
-    const tituloModal = document.getElementById('clienteModalLabel'); 
-    tituloModal.textContent = 'Seleccione un Artículo';
-    const modalContent = document.getElementById('modalContent');
-    modalContent.innerHTML = '';
-    const listaArticulos = document.createElement('ul');
-    listaArticulos.classList.add('list-group')
-    modalContent.appendChild(listaArticulos)
+    const callback = (articulo) => {
+        asignarArticuloElegido(articulo, itemDiv);
+    };
     
-    articulos.forEach(articulo => {
-        const articuloOption = document.createElement('li');
-        articuloOption.classList.add('cliente-option');
-        articuloOption.classList.add('list-group-item');
-        articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio).toFixed(2).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
-        articuloOption.onclick = () => {
-            asignarArticuloElegido(articulo, itemDiv);
-            $('#clienteModal').modal('hide');
-        };
-        listaArticulos.appendChild(articuloOption);
-    });
-
-    // Mostrar el modal
-    $('#clienteModal').modal('show');
+    // Mostrar modal con los datos
+    window.universalSearchModal.show('articulos', articulos || [], callback);
+}
 }
         
 function removeItem(itemDiv) {

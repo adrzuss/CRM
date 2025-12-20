@@ -1,4 +1,4 @@
-from flask import session, jsonify, json, Response
+from flask import session, jsonify, json, Response, current_app
 import os
 import tempfile
 from decimal import Decimal
@@ -9,7 +9,7 @@ from services.configs import discrimina_iva
 from utils.utils import format_currency, precio
 from models.ventas import Factura, Item, PagosFV, Presupuesto, ItemP, PresupuestoFactura, RemitosVtaFactura
 from models.clientes import Clientes
-from models.articulos import Articulo, ListasPrecios, Stock
+from models.articulos import Articulo, ListasPrecios, Stock, Colores, DetallesArticulos
 from models.entidades_cred import MovEntidades
 from models.ctactecli import CtaCteCli
 from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva, \
@@ -307,7 +307,7 @@ def procesar_nueva_venta(form, id_sucursal):
         ctacte = float(form['ctacte'])
         bonificacion = float(form['bonificacion'])
         idcredito = form.get('idcredito', None)
-        monto_credito = form.get('monto_credito', 0.0)
+        credito = float(form.get('credito', 0.0))
         idPresupuesto = form.get('idPresupuesto', None)
         idRemito = form.get('idRemito', None)
         totalFactura = float(form.get('totalFactura', None))
@@ -345,7 +345,7 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito)
+        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito)
         # Si se está facturando un presupuesto se vincula el mismo a la factura 
         if idPresupuesto:
             presupuesto = Presupuesto.query.get(idPresupuesto)
@@ -421,6 +421,37 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                         idoferta = int(idoferta)
                     else:
                         idoferta = 0    
+                    # Obtener color y detalle si están presentes
+                    possible_color_keys = [
+                        f'items[{index}][id_color]',
+                        f'id_color[{index}]', 
+                        f'id_color[]'
+                    ]
+                    possible_detalle_keys = [
+                        f'items[{index}][id_detalle]',
+                        f'id_detalle[{index}]', 
+                        f'id_detalle[]'
+                    ]
+                    
+                    id_color = None
+                    id_detalle = None
+                    
+                    # Buscar color
+                    for key in possible_color_keys:
+                        if key in form:
+                            id_color = form.get(key)
+                            break
+                    
+                    # Buscar detalle
+                    for key in possible_detalle_keys:
+                        if key in form:
+                            id_detalle = form.get(key)
+                            break
+                    
+                    # Convertir a int si tienen valor, sino 0
+                    id_color = int(id_color) if id_color and id_color != '' and id_color != 'None' else 0
+                    id_detalle = int(id_detalle) if id_detalle and id_detalle != '' and id_detalle != 'None' else 0
+                    
                     nuevo_item = Item(
                         idfactura=idfactura,
                         id=index,
@@ -435,7 +466,9 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                         idingbto=ingbto.id,
                         exento=exento,  
                         impint=impint,
-                        idoferta=idoferta 
+                        idoferta=idoferta,
+                        id_color=id_color,
+                        id_detalle=id_detalle
                     )
                     db.session.add(nuevo_item)
                     total += precio_total
@@ -451,7 +484,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     
     return total, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, monto_credito):
+def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito):
     #Calculamos el total de pagos para calcular si hay vuelto
     #El vuelto solo impacta en el total del efectivo
     
@@ -464,7 +497,7 @@ def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entida
             intereses = 0.0
             
     
-    totalPagos = Decimal(efectivo) + Decimal(Decimal(tarjeta) - Decimal(intereses)) + Decimal(ctacte) + Decimal(bonificacion) + Decimal(monto_credito)
+    totalPagos = Decimal(efectivo) + Decimal(Decimal(tarjeta) - Decimal(intereses)) + Decimal(ctacte) + Decimal(bonificacion) + Decimal(credito)
     totalPagos = totalPagos - total
     if totalPagos > 0:
         efectivo = Decimal(efectivo) - Decimal(totalPagos)
@@ -483,8 +516,8 @@ def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entida
             db.session.add(CtaCteCli(idcliente=idcliente, fecha=fecha, debe=Decimal(ctacte), haber=Decimal(0), idcomp=idfactura))
         if bonificacion > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=4, tipo=4, entidad=0, total=Decimal(bonificacion)))
-        if idcredito and Decimal(monto_credito) > 0:
-            db.session.add(PagosFV(idfactura=idfactura, idpago=5, tipo=5, entidad=0, total=Decimal(monto_credito)))
+        if idcredito and Decimal(credito) > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=5, tipo=5, entidad=0, total=Decimal(credito)))
             credito = Creditos.query.get(idcredito)
             if credito:
                 credito.estado = 5 #facturado
@@ -548,8 +581,38 @@ def procesar_items_remito(form, idremito, id_sucursal):
                 codigo = value
                 cantidad = Decimal(form[f'items[{index}][cantidad]'])
                 articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-                #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
-                #precio_unitario = precio.precio if precio else Decimal(0)
+                
+                # Obtener color y detalle si están presentes
+                possible_color_keys = [
+                    f'items[{index}][id_color]',
+                    f'id_color[{index}]', 
+                    f'id_color[]'
+                ]
+                possible_detalle_keys = [
+                    f'items[{index}][id_detalle]',
+                    f'id_detalle[{index}]', 
+                    f'id_detalle[]'
+                ]
+                
+                id_color = None
+                id_detalle = None
+                
+                # Buscar color
+                for key in possible_color_keys:
+                    if key in form:
+                        id_color = form.get(key)
+                        break
+                
+                # Buscar detalle
+                for key in possible_detalle_keys:
+                    if key in form:
+                        id_detalle = form.get(key)
+                        break
+                
+                # Convertir a int si tienen valor, sino 0
+                id_color = int(id_color) if id_color and id_color != '' and id_color != 'None' else 0
+                id_detalle = int(id_detalle) if id_detalle and id_detalle != '' and id_detalle != 'None' else 0
+                
                 nuevo_item = Item(
                     idfactura=idremito,
                     id=index,
@@ -562,7 +625,9 @@ def procesar_items_remito(form, idremito, id_sucursal):
                     ingbto=0,
                     idingbto=0,
                     exento=0,  
-                    impint=0
+                    impint=0,
+                    id_color=id_color,
+                    id_detalle=id_detalle
                 )
                 db.session.add(nuevo_item)
                 # Actualizar el stock
@@ -915,11 +980,19 @@ def get_factura(id):
             Item.cantidad,
             Item.precio_unitario,
             Item.precio_total,
+            Item.iva,
+            Item.exento,
+            Item.impint,
             Item.bonificacion,
             Item.idoferta,
+            Colores.nombre.label('color'),
+            Colores.color.label('codigo_color'),
+            DetallesArticulos.nombre.label('detalle_articulo'),
             Articulo.codigo,
             Articulo.detalle) \
             .join(Articulo, Articulo.id == Item.idarticulo) \
+            .outerjoin(Colores, Colores.id == Item.id_color) \
+            .outerjoin(DetallesArticulos, DetallesArticulos.id == Item.id_detalle) \
             .filter(Item.idfactura == id)
     pagos = db.session.query(
             PagosFV.total,
@@ -1082,6 +1155,14 @@ def procesar_itemsP(form, idpresupuesto, id_sucursal):
                     #precio_unitario = precio.precio if precio else Decimal(0)
                     precio_total = precioUnit * cantidad
                     
+                    # Obtener color y detalle si están presentes
+                    id_color = form.get(f'items[{index}][id_color]')
+                    id_detalle = form.get(f'items[{index}][id_detalle]')
+                    
+                    # Convertir a int si tienen valor, sino None
+                    id_color = int(id_color) if id_color and id_color != '' else None
+                    id_detalle = int(id_detalle) if id_detalle and id_detalle != '' else None
+                    
                     nuevo_item = ItemP(
                         idpresupuesto=idpresupuesto,
                         id=index,
@@ -1089,6 +1170,8 @@ def procesar_itemsP(form, idpresupuesto, id_sucursal):
                         cantidad=cantidad,
                         precio_unitario=precioUnit,
                         precio_total=precio_total,
+                        id_color=id_color,
+                        id_detalle=id_detalle
                     )
                     db.session.add(nuevo_item)
                     total += precio_total

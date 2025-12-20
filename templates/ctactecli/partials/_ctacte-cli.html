@@ -1,82 +1,158 @@
-<div class="card">
-    <div class="card-title">
-        <div class="ml-3">
-            <h3>Ingreso de movimiento en cta cte</h3>
-            <h5 id="punto_vta">Punto de venta: {{ puntoVenta }}</h5>
-        </div>
-    </div>    
-    <div class="card-body">    
-        <form action="{{ url_for('ctactecli.add_cta_cte_cli') }}" id="movCtaCte" method="post">
-            <div class="justify-content-center">
-                <div class="row">
-                    <div class="card m-1 col-5">
-                        <div class="row">
-                            <div class="mb-3 col-2"> 
-                                <label for="idcliente">#Cliente</label>
-                                <input class="form-control" type="text" name="idcliente" id="idcliente" readonly value="{{ idCliente }}" >
+<form action="{{ url_for('ctactecli.add_cta_cte_cli') }}" id="movCtaCte" method="post">
+    <div class="row g-4">
+        <!-- Información del cliente y transacción -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Datos de la Transacción
+                    </h5>
+                    <small id="punto_vta">Punto de venta: {{ puntoVenta }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="form-floating mb-3">
+                                <input class="form-control" type="text" name="idcliente" id="idcliente" readonly value="{{ idCliente }}">
+                                <label for="idcliente"><i class="fas fa-hashtag me-2"></i>ID Cliente</label>
                             </div>
-                            <div class="mb-3 col-5"> 
-                                <label for="nombre">Nombre</label>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating mb-3">
                                 <input class="form-control" type="text" name="nombre" id="nombre" readonly value="{{ nomCliente }}">
+                                <label for="nombre"><i class="fas fa-user me-2"></i>Cliente</label>
                             </div>
-                        
-                            <div class="mb-3 col-4">
-                                <label for="fecha">Fecha</label>
-                                <input class="form-control" type="date" name="fecha" id="fecha" placeholder="Fecha del movimiento">
-                            </div> 
-                        </div>      
-                        <div class="row">
-                                <h6 class="ml-3">Tipo de ingreso</h6>
-                            <div class="col-4">
-                                <div class="row m-3">
-                                    <div class="form-check col-6">
-                                        <input class="form-check-input" type="radio" name="debe_haber" id="debe" value="debe">
-                                        <label class="form-check-label" for="flexRadioDefault1">
-                                        Debe (Ingreso)
-                                        </label>
-                                    </div>
-                                    <div class="form-check col-6">
-                                        <input class="form-check-input" type="radio" name="debe_haber" id="haber" value="haber">
-                                        <label class="form-check-label" for="flexRadioDefault2">
-                                        Haber (Pago)
-                                        </label>
-                                    </div>
-                                </div>    
-                            </div>        
-                            <div class="mb-3 col-5">
-                                <label for="importe">Importe</label>
-                                <input class="form-control" type="text" name="importe" id="importe" step="0.01" min="1" placeholder="Ingrese el monto">
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating mb-3">
+                                <input class="form-control" type="date" name="fecha" id="fecha" required>
+                                <label for="fecha"><i class="fas fa-calendar me-2"></i>Fecha</label>
                             </div>
-                        </div>    
-                    </div>        
-
-                    <div class="card m-1 col-6">
-                        <h4 class="my-3">Formas de pago</h4>
-                        <div class="card-body">
-                                <div class="row">
-                                    <div class="col-4">
-                                        <label for="efectivo">Efectivo</label>
-                                        <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0">
-                                    </div>
-                                    <div class="col-4">
-                                        <label for="entidad" class="form-label">Entidad</label>
-                                        <select class="form-select form-select-md" name="entidad" id="entidad" >
-                                            <option selected>Elija una</option>
-                                            {% for entidad in entidades %}
-                                                <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <label for="tarjeta">Tarjeta</label>
-                                        <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" value="0">
-                                    </div>
-                                </div>        
                         </div>
                     </div>
-                </div>    
-            </div>    
-            <button class="btn btn-exito mt-2" type="submit">Grabar movimiento</button>
-        </form>
-    </div>    
-</div>   
+                    
+                    <!-- Tipo de movimiento -->
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-exchange-alt me-2"></i>Tipo de Movimiento
+                        </h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check p-3 border rounded bg-light">
+                                    <input class="form-check-input" type="radio" name="debe_haber" id="debe" value="debe" required>
+                                    <label class="form-check-label fw-bold text-danger" for="debe">
+                                        <i class="fas fa-arrow-up me-2"></i>Debe (Cargo)
+                                    </label>
+                                    <div class="small text-muted">Genera deuda del cliente</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check p-3 border rounded bg-light">
+                                    <input class="form-check-input" type="radio" name="debe_haber" id="haber" value="haber" required>
+                                    <label class="form-check-label fw-bold text-success" for="haber">
+                                        <i class="fas fa-arrow-down me-2"></i>Haber (Pago)
+                                    </label>
+                                    <div class="small text-muted">Registra pago del cliente</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-floating mb-3">
+                        <input class="form-control" type="number" name="importe" id="importe" step="0.01" min="0.01" placeholder="0.00" required>
+                        <label for="importe"><i class="fas fa-dollar-sign me-2"></i>Importe Total</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formas de pago -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Formas de Pago
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" min="0" value="0">
+                                <label for="efectivo"><i class="fas fa-money-bill me-2"></i>Efectivo</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <select class="form-select" name="entidad" id="entidad">
+                                    <option value="">Seleccione entidad</option>
+                                    {% for entidad in entidades %}
+                                        <option value="{{ entidad.id }}">{{ entidad.entidad }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="entidad"><i class="fas fa-building me-2"></i>Entidad</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="number" name="tarjeta" id="tarjeta" class="form-control" step="0.01" min="0" value="0">
+                                <label for="tarjeta"><i class="fas fa-credit-card me-2"></i>Tarjeta</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Nota:</strong> El total de formas de pago debe coincidir con el importe ingresado.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <button class="btn btn-success btn-lg px-4" type="submit">
+                <i class="fas fa-save me-2"></i>Grabar Movimiento
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg px-4 ms-2" onclick="this.form.reset()">
+                <i class="fas fa-times me-2"></i>Limpiar
+            </button>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importeInput = document.getElementById('importe');
+    const efectivoInput = document.getElementById('efectivo');
+    const tarjetaInput = document.getElementById('tarjeta');
+    
+    // Calcular automáticamente el efectivo cuando se ingresa el importe
+    importeInput.addEventListener('input', function() {
+        if (this.value && tarjetaInput.value == 0) {
+            efectivoInput.value = this.value;
+        }
+    });
+    
+    // Validar que la suma de formas de pago coincida con el importe
+    function validarTotal() {
+        const importe = parseFloat(importeInput.value) || 0;
+        const efectivo = parseFloat(efectivoInput.value) || 0;
+        const tarjeta = parseFloat(tarjetaInput.value) || 0;
+        const total = efectivo + tarjeta;
+        
+        if (Math.abs(importe - total) > 0.01) {
+            importeInput.setCustomValidity('El total de formas de pago debe coincidir con el importe');
+        } else {
+            importeInput.setCustomValidity('');
+        }
+    }
+    
+    efectivoInput.addEventListener('input', validarTotal);
+    tarjetaInput.addEventListener('input', validarTotal);
+    importeInput.addEventListener('input', validarTotal);
+});
+</script>   

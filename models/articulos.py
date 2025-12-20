@@ -24,6 +24,8 @@ class Articulo(db.Model):
     es_compuesto = db.Column(db.Boolean, nullable=False)
     pedir_en_ventas = db.Column(db.Enum(PedirEnVentas), default=PedirEnVentas.CANTIDAD, nullable=False)
     baja = db.Column(db.Date, nullable=False)
+    con_colores = db.Column(db.Boolean, default=False)
+    con_talles = db.Column(db.Boolean, default=False)
     iva = db.relationship('AlcIva', back_populates='articulos')
     ingbto = db.relationship('AlcIB', back_populates='articulos')
     marca = db.relationship('Marca', back_populates='articulos')
@@ -32,7 +34,7 @@ class Articulo(db.Model):
     #tipoarticulo = db.relationship('TipoArticulos', back_populates='articulos', lazy=True)
     #stock = db.relationship('Stock', back_populates='idarticulo')
     
-    def __init__(self, codigo, detalle, costo, costo_total, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto, pedir_en_ventas):
+    def __init__(self, codigo, detalle, costo, costo_total, exento, impint, idiva, idib, idmarca, idrubro, idtipoarticulo, imagen, es_compuesto, pedir_en_ventas, con_colores=False, con_talles=False):
         self.codigo = codigo
         self.detalle = detalle
         self.costo = costo
@@ -47,6 +49,8 @@ class Articulo(db.Model):
         self.imagen = imagen
         self.es_compuesto = es_compuesto
         self.pedir_en_ventas = pedir_en_ventas
+        self.con_colores = con_colores
+        self.con_talles = con_talles
         self.baja = date(1900, 1, 1)
     
     @property
@@ -168,13 +172,17 @@ class ItemBalance(db.Model):
     cantidad = db.Column(db.Numeric(20,6), nullable=False)
     precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
     precio_total = db.Column(db.Numeric(20,6), nullable=False)
+    id_color = db.Column(db.Integer, db.ForeignKey('colores.id'), nullable=True)
+    id_detalle = db.Column(db.Integer, db.ForeignKey('detalles_articulos.id'), nullable=True)
     
-    def _init__(self, idbalance, idarticulo, cantidad, precio_unitario, precio_total):
+    def __init__(self, idbalance, idarticulo, cantidad, precio_unitario, precio_total, id_color=None, id_detalle=None):
         self.idbalance = idbalance
         self.idarticulo = idarticulo
         self.cantidad = cantidad
         self.precio_unitario = precio_unitario
         self.precio_total = precio_total
+        self.id_color = id_color
+        self.id_detalle = id_detalle
         
 class RemitoSucursales(db.Model):
     __tablename__ = 'remito_sucursales'
@@ -197,12 +205,16 @@ class ItemRemitoSucs(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
     cantidad = db.Column(db.Numeric(20,6))
+    id_color = db.Column(db.Integer, db.ForeignKey('colores.id'), nullable=True)
+    id_detalle = db.Column(db.Integer, db.ForeignKey('detalles_articulos.id'), nullable=True)
     
-    def __init__(self, id, idarticulo, idremito, cantidad):
+    def __init__(self, id, idarticulo, idremito, cantidad, id_color=None, id_detalle=None):
         self.id = id
         self.idarticulo = idarticulo
         self.idremito = idremito
         self.cantidad = cantidad
+        self.id_color = id_color
+        self.id_detalle = id_detalle
         
 class CambioPrecios(db.Model):
     __tablename__ = 'cambio_precios'
@@ -232,3 +244,52 @@ class CambioPreciosItem(db.Model):
         self.idarticulo = idarticulo
         self.precio_de = precio_de
         self.precio_a = precio_a
+        
+class Colores(db.Model):
+    __tablename__ = 'colores'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    color = db.Column(db.String(7), nullable=False)  # Almacena el valor hexadecimal del color
+    
+    def __init__(self, nombreColor, color):
+        self.nombre = nombreColor
+        self.color = color
+        
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'color': self.color
+        }
+
+class ArticulosColores(db.Model):
+    __tablename__ = 'articulos_colores'
+    id_articulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
+    id_color = db.Column(db.Integer, db.ForeignKey('colores.id'), primary_key=True)
+    
+    def __init__(self, id_articulo, id_color):
+        self.id_articulo = id_articulo
+        self.id_color = id_color
+        
+class DetallesArticulos(db.Model):
+    __tablename__ = 'detalles_articulos'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    
+    def __init__(self, nombre):
+        self.nombre = nombre
+        
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre
+        }
+
+class ArticulosDetalles(db.Model):
+    __tablename__ = 'articulos_detalles'
+    id_articulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
+    id_detalle = db.Column(db.Integer, db.ForeignKey('detalles_articulos.id'), primary_key=True)
+    
+    def __init__(self, id_articulo, id_detalle):
+        self.id_articulo = id_articulo
+        self.id_detalle = id_detalle

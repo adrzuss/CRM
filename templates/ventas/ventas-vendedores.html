@@ -5,74 +5,726 @@
 {% endblock %}
 
 {% block body %}
-    <h2 class="m-3">Ventas por vendedores</h2>
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="card m-3">
-                <h5 class="px-5 pt-2">Periodo</h5>
-                <div class="card-body">
-                    <form action="" method="post">
-                        <div class="row justify-content-md-center">
-                            <div class="col-md-3">
-                                <label for="desde">Desde</label>
-                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="hasta">Hasta</label>
-                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
-                            </div>    
-                            <div class="col-md-2 m-4">
-                                <button type="submit" class="btn btn-primario">Buscar</button>
-                            </div>    
-                        </div>
-                    </form>
-                </div>    
-            </div>
-        </div>    
-    </div>
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="table-responsive m-3" >
-                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTableVentas" >
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#ID Vendedor</th>
-                            <th>Nombre</th>
-                            <th>Operaciones</th>
-                            <th>Total</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for venta in ventas %}        
-                            <tr class="table-light">
-                                <td scope="row">{{ venta.id }}</td>
-                                <td>{{ venta.nombre }}</td>
-                                <td style="text-align:center">{{ venta.cantidad_total }}</td>
-                                <td style="text-align:center"> {{ venta.total_ventas|round(2) }}</td>
-                                <td>
-                                    <form method="POST" action="{{ url_for('ventas.ventasUnVendedor') }}">
-                                        <input type="hidden" name="idVendedor" value="{{ venta.id }}">
-                                        <input type="hidden" name="fechaDesde" value="{{ desde }}">
-                                        <input type="hidden" name="fechaHasta" value="{{ hasta }}">
-                                        <button type="submit" class="btn btn-secondary">Ver factura</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
-            </div>
-        </div>    
-    </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/datatables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('ventas.ventas', id=0) }}">
+                <i class="fas fa-shopping-cart me-1"></i>Ventas
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-user-tie me-1"></i>Ventas por Vendedores
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-success text-white">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="ms-3 flex-grow-1">
+            <h1 class="page-title mb-0">Desempeño de Vendedores</h1>
+            <p class="page-subtitle text-muted mb-0">Análisis de rendimiento y productividad del equipo de ventas</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-outline-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel me-1"></i>Exportar Excel
+            </button>
+            <button class="btn btn-outline-warning" onclick="generarComisiones()">
+                <i class="fas fa-percentage me-1"></i>Calcular Comisiones
+            </button>
+            <button class="btn btn-outline-info" onclick="compararVendedores()">
+                <i class="fas fa-chart-bar me-1"></i>Comparar Rendimiento
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Filtros de análisis -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <h5 class="card-title mb-0">Filtros de Rendimiento</h5>
+                <div class="ms-auto">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                        <i class="fas fa-broom me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form action="" method="post" id="filtrosForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <select class="form-select" id="filtroMetrica" name="metrica">
+                                <option value="ventas">Total Ventas</option>
+                                <option value="operaciones">Nº Operaciones</option>
+                                <option value="promedio">Promedio/Venta</option>
+                                <option value="crecimiento">% Crecimiento</option>
+                            </select>
+                            <label for="filtroMetrica"><i class="fas fa-chart-line me-2"></i>Métrica</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="filtroMeta" name="meta" min="0" step="0.01" placeholder="Meta">
+                            <label for="filtroMeta"><i class="fas fa-bullseye me-2"></i>Meta $</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success h-100">
+                            <i class="fas fa-search me-1"></i>Analizar
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Análisis del período:</strong> 
+                            {{ desde }} al {{ hasta }} 
+                            <span class="badge bg-success ms-2">{{ ventas|length }} vendedores activos</span>
+                            {% if ventas %}
+                                <span class="badge bg-light text-dark ms-1">
+                                    Total Facturado: ${{ "{:,.2f}".format(ventas|sum(attribute='total_ventas')) }}
+                                </span>
+                                <span class="badge bg-warning text-dark ms-1">
+                                    Promedio/Vendedor: ${{ "{:,.2f}".format((ventas|sum(attribute='total_ventas')) / (ventas|length)) }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Dashboard de métricas -->
+    {% if ventas %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Vendedores Activos</h6>
+                            <h3 class="mb-0">{{ ventas|length }}</h3>
+                        </div>
+                        <i class="fas fa-user-tie fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Total Facturado</h6>
+                            <h3 class="mb-0">${{ "{:,.0f}".format(ventas|sum(attribute='total_ventas')) }}</h3>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Operaciones Totales</h6>
+                            <h3 class="mb-0">{{ ventas|sum(attribute='cantidad_total') }}</h3>
+                        </div>
+                        <i class="fas fa-handshake fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">Mejor Vendedor</h6>
+                            {% set mejor_vendedor = ventas|sort(attribute='total_ventas', reverse=true)|first %}
+                            <h3 class="mb-0 text-truncate" title="{{ mejor_vendedor.nombre if mejor_vendedor else 'N/A' }}">
+                                {{ (mejor_vendedor.nombre[:10] + '...') if mejor_vendedor and mejor_vendedor.nombre|length > 10 else (mejor_vendedor.nombre if mejor_vendedor else 'N/A') }}
+                            </h3>
+                        </div>
+                        <i class="fas fa-trophy fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Podium TOP 3 -->
+    {% if ventas and ventas|length >= 3 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-gradient-warning text-dark">
+            <h6 class="card-title mb-0">
+                <i class="fas fa-medal me-2"></i>Podium de Vendedores - TOP 3 del Período
+            </h6>
+        </div>
+        <div class="card-body text-center py-4">
+            <div class="row justify-content-center align-items-end">
+                <!-- 2do Puesto -->
+                {% if ventas|length >= 2 %}
+                <div class="col-md-3">
+                    <div class="podium-position" style="height: 120px;">
+                        <div class="d-flex flex-column align-items-center h-100 justify-content-end">
+                            <div class="position-relative mb-2">
+                                <div class="avatar bg-light text-dark rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 70px; height: 70px; border: 3px solid silver;">
+                                    {{ ventas[1].nombre[:2].upper() }}
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-light text-dark" 
+                                      style="font-size: 1.2em; border: 2px solid silver;">
+                                    2
+                                </span>
+                            </div>
+                            <div class="bg-light text-dark rounded p-2" style="height: 60px; width: 100%; display: flex; flex-direction: column; justify-content: center;">
+                                <small class="fw-bold text-truncate">{{ ventas[1].nombre }}</small>
+                                <small class="text-success">${{ "{:,.0f}".format(ventas[1].total_ventas) }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- 1er Puesto -->
+                <div class="col-md-3">
+                    <div class="podium-position" style="height: 150px;">
+                        <div class="d-flex flex-column align-items-center h-100 justify-content-end">
+                            <div class="position-relative mb-2">
+                                <div class="avatar bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 90px; height: 90px; border: 3px solid gold; box-shadow: 0 0 20px rgba(255,215,0,0.5);">
+                                    {{ ventas[0].nombre[:2].upper() }}
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" 
+                                      style="font-size: 1.5em; border: 3px solid gold;">
+                                    <i class="fas fa-crown"></i>
+                                </span>
+                            </div>
+                            <div class="bg-warning text-dark rounded p-2" style="height: 80px; width: 100%; display: flex; flex-direction: column; justify-content: center;">
+                                <strong class="text-truncate">{{ ventas[0].nombre }}</strong>
+                                <strong class="text-success">${{ "{:,.0f}".format(ventas[0].total_ventas) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3er Puesto -->
+                {% if ventas|length >= 3 %}
+                <div class="col-md-3">
+                    <div class="podium-position" style="height: 90px;">
+                        <div class="d-flex flex-column align-items-center h-100 justify-content-end">
+                            <div class="position-relative mb-2">
+                                <div class="avatar bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; border: 3px solid #cd7f32;">
+                                    {{ ventas[2].nombre[:2].upper() }}
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary text-white" 
+                                      style="font-size: 1em; border: 2px solid #cd7f32;">
+                                    3
+                                </span>
+                            </div>
+                            <div class="bg-secondary text-white rounded p-2" style="height: 50px; width: 100%; display: flex; flex-direction: column; justify-content: center;">
+                                <small class="fw-bold text-truncate">{{ ventas[2].nombre }}</small>
+                                <small class="text-warning">${{ "{:,.0f}".format(ventas[2].total_ventas) }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla de rendimiento por vendedores -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-line me-2"></i>Rendimiento Individual
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="imprimirReporte()">
+                    <i class="fas fa-print me-1"></i>Reporte
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if ventas %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="dataTableVentas">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID</th>
+                                <th><i class="fas fa-user-tie me-1"></i>Vendedor</th>
+                                <th class="text-center"><i class="fas fa-handshake me-1"></i>Operaciones</th>
+                                <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Total Ventas</th>
+                                <th class="text-center"><i class="fas fa-chart-bar me-1"></i>% Participación</th>
+                                <th class="text-center"><i class="fas fa-calculator me-1"></i>Promedio/Venta</th>
+                                <th class="text-center"><i class="fas fa-percentage me-1"></i>Comisión Est.</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% set total_general = ventas|sum(attribute='total_ventas') %}
+                            {% for venta in ventas %}
+                                {% set participacion = (venta.total_ventas|float / total_general|float * 100) if total_general > 0 else 0 %}
+                                {% set promedio_venta = (venta.total_ventas|float / venta.cantidad_total) if venta.cantidad_total > 0 else 0 %}
+                                {% set comision_estimada = venta.total_ventas|float * 0.03 %} {# 3% de comisión estimada #}
+                                <tr class="{% if loop.index0 % 2 == 0 %}table-light{% else %}bg-white{% endif %}">
+                                    <td class="text-center">
+                                        <code class="bg-light px-2 py-1 rounded">
+                                            {{ venta.id }}
+                                        </code>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                {{ venta.nombre[:1].upper() }}
+                                            </div>
+                                            <div>
+                                                <strong class="d-block">{{ venta.nombre }}</strong>
+                                                {% if loop.index == 1 %}
+                                                    <small class="text-warning">
+                                                        <i class="fas fa-crown"></i> #1 Vendedor
+                                                    </small>
+                                                {% elif loop.index <= 3 %}
+                                                    <small class="text-info">
+                                                        <i class="fas fa-medal"></i> TOP {{ loop.index }}
+                                                    </small>
+                                                {% elif participacion >= 15 %}
+                                                    <small class="text-success">
+                                                        <i class="fas fa-star"></i> Vendedor Estrella
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info fs-6">
+                                            {{ venta.cantidad_total }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-dollar-sign me-1"></i>${{ "{:,.2f}".format(venta.total_ventas) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="progress" style="width: 60px; height: 20px;">
+                                                <div class="progress-bar 
+                                                    {% if participacion >= 25 %}bg-success
+                                                    {% elif participacion >= 15 %}bg-warning
+                                                    {% elif participacion >= 10 %}bg-info
+                                                    {% else %}bg-secondary{% endif %}" 
+                                                     style="width: {{ participacion if participacion <= 100 else 100 }}%">
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-light text-dark ms-2">
+                                                {{ "{:.1f}".format(participacion) }}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">
+                                            ${{ "{:,.2f}".format(promedio_venta) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning text-dark" title="Comisión estimada al 3%">
+                                            ${{ "{:,.2f}".format(comision_estimada) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <form method="POST" action="{{ url_for('ventas.ventasUnVendedor') }}" class="d-inline">
+                                                <input type="hidden" name="idVendedor" value="{{ venta.id }}">
+                                                <input type="hidden" name="fechaDesde" value="{{ desde }}">
+                                                <input type="hidden" name="fechaHasta" value="{{ hasta }}">
+                                                <button type="submit" class="btn btn-outline-primary btn-sm" title="Ver ventas del vendedor">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </form>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="verPerfilVendedor({{ venta.id }})" 
+                                                    title="Ver perfil del vendedor">
+                                                <i class="fas fa-user"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm" 
+                                                    onclick="calcularComision({{ venta.id }}, {{ venta.total_ventas }})" 
+                                                    title="Calcular comisión">
+                                                <i class="fas fa-percentage"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    onclick="analizarTendencia({{ venta.id }})" 
+                                                    title="Analizar tendencia">
+                                                <i class="fas fa-chart-line"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="2" class="text-end">TOTALES EQUIPO:</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info fs-6">
+                                        {{ ventas|sum(attribute='cantidad_total') }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success fs-5">
+                                        <i class="fas fa-calculator me-1"></i>
+                                        ${{ "{:,.2f}".format(ventas|sum(attribute='total_ventas')) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">100.0%</span>
+                                </td>
+                                <td class="text-center">
+                                    {% set total_operaciones = ventas|sum(attribute='cantidad_total') %}
+                                    {% set total_ventas = ventas|sum(attribute='total_ventas')|float %}
+                                    <span class="badge bg-secondary">
+                                        ${{ "{:,.2f}".format(total_ventas / total_operaciones if total_operaciones > 0 else 0) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning text-dark">
+                                        ${{ "{:,.2f}".format((ventas|sum(attribute='total_ventas')|float) * 0.03) }}
+                                    </span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="text-center py-5">
+                    <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay vendedores con ventas</h5>
+                    <p class="text-muted">No se encontraron ventas de vendedores en el período seleccionado</p>
+                    <a href="{{ url_for('ventas.nueva_venta') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Crear Nueva Venta
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones de utilidad para vendedores
+function limpiarFiltros() {
+    document.getElementById('filtrosForm').reset();
+    // Establecer fechas por defecto (último mes)
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
     
+    document.getElementById('desde').value = hace30Dias.toISOString().split('T')[0];
+    document.getElementById('hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('filtroMetrica').value = 'ventas';
+    document.getElementById('filtroMeta').value = '';
+}
+
+function exportarExcel() {
+    // Función para exportar rendimiento de vendedores a Excel
+    const params = new URLSearchParams({
+        desde: document.getElementById('desde').value,
+        hasta: document.getElementById('hasta').value,
+        metrica: document.getElementById('filtroMetrica').value,
+        meta: document.getElementById('filtroMeta').value || '0',
+        formato: 'excel'
+    });
+    window.open(`${window.location.pathname}?${params.toString()}`, '_blank');
+}
+
+function imprimirReporte() {
+    // Función para imprimir reporte completo de vendedores
+    const contenido = document.querySelector('.table-responsive').innerHTML;
+    const estadisticas = document.querySelector('.row.mb-4')?.innerHTML || '';
+    const podium = document.querySelector('.card.shadow-sm.mb-4')?.innerHTML || '';
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Reporte de Desempeño de Vendedores</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    @media print {
+                        .btn { display: none !important; }
+                        body { font-size: 12px; }
+                        .badge { color: black !important; border: 1px solid #ddd; }
+                        .progress { background-color: #f0f0f0 !important; }
+                        .progress-bar { background-color: #333 !important; }
+                        .avatar, .avatar-sm { background-color: #ddd !important; color: black !important; }
+                    }
+                    .podium-position { margin-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h2 class="text-center mb-4">Reporte de Desempeño de Vendedores</h2>
+                    <p class="text-center text-muted">Período: {{ desde }} al {{ hasta }}</p>
+                    ${estadisticas}
+                    ${podium}
+                    <hr>
+                    <h4 class="mb-3">Detalle Individual</h4>
+                    ${contenido}
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            <strong>Nota:</strong> Las comisiones mostradas son estimaciones basadas en un 3% de las ventas totales.
+                            Para cálculos precisos, consulte los parámetros de comisiones configurados para cada vendedor.
+                        </small>
+                    </div>
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+function generarComisiones() {
+    // Función para calcular comisiones del período
+    if (confirm('¿Desea generar el cálculo de comisiones para todos los vendedores del período?')) {
+        const params = new URLSearchParams({
+            desde: document.getElementById('desde').value,
+            hasta: document.getElementById('hasta').value,
+            accion: 'calcular_comisiones'
+        });
+        window.open(`/reportes/comisiones-vendedores?${params.toString()}`, '_blank');
+    }
+}
+
+function compararVendedores() {
+    // Función para comparar rendimiento entre vendedores
+    const params = new URLSearchParams({
+        desde: document.getElementById('desde').value,
+        hasta: document.getElementById('hasta').value
+    });
+    window.open(`/reportes/comparacion-vendedores?${params.toString()}`, '_blank');
+}
+
+function verPerfilVendedor(vendedorId) {
+    // Función para ver perfil completo del vendedor
+    window.open(`/vendedores/perfil/${vendedorId}`, '_blank');
+}
+
+function calcularComision(vendedorId, totalVentas) {
+    // Función para calcular comisión específica
+    const porcentaje = prompt('Ingrese el porcentaje de comisión (ejemplo: 3 para 3%):', '3');
+    if (porcentaje && !isNaN(porcentaje)) {
+        const comision = totalVentas * (parseFloat(porcentaje) / 100);
+        alert(`Comisión calculada: $${comision.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+    }
+}
+
+function analizarTendencia(vendedorId) {
+    // Función para analizar tendencia específica de un vendedor
+    const desde = document.getElementById('desde').value;
+    const hasta = document.getElementById('hasta').value;
+    const url = `/vendedores/${vendedorId}/tendencias?desde=${desde}&hasta=${hasta}`;
+    window.open(url, '_blank');
+}
+
+// Función para mostrar metas y objetivos
+function evaluarMetas() {
+    const meta = parseFloat(document.getElementById('filtroMeta').value);
+    if (meta > 0) {
+        const filas = document.querySelectorAll('#dataTableVentas tbody tr');
+        filas.forEach(fila => {
+            const totalVentasText = fila.querySelector('td:nth-child(4) .badge').textContent;
+            const totalVentas = parseFloat(totalVentasText.replace(/[$,]/g, ''));
+            
+            // Añadir indicador de meta cumplida/no cumplida
+            const indicador = fila.querySelector('.meta-indicator') || document.createElement('span');
+            indicador.className = 'meta-indicator badge ms-1';
+            
+            if (totalVentas >= meta) {
+                indicador.className += ' bg-success';
+                indicador.innerHTML = '<i class="fas fa-check"></i> Meta Cumplida';
+            } else {
+                indicador.className += ' bg-danger';
+                const faltante = meta - totalVentas;
+                indicador.innerHTML = `<i class="fas fa-times"></i> Falta $${faltante.toLocaleString()}`;
+            }
+            
+            if (!fila.querySelector('.meta-indicator')) {
+                fila.querySelector('td:nth-child(4)').appendChild(indicador);
+            }
+        });
+    }
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar fechas por defecto si están vacías
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    
+    if (!desdeInput.value || !hastaInput.value) {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        
+        if (!desdeInput.value) {
+            desdeInput.value = hace30Dias.toISOString().split('T')[0];
+        }
+        if (!hastaInput.value) {
+            hastaInput.value = hoy.toISOString().split('T')[0];
+        }
+    }
+    
+    // Configurar tooltips
+    const tooltips = document.querySelectorAll('[title]');
+    tooltips.forEach(element => {
+        element.setAttribute('data-bs-toggle', 'tooltip');
+    });
+    
+    // Inicializar DataTables con configuración específica para vendedores
+    const table = document.getElementById('dataTableVentas');
+    if (table && typeof $ !== 'undefined') {
+        $(table).DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            order: [[3, 'desc']], // Ordenar por total ventas descendente
+            columnDefs: [
+                { targets: [0, 2, 3, 4, 5, 6, 7], className: 'text-center' },
+                { targets: [3, 5, 6], type: 'currency' },
+                { targets: [2], type: 'num' },
+                { targets: [4], orderable: false }, // No ordenar columna de progreso
+                { targets: [7], orderable: false }  // No ordenar columna de acciones
+            ],
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i> Excel',
+                    className: 'btn btn-success btn-sm',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6] // Excluir columna de acciones
+                    },
+                    title: 'Reporte de Vendedores - {{ desde }} al {{ hasta }}'
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i> PDF',
+                    className: 'btn btn-danger btn-sm',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6]
+                    },
+                    title: 'Reporte de Vendedores',
+                    messageTop: 'Período: {{ desde }} al {{ hasta }}'
+                }
+            ]
+        });
+    }
+    
+    // Event listener para evaluación de metas
+    const metaInput = document.getElementById('filtroMeta');
+    if (metaInput) {
+        metaInput.addEventListener('input', debounce(evaluarMetas, 500));
+    }
+    
+    // Evaluar metas si ya hay un valor
+    if (metaInput && metaInput.value) {
+        evaluarMetas();
+    }
+    
+    // Animación para el podium (opcional)
+    const podiumElements = document.querySelectorAll('.podium-position');
+    podiumElements.forEach((element, index) => {
+        setTimeout(() => {
+            element.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 200);
+        }, index * 300);
+    });
+});
+
+// Función debounce para evitar múltiples llamadas
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // F5 para actualizar análisis
+    if (e.key === 'F5') {
+        e.preventDefault();
+        document.getElementById('filtrosForm').submit();
+    }
+    // F12 para exportar Excel
+    if (e.key === 'F12') {
+        e.preventDefault();
+        exportarExcel();
+    }
+    // Ctrl+P para imprimir
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        imprimirReporte();
+    }
+    // C para calcular comisiones
+    if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey) {
+        if (document.activeElement.tagName !== 'INPUT') {
+            generarComisiones();
+        }
+    }
+});
+</script>
+
+<script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+<script src="/static/vendor/datatable/datatables.js"></script>
+<script src="/static/js/dataTables.js"></script>
+
 {% endblock %}

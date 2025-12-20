@@ -1,0 +1,226 @@
+<!-- ================================================================ -->
+<!--                    EJEMPLO DE MIGRACIÓN                       -->
+<!--              De modal antigua a modal universal               -->
+<!-- ================================================================ -->
+
+<!-- 
+    ANTES: templates/ventas/nueva_venta.html (fragmento)
+-->
+{% comment %}
+<div class="container">
+    <!-- Contenido de la página -->
+    
+    <!-- MODAL ANTIGUA -->
+    {% include 'partials/_modal-pagos.html' %}
+    
+    <script src="/static/js/nueva_venta.js"></script>
+</div>
+{% endcomment %}
+
+<!-- ================================================================ -->
+<!--                         DESPUÉS                               -->
+<!-- ================================================================ -->
+
+<div class="container">
+    <!-- Contenido de la página (sin cambios) -->
+    
+    <!-- MODAL UNIVERSAL -->
+    {% include 'partials/_modal-transacciones.html' with 
+        modal_type='pago', 
+        modal_context='venta',
+        modal_title='💰 Métodos de Pago',
+        show_offers=true 
+    %}
+    
+    <!-- JavaScript universal -->
+    <script src="/static/js/modal-transacciones-universal.js"></script>
+    <script src="/static/js/nueva_venta.js"></script>
+</div>
+
+<!-- ================================================================ -->
+<!--           CAMBIOS EN JAVASCRIPT (nueva_venta.js)              -->
+<!-- ================================================================ -->
+
+<script>
+// ANTES: Abrir modal antigua
+function abrirModalPagos() {
+    $('#pagosModal').modal('show');
+}
+
+// DESPUÉS: Abrir modal universal
+function abrirModalPagos() {
+    // Configurar total antes de abrir
+    const total = document.getElementById('total_factura_main').textContent;
+    document.getElementById('total_factura').textContent = total;
+    
+    // Abrir modal universal
+    $('#transaccionesModal').modal('show');
+}
+
+// ANTES: Función calcSaldo específica (ELIMINAR)
+/*
+function calcSaldo() {
+    // ... código específico de nueva_venta
+}
+*/
+
+// DESPUÉS: Ya no es necesaria, usar la universal
+// La función calcSaldo() ya está en modal-transacciones-universal.js
+
+// ANTES: Event listeners específicos (ELIMINAR)
+/*
+document.getElementById("efectivo").addEventListener("input", function (event) {
+  calcSaldo();
+});
+*/
+
+// DESPUÉS: Ya no son necesarios, están en el JavaScript universal
+</script>
+
+<!-- ================================================================ -->
+<!--                    MIGRACIÓN PASO A PASO                      -->
+<!-- ================================================================ -->
+
+<!-- 
+1. REEMPLAZAR EL INCLUDE:
+   
+   ANTES: {% include 'partials/_modal-pagos.html' %}
+   DESPUÉS: {% include 'partials/_modal-transacciones.html' with modal_type='pago', modal_context='venta', modal_title='💰 Métodos de Pago', show_offers=true %}
+
+2. AGREGAR JAVASCRIPT UNIVERSAL:
+   
+   ANTES: <script src="/static/js/nueva_venta.js"></script>
+   DESPUÉS: 
+   <script src="/static/js/modal-transacciones-universal.js"></script>
+   <script src="/static/js/nueva_venta.js"></script>
+
+3. ACTUALIZAR REFERENCIAS DE MODAL ID:
+   
+   ANTES: $('#pagosModal')
+   DESPUÉS: $('#transaccionesModal')
+
+4. ELIMINAR FUNCIONES DUPLICADAS:
+   
+   - Eliminar función calcSaldo() específica
+   - Eliminar event listeners específicos
+   - Eliminar funciones de manejo de cheques/valores si existen
+
+5. CONFIGURAR DATOS INICIALES:
+   
+   Usar: cargarDatosModal(totalFactura) cuando se abra el modal
+
+6. ADAPTAR PROCESAMIENTO:
+   
+   La función procesarTransaccion() puede ser personalizada en cada archivo
+-->
+
+<!-- ================================================================ -->
+<!--                    EJEMPLO COMPLETO DE MIGRACIÓN              -->
+<!-- ================================================================ -->
+
+<!-- ARCHIVO: templates/proveedores/nueva_compra.html (MIGRADO) -->
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title">🛒 Nueva Compra</h3>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Formulario de compra (sin cambios) -->
+                    <form action="/proveedores/compras" method="POST">
+                        <!-- ... campos del formulario ... -->
+                        
+                        <div class="row">
+                            <div class="col-md-12 text-right">
+                                <button type="button" class="btn btn-success btn-lg" onclick="abrirModalPagos()">
+                                    F9 - 💰 Procesar Pago
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL UNIVERSAL PARA PROVEEDORES -->
+    {% include 'partials/_modal-transacciones.html' with 
+        modal_type='pago', 
+        modal_context='proveedor',
+        modal_title='🏪 Pago a Proveedor'
+    %}
+    
+</div>
+
+<!-- JavaScript -->
+<script src="/static/js/modal-transacciones-universal.js"></script>
+<script src="/static/js/nueva_compra.js"></script>
+
+<script>
+// Función específica para abrir modal de compras
+function abrirModalPagos() {
+    const total = calcularTotalCompra(); // Tu función específica
+    cargarDatosModal(total);
+    $('#transaccionesModal').modal('show');
+}
+
+// Personalizar procesamiento para compras
+function procesarTransaccion() {
+    if (!checkTotales()) {
+        alert('Los totales no coinciden.');
+        return false;
+    }
+    
+    // Lógica específica para compras
+    console.log('Procesando pago de compra...');
+    
+    // Enviar formulario
+    document.querySelector('form').submit();
+    return true;
+}
+
+// Atajos de teclado específicos
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F9') {
+        e.preventDefault();
+        abrirModalPagos();
+    }
+});
+</script>
+
+<!-- ================================================================ -->
+<!--                    RESUMEN DE BENEFICIOS                      -->
+<!-- ================================================================ -->
+
+<!-- 
+✅ BENEFICIOS OBTENIDOS:
+
+1. CONSISTENCIA VISUAL
+   - Todas las modales tienen el mismo diseño
+   - Mismos colores y estructura en todos los módulos
+   - Atajos de teclado consistentes
+
+2. MANTENIMIENTO SIMPLIFICADO
+   - Un solo archivo HTML para mantener
+   - Un solo archivo JavaScript universal
+   - Cambios se propagan a todas las páginas
+
+3. FUNCIONALIDAD MEJORADA
+   - Soporte para Valores y Cheques desde el inicio
+   - Cálculos más precisos y consistentes
+   - Mejor manejo de errores
+
+4. ESCALABILIDAD
+   - Fácil agregar nuevos métodos de pago
+   - Fácil crear nuevos contextos
+   - Fácil mantener compatibilidad hacia atrás
+
+5. EXPERIENCIA DE USUARIO
+   - Interfaz familiar en todos los módulos
+   - Atajos de teclado intuitivos
+   - Validaciones consistentes
+-->

@@ -97,5 +97,9 @@
     </div>
 
     
+    <!-- Modal universal de búsqueda -->
+    {% include 'partials/_modal-busqueda-universal.html' %}
+    
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
     <script src="{{ url_for('static', filename='js/cambio_precio.js')}}"></script>
 {% endblock %}

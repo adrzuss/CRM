@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+
+    <style>
+        
+        .container { max-width: 800px; margin: 0 auto; }
+        .btn { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .options { margin: 20px 0; }
+        #status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+
+    <div class="container">
+        <h1>Impresión de Facturas</h1>
+        
+        <div class="options">
+            <h3>Tipo de impresora:</h3>
+            <button class="btn btn-primario" id="browserPrinter">Impresora del Sistema</button>
+            <button class="btn btn-secundario" id="thermalPrinter">Impresora Térmica USB</button>
+        </div>
+        
+        <div class="printer-config" id="printerConfig" style="display:none;">
+            <h3>Configuración de Impresora</h3>
+            <button class="btn btn-primario" id="connectPrinter">Conectar Impresora</button>
+            <button class="btn btn-secundario" id="listPrinters">Listar Impresoras</button>
+            <div id="printerList"></div>
+        </div>
+        
+        <div class="print-section">
+            <h3>Imprimir Factura:</h3>
+            <input type="text"  class="form-control" id="facturaId" placeholder="ID de Factura" value="{{ factura_id }}">
+            <button class="btn btn-primario" id="printBtn">Imprimir</button>
+        </div>
+        
+        <div id="status" style="display:none;"></div>
+    </div>
+
+    <script type="module">
+        import InvoiceHandler from '/static/js/invoice_handler.js';
+        
+        const invoiceHandler = new InvoiceHandler();
+        const statusEl = document.getElementById('status');
+        
+        // Mostrar mensaje de estado
+        function showStatus(message, isError = false) {
+            statusEl.textContent = message;
+            statusEl.className = isError ? 'error' : 'success';
+            statusEl.style.display = 'block';
+            
+            if (!isError) {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Configurar tipo de impresora
+        document.getElementById('browserPrinter').addEventListener('click', () => {
+            invoiceHandler.setPrinterType('browser');
+            document.getElementById('printerConfig').style.display = 'none';
+            showStatus('Usando impresora del sistema');
+        });
+        
+        document.getElementById('thermalPrinter').addEventListener('click', () => {
+            invoiceHandler.setPrinterType('thermal');
+            document.getElementById('printerConfig').style.display = 'block';
+            showStatus('Modo impresora térmica activado. Configure su dispositivo.');
+        });
+        
+        // Conectar impresora
+        document.getElementById('connectPrinter').addEventListener('click', async () => {
+            try {
+                const result = await invoiceHandler.configurePrinter();
+                if (result.success) {
+                    showStatus(result.message);
+                } else {
+                    showStatus(result.error, true);
+                }
+            } catch (error) {
+                showStatus(error.message, true);
+            }
+        });
+        
+        // Listar impresoras
+        document.getElementById('listPrinters').addEventListener('click', async () => {
+            const printerListEl = document.getElementById('printerList');
+            printerListEl.innerHTML = 'Buscando impresoras...';
+            
+            try {
+                const result = await invoiceHandler.listPrinters();
+                if (result.success && result.printers.length > 0) {
+                    let html = '<ul>';
+                    result.printers.forEach(printer => {
+                        html += `<li>${printer.product} (${printer.manufacturer}) - ID: ${printer.vendor_id}:${printer.product_id}</li>`;
+                    });
+                    html += '</ul>';
+                    printerListEl.innerHTML = html;
+                } else {
+                    printerListEl.innerHTML = result.error || 'No se encontraron impresoras';
+                }
+            } catch (error) {
+                printerListEl.innerHTML = `Error: ${error.message}`;
+            }
+        });
+        
+        // Imprimir factura
+        document.getElementById('printBtn').addEventListener('click', async () => {
+            const facturaId = document.getElementById('facturaId').value;
+            if (!facturaId) {
+                showStatus('Ingrese un ID de factura válido', true);
+                return;
+            }
+            
+            try {
+                const result = await invoiceHandler.printInvoice(facturaId);
+                if (result.success) {
+                    showStatus(result.message);
+                } else {
+                    showStatus(result.error, true);
+                }
+            } catch (error) {
+                showStatus(error.message, true);
+            }
+        });
+    </script>
+
+{% endblock %}

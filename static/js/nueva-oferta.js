@@ -200,50 +200,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function mostrarModalArticulos(articulos, container = null) {
-        const tbody = document.getElementById('tablaArticulos');
-        tbody.innerHTML = '';
+        const callback = (articulo) => {
+            if (container) {
+                asignarArticuloCondicion(container, articulo);
+            } else {
+                asignarArticulo(articuloSeleccionTipo, articulo);
+            }
+        };
         
-        articulos.forEach(art => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${art.codigo}</td>
-                <td>${art.detalle}</td>
-                <td>${art.marca}</td>
-                <td>${art.precio}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-primary seleccionar-articulo" 
-                        data-id="${art.id}"
-                        data-codigo="${art.codigo}"
-                        data-detalle="${art.detalle}"
-                        data-marca="${art.marca}">
-                        Seleccionar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // Agregar event listeners a los botones
-        tbody.querySelectorAll('.seleccionar-articulo').forEach(boton => {
-            boton.addEventListener('click', function() {
-                const articulo = {
-                    id: this.dataset.id,
-                    codigo: this.dataset.codigo,
-                    detalle: this.dataset.detalle,
-                    marca: this.dataset.marca
-                };
-                
-                if (container) {
-                    asignarArticuloCondicion(container, articulo);
-                } else {
-                    asignarArticulo(articuloSeleccionTipo, articulo);
-                }
-                
-                $('#modalArticulos').modal('hide');
-            });
-        });
-        
-        $('#modalArticulos').modal('show');
+        // Mostrar modal con los datos
+        window.universalSearchModal.show('articulos', articulos || [], callback);
     }
 
     // Agregar event listeners para los inputs de artículos

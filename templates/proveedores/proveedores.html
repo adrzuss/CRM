@@ -1,84 +1,153 @@
 {% extends 'base.html'%}
 {% block body %}
+
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs modernos -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-truck"></i> Gestión de Proveedores
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-truck text-danger"></i> Gestión de Proveedores
+                </h1>
+                <p class="page-subtitle">
+                    Administra la información de tus proveedores
+                </p>
+            </div>
+        </div>
+    </div>
+
     <div class="m-2">
         <div class="row justify-content-center align-items-center">
             <div class="col-md-10">
-                <div class="card">
-                    <div class="card-body">
-                        <h3>Ingreso de Proveedores</h3>
+                <div class="card modern-card">
+                    <div class="card-header modern-header">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">Ingreso de Proveedores</h5>
+                                <small class="text-muted">Complete los datos del proveedor</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
                         <form action="{{ url_for('proveedores.add_proveedor') }}" method="POST">
                         
-                            <div class="row">
-                                <div class="mb-3 col-1"> 
-                                    <label for="id">#Id</label>
-                                    <input class="form-control" type="text" name="id" id="id" placeholder="Ingrese el ID" value="{{ proveedor.id }}" readonly>
+                            <div class="row g-3">
+                                <div class="col-md-1"> 
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="id" id="id" placeholder="ID" value="{{ proveedor.id }}" readonly>
+                                        <label for="id"><i class="fas fa-hashtag me-2"></i>ID</label>
+                                    </div>
                                 </div>
-                                <div class="mb-3 col-5"> 
-                                    <label for="nombre">Nombre/Razón Social</label>
-                                    <input class="form-control" type="text" name="nombre" id="nombre" placeholder="Ingrese el nombre" value="{{ proveedor.nombre }}" required>
+                                <div class="col-md-5"> 
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="nombre" id="nombre" placeholder="Nombre" value="{{ proveedor.nombre }}" required>
+                                        <label for="nombre"><i class="fas fa-building me-2"></i>Nombre/Razón Social</label>
+                                    </div>
                                 </div>
-                                <div class="mb-3 col-5"> 
-                                    <label for="fantasia">Nombre de fantasía</label>
-                                    <input class="form-control" type="text" name="fantasia" id="fantasia" placeholder="Ingrese la fantasia" value="{{ proveedor.fantasia }}" required>
+                                <div class="col-md-6"> 
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="fantasia" id="fantasia" placeholder="Fantasía" value="{{ proveedor.fantasia }}" required>
+                                        <label for="fantasia"><i class="fas fa-store me-2"></i>Nombre de Fantasía</label>
+                                    </div>
                                 </div>
                             </div>  
-                            <div class="row">
-                                <div class="mb-3 col-5">
-                                    <label for="direccion">Dirección</label>
-                                    <input class="form-control" type="text" name="direccion" id="direccion" placeholder="Ingrese la dirección" value="{{ proveedor.direccion }}">
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="direccion" id="direccion" placeholder="Dirección" value="{{ proveedor.direccion }}">
+                                        <label for="direccion"><i class="fas fa-map-marker-alt me-2"></i>Dirección</label>
+                                    </div>
                                 </div>    
-                                <div class="mb-3 col-5">
-                                    <label for="mail">E-mail</label>
-                                    <input class="form-control" type="text" name="mail" id="mail" placeholder="Ingrese el mail" value="{{ proveedor.email }}">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="email" name="mail" id="mail" placeholder="Email" value="{{ proveedor.email }}">
+                                        <label for="mail"><i class="fas fa-envelope me-2"></i>E-mail</label>
+                                    </div>
                                 </div>    
                             </div>  
-                            <div class="row">
-                                <div class="mb-3 col-3">
-                                    <label for="documento">Documento/CUIT/CUIL</label>
-                                    <input class="form-control" type="text" name="documento" id="documento" placeholder="Ingrese el n° de documento/CUIL/CUIT" value="{{ proveedor.documento }}" required>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="documento" id="documento" placeholder="Documento" value="{{ proveedor.documento }}" required>
+                                        <label for="documento"><i class="fas fa-id-card me-2"></i>CUIT/CUIL</label>
+                                    </div>
                                 </div>    
                                 
-                                <div class="col-2 mb-3">
-                                    <label for="tipoDoc">Tipo de Documento</label>
-                                    <select class="form-control" name="tipoDoc" id="tipoDoc" required>
-                                        {% for tipo in tipo_docs %}
-                                            <option value="{{ tipo.id }}" {% if tipo.id == proveedor.id_tipo_doc %}selected{% endif %}>{{ tipo.nombre }}</option>
-                                        {% endfor %}
-                                        
-                                    </select>    
-                                    
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <select class="form-select form-control-modern" name="tipoDoc" id="tipoDoc" required>
+                                            {% for tipo in tipo_docs %}
+                                                <option value="{{ tipo.id }}" {% if tipo.id == proveedor.id_tipo_doc %}selected{% endif %}>{{ tipo.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="tipoDoc"><i class="fas fa-file-alt me-2"></i>Tipo de Documento</label>
+                                    </div>
                                 </div>
-                                <div class="col-2 mb-3">
-                                    <label for="tipoIva">Tipo IVA</label>
-                                    <select class="form-control" name="tipoIva" id="tipoIva" required>
-                                        {% for tipo in tipo_ivas %}
-                                            <option value="{{ tipo.id }}" {% if tipo.id == proveedor.id_tipo_iva %}selected{% endif %}>{{ tipo.descripcion }}</option>
-                                        {% endfor %}
-                                        
-                                    </select>    
-                                    
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <select class="form-select form-control-modern" name="tipoIva" id="tipoIva" required>
+                                            {% for tipo in tipo_ivas %}
+                                                <option value="{{ tipo.id }}" {% if tipo.id == proveedor.id_tipo_iva %}selected{% endif %}>{{ tipo.descripcion }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="tipoIva"><i class="fas fa-percentage me-2"></i>Tipo IVA</label>
+                                    </div>
                                 </div>
-                                <div class="mb-3 col-3">
-                                    <label for="telefono">Teléfono</label>
-                                    <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Ingrese el n° de teléfono" value="{{ proveedor.telefono }}">
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input class="form-control form-control-modern" type="text" name="telefono" id="telefono" placeholder="Teléfono" value="{{ proveedor.telefono }}">
+                                        <label for="telefono"><i class="fas fa-phone me-2"></i>Teléfono</label>
+                                    </div>
                                 </div>
                             </div>
-                            <button class="btn btn-success" type="submit">Grabar</button>
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <button class="btn btn-success btn-lg" type="submit">
+                                        <i class="fas fa-save me-2"></i>Grabar Proveedor
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>    
                 </div>   
             </div>    
         </div>    
-        <div class="row justify-content-center align-items-center">
+        <div class="row justify-content-center align-items-center mt-4">
             <div class="col-md-10">
-                <h3 class="m-3">Proveedores</h3>
-                <p class="m-3">Listado de proveedores registrados en el sistema.</p>
-            </div>
-              
-            <div class="col-md-10">
-                {% include 'partials/_lst-proveedores.html' %}
+                <div class="card modern-card">
+                    <div class="card-header modern-header">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">Listado de Proveedores</h5>
+                                <small class="text-muted">Proveedores registrados en el sistema</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% include 'partials/_lst-proveedores.html' %}
+                    </div>
+                </div>
             </div>     
-        </div>    
+        </div>
+    </div>
+</div>    
     </div>    
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">

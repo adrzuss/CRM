@@ -1,72 +1,349 @@
 {% extends "base.html" %}
 
+{% block aditional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+{% endblock %}
+
 {% block body %}
-    <h2 class="m-3">Facturas de compra</h2>
-    <div class="m-3">
-        <a href="{{ url_for('proveedores.nueva_compra') }}" class="btn btn-primario">Nueva compra</a>
-    </div>    
 
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="card m-3">
-                <h5 class="px-5 pt-2">Periodo</h5>
-                <div class="card-body">
-                    <form action="" method="post">
-                        <div class="row justify-content-md-center">
-                            <div class="col-md-3">
-                                <label for="desde">Desde</label>
-                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="hasta">Hasta</label>
-                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
-                            </div>    
-                            <div class="col-md-2 m-4">
-                                <button type="submit" class="btn btn-primario">Buscar</button>
-                            </div>    
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs modernos -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('proveedores.proveedores', id=0) }}"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-file-invoice"></i> Facturas de Compra
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice text-danger"></i> Facturas de Compra
+                </h1>
+                <p class="page-subtitle">
+                    Gestión de comprobantes de compra a proveedores
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('proveedores.nueva_compra') }}" class="btn btn-danger btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Nueva Compra
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="card modern-card mb-4">
+        <div class="card-header modern-header">
+            <div class="d-flex align-items-center">
+                <div class="header-icon">
+                    <i class="fas fa-filter"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">Filtros de Búsqueda</h5>
+                    <small class="text-muted">Selecciona el período para consultar</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <form action="" method="post" id="filtrosForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="desde" id="desde" class="form-control form-control-modern" value="{{ desde }}">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
                         </div>
-                    </form>
-                </div>    
-            </div>
-        </div>    
-    </div>
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="table-responsive m-3" >
-                <table class="table table-striped table-hover table-borderless align-middle" >
-                    <thead class="table-light">
-                        <caption>
-                            Facturas de compra
-                        </caption>
-                        <tr>
-                            <th>Proveedor</th>
-                            <th>Tipo</th>
-                            <th>Comprobante</th>
-                            <th>Fecha</th>
-                            <th>Total</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for factura in facturas %}        
-                            <tr class="table-dark">
-                                <td scope="row">{{ factura.proveedor}}</td>
-                                <td>{{ factura.tipo_comprobante }}</td>
-                                <td>{{ factura.nro_comprobante }}</td>
-                                <td>{{ factura.fecha.strftime('%d-%m-%Y') }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
-                                <td><a href="{{ url_for('proveedores.ver_factura_comp', id=factura.id) }}" class="btn btn-primario">Ver</a></td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
-            </div>
-        </div>    
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="hasta" id="hasta" class="form-control form-control-modern" value="{{ hasta }}">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" id="filtroTipo" name="tipo">
+                                <option value="">Todos los tipos</option>
+                                <option value="Factura A">Factura A</option>
+                                <option value="Factura B">Factura B</option>
+                                <option value="Factura C">Factura C</option>
+                                <option value="Nota Débito">Nota Débito</option>
+                                <option value="Nota Crédito">Nota Crédito</option>
+                            </select>
+                            <label for="filtroTipo"><i class="fas fa-file-invoice me-2"></i>Tipo de Comprobante</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-danger btn-lg h-100 w-100">
+                            <i class="fas fa-search me-2"></i>Buscar Facturas
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Mostrando facturas del período:</strong> 
+                            {{ desde }} al {{ hasta }} 
+                            <span class="badge bg-danger ms-2">{{ facturas|length }} facturas encontradas</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
+    <!-- Tabla de facturas -->
+    <div class="card modern-card">
+        <div class="card-header modern-header bg-danger text-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Listado de Facturas de Compra</h5>
+                        <small class="text-white-50">Comprobantes registrados en el sistema</small>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                        <i class="fas fa-print me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if facturas %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="dataTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="fas fa-truck me-1"></i>Proveedor</th>
+                                <th class="text-center"><i class="fas fa-file-invoice me-1"></i>Tipo</th>
+                                <th class="text-center"><i class="fas fa-hashtag me-1"></i>Comprobante</th>
+                                <th class="text-center"><i class="fas fa-calendar me-1"></i>Fecha</th>
+                                <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for factura in facturas %}
+                                <tr class="{% if loop.index0 % 2 == 0 %}table-light{% else %}bg-white{% endif %}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                {{ factura.proveedor[:1].upper() }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ factura.proveedor }}</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% set tipo_class = {
+                                            'Factura A': 'bg-success',
+                                            'Factura B': 'bg-info', 
+                                            'Factura C': 'bg-warning',
+                                            'Nota Débito': 'bg-danger',
+                                            'Nota Crédito': 'bg-secondary'
+                                        } %}
+                                        <span class="badge {{ tipo_class.get(factura.tipo_comprobante, 'bg-primary') }}">
+                                            {{ factura.tipo_comprobante }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <code class="bg-light px-2 py-1 rounded">
+                                            {{ factura.nro_comprobante }}
+                                        </code>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">
+                                            {{ factura.fecha.strftime("%d/%m/%Y") }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="fas fa-dollar-sign me-1"></i>${{ "{:,.2f}".format(factura.total) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('proveedores.ver_factura_comp', id=factura.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="Ver factura">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="imprimirFactura({{ factura.id }})" 
+                                                    title="Imprimir factura">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="eliminarFactura({{ factura.id }})" 
+                                                    title="Eliminar factura">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Total General:</td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger fs-5">
+                                        <i class="fas fa-calculator me-1"></i>
+                                        ${{ "{:,.2f}".format(facturas|sum(attribute='total')) }}
+                                    </span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No se encontraron facturas</h5>
+                    <p class="text-muted">No hay facturas de compra en el período seleccionado</p>
+                    <a href="{{ url_for('proveedores.nueva_compra') }}" class="btn btn-danger">
+                        <i class="fas fa-plus me-1"></i>Registrar Primera Compra
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones de utilidad
+function exportarExcel() {
+    // Función para exportar a Excel
+    window.open(`${window.location.pathname}/export/excel${window.location.search}`, '_blank');
+}
+
+function imprimirTabla() {
+    // Función para imprimir la tabla
+    const contenido = document.querySelector('.table-responsive').innerHTML;
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Facturas de Compra</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    @media print {
+                        .btn { display: none !important; }
+                        body { font-size: 12px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h2 class="text-center mb-4">Facturas de Compra</h2>
+                    ${contenido}
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+function imprimirFactura(facturaId) {
+    // Función para imprimir una factura específica
+    window.open(`/proveedores/imprimir-compra/${facturaId}`, '_blank');
+}
+
+function eliminarFactura(facturaId) {
+    if (confirm('¿Está seguro de que desea eliminar esta factura? Esta acción no se puede deshacer.')) {
+        fetch(`/proveedores/eliminar-compra/${facturaId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Factura eliminada correctamente');
+                location.reload();
+            } else {
+                alert('Error al eliminar factura: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la factura');
+        });
+    }
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar fechas por defecto si están vacías
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    
+    if (!desdeInput.value || !hastaInput.value) {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        
+        if (!desdeInput.value) {
+            desdeInput.value = hace30Dias.toISOString().split('T')[0];
+        }
+        if (!hastaInput.value) {
+            hastaInput.value = hoy.toISOString().split('T')[0];
+        }
+    }
+    
+    // Inicializar DataTables si existe la tabla
+    const table = document.getElementById('dataTable');
+    if (table && typeof $ !== 'undefined') {
+        $(table).DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            order: [[3, 'desc']], // Ordenar por fecha descendente
+            columnDefs: [
+                { targets: [1, 2, 3, 4, 5], className: 'text-center' }
+            ],
+            responsive: true
+        });
+    }
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // F3 para nueva compra
+    if (e.key === 'F3') {
+        e.preventDefault();
+        window.location.href = '{{ url_for("proveedores.nueva_compra") }}';
+    }
+    // F12 para exportar Excel
+    if (e.key === 'F12') {
+        e.preventDefault();
+        exportarExcel();
+    }
+});
+</script>
+
+<script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+<script src="/static/vendor/datatable/datatables.js"></script>
+<script src="/static/js/dataTables.js"></script>
 
 {% endblock %}

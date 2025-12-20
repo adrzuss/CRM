@@ -1,0 +1,116 @@
+<!-- Modal de Búsqueda Universal - Diseño Moderno -->
+<div class="modal fade" id="universalSearchModal" tabindex="-1" role="dialog" aria-labelledby="universalSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content universal-search-modal">
+            <!-- Header con gradiente -->
+            <div class="modal-header universal-search-header">
+                <div class="search-header-content">
+                    <div class="search-icon-title">
+                        <i class="fas fa-search search-main-icon"></i>
+                        <h4 class="modal-title" id="universalSearchModalLabel">Búsqueda Universal</h4>
+                    </div>
+                    <div class="search-type-indicator">
+                        <span class="search-type-badge" id="searchTypeBadge">
+                            <i class="fas fa-user" id="searchTypeIcon"></i>
+                            <span id="searchTypeText">Clientes</span>
+                        </span>
+                    </div>
+                </div>
+                <button type="button" class="close-modern" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Barra de búsqueda integrada -->
+            <div class="search-bar-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-input-icon"></i>
+                    <input type="text" 
+                           class="form-control search-input-field" 
+                           id="universalSearchInput" 
+                           placeholder="Buscar..." 
+                           autocomplete="off">
+                    <div class="search-loading" id="searchLoading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+                <div class="search-filters" id="searchFilters">
+                    <!-- Filtros dinámicos según el tipo -->
+                </div>
+            </div>
+
+            <!-- Cuerpo del modal -->
+            <div class="modal-body universal-search-body">
+                <!-- Estadísticas de búsqueda -->
+                <div class="search-stats" id="searchStats" style="display: none;">
+                    <div class="stats-item">
+                        <i class="fas fa-list-ul"></i>
+                        <span>Total: <strong id="totalResults">0</strong></span>
+                    </div>
+                    <div class="stats-item">
+                        <i class="fas fa-filter"></i>
+                        <span>Filtrados: <strong id="filteredResults">0</strong></span>
+                    </div>
+                    <div class="stats-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Tiempo: <strong id="searchTime">0ms</strong></span>
+                    </div>
+                </div>
+
+                <!-- Contenedor de resultados -->
+                <div class="search-results-container" id="searchResultsContainer">
+                    <!-- Estado inicial -->
+                    <div class="search-initial-state" id="initialState">
+                        <div class="initial-icon">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
+                        <h5>Comience a escribir para buscar</h5>
+                        <p class="text-muted">Ingrese al menos 2 caracteres para iniciar la búsqueda</p>
+                    </div>
+
+                    <!-- Estado de carga -->
+                    <div class="search-loading-state" id="loadingState" style="display: none;">
+                        <div class="loading-animation">
+                            <div class="loading-dots">
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                            </div>
+                        </div>
+                        <p>Buscando...</p>
+                    </div>
+
+                    <!-- Sin resultados -->
+                    <div class="search-no-results" id="noResultsState" style="display: none;">
+                        <div class="no-results-icon">
+                            <i class="fas fa-search-minus"></i>
+                        </div>
+                        <h5>No se encontraron resultados</h5>
+                        <p class="text-muted">Intente con otros términos de búsqueda</p>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div class="search-results-grid" id="searchResults">
+                        <!-- Los resultados se generarán dinámicamente aquí -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer con acciones -->
+            <div class="modal-footer universal-search-footer">
+                <div class="footer-info">
+                    <small class="text-muted">
+                        <i class="fas fa-keyboard"></i>
+                        Use ↑↓ para navegar, Enter para seleccionar
+                    </small>
+                </div>
+                <div class="footer-actions">
+                    <button type="button" class="btn btn-secondary btn-modern" data-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

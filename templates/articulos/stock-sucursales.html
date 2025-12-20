@@ -1,142 +1,163 @@
+
 {% extends 'base.html' %}
-
 {% block body %}
-    <div class="m-3">
-        <h2>Listado de stock de sucursales</h2>
-    </div>
-    <div class="row justify-content-center align-items-center">
-        <div class="card m-3 col-10">
-            <h3 class="m-3">Stock de artículos</h3>
-            <div class="card-body">
-                
-                <div class="row">
-                    
-                    <div class="col-4 mb-3">
-                        <label for="idmarca" class="form-label">Marca</label>
-                        <select class="form-select form-select" name="idmarca" id="idmarca">
-                            <option >TODOS</option>    
-                            {% for lista in lista_marcas %}
-                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-4 mb-3">
-                        <label for="idrubro" class="form-label">Rubro</label>
-                        <select class="form-select form-select" name="idrubro" id="idrubro">
-                            <option >TODOS</option>    
-                            {% for lista in lista_rubros %}
-                                    <option value="{{ lista.id }}">{{ lista.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                        <button id="btnFiltrar" class="col-2 m-4 btn btn-exito">Consultar</button>
-                    </div>    
-                </div>    
-        </div>
-    </div>
 
-    <div class="card m-3"  >
-        <h3 class="m-3">Stock de artículos</h3>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="display table table-bordered table-striped" id="dataTable" with="100%">
-                    <thead class="thead-dark">
-                        <tr class="table-light">
-                            {% for columna in columnas %}
-                                <th scope="col">{{ columna }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody class="table-group-divider">
-                        
-                    </tbody>
-                </table>
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumb moderno -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('articulos.articulos') }}"><i class="fas fa-box"></i> Artículos</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-store"></i> Stock por Sucursal</li>
+        </ol>
+    </nav>
+
+    <!-- Filtros de stock por sucursal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-info text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Filtrar Stock por Sucursal</h5>
+                        <small class="text-white-50">Selecciona marca y rubro para filtrar el listado</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form class="row g-3 align-items-end modern-form">
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" name="idmarca" id="idmarca">
+                                    <option value="">TODOS</option>
+                                    {% for lista in lista_marcas %}
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="idmarca"><i class="fas fa-tags me-2"></i>Marca</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select form-control-modern" name="idrubro" id="idrubro">
+                                    <option value="">TODOS</option>
+                                    {% for lista in lista_rubros %}
+                                        <option value="{{ lista.id }}">{{ lista.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label for="idrubro"><i class="fas fa-list me-2"></i>Rubro</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="btnFiltrar" type="button" class="btn btn-info btn-modern w-100">
+                                <i class="fas fa-search me-1"></i>Consultar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
         </div>
     </div>
-    
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    
-    
-    <script>
-        $(document).ready(function () {
-            // Obtener las columnas dinámicas desde el backend
-            const columnass = {{ columnas | tojson }};
 
-            // Construir la configuración de las columnas para DataTables
-            const columnsDefs = columnass.map((columna, index) => {
-                if (['id', 'codigo', 'detalle', 'marca', 'rubro'].includes(columna)) {
-                    if (columna === 'codigo') { // Si la columna es 'codigo'
-                        return {
-                            data: columna, // El nombre de la columna
-                            render: function (data, type, row) {
-                                return `<a href="{{ url_for('articulos.update_articulo', id='') }}${row.id}">${data}</a>`; // Enlace al detalle del artículo
-                            }
-                        }
-                    }
-                    else {
-                        return {
-                            data: columna, // El nombre de la columna
-                            
-                        }
-                    }    
+    <!-- Tabla de stock por sucursal -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-primary text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Stock de Artículos por Sucursal</h5>
+                        <small class="text-white-50">Listado dinámico por sucursal</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="display table table-bordered table-striped" id="dataTable" style="width:100%">
+                            <thead class="table-dark">
+                                <tr class="table-light">
+                                    {% for columna in columnas %}
+                                        <th scope="col">{{ columna }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                <!-- DataTables llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                }
-                else {
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Obtener las columnas dinámicas desde el backend
+        const columnass = {{ columnas | tojson }};
+
+        // Construir la configuración de las columnas para DataTables
+        const columnsDefs = columnass.map((columna, index) => {
+            if (["id", "codigo", "detalle", "marca", "rubro"].includes(columna)) {
+                if (columna === "codigo") {
                     return {
-                        data: columna, // El nombre de la columna
-                        className: 'text-center', // Centrar el contenido
+                        data: columna,
                         render: function (data, type, row) {
-                            // Personalizar el renderizado de las columnas si es necesario
-                            if (data < 0) {
-                                color = 'red';
-                            } else {
-                                color = 'black';
-                            }
-                            return `<span style="color: ${color}; font-weight: bold;">${parseFloat(data).toFixed(2)}</span>`;
-                            
+                            return `<a href="update_articulo/${row.id}">${data}</a>`;
                         }
-                    };
-                }    
-            });
-
-            // Inicializar DataTables
-            const table = new DataTable('#dataTable', {
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ url_for('articulos.api_lst_stock_sucursales') }}",
-                    type: 'GET',
-                    data: function (d) {
-                        d.idmarca = $('#idmarca').val(); // Pasar el ID de la marca seleccionada
-                        d.idrubro = $('#idrubro').val(); // Pasar el ID del rubro seleccionado
-                    },
-                    error: function (xhr, error, thrown) {
-                        console.error('Error en la llamada Ajax:', error, thrown);
-                        alert('Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.', error);
                     }
-                },
-                columns: columnsDefs,
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-                },
-                pageLength: 25,
-                lengthMenu: [10, 25, 50, 100]
-            });
-            // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"
-            $('#btnFiltrar').click(function () {
-                const idrubro = $('#idrubro').val();
-                const idmarca = $('#idmarca').val();
-                if ((!idrubro) || (!idmarca)) {
-                    alert('Por favor, selecciona un rubro o una marca.');
-                    return;
+                } else {
+                    return {
+                        data: columna
+                    }
                 }
-                table.ajax.reload(); // Recargar la tabla con los nuevos filtros
-            });
+            } else {
+                return {
+                    data: columna,
+                    className: "text-center",
+                    render: function (data, type, row) {
+                        let color = data < 0 ? "red" : "black";
+                        return `<span style="color: ${color}; font-weight: bold;">${parseFloat(data).toFixed(2)}</span>`;
+                    }
+                };
+            }
         });
-    </script>
 
-{% endblock %}    
+        // Inicializar DataTables
+        const table = new DataTable("#dataTable", {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ url_for('articulos.api_lst_stock_sucursales') }}",
+                type: "GET",
+                data: function (d) {
+                    d.idmarca = $("#idmarca").val();
+                    d.idrubro = $("#idrubro").val();
+                },
+                error: function (xhr, error, thrown) {
+                    console.error("Error en la llamada Ajax:", error, thrown);
+                    alert("Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.", error);
+                }
+            },
+            columns: columnsDefs,
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+            },
+            pageLength: 25,
+            lengthMenu: [10, 25, 50, 100]
+        });
+        // Recargar la tabla cuando se haga clic en el botón "Consultar"
+        $("#btnFiltrar").click(function () {
+            table.ajax.reload();
+        });
+    });
+</script>
+
+{% endblock %}

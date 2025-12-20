@@ -99,6 +99,13 @@
         <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=presupuesto.id, idcliente=presupuesto.idcliente) }}" class="btn btn-success"> Enviar al mail </a>
     </div>
 
+    <!-- Modal para selección de colores y detalles -->
+    {% include 'partials/modal-color-detalle.html' %}
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/modal-color-detalle.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/transaction-color-detail-helper.js')}}"></script>
+
 
 
 {% endblock %}

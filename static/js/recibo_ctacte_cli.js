@@ -1,18 +1,32 @@
-const debe = document.getElementById('debe');
-const haber = document.getElementById('haber');
+// Verificar que los elementos existan antes de agregar event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const debe = document.getElementById('debe');
+    const haber = document.getElementById('haber');
 
-debe.addEventListener('click', ()=> {
-        debe.checked = true;
-        haber.checked = false;
-        habilitar_pagos(false);
+    if (debe && haber) {
+        debe.addEventListener('click', ()=> {
+            debe.checked = true;
+            haber.checked = false;
+            habilitar_pagos(false);
+        });
+        
+        haber.addEventListener('click', () => {
+            haber.checked = true;        
+            debe.checked = false;
+            habilitar_pagos(true);
+        });
     }
-);
-haber.addEventListener('click', () => {
-        haber.checked = true;        
-        debe.checked = false;
-        habilitar_pagos(true);
+
+    // Agregar event listener al formulario si existe
+    const form = document.getElementById('movCtaCte');
+    if (form) {
+        form.addEventListener('submit', function(event){
+            if (checkMovCtaCte() == false){
+                event.preventDefault();
+            }
+        });
     }
-);
+});
 
 function habilitar_pagos(habilitar) {
     
@@ -20,29 +34,35 @@ function habilitar_pagos(habilitar) {
 
 
 function checkMovCtaCte() {
-    const inputFecha = document.getElementById('fecha').value;
-    const fecha = new Date(inputFecha);
-    const fechaControl = new Date('2024-01-01');
-    const importe = parseFloat(document.getElementById('importe').value)
+    const fechaInput = document.getElementById('fecha');
+    const importeInput = document.getElementById('importe');
+    const debe = document.getElementById('debe');
+    const haber = document.getElementById('haber');
     
-    if (((debe.checked) || (haber.checked)) && (fecha >= fechaControl) && (importe > 0)){
-        return true
-    }
-    else{
-        alert('faltan datos')
+    // Verificar que todos los elementos existan
+    if (!fechaInput || !importeInput || !debe || !haber) {
+        console.error('No se encontraron todos los elementos del formulario');
         return false;
     }
     
+    const inputFecha = fechaInput.value;
+    const fecha = new Date(inputFecha);
+    const fechaControl = new Date('2024-01-01');
+    const importe = parseFloat(importeInput.value);
+    
+    if (((debe.checked) || (haber.checked)) && (fecha >= fechaControl) && (importe > 0)){
+        return true;
+    }
+    else{
+        alert('Faltan datos obligatorios');
+        return false;
+    }
 }
 
-document.getElementById('movCtaCte').addEventListener('submit', function(event){
-    if (checkMovCtaCte() == false){
-        event.preventDefault();
-    }
+// Este event listener se movió dentro del DOMContentLoaded arriba
 
-});
-
-document.addEventListener("DOMContentLoaded", async function () {
+// Función para manejar punto de venta (separada del DOMContentLoaded principal)
+async function initializePuntoVenta() {
   try {
     // Realizar la solicitud a la API
     const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);
@@ -99,13 +119,19 @@ document.addEventListener("DOMContentLoaded", async function () {
       }  
     }
     else{
-      // Si punto_vta tiene un valor, asignarlo al input
-      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + data.punto_vta;
+      // Si punto_vta tiene un valor, asignarlo al elemento si existe
+      const puntoVtaElement = document.getElementById("punto_vta");
+      if (puntoVtaElement) {
+        puntoVtaElement.textContent = 'Punto de venta: ' + data.punto_vta;
+      }
     }
   } catch (error) {
     console.error("Error al obtener el punto de venta:", error);
   }
-});
+}
+
+// Llamar a la función después de que el DOM esté listo
+setTimeout(initializePuntoVenta, 100);
 
 async function asignarPuntoVenta(idPuntoVenta) {
   try {
@@ -122,8 +148,14 @@ async function asignarPuntoVenta(idPuntoVenta) {
     if (result.success) {
       $("#ptovtaModal").modal("hide");
       // Actualizar el texto en la página con el punto de venta seleccionado
-      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
-      document.getElementById("idcliente").focus();
+      const puntoVtaElement = document.getElementById("punto_vta");
+      if (puntoVtaElement) {
+        puntoVtaElement.textContent = 'Punto de venta: ' + idPuntoVenta;
+      }
+      const idclienteElement = document.getElementById("idcliente");
+      if (idclienteElement) {
+        idclienteElement.focus();
+      }
     } else {
       alert('Error al asignar el punto de venta: ' + result.message);
     }

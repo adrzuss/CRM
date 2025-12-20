@@ -44,7 +44,9 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Detalle</th>
-                                <th>Cantiad</th>
+                                <th>Detalle del Artículo</th>
+                                <th>Color</th>
+                                <th>Cantidad</th>
                             </tr>
                         </thead>
                         <tbody class="table-group-divider">
@@ -52,6 +54,16 @@
                                 <tr class="table-light">
                                     <td scope="row">{{ item.codigo }}</td>
                                     <td>{{ item.detalle }}</td>
+                                    {% if item.detalle_articulo == None %}
+                                        <td>N/A</td>
+                                    {% else %}
+                                        <td>{{ item.detalle_articulo }}</td>
+                                    {% endif %}
+                                    {% if item.color == None %}
+                                        <td>N/A</td>
+                                    {% else %}
+                                        <td><span class="badge-colores" style="background-color:{{ item.codigo_color }}">{{ item.color }}</span></td>
+                                    {% endif %}
                                     <td>{{ item.cantidad }}</td>
                                 </tr>
                                 {% endfor %}    
@@ -65,6 +77,7 @@
         </div>
     </div>
 
-
+<!-- Script para contraste automático de colores -->
+<script src="{{ url_for('static', filename='js/color-contrast.js') }}"></script>
 
 {% endblock %}

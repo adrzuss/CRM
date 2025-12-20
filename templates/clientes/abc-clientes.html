@@ -1,74 +1,157 @@
 {% extends 'base.html'%}
 {% block body %}
 
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('clientes.clientes', id=0) }}">
+                <i class="fas fa-users me-1"></i>Clientes
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-chart-bar me-1"></i>ABC de Ventas
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página con diseño moderno -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-info">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Análisis ABC de Clientes</h1>
+            <p class="page-subtitle text-muted mb-0">Clasificación de clientes por ventas, operaciones y productos</p>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">ABC de ventas de Clientes</h1>
-    
-    <!-- Aquí puedes agregar más contenido relacionado con el ABC de clientes -->
+    <!-- Filtros de fecha -->
     <form action="{{ url_for('clientes.abc_clientes') }}" method="POST">
-        <div class="card">
-            <div class="row">
-                <div class="form-group col-md-2 m-4">
-                    <label for="desde">Desde</label>
-                    <input type="date" class="form-control" name="desde" id="desde" aria-describedby="helpId"  placeholder="Analizar desde" value="{{ desde }}"/>
-                    <small id="helpId" class="form-text text-muted">Ingrese la fecha desde cuando consultar</small>
-                </div>
-                <div class="form-group col-md-2 m-4">
-                    <label for="hasta">Hasta</label>
-                    <input type="date" class="form-control" name="hasta" id="hasta" aria-describedby="helpId"  placeholder="Analizar hasta" value="{{ hasta }}"/>
-                    <small id="helpId" class="form-text text-muted">Ingrese la fecha hasta cuando consultar</small>
-                </div>
-                <div class="col-md-3 m-5">
-                    <button type="submit" class="btn btn-primario ">Consultar</button>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtros de Análisis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control form-control-modern" name="desde" 
+                                   id="desde" value="{{ desde }}" placeholder="Fecha desde">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
+                        </div>
+                        <small class="form-text text-muted mt-1">
+                            <i class="fas fa-info-circle me-1"></i>Inicio del período de análisis
+                        </small>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control form-control-modern" name="hasta" 
+                                   id="hasta" value="{{ hasta }}" placeholder="Fecha hasta">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                        <small class="form-text text-muted mt-1">
+                            <i class="fas fa-info-circle me-1"></i>Fin del período de análisis
+                        </small>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-search me-2"></i>Analizar Datos
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-12">
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Selecciona el rango de fechas para generar el análisis ABC
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
-    <div class="mt-3">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#abc-operaciones" type="button" role="tab" aria-controls="abc-operaciones" aria-selected="true">Por operaciones</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#abc-montos" type="button" role="tab" aria-controls="abc-montos" aria-selected="false">Por montos</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#abc-productos" type="button" role="tab" aria-controls="abc-productos" aria-selected="false">Por productos</button>
-        </li>
-        </ul>
-        <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="abc-operaciones" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="card-title">ABC por operaciones</h5>
-                        {% include 'partials/_abc-por-operaciones.html' %}
-                    </div>
-                </div>
-            </div>
-            <div class="tab-pane fade" id="abc-montos" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="card-title">ABC por monto</h5>
-                        {% include 'partials/_abc-por-montos.html' %}
-                    </div>
-                </div>
-            </div>
-            <div class="tab-pane fade" id="abc-productos" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="card-title">ABC por productos</h5>
-                        {% include 'partials/_abc-por-productos.html' %}
-                    </div>
-                </div>
-            </div>
-
+    <!-- Tabs de análisis ABC -->
+    <div class="card shadow-sm">
+        <div class="card-header p-0">
+            <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="operaciones-tab" data-bs-toggle="tab" 
+                            data-bs-target="#abc-operaciones" type="button" role="tab" 
+                            aria-controls="abc-operaciones" aria-selected="true">
+                        <i class="fas fa-chart-line me-2"></i>Por Operaciones
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="montos-tab" data-bs-toggle="tab" 
+                            data-bs-target="#abc-montos" type="button" role="tab" 
+                            aria-controls="abc-montos" aria-selected="false">
+                        <i class="fas fa-dollar-sign me-2"></i>Por Montos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="productos-tab" data-bs-toggle="tab" 
+                            data-bs-target="#abc-productos" type="button" role="tab" 
+                            aria-controls="abc-productos" aria-selected="false">
+                        <i class="fas fa-boxes me-2"></i>Por Productos
+                    </button>
+                </li>
+            </ul>
         </div>
-    </div>    
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="abc-operaciones" role="tabpanel" 
+                 aria-labelledby="operaciones-tab" tabindex="0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line text-primary me-2"></i>Análisis ABC por Operaciones
+                        </h5>
+                        <span class="badge bg-primary">Cantidad de Transacciones</span>
+                    </div>
+                    {% include 'clientes/partials/_abc-por-operaciones.html' %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="abc-montos" role="tabpanel" 
+                 aria-labelledby="montos-tab" tabindex="0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-dollar-sign text-success me-2"></i>Análisis ABC por Montos
+                        </h5>
+                        <span class="badge bg-success">Valor Monetario</span>
+                    </div>
+                    {% include 'clientes/partials/_abc-por-montos.html' %}
+                </div>
+            </div>
+            <div class="tab-pane fade" id="abc-productos" role="tabpanel" 
+                 aria-labelledby="productos-tab" tabindex="0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-boxes text-info me-2"></i>Análisis ABC por Productos
+                        </h5>
+                        <span class="badge bg-info">Diversidad de Artículos</span>
+                    </div>
+                    {% include 'clientes/partials/_abc-por-productos.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="{{ url_for('static', filename='js/dataTables.js')}}"></script>
 
 {% endblock %}

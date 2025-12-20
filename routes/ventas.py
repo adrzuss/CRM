@@ -131,10 +131,71 @@ def facturar(ptovta, idfactura):
 
 #----------------- fin factura electronica ------------------#
 
+#----------------- imprimir factura  ------------------#
+
 @bp_ventas.route('/imprimir_factura_vta/<id>') 
 @check_session
 def imprimir_factura_vta(id):
     return generar_factura(id)
+
+@bp_ventas.route('/imprimir_factura_vta2/<id>') 
+@check_session
+@alertas_mensajes
+def imprimir_factura_vta2(id):
+    return render_template('factura-print.html', factura_id=id, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+
+@bp_ventas.route('/api/facturas/<int:factura_id>', methods=['GET'])
+def obtener_factura(factura_id):
+    try:
+        # Obtener datos de la factura de tu base de datos
+        print(f'Obteniendo factura: {factura_id}')
+        factura, items, pagos = get_factura(factura_id)  
+        empresa = getDatosSucEmpresa()  # Implementa esta función
+        
+        laFactura = {'id': factura.id,
+                   'nro_comprobante': factura.nro_comprobante,
+                   'fecha': factura.fecha.strftime('%Y-%m-%d'),
+                   'cliente': factura.idcliente,
+                   'tipo_comprobante': factura.tipo_comprobante,
+                   'total': factura.total,
+                   'bonificacion': factura.bonificacion,
+                   'iva': factura.iva,
+                   'exento': factura.exento,
+                   'impint': factura.impint,
+                   'cae': factura.cae,
+                   'cae_vto': factura.cae_vto,
+                   'punto_vta': factura.punto_vta                   
+                   }
+        losItems = []
+        for item in items:
+            losItems.append({'id': item.id,
+                             'codigo': item.codigo,
+                             'descripcion': item.detalle,
+                             'cantidad': item.cantidad,
+                             'precio_unitario': item.precio_unitario,
+                             'precio_total': item.precio_total,
+                             'iva': item.iva,
+                             'exento': item.exento,
+                             'impint': item.impint,
+                             'bonificacion': item.bonificacion
+                             })
+        
+        return jsonify({
+            'success': True,
+            'factura': laFactura,
+            'items': losItems,
+            'empresa': empresa
+        })
+    except Exception as e:
+        print(f'Error al obtener la factura: {e}')
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+        
+#----------------- imprimir factura  ------------------#
+        
 
 @bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
 @check_session
@@ -151,15 +212,32 @@ def enivar_factura_vta_mail(id, idcliente):
 @alertas_mensajes
 def ventasArticulos():
     if request.method == 'GET':
-        desde = date.today()
-        hasta = date.today()
-        articulos = []
+        if 'desde' in request.args:
+            desde = request.args.get('desde')
+        else:
+            desde = date.today()   
+        if 'hasta' in request.args:    
+            hasta = request.args.get('hasta')
+        else:
+            hasta = date.today()    
+        if 'con_detalles' in request.args:
+            con_detalles = request.args.get('con_detalles', 'false').lower() == 'true'
+        else:
+            con_detalles = False    
+        if 'con_colores' in request.args:    
+            con_colores = request.args.get('con_colores', 'false').lower() == 'true'
+        else:
+            con_colores = False    
+        
+        articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta, :con_detalles, :con_colores)"),
+                         {'desde': desde, 'hasta': hasta, 'con_detalles': con_detalles, 'con_colores': con_colores}).fetchall()
+        return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-        articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta)"),
-                         {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        con_detalles = 'con_talle' in request.form
+        con_colores = 'con_colores' in request.form
+        return redirect(url_for('ventas.ventasArticulos', desde=desde, hasta=hasta, con_detalles=con_detalles, con_colores=con_colores))    
 
 @bp_ventas.route('/ventasClientes', methods=['GET', 'POST'])
 @check_session

@@ -66,6 +66,8 @@
                                 <th>Código</th>
                                 <th>Detalle</th>
                                 <th>Cantiad</th>
+                                <th>Det</th>
+                                <th>Color</th>
                                 <th>Precio U.</th>
                                 <th>Precio F.</th>
                                 <th>Iva</th>
@@ -77,6 +79,16 @@
                                     <td scope="row">{{ item.codigo }}</td>
                                     <td>{{ item.detalle }}</td>
                                     <td>{{ item.cantidad|round(2) }}</td>
+                                    {% if item.detalle_articulo == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td>{{ item.detalle_articulo }}</td>
+                                        {% endif %}
+                                        {% if item.color == None %}
+                                            <td>N/A</td>
+                                        {% else %}
+                                            <td> <span class="chip-color" style="background-color:{{item.codigo_color}}">{{ item.color }}</span></td>
+                                        {% endif %}
                                     <td>{{ item.precio_unitario|round(2) }}</td>
                                     <td>{{ item.precio_total|round(2) }}</td>
                                     <td>{{ item.iva|round(2) }}</td>

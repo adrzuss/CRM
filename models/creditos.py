@@ -133,11 +133,13 @@ class DocumentosDelCreditos(db.Model):
     idcredito = db.Column(db.Integer, db.ForeignKey('creditos.id'), nullable=False)
     iddocumento_credito = db.Column(db.Integer, db.ForeignKey('documentos_creditos.id'), nullable=False)
     documento = db.Column(db.String(255), nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
 
-    def __init__(self, idcredito, iddocumento_credito, documento):
+    def __init__(self, idcredito, iddocumento_credito, documento, version=1):
         self.idcredito = idcredito
         self.iddocumento_credito = iddocumento_credito
         self.documento = documento
+        self.version = version
 
 # Vencimientos de las cuotas de los Créditos
 class VencimientosCreditos(db.Model):

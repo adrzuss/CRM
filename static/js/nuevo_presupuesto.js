@@ -1,6 +1,36 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
+// Función para asegurar que existan campos hidden de color/detalle
+function ensureColorDetalleFields() {
+  const rows = document.querySelectorAll("#tabla-items tbody tr");
+  
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector("td.id-articulo");
+    if (firstCell) {
+      // Verificar si ya tiene los campos
+      let colorInput = row.querySelector('[name*="id_color"]');
+      let detalleInput = row.querySelector('[name*="id_detalle"]');
+      
+      if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'hidden';
+        colorInput.name = `items[${index}][id_color]`;
+        colorInput.value = '0';
+        firstCell.appendChild(colorInput);
+      }
+      
+      if (!detalleInput) {
+        detalleInput = document.createElement('input');
+        detalleInput.type = 'hidden';
+        detalleInput.name = `items[${index}][id_detalle]`;
+        detalleInput.value = '0';
+        firstCell.appendChild(detalleInput);
+      }
+    }
+  });
+}
+
 
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
@@ -31,7 +61,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     else{
       // Si punto_vta tiene un valor, asignarlo al input
-      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + data.punto_vta;
+      const ptoVtaElement = document.getElementById("punto_vta");
+      ptoVtaElement.innerHTML = `<i class="fas fa-store me-1"></i>Punto de venta: ${data.punto_vta}`;
     }
   } catch (error) {
     console.log("Error al obtener el punto de venta:", error);
@@ -107,7 +138,8 @@ async function asignarPuntoVenta(idPuntoVenta) {
     if (result.success) {
       $("#ptovtaModal").modal("hide");
       // Actualizar el texto en la página con el punto de venta seleccionado
-      document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
+      const ptoVtaElement = document.getElementById("punto_vta");
+      ptoVtaElement.innerHTML = `<i class="fas fa-store me-1"></i>Punto de venta: ${idPuntoVenta}`;
       document.getElementById("idcliente").focus();
     } else {
       alert('Error al asignar el punto de venta: ' + result.message);
@@ -213,32 +245,15 @@ async function fetchCliente(input) {
 }
 
 function mostrarModalSeleccionClientes(clientes) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Cliente";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaClientes = document.createElement("ul");
-  listaClientes.classList.add("list-group");
-  modalContent.appendChild(listaClientes);
-
-  clientes.forEach((cliente) => {
-    const clienteOption = document.createElement("li");
-    clienteOption.classList.add("cliente-option");
-    clienteOption.classList.add("list-group-item");
-    clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
-    clienteOption.onclick = () => {
-      asignarCliente(cliente);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const clienteInput = document.getElementById("idcliente");
-      clienteInput.focus();
-    };
-    listaClientes.appendChild(clienteOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  const callback = (cliente) => {
+    asignarCliente(cliente);
+    // Enfocar el nuevo input de código
+    const clienteInput = document.getElementById("idcliente");
+    if (clienteInput) clienteInput.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('clientes', clientes || [], callback);
 }
 
 function asignarCliente(cliente) {
@@ -296,48 +311,89 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
-  itemDiv.target
-    .closest("tr")
-    .querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  const row = itemDiv.target.closest("tr");
+  const tablaItems = document.getElementById("tabla-items").querySelector("tbody");
+  
+  row.querySelector(".id-articulo").textContent = articulo.id;
+  row.querySelector(".descripcion-articulo").textContent = articulo.detalle;
   const precioUnitario = parseFloat(articulo.precio);
-  itemDiv.target.closest("tr").querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  row.querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  
+  // Asegurar que existan campos hidden antes de intentar mostrar modal
+  ensureColorDetalleFields();
+  
+  // Activar modal de color/detalle si está disponible
+  function tryShowModal() {
+    if (window.modalColorDetalleManager && articulo.id) {
+      const rowIndex = Array.from(tablaItems.querySelectorAll('tr')).indexOf(row);
+      
+      window.modalColorDetalleManager.mostrarModal(
+        articulo.id,
+        rowIndex,
+        articulo.detalle,
+        function(seleccion) {
+          // Asegurar que existan los campos hidden
+          ensureColorDetalleFields();
+          
+          // Buscar campos hidden
+          let colorInput = row.querySelector('input[name*="id_color"]');
+          let detalleInput = row.querySelector('input[name*="id_detalle"]');
+          
+          // Si no se encuentran, crearlos
+          if (!colorInput || !detalleInput) {
+            const firstCell = row.querySelector("td.id-articulo");
+            if (firstCell) {
+              if (!colorInput) {
+                colorInput = document.createElement('input');
+                colorInput.type = 'hidden';
+                colorInput.name = `items[${seleccion.rowIndex}][id_color]`;
+                colorInput.value = '0';
+                firstCell.appendChild(colorInput);
+              }
+              
+              if (!detalleInput) {
+                detalleInput = document.createElement('input');
+                detalleInput.type = 'hidden';
+                detalleInput.name = `items[${seleccion.rowIndex}][id_detalle]`;
+                detalleInput.value = '0';
+                firstCell.appendChild(detalleInput);
+              }
+            }
+          }
+          
+          // Asignar valores seleccionados
+          if (colorInput && seleccion.colorId) {
+            colorInput.value = seleccion.colorId;
+          }
+          
+          if (detalleInput && seleccion.detalleId) {
+            detalleInput.value = seleccion.detalleId;
+          }
+        }
+      );
+    } else if (window.modalColorDetalleManager === undefined) {
+      // Reintentar después de un breve retraso si el manager no está disponible
+      setTimeout(tryShowModal, 50);
+    }
+  }
+  
+  // Intentar mostrar el modal después de un pequeño retraso
+  setTimeout(tryShowModal, 100);
+  
   updateItemTotal(itemDiv);
   updateTotalFactura();
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Artículo";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaArticulos = document.createElement("ul");
-  listaArticulos.classList.add("list-group");
-  modalContent.appendChild(listaArticulos);
-
-  articulos.forEach((articulo) => {
-    const articuloOption = document.createElement("li");
-    articuloOption.classList.add("cliente-option");
-    articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio)
-      .toFixed(2)
-      .toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}</span>`;
-    articuloOption.onclick = () => {
-      asignarArticuloElegido(articulo, itemDiv);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-      nuevoInputCodigo.focus();
-    };
-    listaArticulos.appendChild(articuloOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  const callback = (articulo) => {
+    asignarArticuloElegido(articulo, itemDiv);
+    // Enfocar el nuevo input de código
+    const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+    if (nuevoInputCodigo) nuevoInputCodigo.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 
 function updateItemTotal(itemDiv) {
@@ -386,9 +442,23 @@ function renumberItems() {
   });
 }
 
+// Event listeners para cliente
 document.getElementById("idcliente").addEventListener("blur", function () {
   const idcliente = this.value;
   fetchCliente(idcliente);
+});
+
+// Botón buscar cliente
+document.getElementById("buscarCliente").addEventListener("click", function() {
+  const nombreCliente = document.getElementById("idcliente").value.trim();
+  if (nombreCliente) {
+    fetchCliente(nombreCliente);
+  } else {
+    // Mostrar modal de búsqueda vacío para explorar todos los clientes
+    window.universalSearchModal.show('clientes', [], (cliente) => {
+      asignarCliente(cliente);
+    });
+  }
 });
 
 document.getElementById("tabla-items").addEventListener("input", function (e) {
@@ -407,19 +477,44 @@ const tablaItems = document.querySelector("#tabla-items tbody");
 document.getElementById("agregarArticulo").addEventListener("click", () => {
   const nuevaFila = `
                 <tr class="items">
-                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
-                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
-                    <td class="descripcion-articulo">-</td>
-                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0" step="0.1" min="0.1" required></td>
-                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.1" min="0.1" required></td> 
-                    <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
-                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
+                    <td class="id-articulo text-center" name="items[${contadorFilas}][idarticulo]">-</td>
+                    <td class="text-center">
+                        <input type="text" class="form-control form-control-sm codigo-articulo text-center" 
+                               name="items[${contadorFilas}][codigo]" 
+                               placeholder="Código" required>
+                    </td>
+                    <td class="descripcion-articulo text-muted">Busque por código...</td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm precio-unitario text-end" 
+                               name="items[${contadorFilas}][precio_unitario]" 
+                               value="0" step="0.01" min="0" required>
+                    </td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm cantidad text-center" 
+                               name="items[${contadorFilas}][cantidad]" 
+                               value="1" step="0.01" min="0.01" required>
+                    </td> 
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm precio-total text-end" 
+                               name="items[${contadorFilas}][precio_total]" readonly>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar" title="Eliminar artículo">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
   contadorFilas++;
-  // Enfocar el nuevo input de código
+  
+  // Ocultar estado vacío y enfocar el nuevo input
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) emptyState.style.display = 'none';
+  
   const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-  nuevoInputCodigo.focus();
+  if (nuevoInputCodigo) nuevoInputCodigo.focus();
+  
+  updateTotalFactura();
 });
 
 tablaItems.addEventListener(
@@ -438,22 +533,96 @@ tablaItems.addEventListener(
 
 // Eliminar fila
 tablaItems.addEventListener("click", (itemDiv) => {
-  if (itemDiv.target.classList.contains("btn-eliminar")) {
-    itemDiv.target.closest("tr").remove();
+  if (itemDiv.target.classList.contains("btn-eliminar") || itemDiv.target.closest('.btn-eliminar')) {
+    if (confirm('¿Está seguro de eliminar este artículo?')) {
+      itemDiv.target.closest("tr").remove();
+      updateTotalFactura();
+      
+      // Mostrar estado vacío si no hay filas
+      const remainingRows = tablaItems.querySelectorAll('tr');
+      if (remainingRows.length === 0) {
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) emptyState.style.display = 'block';
+      }
+    }
   }
 });
 
 document.getElementById("invoice_form").addEventListener("submit", function (event) {
-    if (document.querySelectorAll("#tabla-items tbody").length === 0) {
+    const itemsRows = document.querySelectorAll("#tabla-items tbody tr");
+    
+    if (itemsRows.length === 0) {
       event.preventDefault();
-      alert("Debe agregar al menos un item al presupuesto");
-      event.preventDefault();
+      alert("Debe agregar al menos un artículo al presupuesto");
+      document.getElementById("agregarArticulo").focus();
       return false;
     }
     
-    if (confirm("¿Grabar el presupuesto?") === false) {
+    // Validar que todos los artículos tengan datos completos
+    let hasInvalidItems = false;
+    itemsRows.forEach(row => {
+      const codigo = row.querySelector('.codigo-articulo').value.trim();
+      const descripcion = row.querySelector('.descripcion-articulo').textContent.trim();
+      const precio = parseFloat(row.querySelector('.precio-unitario').value);
+      const cantidad = parseFloat(row.querySelector('.cantidad').value);
+      
+      if (!codigo || descripcion === '-' || descripcion === 'Busque por código...' || precio <= 0 || cantidad <= 0) {
+        hasInvalidItems = true;
+      }
+    });
+    
+    if (hasInvalidItems) {
       event.preventDefault();
-    } else {
+      alert("Hay artículos con datos incompletos. Por favor complete toda la información antes de guardar.");
+      return false;
+    }
+    
+    // Confirmar guardado
+    if (confirm("¿Confirma que desea guardar este presupuesto?")) {
       isFormSubmited = true;
+      // Mostrar indicador de carga
+      const submitBtn = document.getElementById("grabarPresupuesto");
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+      submitBtn.disabled = true;
+      
+      // Restaurar botón en caso de error (después de 5 segundos)
+      setTimeout(() => {
+        if (!isFormSubmited) {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
+      }, 5000);
+    } else {
+      event.preventDefault();
     }
   });
+
+// Inicialización adicional al cargar el DOM
+document.addEventListener('DOMContentLoaded', function() {
+  // Mostrar estado vacío inicialmente
+  setTimeout(() => {
+    const tbody = document.querySelector('#tabla-items tbody');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (tbody && emptyState && tbody.children.length === 0) {
+      emptyState.style.display = 'block';
+    }
+    
+    // Auto-focus en el campo cliente
+    const clienteInput = document.getElementById('idcliente');
+    if (clienteInput) {
+      clienteInput.focus();
+    }
+  }, 100);
+  
+  // Configurar validez por defecto (15 días)
+  const fechaActual = new Date();
+  const fechaValidez = new Date(fechaActual);
+  fechaValidez.setDate(fechaActual.getDate() + 15);
+  
+  const validezInput = document.querySelector('input[name="validez"]');
+  if (validezInput && !validezInput.value) {
+    validezInput.value = fechaValidez.toISOString().split('T')[0];
+  }
+});

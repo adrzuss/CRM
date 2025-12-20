@@ -27,7 +27,7 @@ def add_cta_cte_cli():
     if request.method == 'GET':
         return render_template('ctacte-cli.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
-@bp_ctactecli.route('/lstctactecli/<id>)')
+@bp_ctactecli.route('/lstctactecli/<id>')
 @check_session
 @alertas_mensajes
 def lst_cta_cte_cli(id):

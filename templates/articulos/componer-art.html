@@ -2,9 +2,11 @@
 {% block body %}
 
     <div class="card m-3">
-        <div class="card-body">
+        <div class="card-header gradiente-uno">
             <h3>Artículos que componen a </h3>
             <h5> {{ articulo.detalle }} </h5>
+        </div>    
+        <div class="card-body">
             <div class="row">
                 <div class="col-3">
                     <label for="idarticulo">#ID</label>
@@ -23,85 +25,88 @@
 
                 {% include 'partials/_modal-articulos.html' %}
 
-                <div class="row justify-content-md-center m-3">
-                    <div class="card">
-                        <h3 class="m-3">Composición de artículo</h3>
+                
+                    <div class="card ml-3">
+                        <div class="card-header gradiente-dos">
+                            <h3 class="card-title">Composición de artículo</h3>
+                        </div>
                         <div class="card-body">
-
-                            
-                                    <label for="codigo">Código</label>
-                                    <input type="text" class="form-control" name="codigo" id="codigo" placeholder="Código" required>
-                                    <label for="detalle">Detalle</label>
-                                    <input type="text" class="form-control" name="detalle" id="detalle" placeholder="Detalle" required>
-                                    <label for="cantidad">Cantidad</label>
-                                    <input type="number" class="form-control" name="cantidad" id="cantidad" step="0.01" min="1" placeholder="Cantidad" required>
-                                    
-                            
+                            <label for="codigo">Código</label>
+                            <input type="text" class="form-control" name="codigo" id="codigo" placeholder="Código" required>
+                            <label for="detalle">Detalle</label>
+                            <input type="text" class="form-control" name="detalle" id="detalle" placeholder="Detalle" required>
+                            <label for="cantidad">Cantidad</label>
+                            <input type="number" class="form-control" name="cantidad" id="cantidad" step="0.01" min="1" placeholder="Cantidad" required>
                             <div class="row">
-                                <button class="btn btn-primario m-2" type="submit" id="grabarComposicion">Agregar a compuesto</button>
+                                <button class="btn btn-moderno btn-primario m-2 col-4" type="submit" id="grabarComposicion">Agregar a compuesto</button>
                             </div>
 
                         </div>
                     </div>
-                </div
+                
             </form>
         </div>
         <div class="col-7">
-            <div class="row justify-content-md-center m-3">
-                <div class="card">
-                    <h3 class="m-3">Artículos que componen</h3>
-                        <div class="card-body">
-                            <div class="table-responsive">
             
-                                <table class="display table table-bordered table-striped" id="dataTable" width="100%">
-                                    
-                                    <thead class="thead-dark">
-                                        <tr>
-                                            <th scope="col">Código</th>
-                                            <th scope="col">Rubro</th>
-                                            <th scope="col">Marca</th>
-                                            <th scope="col">Detalle</th>
-                                            <th scope="col">Cant.</th>
-                                            <th scope="col" style="width: 15%;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tfoot class="thead-dark">
-                                        <tr>
-                                            <th scope="col">Código</th>
-                                            <th scope="col">Rubro</th>
-                                            <th scope="col">Marca</th>
-                                            <th scope="col">Detalle</th>
-                                            <th scope="col">Cant.</th>
-                                            <th scope="col">Acciones</th>
-                                        </tr>
-                                    </tfoot>
-                                    <tbody>
-                                        {% for compuesto in compuestos %}
-                                        <tr class="">
-                                            <td scope="row">{{ compuesto.codigo }}</td>
-                                            <td>{{ compuesto.rubro }}</td>
-                                            <td>{{ compuesto.marca }}</td>
-                                            <td>{{ compuesto.detalle }}</td>
-                                            <td>{{ compuesto.cantidad }}</td>
-                                            <td style="text-align: center;">
-                                                <a href="{{ url_for('articulos.eliminarCompuesto', idarticulo = compuesto.idarticulo, idart_comp = compuesto.idart_comp) }}" 
-                                                   class="btn btn-peligro eliminarCompuesto" 
-                                                   data-idarticulo="{{ compuesto.idarticulo }}" 
-                                                   data-idart_comp="{{ compuesto.idart_comp }}">Eliminar</a>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        
-                        </div>
-                    </div>    
-                </div>    
+            <div class="card">
+                <div class="card-header gradiente-tres">
+                    <h3 class="card-title">Artículos que componen</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+    
+                        <table class="display table table-bordered table-striped" id="dataTable" width="100%">
+                            
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Rubro</th>
+                                    <th scope="col">Marca</th>
+                                    <th scope="col">Detalle</th>
+                                    <th scope="col">Cant.</th>
+                                    <th scope="col" style="width: 15%;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tfoot class="thead-dark">
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Rubro</th>
+                                    <th scope="col">Marca</th>
+                                    <th scope="col">Detalle</th>
+                                    <th scope="col">Cant.</th>
+                                    <th scope="col">Acciones</th>
+                                </tr>
+                            </tfoot>
+                            <tbody>
+                                {% for compuesto in compuestos %}
+                                <tr class="">
+                                    <td scope="row">{{ compuesto.codigo }}</td>
+                                    <td>{{ compuesto.rubro }}</td>
+                                    <td>{{ compuesto.marca }}</td>
+                                    <td>{{ compuesto.detalle }}</td>
+                                    <td>{{ compuesto.cantidad }}</td>
+                                    <td style="text-align: center;">
+                                        <a href="{{ url_for('articulos.eliminarCompuesto', idarticulo = compuesto.idarticulo, idart_comp = compuesto.idart_comp) }}" 
+                                            class="btn btn-peligro eliminarCompuesto" 
+                                            data-idarticulo="{{ compuesto.idarticulo }}" 
+                                            data-idart_comp="{{ compuesto.idart_comp }}">Eliminar</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                
+                </div>
             </div>    
         </div>    
     </div>    
+       
 
+<!-- Modal universal de búsqueda -->
+{% include 'partials/_modal-busqueda-universal.html' %}
+
+<script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
 <script src="{{ url_for('static', filename='js/componer-art.js')}}"></script>
 
 {% endblock %}

@@ -1,119 +1,206 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h1 class="m-3">Nueva factura de gasto</h1>
-    <div class="m-2">
-        <div class="container-fluid">
-            {% include 'partials/_modal-proveedor.html' %}
-            <form id="invoice_form" method="post">
-                <div class="row justify-content-center align-items-center">
-                    
-                    <div class="card mb-3 ml-2 col-8">    
-                        <div class="card-header">
-                            <h3 class="m-2">Datos de la factura</h3>
-                        </div>
-                        <div class="row">
-                            <h4 class="m-2 col-5">Proveedor</h4>
-                            <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
-                        </div>
-                        <div class="cardbody">
-                            <div class="row m-3">
-                                <div class="col-md-2">
-                                    <label for="idproveedor">Proveedor:</label>
-                                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" required>
-                                </div>    
-                                <div class="col-md-5">
-                                    <label for="proveedor_nombre">Nombre del Proveedor:</label>
-                                    <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
+
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('proveedores.proveedores', id=0) }}">
+                <i class="fas fa-truck me-1"></i>Proveedores
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-file-invoice-dollar me-1"></i>Nueva Factura de Gasto
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página con diseño moderno -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-danger">
+            <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Nueva Factura de Gasto</h1>
+            <p class="page-subtitle text-muted mb-0">Registra gastos operativos y servicios</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    {% include 'partials/_modal-proveedor.html' %}
+    
+    <form id="invoice_form" method="post">
+        <div class="row">
+            <!-- Información principal del gasto -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Datos de la Factura de Gasto
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-lg-2 col-md-3">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="idproveedor" 
+                                           id="idproveedor" required placeholder="ID del proveedor">
+                                    <label for="idproveedor"><i class="fas fa-hashtag me-2"></i>ID Proveedor <span class="text-danger">*</span></label>
+                                </div>
+                            </div>    
+                            <div class="col-lg-5 col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="proveedor_nombre" 
+                                           id="proveedor_nombre" readonly placeholder="Nombre del proveedor">
+                                    <label for="proveedor_nombre"><i class="fas fa-building me-2"></i>Nombre del Proveedor</label>
                                 </div>   
-                                <div class="col-md-2">
-                                    <label for="id_tipo_comprobante">Tipo de factura: <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="id_tipo_comprobante" name="id_tipo_comprobante" required>
+                            </div>   
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select form-control-modern" id="id_tipo_comprobante" 
+                                            name="id_tipo_comprobante" required>
+                                        <option value="">Seleccionar...</option>
                                         {% for tipo in tiposComp %}
                                             <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
                                         {% endfor %}
-                                    </select>    
-                                </div> 
-                                <div class="col-md-2">
-                                    <label for="periodo">Periodo:<span class="text-danger">*</span></label>
-                                    <input class="form-control" type="month" name="periodo" value="{{ hoy }}" required>
-                                    <small id="helpId" class="form-text text-muted">Periodo de imputación</small>
+                                    </select>
+                                    <label for="id_tipo_comprobante"><i class="fas fa-file-alt me-2"></i>Tipo Factura <span class="text-danger">*</span></label>
+                                </div>    
+                            </div> 
+                            <div class="col-lg-2 col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="month" name="periodo" 
+                                           value="{{ hoy }}" required>
+                                    <label for="periodo"><i class="fas fa-calendar me-2"></i>Periodo <span class="text-danger">*</span></label>
+                                </div>
+                                <small class="form-text text-muted mt-1">
+                                    <i class="fas fa-info-circle me-1"></i>Periodo de imputación
+                                </small>
+                            </div>
+                        </div>    
+                        <div class="row g-3 mt-2">
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="date" name="fecha" 
+                                           value="{{ hoy }}" required>
+                                    <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha <span class="text-danger">*</span></label>
                                 </div>
                             </div>    
-                            <div class="row m-3">    
-                                <div class="col-md-3">
-                                    <label for="fecha">Fecha:</label>
-                                    <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
-                                </div>    
-                                <div class="col-md-3">
-                                    <label for="nro_factura">Nro. de factura:</label>
-                                    <input class="form-control" type="text" name="nro_factura" id="nro_factura" required>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="nro_factura" 
+                                           id="nro_factura" required placeholder="Número de factura">
+                                    <label for="nro_factura"><i class="fas fa-receipt me-2"></i>Nro. Factura <span class="text-danger">*</span></label>
                                 </div>
-                                <div class="col-md-2">
-                                    <label for="total">Total:</label>
-                                    <input class="form-control" type="text" name="total" id="total" step="0.01" min="0.01" required>
-                                </div>    
-                                <div class="col-md-3">
-                                    <label for="id_plan_cuenta">Cuenta:</label>
-                                    <select class="form-control" name="id_plan_cuenta" id="id_plan_cuenta" required>
-                                        <option value="">Seleccione una cuenta</option>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern total-field" type="number" name="total" 
+                                           id="total" step="0.01" min="0.01" required placeholder="0.00">
+                                    <label for="total"><i class="fas fa-dollar-sign me-2"></i>Total <span class="text-danger">*</span></label>
+                                </div>
+                            </div>    
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select form-control-modern" name="id_plan_cuenta" 
+                                            id="id_plan_cuenta" required>
+                                        <option value="">Seleccionar cuenta...</option>
                                         {% for cuenta in planesCtas %}
                                             <option value="{{ cuenta.id }}">{{ cuenta.nombre }}</option>
                                         {% endfor %}
                                     </select>
-
+                                    <label for="id_plan_cuenta"><i class="fas fa-tags me-2"></i>Cuenta <span class="text-danger">*</span></label>
                                 </div>
-                            </div>    
-                        </div>
-                    </div>        
-
-                    <div class="card mb-3 ml-2 col-3">    
-                        <div class="card-header">
-                            <h5 class="m-2">Remitos pendientes</h3>
-                        </div>
-                        <div class="row">
-                            <div id="remitos_select" class="col-12 m-2" style="display: none;"></div>
-                            
-                        </div>
-                        <div class="cardbody">
-                        </div>
-                    </div>        
-                </div>    
-
-                <div class="card">
-                    <div class="cardbody">
-                        <div id="items" name="items">
-                            
+                            </div>
                         </div>
                     </div>
-                </div>    
-
-                <div class="row">
-                    <h3>Total Factura: $<span id="total_factura">0.00</span></h3>
-                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
                 </div>
-
-                <div class="card">
-                    <h4 class="m-3">Formas de pago</h4>
+            </div>            
+            <!-- Remitos pendientes -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>Remitos Pendientes
+                        </h5>
+                    </div>
                     <div class="card-body">
-                        <div class="row justify-content-md-center">
-                            <div class="col-3 mt-3">
-                                <label for="efectivo">Efectivo</label>
-                                <input type="number" name="efectivo" id="efectivo" class="form-control" value="0">
-                            </div>
-                                
-                            <div class="col-3 mt-3">    
-                                <label for="ctacte">Cta. Cte.</label>
-                                <input type="number" name="ctacte" id="ctacte" class="form-control" value="0">
-                            </div>
+                        <div id="remitos_select" style="display: none;">
+                            <!-- Remitos se cargan dinámicamente -->
                         </div>
-
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-search fa-2x mb-2"></i>
+                            <p class="mb-0">Selecciona un proveedor para ver remitos</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarGasto">Guardar Factura</button>
+        <!-- Sección de items dinámicos -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Detalles del Gasto
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <p class="mb-0">En los gastos no se agregan ítems. Solo se registra el total y el proveedor.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Totales y acciones -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-success">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-6">
+                                <h4 class="text-primary">
+                                    <i class="fas fa-calculator me-2"></i>Total Factura: 
+                                    <span class="badge bg-primary fs-5">$<span id="total_factura">0.00</span></span>
+                                </h4>
+                            </div>
+                            <div class="col-md-6">
+                                <h4 class="text-success" id="saldo-container">
+                                    <i class="fas fa-balance-scale me-2"></i>Saldo: 
+                                    <span class="badge bg-success fs-5">$<span id="saldo_factura">0.00</span></span>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-lg" type="button" onclick="abrirModalPagos()">
+                        <i class="fas fa-credit-card me-2"></i>Procesar Pago <kbd>F9</kbd>
+                    </button>
+                    <button class="btn btn-primary btn-lg" type="submit" id="grabarGasto" style="display:none;">
+                        <i class="fas fa-save me-2"></i>Guardar Gasto
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos ocultos para los métodos de pago -->
+        <div style="display: none;">
+            <input type="number" name="efectivo" id="efectivo_hidden" value="0">
+            <input type="number" name="ctacte" id="ctacte_hidden" value="0">
+            <input type="number" name="bonificacion" id="bonificacion_hidden" value="0">
+        </div>
 
             </form>
         </div>    
@@ -125,6 +212,53 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
+    
+    <!-- Modal universal de búsqueda -->
+    {% include 'partials/_modal-busqueda-universal.html' %}
+    
+    <!-- Modal universal de transacciones -->
+    {% set modal_type = 'pago' %}
+    {% set modal_context = 'proveedores' %}
+    {% set modal_title = '💰 Pago de Gasto' %}
+    {% include 'partials/_modal-transacciones.html' %}
+    
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
     <script src="{{ url_for('static', filename='js/nuevo_gasto.js')}}"></script>
+    
+    <script>
+    function abrirModalPagos() {
+        const total = document.getElementById('total').value;
+        cargarDatosModal(parseFloat(total) || 0);
+        $('#transaccionesModal').modal('show');
+    }
+    
+    // Personalizar procesamiento para gastos
+    function procesarTransaccion() {
+        if (!checkTotales()) {
+            const diferencia = calcSaldo();
+            const mensaje = diferencia > 0 ? 
+                `Falta pagar $${diferencia.toFixed(2)}` : 
+                `Sobra $${Math.abs(diferencia).toFixed(2)}`;
+            
+            if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+                return false;
+            }
+        }
+        
+        // Cerrar modal y procesar
+        $('#transaccionesModal').modal('hide');
+        document.getElementById('grabarGasto').click();
+        return true;
+    }
+    
+    // Atajos de teclado
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F9') {
+            e.preventDefault();
+            abrirModalPagos();
+        }
+    });
+    </script>
     
 {% endblock %}

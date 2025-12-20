@@ -7,7 +7,40 @@ window.onbeforeunload = function () {
   }
 };
 
+// Función para asegurar que existan campos hidden de color/detalle
+function ensureColorDetalleFields() {
+  const rows = document.querySelectorAll("#tabla-items tbody tr");
+  
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector("td.id-articulo");
+    if (firstCell) {
+      // Verificar si ya tiene los campos
+      let colorInput = row.querySelector('[name*="id_color"]');
+      let detalleInput = row.querySelector('[name*="id_detalle"]');
+      
+      if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'hidden';
+        colorInput.name = `items[${index}][id_color]`;
+        colorInput.value = '0';
+        firstCell.appendChild(colorInput);
+      }
+      
+      if (!detalleInput) {
+        detalleInput = document.createElement('input');
+        detalleInput.type = 'hidden';
+        detalleInput.name = `items[${index}][id_detalle]`;
+        detalleInput.value = '0';
+        firstCell.appendChild(detalleInput);
+      }
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
+  // Configurar atajos de teclado
+  setupKeyboardShortcuts();
+  
   try {
     // Realizar la solicitud a la API
     const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);	
@@ -101,10 +134,16 @@ async function asignarPuntoVenta(idPuntoVenta) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+// Función global para manejar atajos de teclado
+function setupKeyboardShortcuts() {
   const form = document.getElementById("invoice_form");
   const btnAgregar = document.getElementById("agregarArticulo");
   const btnGrabar = document.getElementById("grabarVenta");
+
+  if (!form || !btnAgregar || !btnGrabar) {
+    console.warn('No se encontraron todos los elementos para configurar atajos');
+    return;
+  }
 
   // Detectar tecla Enter en los inputs del formulario
   form.addEventListener("keydown", function (event) {
@@ -128,20 +167,23 @@ document.addEventListener("DOMContentLoaded", function () {
         inputs[nextIndex].focus();
       }
     }
+  });
 
+  // Atajos globales de teclado
+  document.addEventListener("keydown", function (event) {
     // Asignar tecla F9 para grabar venta
     if (event.key === "F9") {
-      event.preventDefault(); // Evita el comportamiento por defecto de la tecla
-      btnGrabar.click(); // Simula un click en el botón "Grabar Venta"
+      event.preventDefault();
+      btnGrabar.click();
     }
 
-    // Asignar tecla F5 para agregar un nuevo artículo
+    // Asignar tecla F4 para agregar un nuevo artículo
     if (event.key === "F4") {
-      event.preventDefault(); // Evita la recarga de página con F5
-      btnAgregar.click(); // Simula un click en el botón "Agregar Artículo"
+      event.preventDefault();
+      btnAgregar.click();
     }
   });
-});
+}
 
 function limpiarDatosCliente() {
   inputIdCliente = document.getElementById("idcliente");
@@ -195,32 +237,15 @@ async function fetchCliente(input) {
 }
 
 function mostrarModalSeleccionClientes(clientes) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Cliente";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaClientes = document.createElement("ul");
-  listaClientes.classList.add("list-group");
-  modalContent.appendChild(listaClientes);
-
-  clientes.forEach((cliente) => {
-    const clienteOption = document.createElement("li");
-    clienteOption.classList.add("cliente-option");
-    clienteOption.classList.add("list-group-item");
-    clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
-    clienteOption.onclick = () => {
-      asignarCliente(cliente);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const clienteInput = document.getElementById("idcliente");
-      clienteInput.focus();
-    };
-    listaClientes.appendChild(clienteOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  const callback = (cliente) => {
+    asignarCliente(cliente);
+    // Enfocar el nuevo input de código
+    const clienteInput = document.getElementById("idcliente");
+    if (clienteInput) clienteInput.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('clientes', clientes || [], callback);
 }
 
 function asignarCliente(cliente) {
@@ -273,52 +298,90 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent =
-    articulo.id;
-  itemDiv.target
-    .closest("tr")
-    .querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  const row = itemDiv.target.closest("tr");
+  const tablaItems = document.getElementById("tabla-items").querySelector("tbody");
+  
+  row.querySelector(".id-articulo").textContent = articulo.id;
+  row.querySelector(".descripcion-articulo").textContent = articulo.detalle;
   const precioUnitario = parseFloat(articulo.precio);
-  itemDiv.target.closest("tr").querySelector(".precio-unitario").value =
-    precioUnitario.toFixed(2);
+  row.querySelector(".precio-unitario").value = precioUnitario.toFixed(2);
+  
+  // Asegurar que existan campos hidden antes de intentar mostrar modal
+  ensureColorDetalleFields();
+  
+  // Activar modal de color/detalle si está disponible
+  function tryShowModal() {
+    if (window.modalColorDetalleManager && articulo.id) {
+      const rowIndex = Array.from(tablaItems.querySelectorAll('tr')).indexOf(row);
+      
+      window.modalColorDetalleManager.mostrarModal(
+        articulo.id,
+        rowIndex,
+        articulo.detalle,
+        function(seleccion) {
+          // Asegurar que existan los campos hidden
+          ensureColorDetalleFields();
+          
+          // Buscar campos hidden
+          let colorInput = row.querySelector('input[name*="id_color"]');
+          let detalleInput = row.querySelector('input[name*="id_detalle"]');
+          
+          // Si no se encuentran, crearlos
+          if (!colorInput || !detalleInput) {
+            const firstCell = row.querySelector("td.id-articulo");
+            if (firstCell) {
+              if (!colorInput) {
+                colorInput = document.createElement('input');
+                colorInput.type = 'hidden';
+                colorInput.name = `items[${seleccion.rowIndex}][id_color]`;
+                colorInput.value = '0';
+                firstCell.appendChild(colorInput);
+              }
+              
+              if (!detalleInput) {
+                detalleInput = document.createElement('input');
+                detalleInput.type = 'hidden';
+                detalleInput.name = `items[${seleccion.rowIndex}][id_detalle]`;
+                detalleInput.value = '0';
+                firstCell.appendChild(detalleInput);
+              }
+            }
+          }
+          
+          // Asignar valores seleccionados
+          if (colorInput && seleccion.colorId) {
+            colorInput.value = seleccion.colorId;
+          }
+          
+          if (detalleInput && seleccion.detalleId) {
+            detalleInput.value = seleccion.detalleId;
+          }
+        }
+      );
+    } else if (window.modalColorDetalleManager === undefined) {
+      // Reintentar después de un breve retraso si el manager no está disponible
+      setTimeout(tryShowModal, 50);
+    }
+  }
+  
+  // Intentar mostrar el modal después de un pequeño retraso
+  setTimeout(tryShowModal, 100);
+  
   updateItemTotal(itemDiv);
   updateTotalFactura();
 }
 
 function mostrarModalSeleccionArticulos(articulos, itemDiv) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Artículo";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaArticulos = document.createElement("ul");
-  listaArticulos.classList.add("list-group");
-  modalContent.appendChild(listaArticulos);
-
-  articulos.forEach((articulo) => {
-    const articuloOption = document.createElement("li");
-    articuloOption.classList.add("cliente-option");
-    articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${
-      articulo.detalle
-    }</strong> - <span class="precio-normal">$${parseFloat(articulo.precio)
-      .toFixed(2)
-      .toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}</span>`;
-    articuloOption.onclick = () => {
-      asignarArticuloElegido(articulo, itemDiv);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-      nuevoInputCodigo.focus();
-    };
-    listaArticulos.appendChild(articuloOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  const callback = (articulo) => {
+    asignarArticuloElegido(articulo, itemDiv);
+    
+    // Enfocar el nuevo input de código
+    const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+    if (nuevoInputCodigo) nuevoInputCodigo.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 
 function updateItemTotal(itemDiv) {
@@ -384,24 +447,37 @@ document.getElementById("tabla-items").addEventListener("input", function (e) {
 
 const tablaItems = document.querySelector("#tabla-items tbody");
 
-// Agregar nueva fila
-document.getElementById("agregarArticulo").addEventListener("click", () => {
+// Función para agregar nueva fila
+function agregarNuevaFila() {
   const nuevaFila = `
                 <tr class="items">
-                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
-                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
+                    <td class="id-articulo text-center" name="items[${contadorFilas}][idarticulo]">-</td>
+                    <td class="text-center"><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
                     <td class="descripcion-articulo">-</td>
-                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
-                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
-                    <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
-                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
+                    <td class="text-center"><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
+                    <td class="text-center"><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
+                    <td class="text-center"><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
+                    <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btn-eliminar"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
   contadorFilas++;
+  
+  // Ocultar estado vacío
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) emptyState.style.display = 'none';
+  
+  // Asegurar que la nueva fila tenga los campos necesarios
+  setTimeout(() => {
+    ensureColorDetalleFields();
+  }, 10);
+  
   // Enfocar el nuevo input de código
   const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-  nuevoInputCodigo.focus();
-});
+  if (nuevoInputCodigo) nuevoInputCodigo.focus();
+}
+
+// Event listener para el botón agregar artículo
+document.getElementById("agregarArticulo").addEventListener("click", agregarNuevaFila);
 
 tablaItems.addEventListener(
   "blur",
@@ -418,8 +494,18 @@ tablaItems.addEventListener(
 
 // Eliminar fila
 tablaItems.addEventListener("click", (itemDiv) => {
-  if (itemDiv.target.classList.contains("btn-eliminar")) {
-    itemDiv.target.closest("tr").remove();
+  if (itemDiv.target.classList.contains("btn-eliminar") || itemDiv.target.closest('.btn-eliminar')) {
+    if (confirm('¿Está seguro de eliminar este artículo?')) {
+      itemDiv.target.closest("tr").remove();
+      updateTotalFactura();
+      
+      // Mostrar estado vacío si no hay más artículos
+      const tbody = document.getElementById("tabla-items").querySelector("tbody");
+      const emptyState = document.getElementById('empty-state');
+      if (tbody.children.length === 0 && emptyState) {
+        emptyState.style.display = 'block';
+      }
+    }
   }
 });
 
@@ -434,6 +520,8 @@ document.getElementById("invoice_form").addEventListener("submit", function (eve
     if (confirm("¿Grabar el remito?") === false) {
       event.preventDefault();
     } else {
+      // Asegurar que los campos color/detalle estén presentes antes del envío
+      ensureColorDetalleFields();
       isFormSubmited = true;
     }
   });

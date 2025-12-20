@@ -1,64 +1,150 @@
 {% extends 'base.html' %}
 {% block body %}
 
-<div class="row justify-content-center align-items-center g-2 m-3">
-    <div class="col-4">
-        <div class="card">
-            <h5 class="m-3">Movimientos Cta Cte desde fecha</h5>
-            <div class="card-body">
-                <form action="{{ url_for('ctactecli.movsctactecli') }}" method="GET">
-                    <label for="fecha">Movimientos desde:</label>
-                    <input class="form-control" type="date" id="fecha" name="fecha" value="{{ desde }}" required><br>
-                    <button class="btn btn-primario" type="submit">Consultar</button>
-                </form>
-            </div>    
-        </div>    
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('clientes.clientes', id=0) }}">
+                <i class="fas fa-users me-1"></i>Clientes
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-exchange-alt me-1"></i>Movimientos Cta. Cte.
+        </li>
+    </ol>
+</nav>
 
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-info text-white">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Movimientos de Cuenta Corriente</h1>
+            <p class="page-subtitle text-muted mb-0">Consulta de movimientos por período</p>
+        </div>
     </div>
-    
 </div>
 
-<div class="row justify-content-center align-items-center g-2 m-3">
-    <div class="col-8">
-        <div class="card">
-            <h3 class="m-3">Movimientos de cta cte de clientes</h3>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-borderless table-dark align-middle">
-                        <thead class="table-light">
-                            <caption>
-                                Saldos de cuenta corriente
-                            </caption>
-                            <tr>
-                                <th>ID Cliente</th>
-                                <th>Cliente</th>
-                                <th>Total Debe</th>
-                                <th>Total Haber</th>
-                                <th>Saldo</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="table-group-divider">
-                            {% for saldo in saldos %}
-                                <tr class="table-light">
-                                    <td scope="row">{{ saldo.idcliente }}</td>
-                                    <td>{{ saldo.nombre }}</td>
-                                    <td>{{ "${:,.2f}".format(saldo.total_debe) }}</td>
-                                    <td>{{ "${:,.2f}".format(saldo.total_haber) }}</td>
-                                    <td>{{ "${:,.2f}".format(saldo.total_debe - saldo.total_haber) }}</td>
-                                    <td> <a class="btn btn-dark" href="{{ url_for('ctactecli.lst_cta_cte_cli', id=saldo.idcliente )}}"> Cta. cte. cliente </a></td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            
-                        </tfoot>
-                    </table>
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <!-- Filtro de fecha -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-info text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Filtro por Fecha</h5>
+                        <small class="text-white-50">Consulta movimientos desde una fecha</small>
+                    </div>
                 </div>
+                <div class="card-body">
+                    <form action="{{ url_for('ctactecli.movsctactecli') }}" method="GET" class="modern-form">
+                        <div class="form-floating mb-3">
+                            <input class="form-control form-control-modern" type="date" id="fecha" name="fecha" value="{{ desde }}" required placeholder="Fecha">
+                            <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Movimientos desde</label>
+                        </div>
+                        <button class="btn btn-info btn-modern w-100" type="submit">
+                            <i class="fas fa-search me-1"></i>Consultar Movimientos
+                        </button>
+                    </form>
+                </div>    
             </div>    
-        </div>          
-
-    </div>            
+        </div>
+        
+        <!-- Tabla de resultados -->
+        <div class="col-lg-8 col-md-6 mb-4">
+            <div class="card modern-card shadow-sm">
+                <div class="card-header modern-header bg-primary text-white d-flex align-items-center">
+                    <div class="header-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="card-title mb-0">Movimientos de Cuenta Corriente</h5>
+                        <small class="text-white-50">Listado de movimientos por cliente</small>
+                    </div>
+                    {% if saldos %}
+                        <span class="badge bg-light text-dark ms-2">{{ saldos|length }} registros</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if saldos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID</th>
+                                        <th><i class="fas fa-user me-1"></i>Cliente</th>
+                                        <th class="text-center"><i class="fas fa-arrow-up text-danger me-1"></i>Debe</th>
+                                        <th class="text-center"><i class="fas fa-arrow-down text-success me-1"></i>Haber</th>
+                                        <th class="text-center"><i class="fas fa-balance-scale me-1"></i>Saldo</th>
+                                        <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for saldo in saldos %}
+                                        {% set saldo_final = saldo.total_debe - saldo.total_haber %}
+                                        <tr>
+                                            <td class="text-center fw-bold">{{ saldo.idcliente }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                    <strong>{{ saldo.nombre }}</strong>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger fs-6">{{ "${:,.2f}".format(saldo.total_debe) }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success fs-6">{{ "${:,.2f}".format(saldo.total_haber) }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if saldo_final > 0 %}
+                                                    <span class="badge bg-warning text-dark fs-6">
+                                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ "${:,.2f}".format(saldo_final) }}
+                                                    </span>
+                                                {% elif saldo_final < 0 %}
+                                                    <span class="badge bg-info fs-6">
+                                                        <i class="fas fa-check-circle me-1"></i>{{ "${:,.2f}".format(saldo_final) }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark fs-6">$0.00</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <a class="btn btn-outline-primary btn-modern btn-sm" 
+                                                   href="{{ url_for('ctactecli.lst_cta_cte_cli', id=saldo.idcliente) }}" 
+                                                   title="Ver cuenta corriente">
+                                                    <i class="fas fa-eye me-1"></i>Ver Detalle
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No se encontraron movimientos</h5>
+                            <p class="text-muted">Selecciona una fecha para consultar los movimientos</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

@@ -1,56 +1,159 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="m-3">
-    <h3>Alícuotas de cuotas</h3>
+<!-- Header Section -->
+<div class="page-header mb-4">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('entidades.entidades') }}">Entidades</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Alícuotas</li>
+                    </ol>
+                </nav>
+                <h1 class="page-title">
+                    <i class="fas fa-percentage me-3"></i>
+                    Alícuotas de Cuotas
+                </h1>
+                <p class="page-subtitle">Configuración de coeficientes para {{ entidad.entidad }}</p>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="m-2">
+
+<div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="modern-card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="section-title">
+                                <i class="fas fa-calculator me-2"></i>
+                                Gestión de Alícuotas
+                            </h5>
+                            <p class="section-subtitle mb-0">Configure los coeficientes por cantidad de cuotas</p>
+                        </div>
+                        <div class="col-auto">
+                            <span class="entity-badge">
+                                <i class="fas fa-building me-1"></i>
+                                {{ entidad.entidad }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
-                    <h3>Ingreso de alícuoptas para </h3>
-                    <form action="{{ url_for('entidades.alicuotas', id=entidad.id) }}" method="post">
-                        <div class="row">
-                            <div class="mb-3 col-2"> 
-                                <label for="id"># Id</label>
-                                <input class="form-control" type="text" name="id" id="id" readonly value="{{ entidad.id }}">
-                            </div>    
-                            <div class="mb-3 col-8"> 
-                                <label for="entidad">Entidad</label>
-                                <input class="form-control" type="text" name="entidad" id="entidad" placeholder="Ingrese el nombre de la entidad" readonly value="{{ entidad.entidad }}">
+                    <form action="{{ url_for('entidades.alicuotas', id=entidad.id) }}" method="post" class="modern-form">
+                        <!-- Entity Info Row -->
+                        <div class="entity-info-section mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        <input class="form-control" type="text" name="id" id="id" readonly value="{{ entidad.id }}" placeholder="ID">
+                                        <label for="id"><i class="fas fa-hashtag me-1"></i>ID</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-floating">
+                                        <input class="form-control" type="text" name="entidad" id="entidad_name" readonly value="{{ entidad.entidad }}" placeholder="Entidad">
+                                        <label for="entidad_name"><i class="fas fa-building me-1"></i>Entidad</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="mb-3 col-4">
-                                
-                                <a href="#" class="btn btn-secundario" id="agregarAlicuota">Agregar alícuota</a>
-                            </div>
+
+                        <!-- Add Button Section -->
+                        <div class="action-section mb-4">
+                            <button type="button" class="btn btn-success btn-modern" id="agregarAlicuota">
+                                <i class="fas fa-plus me-2"></i>
+                                Agregar Alícuota
+                            </button>
                         </div>    
 
-                        <div class="row">
-                            
+                        <!-- Aliquots Table Section -->
+                        <div class="table-section">
                             <div class="table-responsive">
-                                <table class="table table-dark" id="tabla-alicuotas" name="tabla-alicuotas">
-                                    <thead>
+                                <table class="table table-modern table-hover" id="tabla-alicuotas" name="tabla-alicuotas">
+                                    <thead class="table-header">
                                         <tr>
-                                            <th scope="col"># Id</th>
-                                            <th scope="col">Cuotas</th>
-                                            <th scope="col">Alícuota</th>
-                                            <th scope="col">Días acred</th>
-                                            <th scope="col">Acciones</th>
+                                            <th scope="col" class="text-center" width="80">
+                                                <i class="fas fa-hashtag me-1"></i>ID
+                                            </th>
+                                            <th scope="col" width="150">
+                                                <i class="fas fa-list-ol me-1"></i>Cuotas
+                                            </th>
+                                            <th scope="col" width="200">
+                                                <i class="fas fa-percentage me-1"></i>Coeficiente
+                                            </th>
+                                            <th scope="col" width="180">
+                                                <i class="fas fa-calendar-day me-1"></i>Días Acreditación
+                                            </th>
+                                            <th scope="col" class="text-center" width="120">
+                                                <i class="fas fa-cogs me-1"></i>Acciones
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for alicuota in financiamiento %}
-                                            <tr class="table table-light">
-                                                <td scope="row">{{ alicuota.id }}</td>
-                                                <td><input type="text" class="form-control alicuota-cuota" name="items[{{loop.index}}][cuota]" required value="{{ alicuota.cuotas }}" onfocus="this.select()"></td>
-                                                <td><input type="number" class="form-control alicuota-alicuota" name="items[{{loop.index}}][alicuota]" step="0.001" required value="{{'{0:0.4f}'.format(alicuota.coeficiente)}}" onfocus="this.select()"></td>
-                                                <td><input type="number" class="form-control alicuota-dias" name="items[{{loop.index}}][dias]" required value="{{ alicuota.acreditacion_dias }}" onfocus="this.select()"></td>
-                                                <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
+                                            <tr class="table-row aliquot-row">
+                                                <td class="text-center fw-medium">{{ alicuota.id }}</td>
+                                                <td>
+                                                    <div class="form-floating">
+                                                        <input type="text" class="form-control form-control-sm alicuota-cuota" 
+                                                               name="items[{{loop.index}}][cuota]" 
+                                                               id="cuota_{{loop.index}}"
+                                                               required 
+                                                               value="{{ alicuota.cuotas }}" 
+                                                               onfocus="this.select()"
+                                                               placeholder="Cuotas">
+                                                        <label for="cuota_{{loop.index}}">Cantidad</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-floating">
+                                                        <input type="number" class="form-control form-control-sm alicuota-alicuota" 
+                                                               name="items[{{loop.index}}][alicuota]" 
+                                                               id="coef_{{loop.index}}"
+                                                               step="0.0001" 
+                                                               required 
+                                                               value="{{'{0:0.4f}'.format(alicuota.coeficiente)}}" 
+                                                               onfocus="this.select()"
+                                                               placeholder="Coeficiente">
+                                                        <label for="coef_{{loop.index}}">Factor</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-floating">
+                                                        <input type="number" class="form-control form-control-sm alicuota-dias" 
+                                                               name="items[{{loop.index}}][dias]" 
+                                                               id="dias_{{loop.index}}"
+                                                               required 
+                                                               value="{{ alicuota.acreditacion_dias }}" 
+                                                               onfocus="this.select()"
+                                                               placeholder="Días">
+                                                        <label for="dias_{{loop.index}}">Días</label>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar alícuota">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        {% endfor %}    
+                                        {% endfor %}
+                                        {% if not financiamiento %}
+                                            <tr class="empty-row">
+                                                <td colspan="5" class="text-center py-4">
+                                                    <div class="empty-state">
+                                                        <i class="fas fa-calculator fa-2x text-muted mb-3"></i>
+                                                        <p class="text-muted mb-0">No hay alícuotas configuradas</p>
+                                                        <small class="text-muted">Haga clic en "Agregar Alícuota" para comenzar</small>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
                                         <script>
                                             contadorFilas = {{ financiamiento|length }};
                                         </script>
@@ -58,43 +161,249 @@
                                 </table>
                             </div>
                         </div>
-                        <button type="submit" class="mt-3 mb-3 btn btn-primario">Guardar alícuotas</button>
+
+                        <!-- Save Button -->
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary btn-modern btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar Alícuotas
+                            </button>
+                        </div>
                     </form>
-                </div>    
-            </div>   
-        </div>    
-    </div>      
+                </div>
+            </div>
+        </div>
+    </div>
 </div>    
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar nueva fila
+    let contadorFilas = {{ financiamiento|length }} || 0;
+    const tablaItems = document.querySelector("#tabla-alicuotas tbody");
+    const emptyRow = document.querySelector('.empty-row');
 
-// Agregar nueva fila
-let contadorFilas = 0;
-const tablaItems = document.querySelector("#tabla-alicuotas tbody");
+    document.getElementById("agregarAlicuota").addEventListener("click", () => {
+        console.log('📝 Agregando nueva alícuota, contador:', contadorFilas);
+        
+        // Ocultar fila vacía si existe
+        if (emptyRow) {
+            emptyRow.style.display = 'none';
+        }
+        
+        const nuevaFila = `
+            <tr class="table-row aliquot-row animate-fade-in">
+                <td class="text-center fw-medium">Nuevo</td>
+                <td>
+                    <div class="form-floating">
+                        <input type="text" class="form-control form-control-sm alicuota-cuota" 
+                               name="items[${contadorFilas}][cuota]" 
+                               id="cuota_${contadorFilas}"
+                               required 
+                               onfocus="this.select()"
+                               placeholder="Cuotas">
+                        <label for="cuota_${contadorFilas}">Cantidad</label>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-sm alicuota-alicuota" 
+                               name="items[${contadorFilas}][alicuota]" 
+                               id="coef_${contadorFilas}"
+                               step="0.0001" 
+                               required 
+                               value="1.0000"
+                               onfocus="this.select()"
+                               placeholder="Coeficiente">
+                        <label for="coef_${contadorFilas}">Factor</label>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-floating">
+                        <input type="number" class="form-control form-control-sm alicuota-dias" 
+                               name="items[${contadorFilas}][dias]" 
+                               id="dias_${contadorFilas}"
+                               required 
+                               value="0"
+                               onfocus="this.select()"
+                               placeholder="Días">
+                        <label for="dias_${contadorFilas}">Días</label>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar" title="Eliminar alícuota">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+        
+        tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+        contadorFilas++;
+        
+        // Enfocar el nuevo input de cuotas y seleccionar el texto
+        setTimeout(() => {
+            const nuevoInputCuota = tablaItems.querySelector(`tr:last-child .alicuota-cuota`);
+            if (nuevoInputCuota) {
+                nuevoInputCuota.focus();
+                nuevoInputCuota.select();
+            }
+        }, 100);
+        
+        console.log('✅ Nueva alícuota agregada, contador actualizado a:', contadorFilas);
+    });
 
-document.getElementById("agregarAlicuota").addEventListener("click", () => {
-  const nuevaFila = `
-                <tr class="items">
-                    <td class="id-alicuota" name="items[${contadorFilas}][idalicuota]"> ${contadorFilas} </td>
-                    <td><input type="text" class="form-control alicuota-cuota" name="items[${contadorFilas}][cuota]" required onfocus="this.select()"></td>
-                    <td><input type="number" class="form-control alicuota-alicuota" name="items[${contadorFilas}][alicuota]" step="0.001" onfocus="this.select()"></td>
-                    <td><input type="number" class="form-control alicuota-dias" name="items[${contadorFilas}][dias]" required onfocus="this.select()"></td> 
-                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
-                </tr>`;
-  tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
-  contadorFilas++;
-  // Enfocar el nuevo input de código
-  const nuevoInputCuota = tablaItems.querySelector(`tr:last-child .alicuota-cuota`);
-  nuevoInputCuota.focus();
+    // Eliminar fila con confirmación
+    tablaItems.addEventListener("click", (event) => {
+        if (event.target.classList.contains("btn-eliminar") || event.target.closest('.btn-eliminar')) {
+            const button = event.target.closest('.btn-eliminar');
+            const row = button.closest("tr");
+            
+            // Confirmación antes de eliminar
+            if (confirm('¿Está seguro de eliminar esta alícuota?')) {
+                row.style.opacity = '0.5';
+                row.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    row.remove();
+                    
+                    // Mostrar fila vacía si no quedan alícuotas
+                    const remainingRows = tablaItems.querySelectorAll('.aliquot-row');
+                    if (remainingRows.length === 0 && emptyRow) {
+                        emptyRow.style.display = '';
+                    }
+                    
+                    console.log('🗑️ Alícuota eliminada');
+                }, 200);
+            }
+        }
+    });
+
+    // Validación de formulario mejorada
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const cuotasInputs = document.querySelectorAll('.alicuota-cuota');
+            const coeficienteInputs = document.querySelectorAll('.alicuota-alicuota');
+            const diasInputs = document.querySelectorAll('.alicuota-dias');
+            
+            let hasErrors = false;
+            
+            // Validar que no haya cuotas duplicadas
+            const cuotasValues = [];
+            cuotasInputs.forEach((input, index) => {
+                const value = input.value.trim();
+                if (value && cuotasValues.includes(value)) {
+                    alert(`Error: La cantidad de cuotas "${value}" está duplicada.`);
+                    input.focus();
+                    hasErrors = true;
+                    return false;
+                }
+                if (value) cuotasValues.push(value);
+            });
+            
+            // Validar coeficientes
+            coeficienteInputs.forEach((input) => {
+                const value = parseFloat(input.value);
+                if (value <= 0) {
+                    alert('Error: Los coeficientes deben ser mayores a 0.');
+                    input.focus();
+                    hasErrors = true;
+                    return false;
+                }
+            });
+            
+            if (hasErrors) {
+                event.preventDefault();
+                return false;
+            }
+            
+            console.log('📊 Formulario validado correctamente, enviando...');
+        });
+    }
+
+    console.log('🔧 JavaScript de alícuotas inicializado correctamente');
 });
-
-// Eliminar fila
-tablaItems.addEventListener("click", (itemDiv) => {
-  if (itemDiv.target.classList.contains("btn-eliminar")) {
-    itemDiv.target.closest("tr").remove();
-  }
-});
-
-
 </script>
+
+<style>
+/* Estilos específicos para la página de alícuotas */
+.entity-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.entity-info-section {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.action-section {
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-section {
+    min-height: 300px;
+}
+
+.aliquot-row {
+    transition: all 0.2s ease;
+}
+
+.aliquot-row:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+    transform: translateY(-1px);
+}
+
+.form-floating > .form-control-sm {
+    padding-top: 1.2rem;
+    padding-bottom: 0.4rem;
+}
+
+.form-floating > .form-control-sm ~ label {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-state {
+    padding: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .entity-info-section {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .form-floating > .form-control-sm {
+        font-size: 0.875rem;
+    }
+}
+</style>
 {% endblock %}

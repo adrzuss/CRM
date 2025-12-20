@@ -14,6 +14,27 @@ document.getElementById('idiva').addEventListener('change', function(e) {
     calcularPrecio();
 });
 
+document.getElementById('con_talles').addEventListener('change', function(e) {
+    const con_talles = document.getElementById('con_talles').checked;
+    const cardTalles = document.querySelector('.card-talles');
+    if (con_talles) {
+        cardTalles.style.display = 'block';
+    } else {
+        cardTalles.style.display = 'none';
+    }
+});
+
+document.getElementById('con_colores').addEventListener('change', function(e) {
+    const con_colores = document.getElementById('con_colores').checked;
+    const cardColores = document.querySelector('.card-colores');
+    if (con_colores) {
+        cardColores.style.display = 'block';
+    } else {
+        cardColores.style.display = 'none';
+    }
+});
+
+
 async function calcularPrecio() {
     const costo = parseFloat(document.getElementById('costo').value);
     const idiva = document.getElementById('idiva').value;
@@ -67,3 +88,23 @@ async function checkArt(e){
 
 let form_articulos = document.getElementById('articulo_form');
 form_articulos.addEventListener('submit', checkArt);
+
+
+
+    const con_talles = document.getElementById('con_talles').checked;
+    const cardTalles = document.querySelector('.card-talles');
+    if (con_talles) {
+        cardTalles.style.display = 'block';
+    } else {
+        cardTalles.style.display = 'none';
+    }
+
+
+
+    const con_colores = document.getElementById('con_colores').checked;
+    const cardColores = document.querySelector('.card-colores');
+    if (con_colores) {
+        cardColores.style.display = 'block';
+    } else {
+        cardColores.style.display = 'none';
+    }

@@ -163,32 +163,15 @@
     }
 
     function mostrarModalSeleccionClientes(clientes) {
-    // Crear el contenido del modal con las opciones de cliente
-    const tituloModal = document.getElementById("clienteModalLabel");
-    tituloModal.textContent = "Seleccione un Cliente";
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = "";
-    const listaClientes = document.createElement("ul");
-    listaClientes.classList.add("list-group");
-    modalContent.appendChild(listaClientes);
-
-    clientes.forEach((cliente) => {
-        const clienteOption = document.createElement("li");
-        clienteOption.classList.add("cliente-option");
-        clienteOption.classList.add("list-group-item");
-        clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
-        clienteOption.onclick = () => {
-        asignarCliente(cliente);
-        $("#clienteModal").modal("hide");
-        // Enfocar el nuevo input de código
-        const clienteInput = document.getElementById("idcliente");
-        clienteInput.focus();
+        const callback = (cliente) => {
+            asignarCliente(cliente);
+            // Enfocar el nuevo input de código
+            const clienteInput = document.getElementById("idcliente");
+            if (clienteInput) clienteInput.focus();
         };
-        listaClientes.appendChild(clienteOption);
-    });
-
-    // Mostrar el modal
-    $("#clienteModal").modal("show");
+        
+        // Mostrar modal con los datos
+        window.universalSearchModal.show('clientes', clientes || [], callback);
     }
 
 async function cuotasPendientes(idcliente) {
@@ -287,14 +270,28 @@ function calcularCuota() {
     document.querySelectorAll('input[name="cuotas"]:checked').forEach((checkbox) => {
         total += parseFloat(checkbox.getAttribute('data-monto'));
     });
-    // Muestra el total donde quieras, por ejemplo en un elemento con id="total_cuotas"
+    
+    console.log('💵 [COBRANZAS] calcularCuota() - Total calculado:', total);
+    
+    // Actualizar todos los elementos de total
     document.getElementById("total_cuotas").textContent = "$" + total.toFixed(2);
     document.getElementById("edt_total_cuotas").value = total.toFixed(2);
     document.getElementById("total_factura").textContent = total.toFixed(2);
+    
+    console.log('✅ [COBRANZAS] Todos los elementos de total actualizados:', total.toFixed(2));
+    
+    // Si la modal está abierta, actualizar el total de la modal universal
+    const modal = document.getElementById('transaccionesModal');
+    if (modal && modal.classList.contains('show') && window.cargarDatosModal) {
+        console.log('🔄 [COBRANZAS] Modal abierta, actualizando total universal...');
+        window.cargarDatosModal(total);
+    }
 }
 
 
 function abrirModalPagos(){
+  console.log('💵 [COBRANZAS] abrirModalPagos() iniciando...');
+  
   //Comprobamos que haya cuotas seleccionadas
   const total = document.getElementById("edt_total_cuotas").value;
   if (total === "0.00") {
@@ -302,27 +299,73 @@ function abrirModalPagos(){
       return;
   }
   
-  // Enfocar el primer campo de pago
+  console.log('💵 [COBRANZAS] Total cuotas seleccionadas:', total);
+  
+  // Verificar que la función universal esté disponible
+  if (window.cargarDatosModal) {
+      console.log('✅ [COBRANZAS] cargarDatosModal está disponible');
+      window.cargarDatosModal(parseFloat(total) || 0);
+  } else {
+      console.error('❌ [COBRANZAS] cargarDatosModal no está disponible');
+      console.log('🔍 [COBRANZAS] window.cargarDatosModal:', typeof window.cargarDatosModal);
+  }
+  
+  // Abrir modal universal
+  $("#transaccionesModal").modal("show");
 
-  $("#pagosModal").modal("show");
-
-  // Cuando el modal se haya mostrado, enfocar el input
-    document.getElementById('pagosModal').addEventListener('shown.bs.modal', function () {
-      document.getElementById("efectivo").focus();
-    }, { once: true }); // once=true para que no se dispare más de una vez
+  // Cuando el modal se haya mostrado, hacer debug y enfocar
+  document.getElementById('transaccionesModal').addEventListener('shown.bs.modal', function () {
+    console.log('📋 [COBRANZAS] Modal mostrado, verificando campos...');
+    
+    // Verificar campos de pago
+    const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion'];
+    paymentFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        console.log(`🔍 [COBRANZAS] Campo ${fieldId}:`, field ? 'EXISTE' : 'NO EXISTE', field?.value || 'sin valor');
+    });
+    
+    // Verificar elemento total
+    const totalFacElement = document.getElementById('modal_total_factura');
+    console.log('💰 [COBRANZAS] modal_total_factura:', totalFacElement ? 'EXISTE' : 'NO EXISTE', totalFacElement?.textContent || 'sin valor');
+    
+    // Enfocar primer input
+    const primerInput = document.querySelector('#transaccionesModal input:not([readonly]):not([type="hidden"])');
+    if (primerInput) {
+        primerInput.focus();
+        console.log('👆 [COBRANZAS] Enfocando:', primerInput.id);
+    }
+    
+    // Agregar funciones de test para verificar funcionamiento
+    window.testCambiarEfectivoCobranza = function(valor) {
+        console.log('🧪 [TEST COBRANZA] Cambiando efectivo a:', valor);
+        const efectivo = document.getElementById('efectivo');
+        if (efectivo) {
+            efectivo.value = valor;
+            efectivo.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('🧪 [TEST COBRANZA] Evento disparado');
+        }
+    };
+    
+    console.log('🧪 [COBRANZAS] Función de test disponible: testCambiarEfectivoCobranza(1000)');
+    
+  }, { once: true });
 
 }
 
 
 async function cobrarCuotas() {
+    console.log('💵 [COBRANZAS] 🎬 INICIANDO cobrarCuotas()');
+    
     //event.preventDefault();
     if (checkPagos() === false) {
+        console.log('💵 [COBRANZAS] ❌ checkPagos() falló');
         alert("El monto del pago es menor que el total de cuotas.");
         event.preventDefault();
         return;
     }
     else 
     {
+        console.log('💵 [COBRANZAS] ✅ checkPagos() pasó correctamente');
         const checkboxes = document.querySelectorAll('input[name="cuotas"]:checked');
         if (checkboxes.length === 0) {
             alert("Por favor, seleccione al menos una cuota para cobrar.");
@@ -346,6 +389,9 @@ async function cobrarCuotas() {
             //console.log("Cuotas seleccionadas:", cuotasSeleccionadas);
             //alert("Cuotas seleccionadas para cobro: " + cuotasSeleccionadas.map(c => c.numero).join(", "));
             try{
+                console.log('💵 [COBRANZAS] 🚀 Enviando petición cobrar_cuotas...');
+                console.log('💵 [COBRANZAS] 📦 Datos enviados:', { cuotas: cuotasSeleccionadas, idCliente: idCliente, totalCuotas: totalCuotas, efectivo: efectivo, tarjeta: tarjeta, entidad: entidad });
+                
                 const response = await fetch(`${BASE_URL}/creditos/cobrar_cuotas`, {
                     method: 'POST',
                     headers: {
@@ -353,77 +399,150 @@ async function cobrarCuotas() {
                     },
                     body: JSON.stringify({ cuotas: cuotasSeleccionadas, idCliente: idCliente, totalCuotas: totalCuotas, efectivo: efectivo, tarjeta: tarjeta, entidad: entidad })
                 })
-                const data = await response.json();
+                
+                console.log('💵 [COBRANZAS] 📡 Respuesta HTTP status:', response.status);
+                console.log('💵 [COBRANZAS] 📡 Response headers:', response.headers.get('content-type'));
+                console.log('💵 [COBRANZAS] 📡 Response OK:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('💵 [COBRANZAS] 📜 Respuesta RAW del servidor:', responseText.substring(0, 500));
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('💵 [COBRANZAS] 📊 JSON parseado exitosamente:', data);
+                } catch (parseError) {
+                    console.error('💵 [COBRANZAS] ❌ Error parseando JSON:', parseError);
+                    console.error('💵 [COBRANZAS] 📜 Respuesta que no es JSON:', responseText);
+                    
+                    // Si el servidor devuelve HTML pero la operación fue exitosa
+                    if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html>')) {
+                        console.log('💵 [COBRANZAS] 🌐 El servidor devolvió HTML - probablemente exitoso');
+                        alert('✅ ¡Cobro procesado exitosamente! (El servidor devolvió HTML en lugar de JSON)');
+                        $("#transaccionesModal").modal("hide");
+                        cuotasPendientes(idCliente);
+                        return;
+                    }
+                    
+                    throw new Error('El servidor devolvió una respuesta que no es JSON válido');
+                }
         
-                if (data.success) {
-                    mostrarMensaje(data.message, "success");
-                    // Opcional: limpiar el formulario o actualizar la lista de cuotas
-                    $("#pagosModal").modal("hide");
+                console.log('💵 [COBRANZAS] 🔍 Verificando campo success:', data.success, typeof data.success);
+                console.log('💵 [COBRANZAS] 🔍 Mensaje del servidor (message):', data.message);
+                console.log('💵 [COBRANZAS] 🔍 Mensaje del servidor (mensaje):', data.mensaje);
+                console.log('💵 [COBRANZAS] 🔍 Estructura completa de data:', Object.keys(data));
+                
+                // Obtener mensaje del servidor (puede ser 'message' o 'mensaje')
+                const serverMessage = data.message || data.mensaje || '';
+                
+                if (data.success === true || data.success === 'true' || data.success === 1) {
+                    console.log('💵 [COBRANZAS] ✅ Cobro procesado exitosamente');
+                    
+                    // Mostrar alert de éxito
+                    alert(`✅ ¡Éxito! ${serverMessage || 'Cuotas cobradas correctamente'}`);
+                    
+                    // También mostrar mensaje en la página
+                    mostrarMensaje(serverMessage || "Cuotas cobradas correctamente", "success");
+                    
+                    // Cerrar modal y actualizar lista
+                    $("#transaccionesModal").modal("hide");
                     cuotasPendientes(idCliente); // Actualizar la lista de cuotas
+                    
+
                 } else {
-                    mostrarMensaje(data.message || "Error al procesar el pago", "error");
+                    console.error('💵 [COBRANZAS] ❌ Error en cobro - success es falso');
+                    console.error('💵 [COBRANZAS] ❌ Datos completos:', data);
+                    
+                    // Mostrar alert de error
+                    alert(`❌ Error: ${serverMessage || 'Error al procesar el pago'}`);
+                    
+                    // También mostrar mensaje en la página
+                    mostrarMensaje(serverMessage || "Error al procesar el pago", "error");
                 }
             } catch (error) {
+                console.error("💵 [COBRANZAS] 💥 EXCEPCIÓN CAPTURADA:");
+                console.error("💵 [COBRANZAS] 💥 Error message:", error.message);
+                console.error("💵 [COBRANZAS] 💥 Error stack:", error.stack);
+                console.error("💵 [COBRANZAS] 💥 Error completo:", error);
+                
+                // Mostrar alert de error de conexión
+                alert(`❌ Error de conexión: No se pudo procesar el cobro. ${error.message}`);
+                
+                // También mostrar mensaje en la página
                 mostrarMensaje("Error al procesar la operación", "error");
-                console.error("Error:", error);
             }
                 
             return;
         }    
-    }    
+    }
+    
+    console.log('💵 [COBRANZAS] 🎭 FINALIZANDO cobrarCuotas()');    
 }    
 
-document.getElementById("efectivo").addEventListener("blur", function (event) {
-  calcSaldo();
-});
+// Event listeners movidos a modal-transacciones-universal.js
+// document.getElementById("efectivo").addEventListener("blur", function (event) {
+//   calcSaldo();
+// });
 
-document.getElementById("tarjeta").addEventListener("blur", function (event) {
-  calcSaldo();
-});
+// document.getElementById("tarjeta").addEventListener("blur", function (event) {
+//   calcSaldo();
+// });
 
-document.getElementById("ctacte").addEventListener("blur", function (event) {
-  calcSaldo();
-});
+// document.getElementById("ctacte").addEventListener("blur", function (event) {
+//   calcSaldo();
+// });
 
-document.getElementById("bonificacion").addEventListener("blur", function (event) {
-  calcSaldo();
-});
+// document.getElementById("bonificacion").addEventListener("blur", function (event) {
+//   calcSaldo();
+// });
 
 
-function calcSaldo() {
-  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
-  const efectivo = parseFloat(document.getElementById("efectivo").value);
-  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
-  const ctacte = parseFloat(document.getElementById("ctacte").value);
-  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
-  if (isNaN(efectivo)) {
-    efectivo = 0;
-  }
-  if (isNaN(tarjeta)) {
-    tarjeta = 0;
-  }
-  else{
-    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
-    tarjeta = tarjeta / coeficiente;
-  }
-  if (isNaN(ctacte)) {
-    ctacte = 0;
-  }
-  if (isNaN(bonificacion)) {
-    bonificacion = 0;
-  }
-  
-  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion)).toFixed(2);
-  let lblSaldo = document.getElementById("saldo_factura");
-  lblSaldo.textContent = diferencia;
-  if (diferencia > 0) {
-    lblSaldo.className = "negativo";
-  } else if (diferencia === 0) {
-    lblSaldo.className = "neutro";
-  } else {
-    lblSaldo.className = "positivo";
-  }
-}
+// Función calcSaldo() movida a modal-transacciones-universal.js
+// para usar la implementación universal que funciona correctamente
+// 
+// function calcSaldo() {
+//   const totalFac = parseFloat(document.getElementById("total_factura").textContent);
+//   const efectivo = parseFloat(document.getElementById("efectivo").value);
+//   let tarjeta = parseFloat(document.getElementById("tarjeta").value);
+//   const ctacte = parseFloat(document.getElementById("ctacte").value);
+//   const bonificacion = parseFloat(document.getElementById("bonificacion").value);
+//   if (isNaN(efectivo)) {
+//     efectivo = 0;
+//   }
+//   if (isNaN(tarjeta)) {
+//     tarjeta = 0;
+//   }
+//   else{
+//     const coeficiente = parseFloat(document.getElementById("coeficiente").value);
+//     tarjeta = tarjeta / coeficiente;
+//   }
+//   if (isNaN(ctacte)) {
+//     ctacte = 0;
+//   }
+//   if (isNaN(bonificacion)) {
+//     bonificacion = 0;
+//   }
+//   
+//   let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion)).toFixed(2);
+//   
+//   // Actualizar el contenido del saldo
+//   let lblSaldo = document.getElementById("saldo_factura");
+//   lblSaldo.textContent = diferencia;
+//   
+//   // Actualizar la clase del contenedor
+//   const saldoContainer = document.getElementById("saldo-container");
+//   if (diferencia > 0) {
+//     saldoContainer.className = "total-amount m-3 negativo";
+//   } else if (diferencia === 0) {
+//     saldoContainer.className = "total-amount m-3 neutro";
+//   } else {
+//     saldoContainer.className = "total-amount m-3 positivo";
+//   }
+// }
 
 
 function checkPagos() {
@@ -434,17 +553,21 @@ function checkPagos() {
         return false;
     }
     else {
-        let efectivo = parseFloat(document.getElementById("efectivo").value);
-        let tarjeta = parseFloat(document.getElementById("tarjeta").value);
-        if (efectivo === 0 && tarjeta === 0) {
+        let efectivo = parseFloat(document.getElementById("efectivo").value) || 0;
+        let tarjeta = parseFloat(document.getElementById("tarjeta").value) || 0;
+        let ctacte = parseFloat(document.getElementById("ctacte").value) || 0;
+        let bonificacion = parseFloat(document.getElementById("bonificacion").value) || 0;
+        
+        const totalPagos = efectivo + tarjeta + ctacte + bonificacion;
+        
+        if (totalPagos === 0) {
             alert("Por favor, ingrese un monto válido para pagar.");
             return false;
         }
         else {
-            console.log("Total Cuotas: ", totalCuotas);
-            console.log("Efectivo: ", efectivo);    
-            console.log("Tarjeta: ", tarjeta);
-            return totalCuotas <= (efectivo + tarjeta);
+            console.log("💵 [COBRANZAS] Total Cuotas: ", totalCuotas);
+            console.log("💵 [COBRANZAS] Total Pagos: ", totalPagos, {efectivo, tarjeta, ctacte, bonificacion});
+            return totalCuotas <= totalPagos;
         }
     }
 }

@@ -75,7 +75,7 @@ def procesar_articulo(form, idarticulo):
             
 def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, length, order_column, order_dir):            
      # Mapear el índice de la columna al nombre de la columna en la base de datos
-    columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'es_compuesto']
+    columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'detalle_articulo', 'color', 'es_compuesto']
     order_by = columns[order_column] if order_column < len(columns) else 'codigo'
     
     # Consulta base
@@ -84,6 +84,8 @@ def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, 
         Articulo.detalle,
         Articulo.codigo,
         Articulo.costo,
+        Articulo.con_talles.label('detalle_articulo'),
+        Articulo.con_colores.label('color'),
         Articulo.es_compuesto,
         Articulo.imagen,
         Articulo.baja,
@@ -100,7 +102,6 @@ def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, 
         if search_value[0:2] == '//':
             if len(search_value) > 2:
                 codBusqueda = search_value[2:]
-                print(f'Codigo a buscar: {codBusqueda}')
                 if verBaja == 1:
                     query = query.filter(and_(Articulo.codigo.ilike(f"{codBusqueda}%"), Articulo.baja >= date(1900, 1, 1)))
                 else:
@@ -135,6 +136,8 @@ def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, 
             'codigo': articulo.codigo,
             'detalle': articulo.detalle,
             'costo': articulo.costo,
+            'detalle_articulo': 'Si' if articulo.detalle_articulo else 'No',
+            'color': 'Si' if articulo.color else 'No',
             'es_compuesto': 'Si' if articulo.es_compuesto else 'No',
             'baja': 'Si' if articulo.baja > date(1900, 1, 1) else 'No',
             'imagen': articulo.imagen,
@@ -616,7 +619,23 @@ def procesar_items_balance(form, idbalance, id_sucursal):
                 precio_unitario = precio.precio if precio else Decimal(0)
                 precio_total = precio_unitario * cantidad
 
-                nuevo_item = ItemBalance(idbalance=idbalance, idarticulo=articulo.id, cantidad=cantidad, precio_unitario=precio_unitario, precio_total=precio_total)
+                # Obtener color y detalle si están presentes
+                id_color = form.get(f'items[{index}][id_color]')
+                id_detalle = form.get(f'items[{index}][id_detalle]')
+                
+                # Convertir a int si tienen valor, sino None
+                id_color = int(id_color) if id_color and id_color != '' else None
+                id_detalle = int(id_detalle) if id_detalle and id_detalle != '' else None
+                
+                nuevo_item = ItemBalance(
+                    idbalance=idbalance, 
+                    idarticulo=articulo.id, 
+                    cantidad=cantidad, 
+                    precio_unitario=precio_unitario, 
+                    precio_total=precio_total,
+                    id_color=id_color,
+                    id_detalle=id_detalle
+                )
                 db.session.add(nuevo_item)
                 # Actualizar el stock
                 actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
@@ -708,7 +727,22 @@ def procesar_remito_a_sucursal(form):
             codigo = value
             cantidad = Decimal(request.form[f'items[{index}][cantidad]'])
             articulo = db.session.query(Articulo.id, Articulo.costo).filter(Articulo.codigo == codigo).first()
-            nuevo_item = ItemRemitoSucs(id=index, idremito=idremito, idarticulo=articulo.id, cantidad=cantidad)
+            # Obtener color y detalle si están presentes
+            id_color = items.get(f'items[{index}][id_color]')
+            id_detalle = items.get(f'items[{index}][id_detalle]')
+            
+            # Convertir a int si tienen valor, sino None
+            id_color = int(id_color) if id_color and id_color != '' else None
+            id_detalle = int(id_detalle) if id_detalle and id_detalle != '' else None
+            
+            nuevo_item = ItemRemitoSucs(
+                id=index, 
+                idremito=idremito, 
+                idarticulo=articulo.id, 
+                cantidad=cantidad,
+                id_color=id_color,
+                id_detalle=id_detalle
+            )
             db.session.add(nuevo_item)
             # Actualizar la tabla de stocks
             actualizarStock(idstock, articulo.id, -cantidad, session['id_sucursal'])

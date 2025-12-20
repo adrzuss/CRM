@@ -67,85 +67,18 @@
 
                 <div class="row">
                     <h3>Total op: $<span id="total_factura">0.00</span></h3>
-                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
+                    <h3 id="saldo-container" class="total-amount">Saldo: $<span id="saldo_factura">0.00</span></h3>
                 </div>
 
-                <div class="card">
-                    <h4 class="m-3">Formas de pago</h4>
-                    <div class="card-title">
-                        <div class="row justify-content-md-center">
-                            <div class="col-2 mt-3 ml-3">
-                                <label for="efectivo">Efectivo</label>
-                                <input type="number" name="efectivo" id="efectivo" class="form-control" value="0" onfocus="this.select()">
-                            </div>
-                            <div class="col-9 mt-3">
-                                <div class="card">
-                                    <div class="card-title">
-                                        <h5 class="m-3">Cheques</h5>
-                                        <div class="row">
-                                            <div class="col-md-2 ml-3">
-                                                <label for="banco">Banco</label>
-                                                <select class="form-select" name="banco" id="banco">
-                                                    {% for banco in bancos %}
-                                                        <option value="{{ banco.id }}">{{ banco.nombre }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>    
-                                            <div class="col-md-1 ml-3">
-                                                <label for="cantCheques">Cant.</label>
-                                                <input type="number" name="cantCheques" id="cantCheques" class="form-control" value="0" onfocus="this.select()">
-                                            </div>
-                                            <div class="col-md-2 ml-3">
-                                                <label for="vtoCheque">Vto. 1° cheque</label>
-                                                <input type="date" name="vtoCheque" id="vtoCheque" class="form-control" value="0" onfocus="this.select()">
-                                            </div>
-                                            <div class="col-md-2 ml-3">
-                                                <label for="diasCheques">Dias entre cheques</label>
-                                                <input type="number" name="diasCheques" id="diasCheques" class="form-control" value="1" min="1" max="365" onfocus="this.select()">
-                                            </div>
-                                            <div class="col-md-3 ml-3">
-                                                <label for="importeCheques">Importe</label>
-                                                <input type="number" name="importeCheques" id="importeCheques" class="form-control" value="0" step="0.01" onfocus="this.select()">
-                                            </div>
-                                        </div>    
-                                        <div class="row">
-                                            <div class="col-md-1 ml-3 mt-3">
-                                                <a class="btn btn-primario" onclick="generarCheque()">Generar</a>
-                                            </div>
-                                            <div class="col-md-1 ml-1 mt-3">
-                                                <a class="btn btn-peligro" onclick="limpiarCheque()">Eliminar</a>
-                                            </div>
-                                        </div>    
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-dark">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">#Id</th>
-                                                        <th scope="col">N° cheque</th>
-                                                        <th scope="col">Vto.</th>
-                                                        <th scope="col">Importe</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="table-group-divider table-light" id="cheques"></tbody>
-                                                    
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                    </div>
-                                    <div class="card-footer">
-                                        <h3>Total: $<span id="totalCheques">0.00</span></h3>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Campos ocultos para los métodos de pago -->
+                <div style="display: none;">
+                    <input type="number" name="efectivo" id="efectivo_hidden" value="0">
+                    <div id="cheques-data"></div>
                 </div>
+
                 <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarOp">Guardar Op. - F9</button>
+                    <button class="btn btn-success col-2 m-2" type="button" onclick="abrirModalPagos()">F9 - 🏦 Procesar Pago</button>
+                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarOp" style="display:none;">Guardar Orden</button>
                 </div>
 
             </form>
@@ -158,6 +91,62 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <script src="{{ url_for('static', filename='js/nueva_op.js') }}"></script>
+    
+    <!-- Modal universal de búsqueda -->
+    {% include 'partials/_modal-busqueda-universal.html' %}
+    
+    <!-- Modal universal de transacciones -->
+    {% set modal_type = 'pago' %}
+    {% set modal_context = 'proveedores' %}
+    {% set modal_title = '🏦 Orden de Pago' %}
+    {% include 'partials/_modal-transacciones.html' %}
+    
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/nueva_op.js')}}"></script>
+    
+    <script>
+    function abrirModalPagos() {
+        const total = document.getElementById('total').value;
+        cargarDatosModal(parseFloat(total) || 0);
+        $('#transaccionesModal').modal('show');
+    }
+    
+    // Personalizar procesamiento para órdenes de pago
+    function procesarTransaccion() {
+        if (!checkTotales()) {
+            alert('Los totales no coinciden.');
+            return false;
+        }
+        
+        // Sincronizar datos de cheques al formulario principal
+        sincronizarCheques();
+        
+        // Cerrar modal y procesar
+        $('#transaccionesModal').modal('hide');
+        document.getElementById('grabarOp').click();
+        return true;
+    }
+    
+    // Sincronizar cheques del modal al formulario
+    function sincronizarCheques() {
+        const chequesContainer = document.getElementById('cheques-data');
+        const chequesModal = document.querySelectorAll('#cheques input[type="hidden"]');
+        
+        chequesContainer.innerHTML = '';
+        chequesModal.forEach(input => {
+            const clonedInput = input.cloneNode(true);
+            chequesContainer.appendChild(clonedInput);
+        });
+    }
+    
+    // Atajos de teclado
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F9') {
+            e.preventDefault();
+            abrirModalPagos();
+        }
+    });
+    </script>
     
 {% endblock %}

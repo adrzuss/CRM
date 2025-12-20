@@ -112,32 +112,15 @@ async function obtener_remitos(idproveedor) {
 }
 
 function mostrarModalSeleccionProveedores(proveedores) {
-    // Crear el contenido del modal con las opciones de proveedor
-    const tituloModal = document.getElementById("clienteModalLabel");
-    tituloModal.textContent = "Seleccione un Proveedor";
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = "";
-    const listaClientes = document.createElement("ul");
-    listaClientes.classList.add("list-group");
-    modalContent.appendChild(listaClientes);
+  const callback = (proveedor) => {
+    asignarProveedor(proveedor);
+    // Enfocar el nuevo input de código
+    const proveedorInput = document.getElementById("idproveedor");
+    if (proveedorInput) proveedorInput.focus();
+  };
   
-    proveedores.forEach((proveedor) => {
-      const clienteOption = document.createElement("li");
-      clienteOption.classList.add("cliente-option");
-      clienteOption.classList.add("list-group-item");
-      clienteOption.textContent = `${proveedor.nombre} - Tel/Cel: ${proveedor.telefono}`;
-      clienteOption.onclick = () => {
-        asignarProveedor(proveedor);
-        $("#clienteModal").modal("hide");
-        // Enfocar el nuevo input de código
-        const proveedorInput = document.getElementById("idproveedor");
-        proveedorInput.focus();
-      };
-      listaClientes.appendChild(clienteOption);
-    });
-  
-    // Mostrar el modal
-    $("#clienteModal").modal("show");
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('proveedores', proveedores || [], callback);
 } 
   
 function calcSaldo(){
@@ -145,16 +128,21 @@ function calcSaldo(){
     const efectivo = parseFloat(document.getElementById('efectivo').value);
     const ctacte = parseFloat(document.getElementById('ctacte').value);
     let diferencia = (totalFac - (efectivo + ctacte));
+    
+    // Actualizar el contenido del saldo
     let lblSaldo = document.getElementById('saldo_factura');
-    lblSaldo.textContent = diferencia;
+    lblSaldo.textContent = diferencia.toFixed(2);
+    
+    // Actualizar la clase del contenedor
+    const saldoContainer = document.getElementById("saldo-container");
     if (diferencia > 0){
-        lblSaldo.className = 'negativo';
+        saldoContainer.className = 'total-amount negativo';
     }
     else if (diferencia === 0){
-        lblSaldo.className = 'neutro';
+        saldoContainer.className = 'total-amount neutro';
     }
     else{
-        lblSaldo.className = 'positivo';
+        saldoContainer.className = 'total-amount positivo';
     }
 }
 
@@ -166,15 +154,14 @@ function checkTotales() {
     return HayDiferencia;
 }
 
-document.getElementById('efectivo').addEventListener('input', function(event){
-    calcSaldo();
-}
-)
+// Event listeners movidos a modal-transacciones-universal.js
+// document.getElementById('efectivo').addEventListener('input', function(event){
+//     calcSaldo();
+// })
 
-document.getElementById('ctacte').addEventListener('input', function(event){
-    calcSaldo();
-}
-)
+// document.getElementById('ctacte').addEventListener('input', function(event){
+//     calcSaldo();
+// })
 
 document.getElementById('idproveedor').addEventListener('blur', function() {
     const idproveedor = this.value;

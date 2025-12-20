@@ -1,130 +1,260 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h1 class="m-3">Nueva factura de compra</h1>
-    <div class="m-2">
-        <div class="container-fluid">
-            <!-- Modal para seleccionar cliente y articulos -->
-            
-            {% include 'partials/_modal-proveedor.html' %}
-            <form id="invoice_form" method="post">
-                <div class="row justify-content-center align-items-center">
-                    <div class="card mb-3 col-8">
-                        <div class="row">
-                            <h4 class="m-2 col-5">Proveedor</h4>
-                            <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
-                            
-                        </div>
 
-                        <div class="cardbody">
-                            <div class="row m-3">
-                                <div class="col-md-2">
-                                    <label for="idproveedor">Proveedor: <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" required autofocus>
-                                </div>    
-                                <div class="col-md-5">
-                                    <label for="proveedor_nombre">Nombre del Proveedor:</label>
-                                    <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
-                                </div>    
-                                <div class="col-md-2">
-                                    <label for="id_tipo_comprobante">Tipo de factura: <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="id_tipo_comprobante" name="id_tipo_comprobante" required>
-                                        {% for tipo in tiposComp %}
-                                            <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
-                                        {% endfor %}
-                                    </select>    
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('proveedores.proveedores', id=0) }}">
+                <i class="fas fa-truck me-1"></i>Proveedores
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-file-invoice me-1"></i>Nueva Factura de Compra
+        </li>
+    </ol>
+</nav>
+
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-shopping-cart text-danger"></i> Nueva Factura de Compra
+                </h1>
+                <p class="page-subtitle">
+                    Registra una nueva compra a proveedor
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('proveedores.compras') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Compras
+                </a>
+            </div>
+        </div>
+    </div>
+            <!-- Modal universal de búsqueda -->
+            {% include 'partials/_modal-busqueda-universal.html' %}
+            
+            <form id="invoice_form" method="post">
+                <div class="row">
+                    <!-- Información del proveedor -->
+                    <div class="col-lg-8">
+                        <div class="card modern-card mb-4">
+                            <div class="card-header modern-header bg-danger text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="header-icon">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">Información del Proveedor</h5>
+                                        <small class="text-white-50">Datos de la factura de compra</small>
+                                    </div>
                                 </div>
-                            </div>    
-                            <div class="row m-3">    
-                                <div class="col-md-2">
-                                    <label for="fecha">Fecha:<span class="text-danger">*</span></label>
-                                    <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-lg-3 col-md-4">
+                                        <div class="form-floating">
+                                            <input class="form-control form-control-modern" type="text" name="idproveedor" 
+                                                   id="idproveedor" required autofocus placeholder="ID del proveedor">
+                                            <label for="idproveedor"><i class="fas fa-hashtag me-2"></i>ID Proveedor <span class="text-danger">*</span></label>
+                                        </div>
+                                    </div>    
+                                    <div class="col-lg-6 col-md-8">
+                                        <div class="form-floating">
+                                            <input class="form-control form-control-modern" type="text" name="proveedor_nombre" 
+                                                   id="proveedor_nombre" readonly placeholder="Nombre del proveedor">
+                                            <label for="proveedor_nombre"><i class="fas fa-building me-2"></i>Nombre del Proveedor</label>
+                                        </div>   
+                                    </div>    
+                                    <div class="col-lg-3">
+                                        <div class="form-floating">
+                                            <select class="form-select form-control-modern" id="id_tipo_comprobante" 
+                                                    name="id_tipo_comprobante" required>
+                                                <option value="">Seleccionar...</option>
+                                                {% for tipo in tiposComp %}
+                                                    <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <label for="id_tipo_comprobante"><i class="fas fa-file-alt me-2"></i>Tipo Factura <span class="text-danger">*</span></label>
+                                        </div>    
+                                    </div>
                                 </div>    
-                                <div class="col-md-2">
-                                    <label for="periodo">Periodo:<span class="text-danger">*</span></label>
-                                    <input class="form-control" type="month" name="periodo" value="{{ hoy }}" required>
-                                    <small id="helpId" class="form-text text-muted">Periodo de imputación</small>
-                                </div>    
-                                <div class="col-md-2">
-                                    <label for="nro_factura">Nro. de factura:<span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" name="nro_factura" id="nro_factura" required pattern="\d{4}-\d{8}" title="El formato debe ser 0000-00000000 (4 números, un guion y 8 números).">
+                                <div class="row g-3 mt-2">
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-floating">
+                                            <input class="form-control form-control-modern" type="date" name="fecha" 
+                                                   value="{{ hoy }}" required>
+                                            <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha <span class="text-danger">*</span></label>
+                                        </div>
+                                    </div>    
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-floating">
+                                            <input class="form-control form-control-modern" type="month" name="periodo" 
+                                                   value="{{ hoy }}" required>
+                                            <label for="periodo"><i class="fas fa-calendar me-2"></i>Periodo <span class="text-danger">*</span></label>
+                                        </div>
+                                        <small class="form-text text-muted mt-1">
+                                            <i class="fas fa-info-circle me-1"></i>Periodo de imputación
+                                        </small>
+                                    </div>    
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-floating">
+                                            <input class="form-control form-control-modern" type="text" name="nro_factura" 
+                                                   id="nro_factura" required pattern="\d{4}-\d{8}" 
+                                                   title="El formato debe ser 0000-00000000" placeholder="0000-00000000">
+                                            <label for="nro_factura"><i class="fas fa-receipt me-2"></i>Nro. Factura <span class="text-danger">*</span></label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select form-control-modern" name="id_plan_cuenta" 
+                                                    id="id_plan_cuenta" required>
+                                                <option value="">Seleccionar cuenta...</option>
+                                                {% for cuenta in planesCtas %}
+                                                    <option value="{{ cuenta.id }}">{{ cuenta.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <label for="id_plan_cuenta"><i class="fas fa-tags me-2"></i>Cuenta <span class="text-danger">*</span></label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="id_plan_cuenta">Cuenta:<span class="text-danger">*</span></label>
-                                    <select class="form-control" name="id_plan_cuenta" id="id_plan_cuenta" required>
-                                        <option value="">Seleccione una cuenta</option>
-                                        {% for cuenta in planesCtas %}
-                                            <option value="{{ cuenta.id }}">{{ cuenta.nombre }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>    
-                        </div>    
+                            </div>
+                        </div>
                     </div>    
                     <!-- Remitos de compra -->
-                    <div class="card mb-3 ml-2 col-3">    
-                        <div class="card-header">
-                            <h5 class="m-2">Remitos pendientes</h3>
+                    <div class="col-lg-4">
+                        <div class="card modern-card mb-4">
+                            <div class="card-header modern-header bg-warning text-dark">
+                                <div class="d-flex align-items-center">
+                                    <div class="header-icon">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">Remitos Pendientes</h5>
+                                        <small class="text-dark">Sin facturar</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-3">
+                                <div id="remitos_select" style="display: none;">
+                                    <!-- Remitos se cargan dinámicamente -->
+                                </div>
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-search fa-2x mb-2"></i>
+                                    <p class="mb-0">Selecciona un proveedor para ver remitos pendientes</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="row">
-                            <div id="remitos_select" class="col-12 m-2" style="display: none;"></div>
-                            
-                        </div>
-                        <div class="cardbody">
-                        </div>
-                    </div>         
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="cardbody m-3">
-                        <!-- Detalles (items) -->
-                        <h4>Artículos</h4>
+                <!-- Tabla de artículos -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header modern-header bg-info text-white">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="header-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">Artículos de la Compra</h5>
+                                    <small class="text-white-50">Detalle de ítems</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover table-borderless align-middle" id="tabla-items">
-                                <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0" id="tabla-items">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>#ID</th>
-                                        <th>Código</th>
-                                        <th>Descripción</th>
-                                        <th>Precio unit.</th>
-                                        <th>Cant.</th>
-                                        <th>Precio total</th>
-                                        <th>Acción</th>
+                                        <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID</th>
+                                        <th><i class="fas fa-barcode me-1"></i>Código</th>
+                                        <th><i class="fas fa-tag me-1"></i>Descripción</th>
+                                        <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Precio Unit.</th>
+                                        <th class="text-center"><i class="fas fa-sort-numeric-up me-1"></i>Cant.</th>
+                                        <th class="text-center"><i class="fas fa-calculator me-1"></i>Total</th>
+                                        <th class="text-center"><i class="fas fa-cogs me-1"></i>Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody class="table-group-divider">
+                                <tbody>
                                     <!-- Aquí se agregarán dinámicamente las filas --> 
                                 </tbody>
                             </table>
                         </div>
+                        <div class="p-3 bg-light border-top">
+                            <button class="btn btn-outline-primary" type="button" id="agregarArticulo">
+                                <i class="fas fa-plus me-2"></i>Agregar Artículo <kbd>F4</kbd>
+                            </button>
+                        </div>
                     </div>
                 </div>    
 
-                <div class="row">
-                    <button class="btn btn-secondary col-2 m-2" type="button" id="agregarArticulo">Agregar Item F4</button>
-                    <h3>Total Factura: $<span id="total_factura">0.00</span></h3>
-                    <h3>Saldo: $<span id="saldo_factura">0.00</span></h3>
+                <!-- Campos ocultos para los métodos de pago -->
+                <div style="display: none;">
+                    <input type="number" name="efectivo" id="efectivo_hidden" step="0.01" value="0">
+                    <input type="number" name="ctacte" id="ctacte_hidden" step="0.01" value="0">
+                    <input type="number" name="bonificacion" id="bonificacion_hidden" step="0.01" value="0">
                 </div>
-
-                <div class="card">
-                    <h4 class="m-3">Formas de pago</h4>
-                    <div class="card-body">
-                        <div class="row justify-content-md-center">
-                            <div class="col-3 mt-3">
-                                <label for="efectivo">Efectivo</label>
-                                <input type="number" name="efectivo" id="efectivo" class="form-control" step="0.01" value="0" >
+                
+                <!-- Total y acciones -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card modern-card border-danger">
+                            <div class="card-header modern-header bg-danger text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="header-icon">
+                                        <i class="fas fa-calculator"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">Total de la Compra</h5>
+                                        <small class="text-white-50">Monto total a pagar</small>
+                                    </div>
+                                </div>
                             </div>
-                                
-                            <div class="col-3 mt-3">    
-                                <label for="ctacte">Cta. Cte.</label>
-                                <input type="number" name="ctacte" id="ctacte" class="form-control" step="0.01" value="0">
+                            <div class="card-body text-center py-4">
+                                <div class="row justify-content-center">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control form-control-lg text-center total-field" 
+                                                   name="totalFactura" id="totalFactura" step="0.01" value="0" readonly>
+                                            <label for="totalFactura">Total de la Factura</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-success btn-lg shadow-sm" type="button" onclick="abrirModalPagos()">
+                                <i class="fas fa-credit-card me-2"></i>Procesar Pago <kbd>F8</kbd>
+                            </button>
+                            <button class="btn btn-primary btn-lg shadow-sm" type="submit" id="grabarCompra" style="display:none;">
+                                <i class="fas fa-save me-2"></i>Guardar Compra
+                            </button>
+                            <a href="{{ url_for('proveedores.compras') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
                     </div>
                 </div>
-
-                <div class="row">
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarCompra">Guardar Factura F9</button>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span class="text-danger">*</span> Campos obligatorios
+                    </small>
                 </div>
 
             </form>
@@ -138,6 +268,20 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <script src="{{ url_for('static', filename='js/nueva_compra.js')}}"></script>
+    <!-- Modal universal de transacciones -->
+    {% set modal_type = 'pago' %}
+    {% set modal_context = 'proveedores' %}
+    {% set modal_title = '🏦 Pago a Proveedor' %}
+    {% include 'partials/_modal-transacciones.html' %}
+    
+    <!-- Modal para selección de colores y detalles -->
+    {% include 'partials/modal-color-detalle.html' %}
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/modal-color-detalle.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/transaction-color-detail-helper.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/nueva_compra.js')}}"></script>
         
 {% endblock %}

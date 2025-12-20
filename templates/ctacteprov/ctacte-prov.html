@@ -2,32 +2,88 @@
 
 {% block body%}
 
-<div class="col-md-5">
-    <div class="card">
-        <div class="card-body">
-            <h3>Ingreso de movimiento en cta cte</h3>
-            <form action="{{ url_for('ctacteprov.add_cta_cte') }}" method="post">
-                <div class="mb-3"> 
-                    <label for="idproveedor">Id Proveedor</label>
-                    <input class="form-control" type="text" name="idproveedor" id="idproveedor" placeholder="Id del proveedor">
-                </div>
-                <div class="mb-3">
-                    <label for="fecha">E-mail</label>
-                    <input class="form-control" type="date" name="fecha" id="fecha" placeholder="Fecha del movimiento">
-                </div>    
-                <div class="mb-3">
-                    <label for="debe">Debe</label>
-                    <input class="form-control" type="text" name="debe" id="debe" placeholder="Importe debe">
-                </div>    
-                <div class="mb-3">
-                    <label for="haber">Haber</label>
-                    <input class="form-control" type="text" name="haber" id="haber" placeholder="Importe haber">
-                </div>    
+<!-- Contenedor principal con diseño moderno -->
+<div class="container-fluid px-4 py-3">
+    <!-- Breadcrumbs modernos -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('proveedores.proveedores', id=0) }}"><i class="fas fa-truck"></i> Proveedores</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-file-invoice-dollar"></i> Cuenta Corriente Proveedores
+            </li>
+        </ol>
+    </nav>
 
-                <button class="btn btn-success" type="submit">Grabar</button>
-            </form>
-        </div>    
-    </div>   
+    <!-- Header principal -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice-dollar text-warning"></i> Cuenta Corriente Proveedores
+                </h1>
+                <p class="page-subtitle">
+                    Registro de movimientos en cuenta corriente
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card modern-card">
+                <div class="card-header modern-header">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Nuevo Movimiento</h5>
+                            <small class="text-muted">Registrar movimiento en cuenta corriente</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('ctacteprov.add_cta_cte') }}" method="post">
+                        <div class="row g-3">
+                            <div class="col-12"> 
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="idproveedor" id="idproveedor" placeholder="Proveedor" required>
+                                    <label for="idproveedor"><i class="fas fa-truck me-2"></i>ID Proveedor</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="date" name="fecha" id="fecha" placeholder="Fecha" required>
+                                    <label for="fecha"><i class="fas fa-calendar me-2"></i>Fecha del Movimiento</label>
+                                </div>
+                            </div>    
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="number" name="debe" id="debe" placeholder="Debe" step="0.01" value="0.00">
+                                    <label for="debe"><i class="fas fa-minus-circle me-2 text-danger"></i>Debe</label>
+                                </div>
+                            </div>    
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="number" name="haber" id="haber" placeholder="Haber" step="0.01" value="0.00">
+                                    <label for="haber"><i class="fas fa-plus-circle me-2 text-success"></i>Haber</label>
+                                </div>
+                            </div>    
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button class="btn btn-success btn-lg w-100" type="submit">
+                                    <i class="fas fa-save me-2"></i>Grabar Movimiento
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>    
+            </div>   
+        </div>
+    </div>
 </div>
 
 {% endblock %}

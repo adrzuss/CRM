@@ -32,8 +32,7 @@ def create_app():
                     ])
     
     app.config.from_object(Config)
-    
-    app.register_blueprint(bp_sesiones, url_prefix= '/sesions')
+    app.register_blueprint(bp_sesiones, url_prefix= '/sesiones')
     app.register_blueprint(bp_tableros, url_prefix='/')
     app.register_blueprint(bp_clientes, url_prefix='/clientes')
     app.register_blueprint(bp_ctactecli, url_prefix='/ctactecli')

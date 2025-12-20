@@ -358,13 +358,19 @@ def generar_credito_cliente(form, files):
                 filename = f"{idcredito}_{id_doc}_{archivo.filename}"
                 filename = secure_filename(filename)  # Asegura que el nombre del archivo sea seguro para el sistema de archivos
                 archivo.save(os.path.join(current_app.config['UPLOAD_FOLDER_CREDITOS'], filename))
-
+                # Obtenemos la versión del archivo guardado
+                version = db.session.query(func.max(DocumentosDelCreditos.version)).filter(and_(DocumentosDelCreditos.idcredito == idcredito, DocumentosDelCreditos.iddocumento_credito == id_doc)).scalar()
+                if version is None:
+                    version = 1
+                else:
+                    version += 1
                 # Crear la relación entre el crédito y el documento
                 try:
                     doc_credito = DocumentosDelCreditos(
                         idcredito=idcredito,
                         iddocumento_credito=id_doc,
-                        documento=filename  # Guardar el nombre del archivo
+                        documento=filename,  # Guardar el nombre del archivo
+                        version=version
                     )
                     db.session.add(doc_credito)
                 except Exception as e:
@@ -461,14 +467,34 @@ def buscar_documento_descarga(idcredito, iddocumento):
 
 def get_credito_by_idcliente(idcliente):
     try:
+        print(f"🔍 Buscando crédito para cliente ID: {idcliente}")
+        
+        # Primero veamos todos los créditos del cliente
+        todos_creditos = db.session.query(Creditos.id,
+                                         Creditos.cuotas,
+                                         Creditos.monto_total,
+                                         Creditos.estado,
+                                         ).filter(Creditos.idcliente == idcliente).all()
+        
+        print(f"📊 Cliente tiene {len(todos_creditos)} créditos en total:")
+        for c in todos_creditos:
+            print(f"   - Crédito ID: {c.id}, Estado: {c.estado}, Monto: {c.monto_total}")
+        
+        # Buscar crédito aprobado (estado 3)
         credito = db.session.query(Creditos.id,
                                    Creditos.cuotas,
                                    Creditos.monto_total,
                                    Creditos.estado,
                                    ).filter(and_(Creditos.idcliente == idcliente, Creditos.estado == 3)).first()
+        
+        if credito:
+            print(f"✅ Crédito aprobado encontrado: ID {credito.id}, Monto: {credito.monto_total}")
+        else:
+            print("❌ No se encontró crédito aprobado (estado 3)")
+            
         return credito
     except Exception as e:
-        print(f'Error al obtener el crédito por cliente: {e}')
+        print(f'❌ Error al obtener el crédito por cliente: {e}')
         return None
     
 def vencimientos_cuotas_creditos(desde, hasta):

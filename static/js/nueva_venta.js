@@ -1,3 +1,6 @@
+// ✅ VERSION ACTUALIZADA - Nueva Venta JS v2.0 - Fix label-ctacte
+console.log("🚀 Nueva Venta JS cargado - Versión corregida 2.0");
+
 let isFormSubmited = false;
 let contadorFilas = 0;
 let articulosFacturados = [];
@@ -8,6 +11,71 @@ window.onbeforeunload = function () {
     return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
   }
 };
+
+// Función para asegurar que todas las filas tengan campos de color y detalle
+function ensureColorDetalleFields() {
+  const rows = document.querySelectorAll("#tabla-items tbody tr");
+  console.log('🔍 [ensureColorDetalleFields] Verificando campos en', rows.length, 'filas');
+  
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector("td.id-articulo");
+    if (firstCell) {
+      // Verificar si ya tiene los campos
+      let colorInput = row.querySelector('[name*="id_color"]');
+      let detalleInput = row.querySelector('[name*="id_detalle"]');
+      
+      console.log(`📋 Fila ${index} - Color input existe:`, !!colorInput, 'Detalle input existe:', !!detalleInput);
+      
+      if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'hidden';
+        colorInput.name = `items[${index}][id_color]`;
+        colorInput.value = '0';
+        colorInput.setAttribute('data-debug', 'auto-created-color');
+        colorInput.setAttribute('data-row', index.toString());
+        firstCell.appendChild(colorInput);
+        console.log('✅ Campo id_color agregado a fila', index, 'con nombre:', colorInput.name);
+        
+        // Verificar que realmente se agregó
+        const verificacion = row.querySelector('[name*="id_color"]');
+        console.log('🔬 Verificación inmediata - Campo agregado:', !!verificacion);
+      } else {
+        console.log('✨ Campo color existe con nombre:', colorInput.name, 'y valor:', colorInput.value);
+      }
+      
+      if (!detalleInput) {
+        detalleInput = document.createElement('input');
+        detalleInput.type = 'hidden';
+        detalleInput.name = `items[${index}][id_detalle]`;
+        detalleInput.value = '0';
+        detalleInput.setAttribute('data-debug', 'auto-created-detalle');
+        detalleInput.setAttribute('data-row', index.toString());
+        firstCell.appendChild(detalleInput);
+        console.log('✅ Campo id_detalle agregado a fila', index, 'con nombre:', detalleInput.name);
+        
+        // Verificar que realmente se agregó
+        const verificacion = row.querySelector('[name*="id_detalle"]');
+        console.log('🔬 Verificación inmediata - Campo agregado:', !!verificacion);
+      } else {
+        console.log('✨ Campo detalle existe con nombre:', detalleInput.name, 'y valor:', detalleInput.value);
+      }
+    }
+  });
+  
+  // Verificación final con más detalle
+  const allColorInputs = document.querySelectorAll('[name*="id_color"]');
+  const allDetalleInputs = document.querySelectorAll('[name*="id_detalle"]');
+  console.log('📊 Total campos color encontrados:', allColorInputs.length);
+  console.log('📊 Total campos detalle encontrados:', allDetalleInputs.length);
+  
+  // Debug adicional: mostrar todos los campos encontrados
+  allColorInputs.forEach((input, i) => {
+    console.log(`  🎨 Color ${i}: name="${input.name}" value="${input.value}" data-debug="${input.getAttribute('data-debug')}"`);
+  });
+  allDetalleInputs.forEach((input, i) => {
+    console.log(`  📝 Detalle ${i}: name="${input.name}" value="${input.value}" data-debug="${input.getAttribute('data-debug')}"`);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", async function () {
   document.getElementById('idcliente').focus();
@@ -57,8 +125,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       idPresupuesto.value = window.PRESUPUESTO.id;
     }
     document.getElementById("idcliente").value = window.PRESUPUESTO.idcliente;
-    document.getElementById("total_factura").textContent = window.PRESUPUESTO.total;
-    document.getElementById("totalFactura").textContent = window.PRESUPUESTO.total;
+    document.getElementById("totalFactura").value = window.PRESUPUESTO.total;
     
     // Podés llamar a fetchCliente para completar el resto de los datos del cliente
     fetchCliente(window.PRESUPUESTO.idcliente);
@@ -77,6 +144,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       fila.querySelector(".precio-total").value = (art.precio_unitario * art.cantidad).toFixed(2);
     });
     updateTotalFactura();
+    
+    // Asegurar que todas las filas tengan campos de color/detalle
+    setTimeout(ensureColorDetalleFields, 100);
   }
 
   // Si hay datos de remito, precargar
@@ -97,8 +167,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       idRemito.value = window.REMITO.id;
     }
     document.getElementById("idcliente").value = window.REMITO.idcliente;
-    document.getElementById("total_factura").textContent = window.REMITO.total;
-    document.getElementById("totalFactura").textContent = window.REMITO.total;
+    document.getElementById("totalFactura").value = window.REMITO.total;
     
     // Podés llamar a fetchCliente para completar el resto de los datos del cliente
     fetchCliente(window.REMITO.idcliente);
@@ -178,14 +247,129 @@ function saleccionarPtoVta(datos) {
 function abrirModalPagos(){
   //Calcular ofertas de cierre
   calcularOfetasDeCierre();
-  // Enfocar el primer campo de pago
-  $("#pagosModal").modal("show");
+  
+  // Configurar total antes de abrir modal
+  const totalElement = document.getElementById('totalFactura');
+  const totalFactura = totalElement ? (totalElement.value || totalElement.textContent) : '0';
+  
+  // Usar la función universal cargarDatosModal
+  if (window.cargarDatosModal) {
+    window.cargarDatosModal(parseFloat(totalFactura) || 0);
+  } else {
+    console.error('❌ cargarDatosModal no está disponible');
+  }
+  
+  $("#transaccionesModal").modal("show");
+  
+  // Cuando el modal se haya mostrado completamente
+  document.getElementById('transaccionesModal').addEventListener('shown.bs.modal', function () {
+    // Aplicar crédito pendiente si existe
+    if (window.creditoPendienteAplicar) {
+      console.log('💳 Aplicando crédito pendiente al modal de pagos...');
+      setTimeout(() => {
+        const aplicado = aplicarCreditoEnModal();
+        if (aplicado) {
+          console.log('✅ Crédito aplicado automáticamente en el modal');
+        }
+      }, 200); // Pequeño delay para asegurar que el DOM esté listo
+    }
+    
+    // Enfocar el input apropiado
+    const primerInput = document.querySelector('#transaccionesModal input:not([readonly]):not([type="hidden"])');
+    if (primerInput && !window.creditoPendienteAplicar) {
+      primerInput.focus();
+    } else if (window.creditoPendienteAplicar) {
+      // Si hay crédito aplicado, enfocar el campo de efectivo o el siguiente disponible
+      const efectivoInput = document.querySelector('#efectivo, [name="efectivo"]');
+      if (efectivoInput) {
+        setTimeout(() => efectivoInput.focus(), 300);
+      }
+    }
+  }, { once: true });
 
-  // Cuando el modal se haya mostrado, enfocar el input
-    document.getElementById('pagosModal').addEventListener('shown.bs.modal', function () {
-      document.getElementById("efectivo").focus();
-    }, { once: true }); // once=true para que no se dispare más de una vez
+  // Asegurar que todas las filas existentes tengan campos de color/detalle
+  setTimeout(ensureColorDetalleFields, 500);
+}
 
+// Hacer funciones disponibles globalmente
+window.abrirModalPagos = abrirModalPagos;
+window.procesarTransaccion = procesarTransaccion;
+
+// Función personalizada para procesar transacción en nueva venta
+function procesarTransaccion() {
+    console.log('procesarTransaccion() llamada para nueva venta');
+    
+    // Usar la validación del modal universal
+    if (!checkTotales()) {
+        const diferencia = calcSaldo();
+        const mensaje = diferencia > 0 ? 
+            `Falta pagar $${diferencia.toFixed(2)}` : 
+            `Sobra $${Math.abs(diferencia).toFixed(2)}`;
+        
+        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+            return false;
+        }
+    }
+    
+    console.log('Cerrando modal y grabando venta...');
+    
+    // Cerrar modal
+    $('#transaccionesModal').modal('hide');
+    
+    // Enviar formulario via AJAX para grabar la venta
+    console.log('Enviando formulario de venta via AJAX...');
+    const form = document.getElementById('invoice_form');
+    if (!form) {
+        console.error('Formulario invoice_form no encontrado');
+        alert('Error: No se pudo grabar la venta. Formulario no encontrado.');
+        return false;
+    }
+    
+    // Preparar datos del formulario
+    const formData = new FormData(form);
+    
+    // Mostrar loading
+    const originalText = 'Grabando venta...';
+    
+    fetch(form.action || window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Respuesta del servidor:', data);
+        
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            alert(`✅ ${data.message}`);
+            
+            // Limpiar formulario para nueva venta
+            form.reset();
+            
+            // Limpiar tabla de artículos
+            const tbody = document.querySelector('#tabla-items tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+            }
+            
+            // Resetear total
+            const totalFactura = document.getElementById('totalFactura');
+            if (totalFactura) {
+                totalFactura.value = '0';
+            }
+            
+            // Opcional: Redirigir o recargar si es necesario
+            // window.location.reload();
+        } else {
+            alert(`❌ Error: ${data.message || 'No se pudo grabar la venta'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error al grabar venta:', error);
+        alert('❌ Error de conexión al grabar la venta');
+    });
+    
+    return true;
 }
 
 async function calcularOfetasDeCierre(){
@@ -293,26 +477,20 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault(); // Evita la recarga de página con F5
       btnAgregar.click(); // Simula un click en el botón "Agregar Artículo"
     }
-    // Asignar tecla F8 para mostra formas de pago
+    // F8: Abrir modal de pagos
     if (event.key === "F8") {
-      event.preventDefault(); // Evita el comportamiento por defecto de la tecla
+      event.preventDefault();
       // Si el elemento activo es un input codigo-articulo
       if (document.activeElement.classList.contains("codigo-articulo")) {
         // Esperar a que se complete el blur antes de abrir el modal
         await handleArticuloBlur({target: document.activeElement});
       }
-      abrirModalPagos(); // Simula un click en el botón "Grabar Venta"
-    }
-
-    // Asignar tecla F9 para grabar venta
-    if (event.key === "F9") {
-      event.preventDefault(); // Evita el comportamiento por defecto de la tecla
-      btnGrabar.click(); // Simula un click en el botón "Grabar Venta"
+      abrirModalPagos();
     }
 
     // Atajos de teclado en modal de formas de pago
     // Verifica si la modal está visible
-    if (document.getElementById('pagosModal').classList.contains('show')) {
+    if (document.getElementById('transaccionesModal').classList.contains('show')) {
         // Alt + E para Efectivo
         if (event.altKey && event.key.toLowerCase() === 'e') {
             event.preventDefault();
@@ -454,48 +632,66 @@ async function fetchCliente(input) {
 }
 
 function mostrarModalSeleccionClientes(clientes) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Cliente";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaClientes = document.createElement("ul");
-  listaClientes.classList.add("list-group");
-  modalContent.appendChild(listaClientes);
-
-  clientes.forEach((cliente) => {
-    const clienteOption = document.createElement("li");
-    clienteOption.classList.add("cliente-option");
-    clienteOption.classList.add("list-group-item");
-    clienteOption.textContent = `${cliente.nombre} - Tel/Cel: ${cliente.telefono}`;
-    clienteOption.onclick = () => {
-      asignarCliente(cliente);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const clienteInput = document.getElementById("idcliente");
-      clienteInput.focus();
-    };
-    listaClientes.appendChild(clienteOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+  // Usar el sistema universal de modal de búsqueda
+  const callback = (cliente) => {
+    asignarCliente(cliente);
+    // Enfocar el nuevo input de código
+    const clienteInput = document.getElementById("idcliente");
+    if (clienteInput) clienteInput.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('clientes', clientes || [], callback);
 }
 
 function asignarCliente(cliente) {
-  document.getElementById("idcliente").value = cliente.id;
-  document.getElementById("cliente_nombre").value = cliente.nombre;
-  document.getElementById("id").value = cliente.id;
-  document.getElementById("ctacte").readOnly = cliente.ctacte == 0;
-  document.getElementById("tipo_comprobante").innerText = "Tipo de factura: " + cliente.tipo_comprobante;
-  document.getElementById("id_tipo_comprobante").value = cliente.id_tipo_comprobante;
-  if (cliente.ctacte == 0) {
-    document.getElementById("label-ctacte").innerText =
-      "Cta. Cte. - Cliente sin cta. cte.";
-  } else {
-    document.getElementById("label-ctacte").innerText = "Cta. Cte.";
+  console.log("🎯 Asignando cliente:", cliente);
+  
+  // Función auxiliar para actualizar elementos de forma segura
+  const updateElement = (id, property, value) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element[property] = value;
+    } else {
+      console.warn(`⚠️ Elemento '${id}' no encontrado en el DOM`);
+    }
+  };
+
+  // Actualizar campos del cliente con validación
+  updateElement("idcliente", "value", cliente.id);
+  updateElement("cliente_nombre", "value", cliente.nombre);
+  updateElement("id", "value", cliente.id);
+  updateElement("id_tipo_comprobante", "value", cliente.id_tipo_comprobante);
+  
+  // Manejar campo ctacte con validación
+  const ctacteElement = document.getElementById("ctacte");
+  if (ctacteElement) {
+    ctacteElement.readOnly = cliente.ctacte == 0;
   }
-  hayCredito(cliente.id);
+  
+  // Manejar tipo de comprobante con validación
+  const tipoComprobanteElement = document.getElementById("tipo_comprobante");
+  if (tipoComprobanteElement) {
+    tipoComprobanteElement.innerText = "Tipo de factura: " + cliente.tipo_comprobante;
+  }
+  
+  // Actualizar label de cuenta corriente con validación de seguridad
+  const labelCtacte = document.getElementById("label-ctacte");
+  if (labelCtacte) {
+    if (cliente.ctacte == 0) {
+      labelCtacte.innerText = "Cta. Cte. - Cliente sin cta. cte.";
+    } else {
+      labelCtacte.innerText = "Cta. Cte.";
+    }
+  }
+  
+  // Verificar si el cliente tiene crédito disponible
+  console.log("🔍 Verificando crédito para cliente:", cliente.id);
+  try {
+    hayCredito(cliente.id);
+  } catch (error) {
+    console.error("❌ Error al verificar crédito:", error);
+  }
 }
 
 async function fetchArticulo(id, idlista, itemDiv) {
@@ -561,12 +757,83 @@ function asignarArticuloElegido(articulo, itemDiv) {
 }
 
 function asignarArticulo(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".id-articulo").textContent = articulo.id;
-  itemDiv.target.closest("tr").querySelector(".id-marca").textContent = articulo.idmarca;
-  itemDiv.target.closest("tr").querySelector(".id-rubro").textContent = articulo.idrubro;
-  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
-  itemDiv.target.closest("tr").querySelector(".idoferta").value = articulo.idoferta;
-  itemDiv.target.closest("tr").querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  const row = itemDiv.target.closest("tr");
+  
+  row.querySelector(".id-articulo").textContent = articulo.id;
+  row.querySelector(".id-marca").textContent = articulo.idmarca;
+  row.querySelector(".id-rubro").textContent = articulo.idrubro;
+  row.querySelector(".codigo-articulo").value = articulo.codigo;
+  row.querySelector(".idoferta").value = articulo.idoferta;
+  row.querySelector(".descripcion-articulo").textContent = articulo.detalle;
+  
+  // Activar modal de color/detalle si está disponible
+  function tryShowModal() {
+    if (window.modalColorDetalleManager && articulo.id) {
+      const rowIndex = Array.from(tablaItems.querySelectorAll('tr')).indexOf(row);
+      
+      window.modalColorDetalleManager.mostrarModal(
+        articulo.id,
+        rowIndex,
+        articulo.detalle,
+        function(seleccion) {
+          // Asegurar que existan los campos hidden
+          ensureColorDetalleFields();
+          
+          // Buscar campos hidden
+          let colorInput = row.querySelector('input[name*="id_color"]');
+          let detalleInput = row.querySelector('input[name*="id_detalle"]');
+          
+          // Si no se encuentran, crearlos
+          if (!colorInput || !detalleInput) {
+            const firstCell = row.querySelector("td.id-articulo");
+            if (firstCell) {
+              if (!colorInput) {
+                colorInput = document.createElement('input');
+                colorInput.type = 'hidden';
+                colorInput.name = `items[${seleccion.rowIndex}][id_color]`;
+                colorInput.value = '0';
+                firstCell.appendChild(colorInput);
+              }
+              
+              if (!detalleInput) {
+                detalleInput = document.createElement('input');
+                detalleInput.type = 'hidden';
+                detalleInput.name = `items[${seleccion.rowIndex}][id_detalle]`;
+                detalleInput.value = '0';
+                firstCell.appendChild(detalleInput);
+              }
+            }
+          }
+          
+          // Asignar valores seleccionados
+          if (colorInput && seleccion.colorId) {
+            colorInput.value = seleccion.colorId;
+          }
+          
+          if (detalleInput && seleccion.detalleId) {
+            detalleInput.value = seleccion.detalleId;
+          }
+          
+          if (colorInput) {
+            colorInput.value = seleccion.colorId || '';
+            console.log('Color asignado:', colorInput.name, '=', colorInput.value);
+          }
+          
+          if (detalleInput) {
+            detalleInput.value = seleccion.detalleId || '';
+            console.log('Detalle asignado:', detalleInput.name, '=', detalleInput.value);
+          }
+        }
+      );
+    } else if (window.modalColorDetalleManager === undefined) {
+      // Reintentar después de un breve retraso si el manager no está disponible
+      setTimeout(tryShowModal, 50);
+    }
+    // Si modalColorDetalleManager existe pero articulo.id no, no hacer nada
+  }
+  
+  // Intentar mostrar el modal después de un pequeño retraso para asegurar que esté listo
+  setTimeout(tryShowModal, 100);
   if ((itemDiv.target.closest("tr").querySelector(".precio-unitario").value === null) || (itemDiv.target.closest("tr").querySelector(".precio-unitario").value == 0)) {
     const precioUnitario = parseFloat(articulo.precio);
     const inputPrecio = itemDiv.target.closest("tr").querySelector(".precio-unitario")
@@ -605,43 +872,27 @@ function asignarArticulo(articulo, itemDiv) {
 }
 
 function mostrarModalSeleccionArticulos(articulos, idlista, itemDiv) {
-  // Crear el contenido del modal con las opciones de cliente
-  const tituloModal = document.getElementById("clienteModalLabel");
-  tituloModal.textContent = "Seleccione un Artículo";
-  const modalContent = document.getElementById("modalContent");
-  modalContent.innerHTML = "";
-  const listaArticulos = document.createElement("ul");
-  listaArticulos.classList.add("list-group");
-  modalContent.appendChild(listaArticulos);
-
-  articulos.forEach((articulo) => {
-    const articuloOption = document.createElement("li");
-    articuloOption.classList.add("cliente-option");
-    articuloOption.classList.add("list-group-item");
-    articuloOption.innerHTML = `<strong>${articulo.marca} ${articulo.detalle}</strong> - <span class="precio-normal">$${parseFloat(articulo.precio)
-      .toFixed(2)
-      .toLocaleString("es-AR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}</span>`;
-    articuloOption.onclick = async() => {
-      response = await fetch(`${BASE_URL}/articulos/articulo/${articulo.codigo}/${idlista}`);
+  // Usar el sistema universal de modal de búsqueda
+  const callback = async (articulo) => {
+    try {
+      const response = await fetch(`${BASE_URL}/articulos/articulo/${articulo.codigo}/${idlista}`);
       if (response.ok) {
         const data = await response.json();
-        //asignarArticulo(data.articulo, itemDiv);
         asignarArticuloElegido(data.articulo, itemDiv);
       }
-      //asignarArticuloElegido(articulo, itemDiv);
-      $("#clienteModal").modal("hide");
-      // Enfocar el nuevo input de código
-      const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-      nuevoInputCodigo.focus();
-    };
-    listaArticulos.appendChild(articuloOption);
-  });
-
-  // Mostrar el modal
-  $("#clienteModal").modal("show");
+    } catch (error) {
+      console.error('Error al obtener artículo:', error);
+      // Fallback: usar el artículo directamente
+      asignarArticuloElegido(articulo, itemDiv);
+    }
+    
+    // Enfocar el nuevo input de código
+    const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
+    if (nuevoInputCodigo) nuevoInputCodigo.focus();
+  };
+  
+  // Mostrar modal con los datos
+  window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 
 function updateItemTotal(itemDiv) {
@@ -664,9 +915,13 @@ function updateTotalFactura() {
       totalFactura += precioTotal;
     }
   });
-  document.getElementById("total_factura").textContent = totalFactura.toFixed(2);
   document.getElementById("totalFactura").value = totalFactura.toFixed(2);
-  calcSaldo();
+  
+  // Solo llamar calcSaldo si el modal está abierto y las funciones universales están disponibles
+  const modal = document.getElementById('transaccionesModal');
+  if (modal && modal.classList.contains('show') && window.calcSaldo) {
+    window.calcSaldo();
+  }
 }
 
 function removeItem(itemDiv) {
@@ -710,108 +965,11 @@ function checkDatosTarjeta() {
 }
 /*FIXIT
         controlar valores nulos NaN*/
-function calcSaldo() {
-  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
-  const efectivo = parseFloat(document.getElementById("efectivo").value);
-  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
-  const ctacte = parseFloat(document.getElementById("ctacte").value);
-  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
-  const monto_credito = parseFloat(document.getElementById("monto_credito").value);
-  const ofertas_especiales = parseFloat(document.getElementById("ofertas_especiales").value);
-  if (isNaN(efectivo)) {
-    efectivo = 0;
-  }
-  if (isNaN(tarjeta)) {
-    tarjeta = 0;
-  }
-  else{
-    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
-    tarjeta = tarjeta / coeficiente;
-  }
-  if (isNaN(ctacte)) {
-    ctacte = 0;
-  }
-  if (isNaN(bonificacion)) {
-    bonificacion = 0;
-  }
-  if (isNaN(monto_credito)) {
-    monto_credito = 0;
-  }
-  if (isNaN(ofertas_especiales)) {
-    ofertas_especiales = 0;
-  }
-  let diferencia = parseFloat(totalFac - (efectivo + tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales)).toFixed(2);
-  let lblSaldo = document.getElementById("saldo_factura");
-  lblSaldo.textContent = diferencia;
-  if (diferencia > 0) {
-    lblSaldo.className = "negativo";
-  } else if (diferencia === 0) {
-    lblSaldo.className = "neutro";
-  } else {
-    lblSaldo.className = "positivo";
-  }
-}
+// Funciones calcSaldo() y checkTotales() movidas a modal-transacciones-universal.js
+// para evitar conflictos con el modal universal
 
-function checkTotales() {
-  const totalFac = parseFloat(document.getElementById("total_factura").textContent);
-  const efectivo = parseFloat(document.getElementById("efectivo").value);
-  const ctacte = parseFloat(document.getElementById("ctacte").value);
-  let tarjeta = parseFloat(document.getElementById("tarjeta").value);
-  const bonificacion = parseFloat(document.getElementById("bonificacion").value);
-  const monto_credito = parseFloat(document.getElementById("monto_credito").value);
-  const ofertas_especiales = parseFloat(document.getElementById("ofertas_especiales").value);
-  if (isNaN(efectivo)) {
-    efectivo = 0;
-  }
-  if (isNaN(tarjeta)) {
-    tarjeta = 0;
-  }
-  else{
-    const coeficiente = parseFloat(document.getElementById("coeficiente").value);
-    tarjeta = tarjeta / coeficiente;
-  }
-
-  if (isNaN(ctacte)) {
-    ctacte = 0;
-  }
-  if (isNaN(bonificacion)) {
-    bonificacion = 0;
-  }
-  if (isNaN(monto_credito)) {
-    monto_credito = 0;
-  }
-  if (isNaN(ofertas_especiales)) {
-    ofertas_especiales = 0;
-  }
-  let HayDiferencia;
-  if (efectivo > 0) {
-     HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac <= (efectivo + tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales).toFixed(2));
-  }
-  else{
-    HayDiferencia = totalFac.toFixed(2) > 0 && (totalFac.toFixed(2) === (tarjeta + ctacte + bonificacion + monto_credito + ofertas_especiales).toFixed(2));
-  }  
-  return HayDiferencia;
-}
-
-document.getElementById("efectivo").addEventListener("blur", function (event) {
-  calcSaldo();
-});
-
-document.getElementById("tarjeta").addEventListener("blur", function (event) {
-  calcSaldo();
-});
-
-document.getElementById("ctacte").addEventListener("blur", function (event) {
-  calcSaldo();
-});
-
-document.getElementById("bonificacion").addEventListener("blur", function (event) {
-  calcSaldo();
-});
-
-document.getElementById("monto_credito").addEventListener("blur", function (event) {
-  calcSaldo();
-});
+// Event listeners movidos a modal-transacciones-universal.js
+// Mantener solo el de cliente que es específico de esta página
 
 document.getElementById("idcliente").addEventListener("blur", function () {
   const idcliente = this.value;
@@ -835,9 +993,12 @@ const tablaItems = document.querySelector("#tabla-items tbody");
 document.getElementById("agregarArticulo").addEventListener("click", () => {
   const nuevaFila = `
                 <tr class="items">
-                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">- <input type="number" name="items[${contadorFilas}][idrubro]" hidden> <input type="number" name="items[${contadorFilas}][idmarca]" hidden> </td>
-
-                    <td class="id-marca" name="items[${contadorFilas}][idmarca]" hidden> </td>
+                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">- 
+                        <input type="hidden" name="items[${contadorFilas}][idrubro]">
+                        <input type="hidden" name="items[${contadorFilas}][idmarca]">
+                        <input type="hidden" name="items[${contadorFilas}][id_color]" value="0">
+                        <input type="hidden" name="items[${contadorFilas}][id_detalle]" value="0">
+                    </td>                    <td class="id-marca" name="items[${contadorFilas}][idmarca]" hidden> </td>
                     <td class="id-rubro" name="items[${contadorFilas}][idrubro]" hidden> </td>
 
                     <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required onfocus="this.select()"></td>
@@ -850,6 +1011,12 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
   contadorFilas++;
+  
+  // Asegurar que la nueva fila tenga los campos necesarios
+  setTimeout(() => {
+    ensureColorDetalleFields();
+  }, 10);
+  
   // Enfocar el nuevo input de código
   const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
   nuevoInputCodigo.focus();
@@ -886,7 +1053,7 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
     if (checkDatosTarjeta() === false) {
         return false;
     }
-    if (checkTotales() === false) {
+    if (!window.checkTotales || !window.checkTotales()) {
         alert(
             'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." + "Crédito" debe ser igual al total de la factura'
         );
@@ -896,6 +1063,9 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
         return false;
     }
 
+    // Asegurar que los campos color/detalle estén presentes antes del envío
+    ensureColorDetalleFields();
+    
     // 👉 Mostrar spinner
     document.getElementById("spinner").style.display = "block";
 
@@ -953,29 +1123,297 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
 });
 
 
+// Variable global para almacenar los datos del crédito
+let creditoDisponible = null;
+
 async function hayCredito(idcliente) {
-  response = await fetch(`${BASE_URL}/creditos/hay_credito/${idcliente}`)
-  if (response.ok) {
-    const data = await response.json();
-    if (data.success) {
-      if (data.credito.idcredito != 0) {
-        document.getElementById("monto_credito").disabled = false;
-        let monto_credito = parseFloat(data.credito.monto_credito);
-        document.getElementById("monto_credito").value = monto_credito.toFixed(2);
-        document.getElementById("idcredito").value = data.credito.idcredito;
+  console.log(`🔍 Verificando crédito para cliente: ${idcliente}`);
+  
+  try {
+    const response = await fetch(`${BASE_URL}/creditos/hay_credito/${idcliente}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('📊 Respuesta del servidor:', data);
+      
+      if (data.success) {
+        if (data.credito.idcredito != 0) {
+          console.log('💳 Cliente tiene crédito disponible');
+          
+          // Guardar los datos del crédito globalmente
+          creditoDisponible = {
+            idcredito: data.credito.idcredito,
+            estado: data.credito.estado,
+            monto_credito: parseFloat(data.credito.monto_credito),
+            cuotas: data.credito.cuotas
+          };
+          
+          console.log('💾 Datos del crédito guardados:', creditoDisponible);
+          
+          // Mostrar modal de confirmación
+          mostrarModalCreditoDisponible(creditoDisponible);
+        } else {
+          console.log('❌ Cliente no tiene crédito disponible');
+          // No hay crédito disponible - limpiar campos
+          limpiarCamposCredito();
+        }
       } else {
-        document.getElementById("idcredito").disabled = true;
-        document.getElementById("idcredito").value = '';
-        document.getElementById("monto_credito").disabled = true;
-        document.getElementById("monto_credito").value = 0;
+        console.error('❌ Error en la respuesta del servidor:', data);
+        limpiarCamposCredito();
       }
     } else {
-      console.log('error');
+      console.error(`❌ Error HTTP ${response.status}: ${response.statusText}`);
+      limpiarCamposCredito();
+    }
+  } catch (error) {
+    console.error('❌ Error al verificar crédito:', error);
+    limpiarCamposCredito();
+  }
+}
+
+function mostrarModalCreditoDisponible(credito) {
+  console.log('Mostrando modal de crédito disponible:', credito);
+  
+  // Llenar los datos en la modal
+  document.getElementById('credito-id').textContent = credito.idcredito;
+  document.getElementById('credito-estado').textContent = getEstadoCredito(credito.estado);
+  document.getElementById('credito-monto').textContent = `$ ${credito.monto_credito.toLocaleString('es-AR', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  })}`;
+  document.getElementById('credito-cuotas').textContent = credito.cuotas;
+  
+  // Mostrar la modal (usando both jQuery and vanilla JS for compatibility)
+  const modal = document.getElementById('creditoDisponibleModal');
+  if (modal) {
+    $('#creditoDisponibleModal').modal({
+      backdrop: 'static',  // Prevent closing by clicking outside
+      keyboard: false      // Prevent closing with ESC key  
+    }).modal('show');
+  } else {
+    console.error('Modal creditoDisponibleModal no encontrada');
+  }
+}
+
+function getEstadoCredito(estado) {
+  const estados = {
+    1: 'Nuevo',
+    2: 'Pendiente',
+    3: 'Aprobado',
+    4: 'Rechazado',
+    5: 'Cancelado',
+    6: 'Finalizado',
+    7: 'Actualizar datos'
+  };
+  return estados[estado] || 'Desconocido';
+}
+
+function aplicarCredito() {
+  if (creditoDisponible) {
+    console.log('✅ Aplicando crédito:', creditoDisponible);
+    
+    // Guardar el crédito para aplicar cuando se abra el modal de pagos
+    window.creditoPendienteAplicar = {
+      monto: creditoDisponible.monto_credito,
+      idcredito: creditoDisponible.idcredito
+    };
+    
+    console.log('💾 Crédito guardado para aplicar:', window.creditoPendienteAplicar);
+    
+    // Mostrar notificación de éxito ANTES de aplicar (para evitar que se limpie la variable)
+    mostrarNotificacionCredito(window.creditoPendienteAplicar.monto);
+    
+    // Intentar aplicar inmediatamente si el modal de pagos ya está disponible
+    aplicarCreditoEnModal();
+    
+    // Cerrar modal
+    $('#creditoDisponibleModal').modal('hide');
+  } else {
+    console.error('❌ No hay datos de crédito disponibles para aplicar');
+  }
+}
+
+function aplicarCreditoEnModal() {
+  if (!window.creditoPendienteAplicar) return;
+  
+  console.log('🔄 Intentando aplicar crédito en modal de pagos...');
+  
+  // Buscar campos de crédito en el modal de pagos con múltiples selectores
+  const posiblesSelectores = [
+    '#credito',
+    '#monto_credito', 
+    '[name="credito"]',
+    '[name="monto_credito"]',
+    '#pago-credito input[type="number"]',
+    '.tab-pane#pago-credito input'
+  ];
+  
+  let montoCreditoField = null;
+  let idCreditoField = null;
+  
+  // Buscar el campo de monto de crédito
+  for (const selector of posiblesSelectores) {
+    montoCreditoField = document.querySelector(selector);
+    if (montoCreditoField) {
+      console.log(`✅ Campo de crédito encontrado con selector: ${selector}`);
+      break;
     }
   }
-  else {
-    console.log('Error al consultar créditos');
-  } 
+  
+  // Buscar el campo de ID de crédito
+  const posiblesIdSelectores = [
+    '#idcredito',
+    '[name="idcredito"]',
+    '#pago-credito input[name="idcredito"]'
+  ];
+  
+  for (const selector of posiblesIdSelectores) {
+    idCreditoField = document.querySelector(selector);
+    if (idCreditoField) {
+      console.log(`✅ Campo ID crédito encontrado con selector: ${selector}`);
+      break;
+    }
+  }
+  
+  if (montoCreditoField) {
+    montoCreditoField.disabled = false;
+    montoCreditoField.value = window.creditoPendienteAplicar.monto.toFixed(2);
+    
+    if (idCreditoField) {
+      idCreditoField.value = window.creditoPendienteAplicar.idcredito;
+      console.log('✅ ID de crédito establecido:', window.creditoPendienteAplicar.idcredito);
+    }
+    
+    // NO activar automáticamente la pestaña de crédito
+    // El usuario puede cambiar manualmente si lo desea
+    // El tab de efectivo siempre queda activo por defecto
+    console.log('✅ Valores de crédito cargados (tab efectivo permanece activo)');
+    
+    // Recalcular saldo usando función universal
+    if (window.calcSaldo) {
+      setTimeout(() => {
+        window.calcSaldo();
+      }, 100);
+    }
+    
+    // Mostrar feedback visual
+    montoCreditoField.style.backgroundColor = '#d4edda';
+    montoCreditoField.style.border = '2px solid #28a745';
+    setTimeout(() => {
+      montoCreditoField.style.backgroundColor = '';
+      montoCreditoField.style.border = '';
+    }, 3000);
+    
+    console.log('✅ Crédito aplicado exitosamente en el modal de pagos');
+    
+    // Limpiar el crédito pendiente DESPUÉS de aplicarlo exitosamente
+    window.creditoPendienteAplicar = null;
+    
+    return true;
+  } else {
+    console.warn('⚠️ Campos de crédito no encontrados en el modal de pagos');
+    return false;
+  }
+}
+
+function mostrarNotificacionCredito(monto) {
+  // Usar el monto pasado como parámetro
+  const montoCredito = monto || (window.creditoPendienteAplicar ? window.creditoPendienteAplicar.monto : 0);
+  
+  if (montoCredito <= 0) {
+    console.warn('⚠️ No se puede mostrar notificación: monto inválido');
+    return;
+  }
+  
+  // Crear notificación temporal
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 10000;
+    font-weight: 600;
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.innerHTML = `
+    <i class="fas fa-check-circle"></i>
+    Crédito de $${montoCredito.toLocaleString('es-AR', {minimumFractionDigits: 2})} listo para usar
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification && notification.parentNode) {
+      notification.remove();
+    }
+  }, 4000);
+}
+
+// Asegurar que las funciones estén en el scope global
+window.aplicarCredito = aplicarCredito;
+
+function rechazarCredito() {
+  console.log('🚫 Usuario rechazó aplicar el crédito');
+  
+  // No aplicar el crédito - limpiar campos y variables
+  limpiarCamposCredito();
+  
+  // Limpiar crédito pendiente
+  window.creditoPendienteAplicar = null;
+  
+  // Cerrar modal
+  $('#creditoDisponibleModal').modal('hide');
+  
+  console.log('✅ Crédito rechazado - campos y variables limpiados');
+}
+
+// Event listeners para los botones del modal de crédito
+document.addEventListener('DOMContentLoaded', function() {
+  // Botón rechazar crédito
+  const btnRechazarCredito = document.querySelector('#creditoDisponibleModal .btn-secondary');
+  if (btnRechazarCredito) {
+    btnRechazarCredito.addEventListener('click', rechazarCredito);
+    console.log('✅ Event listener para rechazar crédito configurado');
+  }
+  
+  // Botón aplicar crédito  
+  const btnAplicarCredito = document.querySelector('#creditoDisponibleModal .btn-success');
+  if (btnAplicarCredito) {
+    btnAplicarCredito.addEventListener('click', aplicarCredito);
+    console.log('✅ Event listener para aplicar crédito configurado');
+  }
+});
+
+// También asegurar que estén en el scope global para compatibilidad
+window.rechazarCredito = rechazarCredito;
+
+function limpiarCamposCredito() {
+  console.log('🧹 Limpiando campos de crédito');
+  
+  const idCreditoField = document.getElementById("idcredito");
+  const montoCreditoField = document.getElementById("monto_credito");
+  
+  if (idCreditoField && montoCreditoField) {
+    idCreditoField.disabled = true;
+    idCreditoField.value = '';
+    montoCreditoField.disabled = true;
+    montoCreditoField.value = 0;
+    
+    // Remover cualquier estilo de feedback visual
+    montoCreditoField.style.backgroundColor = '';
+    
+    console.log('✅ Campos de crédito limpiados');
+  } else {
+    console.warn('⚠️ No se encontraron los campos de crédito para limpiar');
+  }
+  
+  // Limpiar variable global
+  creditoDisponible = null;
 }  
 
 
@@ -1016,12 +1454,5 @@ async function coefCuotas(tarjeta, cuotas) {
   }  
 }
 
-document.getElementById('cuotas').addEventListener('input', async function() {
-    const cuotas = this.value;
-    const tarjeta = document.getElementById('entidad').value;
-    const coeficienteCuotas = await coefCuotas(tarjeta, cuotas);
-    document.getElementById('coeficiente').value = coeficienteCuotas;
-    const saldo = parseFloat(document.getElementById("saldo_factura").innerHTML);
-    document.getElementById('total_tarjeta').value = parseFloat(saldo * coeficienteCuotas).toFixed(2);
-    //document.getElementById('total').innerText = total.toFixed(2);
-});
+// Event listener para cuotas movido a modal-transacciones-universal.js
+// para usar la implementación universal que maneja todos los campos correctamente

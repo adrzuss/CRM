@@ -2,82 +2,484 @@
 
 {% block aditional_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.dataTables.css')}}">
+    <style>
+    /* Gradientes y fondos suaves */
+    .section-header, .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border-radius: 0.75rem 0.75rem 0 0;
+        padding: 1.25rem 2rem;
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 0.25rem 2rem rgba(78, 115, 223, 0.08);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.15);
+    }
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+    }
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        color: #6c757d;
+    }
+    /* Badges suaves */
+    .badge {
+        background: linear-gradient(135deg, #36b9cc 0%, #3bc3db 100%);
+        color: white;
+        border-radius: 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.5rem 1.25rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.08);
+    }
+    /* Inputs y botones modernos */
+    .form-control-modern {
+        border-radius: 0.5rem;
+        border: 1px solid #e3e6f0;
+        background: #f8f9fc;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    .form-control-modern:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+    .btn-action {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 1rem rgba(102, 126, 234, 0.15);
+        color: white;
+    }
+    /* Animaciones sutiles */
+    .fade-in {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px);}
+        to { opacity: 1; transform: translateY(0);}
+    }
+    </style>
 {% endblock %}
 
 {% block body %}
-    <h2 class="m-3">Facturas de venta</h2>
-    <div class="m-3">
-        <a href="{{ url_for('ventas.nueva_venta') }}" class="btn btn-primario">Nueva venta</a>
-    </div>    
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-8">
-            <div class="card m-3">
-                <h5 class="px-5 pt-2">Periodo</h5>
-                <div class="card-body">
-                    <form action="" method="post">
-                        <div class="row justify-content-md-center">
-                            <div class="col-md-3">
-                                <label for="desde">Desde</label>
-                                <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="hasta">Hasta</label>
-                                <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
-                            </div>    
-                            <div class="col-md-2 m-4">
-                                <button type="submit" class="btn btn-primario">Buscar</button>
-                            </div>    
-                        </div>
-                    </form>
-                </div>    
-            </div>
-        </div>    
-    </div>
-    
-    <div class="row justify-content-center align-items-center">
-        <div class="col-10">
-            <div class="table-responsive m-3" >
-                <table class="table display table-striped table-hover table-borderless align-middle" id="dataTable" >
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Número</th>
-                            <th>Total</th>
-                            <th>CAE</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-group-divider">
-                        {% for factura in facturas %}        
-                            <tr class="table-light">
-                                <td scope="row">{{ factura.cliente }}</td>
-                                <td>{{ factura.fecha.strftime("%d-%m-%Y") }}</td>
-                                <td>{{ factura.tipo_comprobante }}</td>
-                                <td>{{ factura.nro_comprobante }}</td>
-                                <td style="text-align:center">{{ "${:,.2f}".format(factura.total) }}</td>
-                                {% if factura.cae == None %}
-                                    <td style="text-align:center">No aplica</td>
-                                {% else %}
-                                    <td style="text-align:center">{{ factura.cae }}</td>
-                                {% endif %}
-                                
-                                <td><a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" class="btn btn-secondary">Ver factura</a></td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        
-                    </tfoot>
-                </table>
-            </div>
-        </div>    
-    </div>
 
-    <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
-    <script src="/static/vendor/datatable/datatables.js"></script>
-    <script src="/static/js/dataTables.js"></script>
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-shopping-cart me-1"></i>Facturas de Venta
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-success text-white">
+            <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="ms-3 flex-grow-1">
+            <h1 class="page-title mb-0">Facturas de Venta</h1>
+            <p class="page-subtitle text-muted mb-0">Gestión y consulta de facturas emitidas</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{{ url_for('ventas.nueva_venta') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Nueva Venta
+            </a>
+            <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-warning">
+                <i class="fas fa-file-invoice me-1"></i>Nuevo Presupuesto
+            </a>
+            <a href="{{ url_for('ventas.nuevo_remito') }}" class="btn btn-info">
+                <i class="fas fa-truck me-1"></i>Nuevo Remito
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">    
+    <!-- Filtros de búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <h5 class="card-title mb-0">Filtros de Búsqueda</h5>
+                <div class="ms-auto">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                        <i class="fas fa-broom me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form action="" method="post" id="filtrosForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-select" id="filtroTipo" name="tipo">
+                                <option value="">Todos los tipos</option>
+                                <option value="Factura A">Factura A</option>
+                                <option value="Factura B">Factura B</option>
+                                <option value="Factura C">Factura C</option>
+                                <option value="Nota Débito">Nota Débito</option>
+                                <option value="Nota Crédito">Nota Crédito</option>
+                            </select>
+                            <label for="filtroTipo"><i class="fas fa-file-invoice me-2"></i>Tipo de Comprobante</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary h-100">
+                            <i class="fas fa-search me-1"></i>Buscar Facturas
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Mostrando facturas del período:</strong> 
+                            {{ desde }} al {{ hasta }} 
+                            <span class="badge bg-primary ms-2">{{ facturas|length }} facturas encontradas</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     
+    <!-- Tabla de facturas -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>Lista de Facturas
+            </h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                    <i class="fas fa-print me-1"></i>Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if facturas %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="dataTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Cliente</th>
+                                <th class="text-center"><i class="fas fa-calendar me-1"></i>Fecha</th>
+                                <th class="text-center"><i class="fas fa-file-invoice me-1"></i>Tipo</th>
+                                <th class="text-center"><i class="fas fa-hashtag me-1"></i>Número</th>
+                                <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                <th class="text-center"><i class="fas fa-certificate me-1"></i>CAE</th>
+                                <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            {% for factura in facturas %}
+                                <tr class="{% if loop.index0 % 2 == 0 %}table-light{% else %}bg-white{% endif %}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                {{ factura.cliente[:1].upper() }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ factura.cliente }}</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">
+                                            {{ factura.fecha.strftime("%d/%m/%Y") }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% set tipo_class = {
+                                            'Factura A': 'bg-success',
+                                            'Factura B': 'bg-info', 
+                                            'Factura C': 'bg-warning',
+                                            'Nota Débito': 'bg-danger',
+                                            'Nota Crédito': 'bg-secondary'
+                                        } %}
+                                        <span class="badge {{ tipo_class.get(factura.tipo_comprobante, 'bg-primary') }}">
+                                            {{ factura.tipo_comprobante }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <code class="bg-light px-2 py-1 rounded">
+                                            {{ factura.nro_comprobante }}
+                                        </code>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-dollar-sign me-1"></i>${{ "{:,.2f}".format(factura.total) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if factura.cae == None %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-times me-1"></i>No aplica
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success" title="CAE: {{ factura.cae }}">
+                                                <i class="fas fa-check me-1"></i>Válido
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('ventas.ver_factura_vta', id=factura.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="Ver factura">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="imprimirFactura({{ factura.id }})" 
+                                                    title="Imprimir factura">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    onclick="enviarEmail({{ factura.id }})" 
+                                                    title="Enviar por email">
+                                                <i class="fas fa-envelope"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Total General:</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-calculator me-1"></i>
+                                        ${{ "{:,.2f}".format(facturas|sum(attribute='total')) }}
+                                    </span>
+                                </td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No se encontraron facturas</h5>
+                    <p class="text-muted">No hay facturas en el período seleccionado</p>
+                    <a href="{{ url_for('ventas.nueva_venta') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Crear Primera Factura
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones de utilidad
+function limpiarFiltros() {
+    document.getElementById('filtrosForm').reset();
+    // Establecer fechas por defecto (último mes)
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    document.getElementById('desde').value = hace30Dias.toISOString().split('T')[0];
+    document.getElementById('hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('filtroTipo').value = '';
+}
+
+function exportarExcel() {
+    // Función para exportar a Excel
+    window.open(`${window.location.pathname}/export/excel${window.location.search}`, '_blank');
+}
+
+function imprimirTabla() {
+    // Función para imprimir la tabla
+    const contenido = document.querySelector('.table-responsive').innerHTML;
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Facturas de Venta</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    @media print {
+                        .btn { display: none !important; }
+                        body { font-size: 12px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h2 class="text-center mb-4">Facturas de Venta</h2>
+                    ${contenido}
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+function imprimirFactura(facturaId) {
+    // Función para imprimir una factura específica
+    window.open(`/ventas/imprimir/${facturaId}`, '_blank');
+}
+
+function enviarEmail(facturaId) {
+    // Función para enviar factura por email
+    if (confirm('¿Desea enviar esta factura por email al cliente?')) {
+        fetch(`/ventas/enviar-email/${facturaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Factura enviada por email exitosamente');
+            } else {
+                alert('Error al enviar email: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al enviar email');
+        });
+    }
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar fechas por defecto si están vacías
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    
+    if (!desdeInput.value || !hastaInput.value) {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        
+        if (!desdeInput.value) {
+            desdeInput.value = hace30Dias.toISOString().split('T')[0];
+        }
+        if (!hastaInput.value) {
+            hastaInput.value = hoy.toISOString().split('T')[0];
+        }
+    }
+    
+    // Configurar tooltips
+    const tooltips = document.querySelectorAll('[title]');
+    tooltips.forEach(element => {
+        element.setAttribute('data-bs-toggle', 'tooltip');
+    });
+    
+    // Inicializar DataTables si existe la tabla
+    const table = document.getElementById('dataTable');
+    if (table && typeof $ !== 'undefined') {
+        $(table).DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            order: [[1, 'desc']], // Ordenar por fecha descendente
+            columnDefs: [
+                { targets: [1, 2, 3, 4, 5, 6], className: 'text-center' }
+            ],
+            responsive: true
+        });
+    }
+    
+    // Auto-submit del formulario al cambiar fechas (opcional)
+    const autoSubmit = false; // Cambiar a true si se desea auto-submit
+    if (autoSubmit) {
+        desdeInput.addEventListener('change', function() {
+            if (hastaInput.value) {
+                document.getElementById('filtrosForm').submit();
+            }
+        });
+        
+        hastaInput.addEventListener('change', function() {
+            if (desdeInput.value) {
+                document.getElementById('filtrosForm').submit();
+            }
+        });
+    }
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // F3 para nueva venta
+    if (e.key === 'F3') {
+        e.preventDefault();
+        window.location.href = '{{ url_for("ventas.nueva_venta") }}';
+    }
+    // F4 para nuevo presupuesto
+    if (e.key === 'F4') {
+        e.preventDefault();
+        window.location.href = '{{ url_for("ventas.nuevo_presupuesto") }}';
+    }
+    // F5 para actualizar (comportamiento por defecto)
+    // F12 para exportar Excel
+    if (e.key === 'F12') {
+        e.preventDefault();
+        exportarExcel();
+    }
+});
+</script>
+
+<script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+<script src="/static/vendor/datatable/datatables.js"></script>
+<script src="/static/js/dataTables.js"></script>
+
 {% endblock %}

@@ -1,16 +1,48 @@
 {% extends 'base.html'%}
 {% block body %}
 
-    <div class="row m-3">
-        <div class="col-md-12">
-            {% include 'partials/_add-clientes.html' %}
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-users me-1"></i>Gestión de Clientes
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página con diseño moderno -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Gestión de Clientes</h1>
+            <p class="page-subtitle text-muted mb-0">Administra la información de tus clientes</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Formulario de ingreso -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% include 'clientes/partials/_add-clientes.html' %}
         </div>  
-    </div>       
-    <div class="row m-3">
-        <div class="col-md-12">
-            {% include 'partials/_lst-clientes.html' %}
+    </div>
+    
+    <!-- Lista de clientes -->
+    <div class="row">
+        <div class="col-12">
+            {% include 'clientes/partials/_lst-clientes.html' %}
         </div>     
-    </div>      
+    </div>
+</div>      
 
     <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js')}}"></script>
     <script src="{{ url_for('static', filename='vendor/datatable/datatables.js')}}"></script>

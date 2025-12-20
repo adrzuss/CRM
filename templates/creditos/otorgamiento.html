@@ -1,165 +1,790 @@
 {% extends 'base.html' %}
+
+{% block head %}
+<style>
+/* Estilos personalizados para otorgamiento de créditos */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding: 1rem 0.5rem;
+}
+
+.step::before {
+    content: attr(data-step);
+    display: block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    line-height: 40px;
+    font-weight: bold;
+    margin: 0 auto 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.step.active::before {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.step.completed::before {
+    background: #28a745;
+    color: white;
+}
+
+.step-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.step.active .step-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0;
+    padding: 1.25rem 2rem;
+    margin: 0;
+    border: none;
+}
+
+.section-header h4, .section-header h3 {
+    margin: 0;
+    color: white !important;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #5a5c69;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-action {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 1rem rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.info-badge {
+    background: linear-gradient(135deg, #36b9cc 0%, #3bc3db 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.calculation-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.calculation-amount {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+}
+
+.fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h1>Otorgamiento de crédito</h1>
+<div class="container-fluid">
+    
+    <!-- Header elegante con breadcrumbs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 text-gray-800 mb-1">💎 Otorgamiento de Crédito</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="/creditos">Créditos</a></li>
+                            <li class="breadcrumb-item active">Otorgamiento</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="text-right">
+                    <span class="info-badge">
+                        <i class="fas fa-calendar"></i> <span id="fecha_hoy"></span>
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-title">
-            <h3 class="ml-3 mt-3">Datos para el otorgamiento del crédito</h3>
+
+    <!-- Indicador de pasos -->
+    <div class="step-indicator mb-4">
+        <div class="step active" data-step="1">
+            <div class="step-title">Cliente</div>
         </div>
+        <div class="step" data-step="2">
+            <div class="step-title">Plan</div>
+        </div>
+        <div class="step" data-step="3">
+            <div class="step-title">Garantes</div>
+        </div>
+        <div class="step" data-step="4">
+            <div class="step-title">Cuotas</div>
+        </div>
+        <div class="step" data-step="5">
+            <div class="step-title">Documentos</div>
+        </div>
+    </div>
 
-        {% include 'partials/_modal-cliente.html' %}
+    {% include 'partials/_modal-cliente.html' %}
 
-        <div class="card-body">
-            
-            <form action="{{ url_for('creditos.generar_credito') }}" id="otorgamiento_form" method="post" enctype="multipart/form-data">
-                <!-- Datos del cliente -->
-                <div class="card mt-3 card-color-uno">
-                    <div class="card-title">
-                        <h4 class="ml-3 mt-3">Datos del cliente</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-2">
-                                <label for="idcliente"># Cliente</label>
-                                <input class="form-control" type="text" name="idcliente" id="idcliente" placeholder="Ingrese el nombre" value="{{ cliente.nombre }}" required>
-                            </div>
-                            <div class="col-5">
-                                <label for="cliente_nombre">Nombre</label>
-                                <input class="form-control" type="text" name="cliente_nombre" id="cliente_nombre" value="{{ cliente.nombre }}" readonly>
-                            </div>
-                            <div class="col-3">
-                                <label for="cliente_categoria">Categoría</label>
-                                <input class="form-control" type="text" name="cliente_categoria" id="cliente_categoria" value="{{ cliente.categoria }}" readonly>
-                            </div>
-                        </div>
-                    </div>    
-                </div>     
-                <!-- Datos del plan -->
-                 <div class="card mt-3 card-color-dos">
-                    <div class="card-title">
-                        <h4 class="mt-3 ml-3">Datos del plan</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-3">
-                                <label for="idplan">Plan</label>
-                                <select class="form-control" name="idplan" id="idplan" required>
-                                    
-                                </select>
-                            </div>
-                            <div class="col-2">
-                                <label for="cuotas">Cuotas</label>
-                                <input class="form-control" type="number" step="1" name="cuotas" id="cuotas" placeholder="Cantidad de cuotas" max="1" required>
-                            </div>
-                            <div class="col-2">
-                                <label for="tasa_interes">Tasa de interés</label>
-                                <input class="form-control" type="number" step="0.01" name="tasa_interes" id="tasa_interes" placeholder="Tasa de interés" readonly>
-                            </div>
-                            <div class="col-2">
-                                <label for="garantes">Cant. garantes</label>
-                                <input class="form-control" type="number" step="1" name="garantes" id="garantes" placeholder="Cantidad de garantes" readonly>
-                            </div>
-                        </div>
-                        <!-- Datos del crédito plan de cuotas-->
-                        <div class="row">
-                            <div class="col-4">
-                                <label for="monto_total">Monto del crédito</label>
-                                <input class="form-control " type="number" step="0.01" name="monto_total" id="monto_total" placeholder="Monto del crédito" value="{{ credito.monto_total }}" required>
-                            </div>
-                            <div class="col-2">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" value="" id="anticipo" >
-                                    <label class="form-check-label" for="anticipo"> Anticipo </label>
+    <form action="{{ url_for('creditos.generar_credito') }}" id="otorgamiento_form" method="post" enctype="multipart/form-data">
+        
+        <!-- PASO 1: Datos del cliente -->
+        <div class="card shadow mb-4 fade-in" data-step="1">
+            <div class="section-header">
+                <h4>
+                    <i class="fas fa-user-circle"></i>
+                    Datos del Cliente
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-2 col-md-3">
+                        <div class="form-group">
+                            <label for="idcliente">ID Cliente</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
                                 </div>
-                            </div>
-                            <div class="col-2">
-                                <label for="fecha_solicitud">Fecha de solicitud</label>
-                                {% if credito.fecha_solicitud %}
-                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" placeholder="Fecha de solicitud" readonly value="{{ credito.fecha_solicitud }}">
-                                {% else %}
-                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" placeholder="Fecha de solicitud" readonly value="{{ fecha_solicitud }}">
-                                {% endif %}
-                            </div>
-                            <div class="col-2">
-                                <label for="fecha_inicio">Fecha de inicio / 1° cuota</label>
-                                <input class="form-control" type="date" name="fecha_inicio" id="fecha_inicio" placeholder="Fecha de inicio" readonly value="{{ credito.fecha_inicio }}">
+                                <input class="form-control font-weight-bold" type="text" name="idcliente" id="idcliente" 
+                                       placeholder="Buscar cliente" value="{{ cliente.id if cliente else '' }}" required>
                             </div>
                         </div>
-                    </div>    
-                </div>    
-                <div class="card mt-3 card-color-tres">
-                    <div class="card-title">
-                        <h4 class="ml-3 mt-3">Datos de los garantes</h4>
                     </div>
-                    <div class="card-body" id="datos_garantes">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="form-group">
+                            <label for="cliente_nombre">Nombre Completo</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                </div>
+                                <input class="form-control font-weight-bold text-primary" type="text" name="cliente_nombre" id="cliente_nombre" 
+                                       value="{{ cliente.nombre if cliente else '' }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3">
+                        <div class="form-group">
+                            <label for="cliente_categoria">Categoría</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-star"></i></span>
+                                </div>
+                                <input class="form-control" type="text" name="cliente_categoria" id="cliente_categoria" 
+                                       value="{{ cliente.categoria if cliente else '' }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-12">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-outline-primary btn-block" onclick="buscarCliente()" title="Buscar cliente">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- Información adicional del cliente -->
                 <div class="row mt-3">
-                    <div class="col-4">
-                        <a class="btn btn-secundario" href="#" id="generar">Generar cuotas</a>
-                    </div>
-                </div>
-                <div class="card mt-3 card-color-cuatro">
-                    <div class="card-title">
-                        <h3 class="ml-3 mt-3">Detalles del crédito</h3>
-                        <div class="row">
-                            <div class="col-6 ml-3">
-                                <h3 id="monto_cuota" for="cuota_credito">Monto cuota:</h3>
-                                <input type="text" class="form-control col-4" id="cuota_credito" readonly hidden>
-                            </div>    
-                        </div>    
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                        <table class="table table-dark">
-                            <thead>
-                                <tr>
-                                    <th scope="col"># Cuota</th>
-                                    <th scope="col">Cuota</th>
-                                    <th scope="col">Interes</th>
-                                    <th scope="col">Capital</th>
-                                    <th scope="col">Saldo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="lst_cuotas">
-                                
-                            </tbody>
-                        </table>
+                    <div class="col-12">
+                        <div class="alert alert-info d-flex align-items-center" id="cliente_info" style="display: none !important;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div id="cliente_detalles">
+                                Seleccione un cliente para ver sus detalles y historial crediticio
+                            </div>
                         </div>
                     </div>
-                </div> 
-                <!-- Datos del crédito documentos del plan -->
-                <div class="card mt-3 card-color-cinco">
-                    <div class="card-title">
-                        <h3 class="ml-3 mt-3">Documentos del plan</h3>
+                </div>
+            </div>
+        </div>     
+        <!-- PASO 2: Datos del plan -->
+        <div class="card shadow mb-4 fade-in" data-step="2">
+            <div class="section-header">
+                <h4>
+                    <i class="fas fa-clipboard-list"></i>
+                    Configuración del Plan de Crédito
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-group">
+                            <label for="idplan">Plan de Crédito</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-list"></i></span>
+                                </div>
+                                <select class="form-control font-weight-bold" name="idplan" id="idplan" required>
+                                    <option value="">Seleccione un plan</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body" id="documentos_plan">
+                    <div class="col-lg-2 col-md-3">
+                        <div class="form-group">
+                            <label for="cuotas">Número de Cuotas</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-calculator"></i></span>
+                                </div>
+                                <input class="form-control text-center font-weight-bold" type="number" step="1" name="cuotas" id="cuotas" 
+                                       placeholder="0" max="999" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3">
+                        <div class="form-group">
+                            <label for="tasa_interes">Tasa de Interés (%)</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-percent"></i></span>
+                                </div>
+                                <input class="form-control text-center" type="number" step="0.01" name="tasa_interes" id="tasa_interes" 
+                                       placeholder="0.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-12">
+                        <div class="form-group">
+                            <label for="garantes">Garantes Requeridos</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                </div>
+                                <input class="form-control text-center" type="number" step="1" name="garantes" id="garantes" 
+                                       placeholder="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuración del crédito -->
+                <div class="row mt-3">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-group">
+                            <label for="monto_total">Monto del Crédito</label>
+                            <div class="input-group input-group-lg">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-success text-white"><i class="fas fa-dollar-sign"></i></span>
+                                </div>
+                                <input class="form-control font-weight-bold text-success" type="number" step="0.01" name="monto_total" id="monto_total" 
+                                       placeholder="0.00" value="{{ credito.monto_total if credito else '' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div class="form-check mt-2" style="padding-top: 12px;">
+                                <input class="form-check-input" type="checkbox" value="" id="anticipo" style="transform: scale(1.3);">
+                                <label class="form-check-label font-weight-bold ml-2" for="anticipo">
+                                    <i class="fas fa-money-bill-wave text-info"></i> Requiere Anticipo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label for="fecha_solicitud">Fecha de Solicitud</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-calendar-plus"></i></span>
+                                </div>
+                                {% if credito and credito.fecha_solicitud %}
+                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" readonly value="{{ credito.fecha_solicitud }}">
+                                {% else %}
+                                    <input class="form-control" type="date" name="fecha_solicitud" id="fecha_solicitud" readonly value="{{ fecha_solicitud }}">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label for="fecha_inicio">Inicio / 1° Cuota</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                                </div>
+                                <input class="form-control" type="date" name="fecha_inicio" id="fecha_inicio" 
+                                       value="{{ credito.fecha_inicio if credito else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botón de cálculo -->
+                <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <button type="button" class="btn btn-action" id="generar">
+                            <i class="fas fa-calculator"></i> Generar Plan de Cuotas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>    
+        <!-- PASO 3: Datos de los garantes -->
+        <div class="card shadow mb-4 fade-in" data-step="3">
+            <div class="section-header">
+                <h4>
+                    <i class="fas fa-handshake"></i>
+                    Garantes del Crédito
+                </h4>
+            </div>
+            <div class="card-body" id="datos_garantes">
+                <div class="text-center py-4" id="sin_garantes">
+                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">Sin garantes configurados</h5>
+                    <p class="text-muted">Los garantes se configurarán automáticamente según el plan seleccionado.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PASO 4: Plan de cuotas -->
+        <div class="card shadow mb-4 fade-in" data-step="4">
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h3>
+                    <i class="fas fa-table"></i>
+                    Plan de Cuotas Detallado
+                </h3>
+                <div class="calculation-card" id="cuota_display" style="display: none;">
+                    <div class="calculation-amount" id="monto_cuota">$0.00</div>
+                    <small>Cuota Mensual</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12 text-center" id="tabla_placeholder">
+                        <div class="py-5">
+                            <i class="fas fa-calculator fa-4x text-gray-300 mb-3"></i>
+                            <h4 class="text-gray-500">Plan de Cuotas</h4>
+                            <p class="text-muted">Complete los datos del crédito y haga clic en "Generar Plan de Cuotas" para ver el detalle.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive" id="tabla_cuotas" style="display: none;">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center">
+                                    <i class="fas fa-list-ol"></i> # Cuota
+                                </th>
+                                <th class="text-center">
+                                    <i class="fas fa-calendar"></i> Vencimiento
+                                </th>
+                                <th class="text-right">
+                                    <i class="fas fa-money-bill-wave"></i> Cuota
+                                </th>
+                                <th class="text-right">
+                                    <i class="fas fa-percent"></i> Interés
+                                </th>
+                                <th class="text-right">
+                                    <i class="fas fa-coins"></i> Capital
+                                </th>
+                                <th class="text-right">
+                                    <i class="fas fa-balance-scale"></i> Saldo
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="lst_cuotas">
+                            <!-- Las cuotas se generan dinámicamente -->
+                        </tbody>
+                        <tfoot class="bg-light">
+                            <tr>
+                                <th colspan="2" class="text-center">TOTALES</th>
+                                <th class="text-right" id="total_cuotas">$0.00</th>
+                                <th class="text-right" id="total_intereses">$0.00</th>
+                                <th class="text-right" id="total_capital">$0.00</th>
+                                <th class="text-right">$0.00</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <!-- Campo oculto para la cuota -->
+                <input type="text" class="form-control" id="cuota_credito" readonly hidden>
+            </div>
+        </div> 
+        <!-- PASO 5: Documentos del plan -->
+        <div class="card shadow mb-4 fade-in" data-step="5">
+            <div class="section-header">
+                <h3>
+                    <i class="fas fa-file-contract"></i>
+                    Documentación Requerida
+                </h3>
+            </div>
+            <div class="card-body" id="documentos_plan">
+                <div class="text-center py-4" id="sin_documentos">
+                    <i class="fas fa-folder-open fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">Documentos del Plan</h5>
+                    <p class="text-muted">Los documentos requeridos se mostrarán según el plan de crédito seleccionado.</p>
+                </div>
+            </div>
+        </div> 
+        
+        <!-- Observaciones finales -->
+        <div class="card shadow mb-4">
+            <div class="section-header">
+                <h3>
+                    <i class="fas fa-sticky-note"></i>
+                    Observaciones y Notas Adicionales
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="observaciones">Comentarios del Crédito</label>
+                    <textarea name="observaciones" id="observaciones" class="form-control" rows="4" 
+                              placeholder="Ingrese cualquier observación, condición especial o nota importante sobre este crédito..."></textarea>
+                </div>
+                
+                <!-- Resumen final -->
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <div class="alert alert-light border-left-primary">
+                            <h6 class="font-weight-bold">
+                                <i class="fas fa-info-circle text-primary"></i> Resumen del Crédito
+                            </h6>
+                            <div id="resumen_credito">
+                                <p class="mb-1"><strong>Cliente:</strong> <span id="resumen_cliente">Sin seleccionar</span></p>
+                                <p class="mb-1"><strong>Monto:</strong> <span id="resumen_monto">$0.00</span></p>
+                                <p class="mb-1"><strong>Plan:</strong> <span id="resumen_plan">Sin seleccionar</span></p>
+                                <p class="mb-0"><strong>Cuotas:</strong> <span id="resumen_cuotas">0</span> de <span id="resumen_valor_cuota">$0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <button class="btn btn-success btn-lg btn-block" type="submit" id="btn_generar_credito" disabled>
+                            <i class="fas fa-check-circle"></i> 
+                            <span>Otorgar Crédito</span>
+                        </button>
+                        <small class="text-muted mt-2">Complete todos los datos requeridos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </form>
+<!-- Modal universal de búsqueda -->
+{% include 'partials/_modal-busqueda-universal.html' %}
 
-                    </div>
-                        
-                </div> 
-                <!-- Observaciones del crédito -->
-                <div class="card mt-3 card-color-seis">
-                    <div class="card-title">
-                        <h3 class="ml-3 mt-3">Observaciones</h3>
-                    </div>
-                    <div class="card-body" >
-                        <textarea name="observaciones" id="observaciones" class="form-control" rows="5" placeholder="Observaciones"></textarea>
-                        
-                    </div>
-                        
-                </div> 
-                <button class="btn btn-exito mt-3" type="submit">Generar crédito</button>
-            </form>
-    </div>
-</div>
-
+<script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
 <script src="{{ url_for('static', filename='js/otorgamiento.js')}}"></script>
+
+<script>
+// ================================================================
+//                    FUNCIONES DE INTERFAZ MEJORADA
+// ================================================================
+
+/**
+ * Actualiza el indicador de pasos
+ */
+function actualizarPasoActual(pasoActual) {
+    console.log(`📋 Actualizando a paso: ${pasoActual}`);
+    
+    // Limpiar estados previos
+    document.querySelectorAll('.step').forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+    
+    // Marcar pasos completados y activo
+    for (let i = 1; i <= 5; i++) {
+        const step = document.querySelector(`.step[data-step="${i}"]`);
+        if (i < pasoActual) {
+            step.classList.add('completed');
+        } else if (i === pasoActual) {
+            step.classList.add('active');
+        }
+    }
+    
+    // Scroll suave al paso actual
+    const cardActual = document.querySelector(`[data-step="${pasoActual}"]`);
+    if (cardActual) {
+        cardActual.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+/**
+ * Actualiza el resumen del crédito en tiempo real
+ */
+function actualizarResumen() {
+    const cliente = document.getElementById('cliente_nombre').value || 'Sin seleccionar';
+    const monto = document.getElementById('monto_total').value;
+    const plan = document.getElementById('idplan').selectedOptions[0]?.text || 'Sin seleccionar';
+    const cuotas = document.getElementById('cuotas').value || '0';
+    const montoCuota = document.getElementById('cuota_credito').value;
+    
+    document.getElementById('resumen_cliente').textContent = cliente;
+    document.getElementById('resumen_monto').textContent = monto ? `$${parseFloat(monto).toFixed(2)}` : '$0.00';
+    document.getElementById('resumen_plan').textContent = plan;
+    document.getElementById('resumen_cuotas').textContent = cuotas;
+    document.getElementById('resumen_valor_cuota').textContent = montoCuota ? `$${parseFloat(montoCuota).toFixed(2)}` : '$0.00';
+    
+    // Validar si se puede generar el crédito
+    validarFormularioCompleto();
+}
+
+/**
+ * Valida si el formulario está completo para habilitar el botón final
+ */
+function validarFormularioCompleto() {
+    const cliente = document.getElementById('idcliente').value;
+    const monto = document.getElementById('monto_total').value;
+    const plan = document.getElementById('idplan').value;
+    const cuotas = document.getElementById('cuotas').value;
+    
+    const esValido = cliente && monto && plan && cuotas && parseFloat(monto) > 0;
+    
+    const btnGenerar = document.getElementById('btn_generar_credito');
+    btnGenerar.disabled = !esValido;
+    
+    const textoBoton = btnGenerar.querySelector('span');
+    const smallText = btnGenerar.parentNode.querySelector('small');
+    
+    if (esValido) {
+        btnGenerar.classList.add('pulse-button');
+        textoBoton.textContent = 'Otorgar Crédito';
+        smallText.textContent = 'Todo listo para generar el crédito';
+        smallText.className = 'text-success mt-2';
+    } else {
+        btnGenerar.classList.remove('pulse-button');
+        textoBoton.textContent = 'Completar Datos';
+        smallText.textContent = 'Complete todos los datos requeridos';
+        smallText.className = 'text-muted mt-2';
+    }
+}
+
+/**
+ * Muestra la tabla de cuotas con animación
+ */
+function mostrarTablaCuotas() {
+    const placeholder = document.getElementById('tabla_placeholder');
+    const tabla = document.getElementById('tabla_cuotas');
+    const cuotaDisplay = document.getElementById('cuota_display');
+    
+    placeholder.style.display = 'none';
+    tabla.style.display = 'block';
+    cuotaDisplay.style.display = 'block';
+    
+    // Animar la aparición
+    tabla.classList.add('fade-in');
+    
+    // Actualizar paso
+    actualizarPasoActual(4);
+}
+
+/**
+ * Actualiza el display del monto de cuota
+ */
+function actualizarDisplayCuota(montoCuota) {
+    const display = document.getElementById('monto_cuota');
+    if (display && montoCuota) {
+        display.textContent = `$${parseFloat(montoCuota).toFixed(2)}`;
+        display.classList.add('actualizado');
+        setTimeout(() => display.classList.remove('actualizado'), 1000);
+    }
+}
+
+/**
+ * Función mejorada de búsqueda de cliente
+ */
+function buscarCliente() {
+    // Implementar búsqueda de cliente con modal
+    console.log('🔍 Buscando cliente...');
+    // Esta función se conectaría con el modal de búsqueda universal
+}
+
+// ================================================================
+//                    EVENT LISTENERS MEJORADOS
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar fecha actual en el badge
+    const fechaHoy = new Date();
+    const fechaFormateada = fechaHoy.toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+    });
+    document.getElementById('fecha_hoy').textContent = fechaFormateada;
+    
+    // Inicializar paso actual
+    actualizarPasoActual(1);
+    
+    // Listeners para actualización en tiempo real
+    document.getElementById('cliente_nombre').addEventListener('change', actualizarResumen);
+    document.getElementById('monto_total').addEventListener('input', actualizarResumen);
+    document.getElementById('idplan').addEventListener('change', () => {
+        actualizarResumen();
+        actualizarPasoActual(2);
+    });
+    document.getElementById('cuotas').addEventListener('change', actualizarResumen);
+    
+    // Listener para el cliente
+    document.getElementById('idcliente').addEventListener('change', function() {
+        if (this.value) {
+            actualizarPasoActual(2);
+        }
+    });
+    
+    // Interceptar el botón generar original
+    const btnGenerar = document.getElementById('generar');
+    if (btnGenerar) {
+        btnGenerar.addEventListener('click', function(e) {
+            e.preventDefault();
+            mostrarTablaCuotas();
+            
+            // Llamar a la función original si existe
+            if (typeof generarCuotas === 'function') {
+                generarCuotas();
+            }
+        });
+    }
+    
+    // Validación inicial
+    validarFormularioCompleto();
+});
+
+// Interceptar cuando se generan las cuotas para actualizar el display
+const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+if (originalInnerHTML) {
+    Object.defineProperty(Element.prototype, 'innerHTML', {
+        get: originalInnerHTML.get,
+        set: function(value) {
+            const result = originalInnerHTML.set.call(this, value);
+            
+            // Si se actualiza la tabla de cuotas, actualizar display
+            if (this.id === 'lst_cuotas' && value.trim() !== '') {
+                const cuotaCredito = document.getElementById('cuota_credito');
+                if (cuotaCredito && cuotaCredito.value) {
+                    actualizarDisplayCuota(cuotaCredito.value);
+                }
+                actualizarResumen();
+            }
+            
+            return result;
+        }
+    });
+}
+
+// Estilo adicional para animación del botón
+const style = document.createElement('style');
+style.textContent = `
+    .pulse-button {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+    
+    .actualizado {
+        animation: pulseAmount 0.5s ease;
+    }
+    
+    @keyframes pulseAmount {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+</div>
 
 {% endblock %}

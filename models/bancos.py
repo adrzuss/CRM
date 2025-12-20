@@ -30,11 +30,6 @@ class TipoMovBancos(db.Model):
         self.nombre = nombre
         self.descripcion = descripcion
         self.tipo_operacion = tipo_operacion
-    
-    def __init__(self, nombre, descripcion, tipo_operacion):
-        self.nombre = nombre
-        self.descripcion = descripcion
-        self.tipo_operacion = tipo_operacion
         
 class BancoPropio(db.Model):
     __tablename__ = 'bancos_propios'

@@ -34,6 +34,7 @@ def procesar_nueva_compra(form, id_sucursal):
             fecha=fecha,
             periodo=periodoFormateado,
             total=0,  # Se calculará más adelante
+            neto = 0,
             iva=0,
             exento=0,
             impint=0,
@@ -98,6 +99,7 @@ def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=Fa
                         cantidad=cantidad,
                         precio_unitario=precio_unitario,
                         precio_total=precio_total,
+                        neto =precio_total - (Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100))) - (Decimal(articulo.exento) * cantidad) - (Decimal(articulo.impint) * cantidad),
                         idalciva=articulo.idiva,
                         iva=Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100)),
                         exento=articulo.exento * cantidad,

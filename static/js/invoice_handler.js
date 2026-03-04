@@ -35,6 +35,33 @@ class InvoiceHandler {
             return { success: false, error: error.message };
         }
     }
+
+    async printDelivery(facturaId) {
+        try {
+            // Obtener datos de la factura del servidor
+            const response = await fetch(`${BASE_URL}/ventas/api/facturas/${facturaId}`);
+            if (!response.ok) {
+                throw new Error('Error al obtener la factura');
+            }
+            
+            const data = await response.json();
+            const { factura, items, empresa } = data;
+            
+            // Imprimir remito
+            const result = await this.printerService.printDelivery(factura, items, empresa);
+            
+            if (result.success) {
+                console.log(result.message);
+                return result;
+            } else {
+                console.error(result.error);
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error al imprimir:', error);
+            return { success: false, error: error.message };
+        }
+    }
     
     async configurePrinter() {
         // Para impresoras térmicas, necesitamos conectar primero

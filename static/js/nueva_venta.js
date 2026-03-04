@@ -1,4 +1,6 @@
 // ✅ VERSION ACTUALIZADA - Nueva Venta JS v2.0 - Fix label-ctacte
+import InvoiceHandler from './invoice_handler.js';
+
 console.log("🚀 Nueva Venta JS cargado - Versión corregida 2.0");
 
 let isFormSubmited = false;
@@ -102,6 +104,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     else{
       // Si punto_vta tiene un valor, asignarlo al input
       document.getElementById("punto_vta").textContent = 'Punto de venta: ' + data.punto_vta;
+      document.getElementById("ptovta_seleccionado").value = data.punto_vta;
+      document.getElementById("fac_electronica").value = data.fac_electronica ? 'true' : 'false';
+      document.getElementById("pos_printer").value = data.pos_printer || '';
     }
   } catch (error) {
     console.log("Error al obtener el punto de venta:", error);
@@ -331,7 +336,8 @@ function procesarTransaccion() {
     // Mostrar loading
     const originalText = 'Grabando venta...';
     
-    fetch(form.action || window.location.href, {
+    let url = form.action || window.location.href;
+    fetch(url, {
         method: 'POST',
         body: formData
     })
@@ -340,36 +346,165 @@ function procesarTransaccion() {
         console.log('Respuesta del servidor:', data);
         
         if (data.success) {
-            // Mostrar mensaje de éxito
-            alert(`✅ ${data.message}`);
+            // Verificar si tiene facturación electrónica e impresora POS
+            const tieneFacElectronica = document.getElementById('fac_electronica')?.value === 'true';
+            const posPrinter = document.getElementById('pos_printer')?.value || '';
+            const facturaId = data.id;
+            const ptoVta = document.getElementById('ptovta_seleccionado')?.value || '1';
             
-            // Limpiar formulario para nueva venta
-            form.reset();
+            // Mostrar modal de confirmación de impresión (siempre)
+            document.getElementById('facturaIdConfirmacion').textContent = facturaId;
             
-            // Limpiar tabla de artículos
-            const tbody = document.querySelector('#tabla-items tbody');
-            if (tbody) {
-                tbody.innerHTML = '';
+            const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmarImpresion'));
+            modalConfirmar.show();
+            
+            // Bandera para controlar si ya se procesó con un botón
+            let botonProcesado = false;
+            
+            // Manejar botón de imprimir
+            document.getElementById('btnSiImprimir').onclick = async function() {
+                botonProcesado = true;
+                modalConfirmar.hide();
+                // Mostrar spinner mientras se procesa
+                document.getElementById('spinner').style.display = 'flex';
+                
+                try {
+                    if (tieneFacElectronica) {
+                        // Solo llamar a facturar_venta si tiene facturación electrónica
+                        const response = await fetch(`${BASE_URL}/ventas/facturar_venta/${ptoVta}/${facturaId}`);
+                        const result = await response.json().catch(() => null);
+                        
+                        if (!result || !result.success) {
+                            console.warn('Advertencia al facturar electrónicamente:', result?.message || 'Error desconocido');
+                        }
+                    }
+                    
+                    // Imprimir según el tipo de impresora
+                    if (posPrinter) {
+                        // Usar impresora POS (formato ticket térmico via navegador)
+                        console.log('-----------------------------------------------');
+                        console.log('Intentando imprimir factura en POS para factura ID:', facturaId, 'en punto de venta:', ptoVta);
+                        console.log('-----------------------------------------------');
+                        const invoiceHandler = new InvoiceHandler();
+                        console.log('Se creo el objeto de impresion');
+                        invoiceHandler.setPrinterType('pos');
+                        console.log('Se seteo el tipo de impresora a POS');
+                        const printResult = await invoiceHandler.printInvoice(facturaId);
+                        console.log('Se envió la factura a imprimir en POS, resultado:', printResult);
+                        console.log('-----------------------------------------------');
+                        if (!printResult || !printResult.success) {
+                            console.warn('Error en impresión POS:', printResult?.error || 'Error desconocido');
+                            // Fallback a PDF
+                            window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                        }
+                    } else {
+                        // Abrir el PDF de la factura en nueva pestaña
+                        window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                    }
+                } catch (error) {
+                    console.error('Error al procesar:', error);
+                    // Intentar abrir PDF de todas formas
+                    window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                } finally {
+                    document.getElementById('spinner').style.display = 'none';
+                }
+                
+                limpiarFormularioVenta();
             }
-            
-            // Resetear total
-            const totalFactura = document.getElementById('totalFactura');
-            if (totalFactura) {
-                totalFactura.value = '0';
+
+            // Manejar botón de no imprimir
+            document.getElementById('btnNoImprimir').onclick = function() {
+              botonProcesado = true;
+              console.log('Usuario optó por no imprimir. Limpiando formulario...');
+              modalConfirmar.hide();
+              imprimirRemitoVenta(facturaId);
             }
+                    
+                        
+            // Solo ejecutar si se cerró con X o click fuera (no con los botones)
+            document.getElementById('modalConfirmarImpresion').addEventListener('hidden.bs.modal', function () {
+                if (!botonProcesado) {
+                    console.log('Modal cerrado con X o click fuera. Limpiando formulario...');
+                    imprimirRemitoVenta(facturaId);
+                }
+            }, { once: true });
             
-            // Opcional: Redirigir o recargar si es necesario
-            // window.location.reload();
         } else {
             alert(`❌ Error: ${data.message || 'No se pudo grabar la venta'}`);
         }
     })
     .catch(error => {
         console.error('Error al grabar venta:', error);
-        alert('❌ Error de conexión al grabar la venta');
+        alert('❌ Error de conexión al grabar la venta (Mensaje' + error.message + ' - Detalle: ' + error.error_detalle + '). URL: ' + url);
+        
     });
     
     return true;
+}
+
+/**
+ * Función para imprimir el remito de la venta
+**/
+
+async function imprimirRemitoVenta(facturaId) {
+  console.log('-----------------------------------------------');
+  console.log('Intentando imprimir remito para factura ID:', facturaId);
+  console.log('-----------------------------------------------');
+  if (posPrinter) {
+    // Usar impresora POS (formato ticket térmico via navegador)
+    const invoiceHandler = new InvoiceHandler();
+    invoiceHandler.setPrinterType('pos');
+    const printResult = await invoiceHandler.printDelivery(facturaId);
+    
+    if (!printResult || !printResult.success) {
+        console.warn('Error en impresión POS:', printResult?.error || 'Error desconocido');
+        // Fallback a PDF
+        window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+    }
+  } else {
+    // Abrir el PDF de la factura en nueva pestaña
+    window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+  }
+  limpiarFormularioVenta();
+}              
+
+/**
+ * Limpia el formulario de venta para preparar una nueva operación
+ */
+function limpiarFormularioVenta() {
+    const form = document.getElementById('invoice_form');
+    if (form) {
+        form.reset();
+    }
+    
+    // Limpiar tabla de artículos
+    const tbody = document.querySelector('#tabla-items tbody');
+    if (tbody) {
+        tbody.innerHTML = '';
+    }
+    
+    // Resetear total
+    const totalFactura = document.getElementById('totalFactura');
+    if (totalFactura) {
+        totalFactura.value = '0';
+    }
+    
+    // Resetear total visual si existe
+    const totalVisual = document.getElementById('total-factura-visual');
+    if (totalVisual) {
+        totalVisual.textContent = '$0.00';
+    }
+    
+    // Limpiar cliente
+    const idcliente = document.getElementById('idcliente');
+    if (idcliente) {
+        idcliente.value = '';
+    }
+    
+    const idInput = document.getElementById('id');
+    if (idInput) {
+        idInput.value = '';
+    }
 }
 
 async function calcularOfetasDeCierre(){
@@ -435,6 +570,13 @@ async function asignarPuntoVenta(idPuntoVenta) {
       // Actualizar el texto en la página con el punto de venta seleccionado
       document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
       document.getElementById("posPrinter").textContent = 'Pos: ' + result.posPrinter;
+      document.getElementById("facElectronica").textContent = 'Fac. Electrónica: ' + (result.facElectronica ? 'Sí' : 'No');
+      // Guardar el ID del punto de venta en el input hidden
+      document.getElementById("ptovta_seleccionado").value = idPuntoVenta;
+      // Guardar si tiene facturación electrónica
+      document.getElementById("fac_electronica").value = result.facElectronica ? 'true' : 'false';
+      // Guardar la impresora POS si existe
+      document.getElementById("pos_printer").value = result.posPrinter || '';
       document.getElementById("idcliente").focus();
     } else {
       alert('Error al asignar el punto de venta: ' + result.message);
@@ -1103,6 +1245,7 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
             posPrinter = document.getElementById("posPrinter").value;
             if (posPrinter != ""){
               try {
+                  alert('voy a imprimir la factura');
                   await imprimirFactura(result.id);
               } catch (error) {
                   console.error('Error al imprimir la factura:', error);

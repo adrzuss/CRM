@@ -1,214 +1,7 @@
 {% extends "base.html" %}
 
 {% block styles %}
-<style>
-/* Estilos modernos para Nueva Venta */
-.fade-in {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.section-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 0.75rem 0.75rem 0 0;
-    padding: 1.25rem 2rem;
-    margin: 0;
-    border: none;
-}
-
-.section-header h3, .section-header h4 {
-    margin: 0;
-    color: white !important;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.25rem 0;
-}
-
-.form-group label {
-    font-weight: 600;
-    color: #5a5c69;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    margin-bottom: 0.5rem;
-}
-
-.form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-action {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.25rem 1rem rgba(102, 126, 234, 0.3);
-    color: white;
-}
-
-.invoice-header {
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-    color: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 0.25rem 2rem rgba(78, 115, 223, 0.2);
-}
-
-.invoice-number {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    text-align: center;
-    backdrop-filter: blur(10px);
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
-}
-
-.table thead th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(102, 126, 234, 0.05);
-}
-
-.breadcrumb {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-}
-
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    color: #6c757d;
-}
-
-.status-badge {
-    background: linear-gradient(135deg, #36b9cc 0%, #3bc3db 100%);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.loader {
-    border: 6px solid #f3f3f3;
-    border-top: 6px solid #667eea;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.spinner-overlay {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 1rem;
-    padding: 3rem;
-    text-align: center;
-    box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.1);
-}
-
-#spinner.hidden {
-    display: none !important;
-}
-
-#spinner.show {
-    display: flex !important;
-}
-
-/* Estilos adicionales para nueva venta */
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-
-.total-display {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-    transition: all 0.3s ease;
-}
-
-.total-display:hover {
-    transform: scale(1.02);
-}
-
-.btn-lg {
-    padding: 0.875rem 1.5rem;
-    font-size: 1.125rem;
-    border-radius: 0.5rem;
-}
-
-#no-items-row {
-    background: #f8f9fc;
-}
-
-.table tbody tr:hover {
-    background-color: rgba(78, 115, 223, 0.05);
-}
-
-/* Animación para el total */
-.total-animate {
-    animation: pulse 0.5s ease-in-out;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Animación para notificación de crédito */
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nueva_venta.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -235,10 +28,14 @@
                         <div class="text-center">
                             <small class="text-muted d-block">Punto de Venta</small>
                             <div class="h5 mb-0" id="punto_vta">Cargando...</div>
+                            <input type="hidden" id="ptovta_seleccionado" name="ptovta_seleccionado" value="">
+                            <input type="hidden" id="fac_electronica" name="fac_electronica" value="false">
+                            <input type="hidden" id="pos_printer" name="pos_printer" value="">
                         </div>
                         <div class="text-center">
                             <small class="text-muted d-block">Terminal POS</small>
                             <div class="h6 mb-0" id="posPrinter">{{ session['posPrinter'] or 'N/A' }}</div>
+                            <div class="h6 text-center" id="facElectronica">{{ session['facElectronica'] or '' }}</div>
                         </div>
                         <button class="btn btn-action btn-sm" id="cambiar_pto_vta">
                             <i class="fas fa-exchange-alt"></i>
@@ -253,6 +50,8 @@
     {% include 'partials/_modal-busqueda-universal.html' %}
     {% include 'partials/_modal-seleccion-ptovta.html' %}
     {% include 'partials/_modal-credito-disponible.html' %}
+    {% include 'partials/_modal-confirmacion-impresion.html' %}
+       
     
     <!-- Spinner mejorado -->
     <div id="spinner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">

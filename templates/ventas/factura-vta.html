@@ -147,7 +147,7 @@
             </div>    
         </div>
         {% if (factura.cae == None)and(factura.tipo_oper == 1) %}
-            <a href="{{ url_for('ventas.facturar', ptovta=factura.punto_vta, idfactura=factura.id) }}" class="btn btn-primary"> Generar factura electrónica </a>
+            <a href="{{ url_for('ventas.facturar', ptovta=factura.punto_vta, idfactura=factura.id) }}" class="btn btn-primario"> Generar factura electrónica </a>
         {% endif %}    
 
         <div class="m-3 card shadow mb-4">

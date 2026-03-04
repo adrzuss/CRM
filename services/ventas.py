@@ -94,6 +94,7 @@ def getNroComprobante(id_tipo_comprobante):
     
 def facturar_fe(ptovta, idfactura):
     #ptoVta = PuntosVenta.query.get(ptovta)
+    #print('0- Empezamos facturar_fe')
     if ptovta: #aca
         #AFIP_CERT_PATH = f'cert_fe/{ptoVta.certificado_p12}'
         #AFIP_CERT_PASSWORD = ptoVta.clave_certificado
@@ -102,19 +103,28 @@ def facturar_fe(ptovta, idfactura):
         return jsonify({'success': False, 'error': msg}), 400
     try:
         # 1. Obtener datos de la factura desde la DB
+        paso = 1
         #print('1- Obtener datos de la factura desde la DB')
         result_proxy = db.session.execute(text("CALL get_datosfac_fe(:id)"), {'id': idfactura})
         result = result_proxy.fetchall()
         result_proxy.close
+        paso = 2
         #print('2- Obtener datos de la factura desde la DB')
         if not result:
             return jsonify({"error": "Factura no encontrada"}), 404
         # 2. Parsear el JSON
         
         #print('2- Parsear el JSON')
+        paso = 3
         factura_db = json.loads(result[0][0])  # Asume que el SP devuelve JSON como cadena
         # 3. Mapear a la estructura esperada por Facturador
+        #print('------------------------------------------------------')
         #print('3- Mapear a la estructura esperada por Facturador')
+        #print('------------------------------------------------------') 
+        #print(f'Datos factura_db: {factura_db}')
+        #print(f'Datos items: {factura_db["items"]}')
+        #print('------------------------------------------------------')
+        paso = 4
         datos_factura = {
             "cliente": {
                 "tipo_doc": factura_db["cliente"]["tipo_doc"],
@@ -138,16 +148,17 @@ def facturar_fe(ptovta, idfactura):
             "punto_venta": int(factura_db.get("punto_venta", 1))  # Default 1 si no existe
         }
         # 4. Validar datos antes de enviar a AFIP
+        paso = 5
         if not datos_factura["items"]:
             return jsonify({"error": "La factura no tiene items"}), 400
         # Crear facturador
-        #print('4- Crear facturador')
+        print('4- Crear facturador')
         facturador = Facturador({
             'cert_path': AFIP_CERT_PATH,
             'cert_password': AFIP_CERT_PASSWORD,
             'punto_venta': datos_factura["punto_venta"]
         })
-        
+        paso = 6
         #print('5- Emitir factura')
         # Emitir factura
         resultado = facturador.emitir_factura(
@@ -157,7 +168,7 @@ def facturar_fe(ptovta, idfactura):
             punto_venta=datos_factura["punto_venta"])
         
         # 6. Actualizar la factura en DB con el CAE
-        
+        paso = 7
         try:
             db.session.execute(
                 text("""
@@ -185,13 +196,13 @@ def facturar_fe(ptovta, idfactura):
             db.session.rollback()
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': str(e) + '-1-'
             }), 500        
     
     except Exception as e:
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': str(e) + f'- Paso: {paso}-'
         }), 500
         
 def generar_factura(id_factura):
@@ -334,15 +345,17 @@ def procesar_nueva_venta(form, id_sucursal):
 
         # Procesar los items
         total = 0
+        neto = 0
         total_bonificacion = 0
-        total, total_bonificacion, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal, descuento)
+        total, neto, total_bonificacion, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal, descuento)
         nueva_factura.total = total
+        nueva_factura.neto = neto
         nueva_factura.bonificacion = total_bonificacion
         if not discrimina:
             total_iva = 0
         else:    
             nueva_factura.iva = total_iva
-        nueva_factura.exento = total_exento
+        nueva_factura.exento = total_exento 
         nueva_factura.impint = total_impint
         # Registrar los pagos
         procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito)
@@ -378,6 +391,7 @@ def procesar_nueva_venta(form, id_sucursal):
 
 def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     total = Decimal(0)
+    total_neto = Decimal(0)
     total_bonificacion = Decimal(0)
     total_iva = Decimal(0)
     total_exento = Decimal(0)
@@ -413,6 +427,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                     else:    
                         idalciva = articulo.idiva
                         iva = precios['Iva'] * cantidad
+                    neto = precios['Neto'] * cantidad    
                     exento = precios['Exento'] * cantidad
                     impint = precios['ImpInt'] * cantidad
                     ingbrutos = precios['IngBto'] * cantidad
@@ -459,6 +474,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                         cantidad=cantidad,
                         precio_unitario=precioUnit,
                         precio_total=precio_total,
+                        neto = neto,
                         bonificacion=bonificacion,
                         iva=iva,
                         idalciva=idalciva,
@@ -472,6 +488,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                     )
                     db.session.add(nuevo_item)
                     total += precio_total
+                    total_neto += neto
                     total_bonificacion += bonificacion
                     total_iva += iva
                     total_exento += exento
@@ -482,7 +499,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
     except SQLAlchemyError as e:
         print(f"Error procesando items: {e}")            
     
-    return total, total_bonificacion, total_iva, total_exento, total_impint
+    return total, total_neto, total_bonificacion, total_iva, total_exento, total_impint
 
 def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito):
     #Calculamos el total de pagos para calcular si hay vuelto
@@ -963,6 +980,7 @@ def get_factura(id):
                 Factura.cae,
                 Factura.cae_vto,
                 Factura.fecha_emision,
+                Factura.idtipocomprobante,
                 Clientes.id.label('idcliente'),
                 Clientes.nombre,
                 Clientes.direccion,

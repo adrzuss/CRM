@@ -8,8 +8,9 @@ from models.sucursales import Sucursales
 from models.proveedores import Proveedores
 from services.articulos import get_listado_precios, obtener_stock_sucursales, update_insert_articulo_compuesto, \
                                eliminarComp, obtenerArticulosMarcaRubro, procesar_nuevo_balance, \
-                               procesar_articulo, procesar_cambio_precio, procesar_remito_a_sucursal, get_listado_articulos, \
-                               get_listado_stock, get_listado_stock_faltantes
+                               procesar_cambio_precio, procesar_remito_a_sucursal, get_listado_articulos, \
+                               get_listado_stock, get_listado_stock_faltantes, enviar_remito_sucursal, recibir_remito_sucursal, \
+                               get_remitos_sucursales, get_detalle_remito, guardar_articulo
 from sqlalchemy import func, and_, or_
 from sqlalchemy.sql import text
 from utils.db import db
@@ -123,13 +124,15 @@ def api_articulos():
     }
     return jsonify(response)
 
+"""
+Creo que no se usa mas  
 @bp_articulos.route('/add_articulo', methods=['POST'])
 @check_session
 def add_articulo():
     procesar_articulo(request.form)
     flash('Articulo agregado')
     return redirect('/articulos')
-    
+"""    
      
 @bp_articulos.route('/update_articulo/<id>', methods=['GET', 'POST'])
 @check_session
@@ -171,6 +174,8 @@ def update_articulo(id):
                     Stock.maximo.label("stock_maximo"),
                     Stock.deseable.label("stock_deseable"),
                     Stock.idsucursal.label("idsucursal"),
+                    Stock.en_transito_entrada.label("en_transito_entrada"),
+                    Stock.en_transito_salida.label("en_transito_salida"),
                     Sucursales.nombre.label("nombre_sucursal")
                 )
                 .join(Articulo, Stock.idarticulo == Articulo.id)  # Vincular Stock con Articulo
@@ -205,179 +210,11 @@ def update_articulo(id):
         return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
     if request.method == 'POST':
-        
-        if (id == '0'):
-            try:
-                codigo=request.form['codigo']
-                detalle=request.form['detalle']
-                costo=request.form['costo']
-                costo_total=request.form['costo_total']
-                exento=request.form['exento']
-                impint=request.form['impint']
-                idiva=request.form['idiva']
-                idib=request.form['idib']
-                idrubro=request.form['idrubro']
-                idmarca=request.form['idmarca']
-                idTipoArticulo=request.form['idtipoarticulo']
-                esCompuesto=request.form.get("es_compuesto") != None
-                con_colores=request.form.get("con_colores") != None
-                con_talles=request.form.get("con_talles") != None
-                pedirEnVentas=request.form.get("pedir_en_ventas")
-                articulo = Articulo(codigo=codigo, detalle=detalle, costo=costo, costo_total=costo_total, exento=exento, impint=impint, idiva=idiva, idib=idib, idrubro=idrubro, idmarca=idmarca, idtipoarticulo=idTipoArticulo, imagen='', es_compuesto=esCompuesto, pedir_en_ventas=pedirEnVentas, con_colores=con_colores, con_talles=con_talles) 
-                db.session.add(articulo)
-                
-            except Exception as e:
-                flash(f'Error grabando articulo nuevo: {e}', 'error')
-                return redirect('/articulos')
+        resultado = guardar_articulo(id, request.form, request.files)
+        if resultado['success']:
+            flash(resultado['message'])
         else:
-            try:
-                articulo = Articulo.query.get(id)
-                articulo.codigo = request.form['codigo']
-                articulo.detalle = request.form['detalle']
-                articulo.costo = request.form['costo']
-                articulo.costo_total = request.form['costo_total']
-                articulo.exento = request.form['exento']
-                articulo.impint = request.form['impint']
-                articulo.idiva = request.form['idiva']
-                articulo.idib = request.form['idib']
-                articulo.idtipoarticulo = request.form['idtipoarticulo']
-                articulo.es_compuesto = request.form.get("es_compuesto") != None
-                articulo.con_colores=request.form.get("con_colores") != None
-                articulo.con_talles=request.form.get("con_talles") != None
-                articulo.pedir_en_ventas = request.form.get("pedir_en_ventas")
-                articulo.idmarca = request.form['idmarca']
-                articulo.idrubro = request.form['idrubro']
-            except Exception as e: 
-                flash(f'Error grabando articulo modificado: {e}', 'error')
-                return redirect('articulos.articulos')
-            
-        db.session.flush()
-        # Manejar la imagen
-        if 'imagen' not in request.files:
-            flash('No file part')
-            return redirect(url_for('articulos.articulos'))
-            
-        file = request.files['imagen']
-            
-        if file.filename != '':
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)  # Asegura que el nombre del archivo sea seguro para el sistema de archivos
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))  # Guarda el archivo en la carpeta de subida
-                #imagen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)  # Guarda la ruta del archivo en la base de datos
-                imagen_path = filename
-                articulo.imagen = imagen_path
-            else:
-                flash('Tipo de archivo inválido')
-                return redirect(url_for('articulos.articulos'))
-        
-        
-        #Actauliza precios    
-        items = request.form  # Obtener todo el formulario
-        item_count = 0  # Contador de items agregados
-        item_count = len([key for key in items.keys() if key.startswith('precio') and key.endswith('[precio]')])
-            
-        for i in range(item_count):
-            try:
-                idlista = request.form[f'precio[{i+1}][idlista]']
-                pvp = request.form[f'precio[{i+1}][precio]']
-                if (idlista != None) and (pvp != None):
-                    precio = Precio.query.get((idlista, id))
-                    if precio:
-                        precio.precio = pvp 
-                        precio.ult_modificacion = datetime.now()
-                    else:    
-                        precio = Precio(idlista, articulo.id, pvp, datetime.now())
-                        db.session.add(precio)
-                    db.session.flush()
-            except Exception as e:
-                flash(f'Error grabando precios {e}', 'error')
-                
-        #Actauliza stocks
-        items = request.form  # Obtener todo el formulario
-        item_count = 0  # Contador de items agregados
-        item_count = len([key for key in items.keys() if key.startswith('stock') and key.endswith('[id]')])
-        
-        idsucursal = session['id_sucursal']    
-        for i in range(item_count):
-            try:
-                idstock = request.form[f'stock[{i+1}][id]']
-                idsucstock = request.form[f'stock[{i+1}][idsucursal]']
-                deseable = request.form[f'stock[{i+1}][deseable]']
-                maximo = request.form[f'stock[{i+1}][maximo]']
-                if (idstock != None) and (deseable != None) and (maximo != None):
-                    stock = Stock.query.get((idstock, id, idsucstock))
-                    if stock:
-                        stock.deseable = deseable
-                        stock.maximo = maximo
-                        db.session.flush()
-                    else:    
-                        stock = Stock(idstock, articulo.id, idsucstock, deseable, maximo)
-                        db.session.add(stock)
-                    db.session.flush()
-            except Exception as e:
-                flash(f'Error grabando stocks {e}', 'error')
-
-        # Manejar colores del artículo
-        try:
-            # Debug: Imprimir todos los datos del formulario
-            if articulo.con_colores == None or articulo.con_colores == False:
-                ArticulosColores.query.filter_by(id_articulo=articulo.id).delete()
-            else:
-                for key, value in request.form.items():
-                    print(f"{key}: {value}")
-                
-                # Primero eliminar colores existentes si se está editando
-                if id != '0':
-                    ArticulosColores.query.filter_by(id_articulo=articulo.id).delete()
-                
-                # Procesar colores seleccionados
-                colores_data = request.form.get('colores', '')
-                if colores_data:
-                    import json
-                    try:
-                        colores_seleccionados = json.loads(colores_data)
-                        for color_data in colores_seleccionados:
-                            if isinstance(color_data, dict) and 'id' in color_data:
-                                color_id = color_data['id']
-                                # Verificar que el color existe
-                                if Colores.query.get(color_id):
-                                    articulo_color = ArticulosColores(id_articulo=articulo.id, id_color=color_id)
-                                    db.session.add(articulo_color)
-                                    db.session.flush()
-                    except (json.JSONDecodeError, KeyError, ValueError) as e:
-                        flash(f'Error procesando colores: {e}', 'warning')
-        except Exception as e:
-            flash(f'Error grabando colores: {e}', 'error')
-
-        # Manejar detalles del artículo
-        try:
-            if articulo.con_talles == None or articulo.con_talles == False:
-                ArticulosDetalles.query.filter_by(id_articulo=articulo.id).delete()
-            else:
-                # Primero eliminar detalles existentes si se está editando
-                if id != '0':
-                    ArticulosDetalles.query.filter_by(id_articulo=articulo.id).delete()
-                
-                # Procesar detalles seleccionados
-                detalles_data = request.form.get('detalles', '')
-                if detalles_data:
-                    import json
-                    try:
-                        detalles_seleccionados = json.loads(detalles_data)
-                        for detalle_data in detalles_seleccionados:
-                            if isinstance(detalle_data, dict) and 'id' in detalle_data:
-                                detalle_id = detalle_data['id']
-                                # Verificar que el detalle existe
-                                if DetallesArticulos.query.get(detalle_id):
-                                    articulo_detalle = ArticulosDetalles(id_articulo=articulo.id, id_detalle=detalle_id)
-                                    db.session.add(articulo_detalle)
-                                    db.session.flush()
-                    except (json.JSONDecodeError, KeyError, ValueError) as e:
-                        flash(f'Error procesando detalles: {e}', 'warning')
-        except Exception as e:
-            flash(f'Error grabando detalles: {e}', 'error')
-        db.session.commit()
-        flash('Articulo grabado')
+            flash(resultado['message'], 'error')
         return redirect(url_for('articulos.articulos'))
 
 @bp_articulos.route('/api/eliminar/<id>', methods=['DELETE'])
@@ -915,4 +752,37 @@ def remitos_sucursales():
     else:
         sucursales = Sucursales.query.all()
         return render_template('ing-remitos-sucursales.html', sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-        
+@bp_articulos.route('/enviar_remito_sucursal/<int:idremito>', methods=['POST'])
+@check_session
+def enviar_remito_api(idremito):
+    """Endpoint para enviar un remito (cambiar estado a ENVIADO)"""
+    resultado = enviar_remito_sucursal(idremito)
+    return jsonify(resultado)
+
+@bp_articulos.route('/recibir_remito_sucursal/<int:idremito>', methods=['POST'])
+@check_session
+def recibir_remito_api(idremito):
+    """Endpoint para recibir/controlar un remito (cambiar estado a RECIBIDO)"""
+    resultado = recibir_remito_sucursal(idremito)
+    return jsonify(resultado)        
+
+@bp_articulos.route('/listado_remitos_sucursales')
+@check_session
+@alertas_mensajes
+def listado_remitos_sucursales():
+    '''Vista para listar todos los remitos'''
+    filtro = request.args.get('filtro', 'todos')
+    remitos = get_remitos_sucursales(filtro)
+    return render_template('listado-remitos-sucursales.html', remitos=remitos, filtro=filtro, 
+                         alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, 
+                         mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_articulos.route('/detalle_remito_sucursal/<int:idremito>')
+@check_session
+def detalle_remito_sucursal(idremito):
+    '''Endpoint para obtener el detalle de un remito'''
+    detalle = get_detalle_remito(idremito)
+    if detalle:
+        return jsonify({'success': True, 'remito': detalle})
+    else:
+        return jsonify({'success': False, 'message': 'Remito no encontrado'})

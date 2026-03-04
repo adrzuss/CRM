@@ -18,14 +18,15 @@ var cantidadRubros;
 coloresPie = ['#1150af', '#008060', '#bb1133', '#eb4315ff', '#f6a22d', '#80184eff'];
 coloresPieHover = ['#1870F5','#00EDB2', '#FF1746', '#ec6e4bff', '#fac06eff', '#81345cff']
 
-coloresPie2 = ['#b30505ff', '#cf7704ff', '#f8fc05ff', '#669103ff',
-               '#0be703ff', '#00c050ff', '#03ece1ff', '#02d2eeff',
-               '#0196ecff', '#0155f1ff', '#0414ecff', '#6300c0ff',
-               '#b501ecff', '#f101b5ff', '#ec045dff', '#5698beff'];
-coloresPieHover2 = ['#b95656ff', '#cf9c59ff', '#f6f86cff', '#758d3dff',
-                    '#6ae466ff', '#54be80ff', '#6aebe4ff', '#65dbebff',
-                    '#6ab9e7ff', '#6b9bf3ff', '#646ef0ff', '#8f5bc0ff',
-                    '#cb64ebff', '#ee73cfff', '#ec6d9eff', '#8eacbdff'];
+// Paleta moderna - Tailwind CSS vibrantes equilibrados
+coloresPie2 = ['#EF4444', '#F97316', '#F59E0B', '#EAB308',
+               '#84CC16', '#22C55E', '#10B981', '#14B8A6',
+               '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1',
+               '#8B5CF6', '#A855F7', '#D946EF', '#EC4899'];
+coloresPieHover2 = ['#FCA5A5', '#FDBA74', '#FCD34D', '#FDE047',
+                    '#BEF264', '#86EFAC', '#6EE7B7', '#5EEAD4',
+                    '#67E8F9', '#7DD3FC', '#93C5FD', '#A5B4FC',
+                    '#C4B5FD', '#D8B4FE', '#F0ABFC', '#F9A8D4'];
 
 
 window.onload = () => {

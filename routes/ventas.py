@@ -4,6 +4,7 @@ from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
 from models.configs import PuntosVenta
 from models.sessions import Usuarios
+from models.sucursales import Sucursales
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
                             generar_presupuesto
@@ -40,11 +41,15 @@ def get_punto_vta():
     try:
         if not ('idPuntoVenta' in session):
             punto_vta = None
+            fac_electronica = False
+            pos_printer = None
         else:    
             punto_vta = session['idPuntoVenta']
-            session['posPrinter'] = getPosPrinter(punto_vta)
+            session['posPrinter'], session['facElectronica'] = getPosPrinter(punto_vta)
+            fac_electronica = session.get('facElectronica', False)
+            pos_printer = session.get('posPrinter', None)
         #punto_vta = 1    
-        return jsonify({'success': True, 'punto_vta': punto_vta})
+        return jsonify({'success': True, 'punto_vta': punto_vta, 'fac_electronica': fac_electronica, 'pos_printer': pos_printer})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -74,7 +79,7 @@ def set_punto_vta():
         puntoVta = PuntosVenta.query.get(punto_vta_id)
         session['posPrinter'] = puntoVta.pos_printer
         
-        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer})
+        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al asignar el punto de venta: {str(e)}'}), 500
     
@@ -83,6 +88,8 @@ def set_punto_vta():
 @alertas_mensajes
 def nueva_venta():
     if request.method == 'POST':
+        # DEBUG: Retorno inmediato para verificar que el código nuevo se ejecuta
+        # return jsonify({'debug': True, 'message': 'Código actualizado OK - v2'}), 200
         try:
             nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
             flash(f'Factura grabada exitosamente: {nro_comprobante}')
@@ -94,8 +101,14 @@ def nueva_venta():
                 'id': id_factura 
             })
         except Exception as e:
-            flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
-            return redirect(url_for('ventas.nueva_venta'))
+            import traceback
+            error_detalle = traceback.format_exc()
+            print(f'Error al procesar venta: {error_detalle}')  # Log para el servidor
+            return jsonify({
+                'success': False,
+                'message': f'Error al procesar la venta en servidor: {str(e)}',
+                'error_detalle': error_detalle
+            }), 500
     if request.method == 'GET':
         hoy = date.today()
         entidades = EntidadesCred.query.all()
@@ -110,24 +123,56 @@ def ver_factura_vta(id):
     return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 #----------------- factura electronica ------------------#
-
+#----------------- factura desde la ventana donde se ve el comprobante realizado -------------------------#
 @bp_ventas.route('/facturar/<ptovta>/<idfactura>', methods=['GET', 'POST'])
 def facturar(ptovta, idfactura):
     try:
+        paso = 1
+        print(f'Paso {paso}: Iniciando facturación electrónica para factura ID {idfactura} en punto de venta {ptovta}')
         response, statuscode = facturar_fe(ptovta, idfactura)  
+        paso = 2
+        print(f'Paso {paso}: Respuesta recibida del servicio de facturación electrónica para factura ID {idfactura}')
         data = response.get_json()
         if data.get('success') == True:
+            paso = 3
             cae = data.get('result', {}).get('cae')
             nro_cbte = data.get('result', {}).get('nro_cbte')
             flash(f'Factura {nro_cbte} emitida correctamente. CAE: {cae}')
+            paso = 4
             # Generar PDF
             return redirect(url_for('ventas.ver_factura_vta', id=idfactura))
         else:
-            flash(f'Ocurrió un error al procesar la venta (1): {data.get("error")}. Status: {statuscode}', 'error')
+            flash(f'Ocurrió un error al procesar la venta (1)-({paso}): {data.get("error")}. Status: {statuscode}', 'error')
             return redirect(url_for('ventas.ver_factura_vta', id=idfactura))
     except Exception as e:
         print(f'Error al generar factura electrónica: {e}')
         return redirect(url_for('ventas.ver_factura_vta', id=idfactura))
+
+#----------------- factura desde la ventana de venta -------------------------#
+@bp_ventas.route('/facturar_venta/<ptovta>/<idfactura>', methods=['GET', 'POST'])
+def facturar_venta(ptovta, idfactura):
+    try:
+        paso = 1
+        print(f'Paso {paso}: Iniciando facturación electrónica para factura ID {idfactura} en punto de venta {ptovta}')
+        response, statuscode = facturar_fe(ptovta, idfactura)  
+        paso = 2
+        print(f'Paso {paso}: Respuesta recibida del servicio de facturación electrónica para factura ID {idfactura}')
+        data = response.get_json()
+        if data.get('success') == True:
+            paso = 3
+            cae = data.get('result', {}).get('cae')
+            nro_cbte = data.get('result', {}).get('nro_cbte')
+            flash(f'Factura {nro_cbte} emitida correctamente. CAE: {cae}')
+            paso = 4
+            # Generar PDF
+            return {'success': True, 'message': f'Factura {nro_cbte} emitida correctamente. CAE: {cae}', 'nro_comprobante': nro_cbte, 'cae': cae}
+        else:
+            flash(f'Ocurrió un error al procesar la venta (1)-({paso}): {data.get("error")}. Status: {statuscode}', 'error')
+            return {'success': False, 'message': f'Ocurrió un error al procesar la venta (1)-({paso}): {data.get("error")}. Status: {statuscode}'}
+    except Exception as e:
+        print(f'Error al generar factura electrónica: {e}')
+        return {'success': False, 'message': f'Error al generar factura electrónica: {e}'}
+
 
 #----------------- fin factura electronica ------------------#
 
@@ -153,18 +198,25 @@ def obtener_factura(factura_id):
         factura, items, pagos = get_factura(factura_id)  
         empresa = getDatosSucEmpresa()  # Implementa esta función
         
+        # Obtener datos del cliente para el QR
+        cliente = Clientes.query.get(factura.idcliente)
+        
         laFactura = {'id': factura.id,
                    'nro_comprobante': factura.nro_comprobante,
                    'fecha': factura.fecha.strftime('%Y-%m-%d'),
                    'cliente': factura.idcliente,
+                   'cliente_nombre': cliente.nombre if cliente else '',
+                   'cliente_documento': cliente.documento if cliente else '',
+                   'cliente_tipo_doc': cliente.id_tipo_doc if cliente else 99,
                    'tipo_comprobante': factura.tipo_comprobante,
+                   'id_tipo_comprobante': factura.idtipocomprobante,
                    'total': factura.total,
                    'bonificacion': factura.bonificacion,
                    'iva': factura.iva,
                    'exento': factura.exento,
                    'impint': factura.impint,
                    'cae': factura.cae,
-                   'cae_vto': factura.cae_vto,
+                   'cae_vto': factura.cae_vto.strftime('%Y-%m-%d') if factura.cae_vto else '',
                    'punto_vta': factura.punto_vta                   
                    }
         losItems = []
@@ -194,7 +246,7 @@ def obtener_factura(factura_id):
             'error': str(e)
         }), 500
         
-#----------------- imprimir factura  ------------------#
+#----------------- fin imprimir factura  ------------------#
         
 
 @bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
@@ -520,3 +572,19 @@ def list_printers():
             print(f"Error: {result['error']}")
     except Exception as e:
         print(f'Error listando impresoras: {e}')        
+
+@bp_ventas.route('/ivaVentas', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ivaVentas():
+    sucursales = Sucursales.query.all()
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        iva_ventas = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        iva_ventas = db.session.execute(text("CALL iva_ventas(:desde, :hasta, :sucursal)"),
+                         {'desde': desde, 'hasta': hasta, 'sucursal': session['id_sucursal']}).fetchall()
+    return render_template('iva-ventas.html', iva_ventas=iva_ventas, desde=desde, hasta=hasta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

@@ -78,20 +78,23 @@ class ArticuloCompuesto(db.Model):
         
 class Stock(db.Model):
     __tablename__ = 'stocks'
-    idstock = db.Column(db.Integer, primary_key=True)
+    idstock = db.Column(db.Integer, primary_key=True, autoincrement=True)
     idarticulo = db.Column(db.Integer, db.ForeignKey('articulos.id'), primary_key=True)
     idsucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id'), primary_key=True)
     actual = db.Column(db.Numeric(20,6), nullable=False)
     maximo = db.Column(db.Numeric(20,6))
     deseable = db.Column(db.Numeric(20,6))
+    en_transito_entrada = db.Column(db.Numeric(20,6), nullable=False, default=0)
+    en_transito_salida = db.Column(db.Numeric(20,6), nullable=False, default=0)
     
-    def __init__(self, idstock, idarticulo, idsucursal, actual, maximo, deseable):
-        self.idstock = idstock
+    def __init__(self, idarticulo, idsucursal, actual, maximo, deseable, en_transito_entrada=0, en_transito_salida =0):
         self.idarticulo = idarticulo
         self.idsucursal = idsucursal
         self.actual = actual
         self.maximo = maximo
         self.deseable = deseable
+        self.en_transito_entrada = en_transito_entrada  
+        self.en_transito_salida = en_transito_salida
 
 class Precio(db.Model):
     __tablename__ = 'precios'
@@ -184,6 +187,11 @@ class ItemBalance(db.Model):
         self.id_color = id_color
         self.id_detalle = id_detalle
         
+class EstadosRemitoSucursales(Enum):
+    PENDIENTE = "Pendiente"
+    ENVIADO = "Enviado"
+    RECIBIDO = "Recibido"
+    
 class RemitoSucursales(db.Model):
     __tablename__ = 'remito_sucursales'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -191,6 +199,7 @@ class RemitoSucursales(db.Model):
     iddestino = db.Column(db.Integer, db.ForeignKey('sucursales.id'), nullable=False)
     idusuario = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     fecha = db.Column(db.DateTime)
+    estado = db.Column(db.Enum(EstadosRemitoSucursales), default=EstadosRemitoSucursales.PENDIENTE, nullable=False)
     usuario = db.relationship('Usuarios', backref=db.backref('remito_sucursales', lazy=True))
     
     def __init__(self, idsucursal, iddestino, idusuario, fecha):

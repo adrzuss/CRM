@@ -1,0 +1,184 @@
+/* 
+ * Paleta de colores suaves para el sistema
+ * Archivo: soft-colors.css
+ */
+
+/* ===========================
+   BOTONES CON COLORES SUAVES
+   =========================== */
+
+/* Botón: Todos / General */
+.btn-soft-all {
+    color: #5a6c7d;
+    border-color: #b8c5d0;
+    background-color: #fff;
+}
+.btn-soft-all:hover, .btn-soft-all.active {
+    color: #fff;
+    background-color: #5a6c7d;
+    border-color: #5a6c7d;
+}
+
+/* Botón: Pendiente */
+.btn-soft-pending {
+    color: #d4a574;
+    border-color: #f4ddc4;
+    background-color: #fff;
+}
+.btn-soft-pending:hover, .btn-soft-pending.active {
+    color: #fff;
+    background-color: #d4a574;
+    border-color: #d4a574;
+}
+
+/* Botón: Enviado */
+.btn-soft-sent {
+    color: #7fb3d5;
+    border-color: #c5e3f6;
+    background-color: #fff;
+}
+.btn-soft-sent:hover, .btn-soft-sent.active {
+    color: #fff;
+    background-color: #7fb3d5;
+    border-color: #7fb3d5;
+}
+
+/* Botón: Recibido */
+.btn-soft-received {
+    color: #88c999;
+    border-color: #c8e6d0;
+    background-color: #fff;
+}
+.btn-soft-received:hover, .btn-soft-received.active {
+    color: #fff;
+    background-color: #88c999;
+    border-color: #88c999;
+}
+
+/* Botón: Origen */
+.btn-soft-origin {
+    color: #b19cd9;
+    border-color: #e0d7f0;
+    background-color: #fff;
+}
+.btn-soft-origin:hover, .btn-soft-origin.active {
+    color: #fff;
+    background-color: #b19cd9;
+    border-color: #b19cd9;
+}
+
+/* Botón: Destino */
+.btn-soft-destination {
+    color: #f5a3a3;
+    border-color: #fad7d7;
+    background-color: #fff;
+}
+.btn-soft-destination:hover, .btn-soft-destination.active {
+    color: #fff;
+    background-color: #f5a3a3;
+    border-color: #f5a3a3;
+}
+
+/* ===========================
+   BADGES CON COLORES SUAVES
+   =========================== */
+
+/* Badge: Pendiente */
+.badge-soft-pending {
+    background-color: #f4ddc4;
+    color: #8b6f47;
+}
+
+/* Badge: Enviado */
+.badge-soft-sent {
+    background-color: #c5e3f6;
+    color: #4a7c9c;
+}
+
+/* Badge: Recibido */
+.badge-soft-received {
+    background-color: #c8e6d0;
+    color: #4a8a5c;
+}
+
+/* ===========================
+   INPUTS CON COLORES SUAVES
+   =========================== */
+
+/* Input: En tránsito entrada (color azul celeste suave) */
+.input-transito-entrada {
+    background-color: #e8f4fa !important;
+    border-color: #c5e3f6 !important;
+    color: #4a7c9c !important;
+}
+
+.input-transito-entrada:focus {
+    background-color: #d4ecf8 !important;
+    border-color: #7fb3d5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(127, 179, 213, 0.25) !important;
+}
+
+/* Input: En tránsito salida (color lavanda suave) */
+.input-transito-salida {
+    background-color: #f5f0fb !important;
+    border-color: #e0d7f0 !important;
+    color: #7e6b99 !important;
+}
+
+.input-transito-salida:focus {
+    background-color: #ebe3f5 !important;
+    border-color: #b19cd9 !important;
+    box-shadow: 0 0 0 0.2rem rgba(177, 156, 217, 0.25) !important;
+}
+
+/* Input: Stock actual (color verde menta suave) */
+.input-stock-actual {
+    background-color: #e8f5ec !important;
+    border-color: #c8e6d0 !important;
+    color: #4a8a5c !important;
+}
+
+.input-stock-actual:focus {
+    background-color: #d9f0df !important;
+    border-color: #88c999 !important;
+    box-shadow: 0 0 0 0.2rem rgba(136, 201, 153, 0.25) !important;
+}
+
+/* ===========================
+   FONDOS Y CONTENEDORES
+   =========================== */
+
+/* Fondo suave para contenedores de tránsito entrada */
+.bg-soft-entrada {
+    background-color: #f0f8fc;
+}
+
+/* Fondo suave para contenedores de tránsito salida */
+.bg-soft-salida {
+    background-color: #f9f5fd;
+}
+
+/* Fondo suave para contenedores de stock actual */
+.bg-soft-stock {
+    background-color: #f2f9f4;
+}
+
+/* ===========================
+   TEXTOS Y LABELS
+   =========================== */
+
+.text-soft-entrada {
+    color: #4a7c9c;
+}
+
+.text-soft-salida {
+    color: #7e6b99;
+}
+
+.text-soft-stock {
+    color: #4a8a5c;
+}
+
+.text-soft-pending {
+    color: #8b6f47;
+}

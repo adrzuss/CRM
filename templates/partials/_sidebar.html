@@ -1,8 +1,10 @@
 <!-- Sidebar -->
+        
+        <ul class="navbar-nav sidebar sidebar-dark accordion my-gradient" id="accordionSidebar">
+        
         <!--
-        <ul class="navbar-nav bg-gradient-secondary sidebar sidebar-dark accordion" id="accordionSidebar">
-        -->    
         <ul class="navbar-nav sidebar sidebar-dark accordion bg-color-mediumblue" id="accordionSidebar" >
+        -->        
 
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('index') }}">
@@ -31,7 +33,7 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseClientes"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseClientes"
                     aria-expanded="true" aria-controls="collapseClientes">
                     <i class="fas fa-fw fa-person"></i>
                     <span>Clientes</span>
@@ -47,7 +49,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCtaCteCli"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCtaCteCli"
                     aria-expanded="true" aria-controls="collapseCtaCteCli">
                     <i class="fas fa-fw fa-file-invoice-dollar"></i>
                     <span>Cta. Cte.</span>
@@ -68,7 +70,7 @@
                 Ventas
             </div>
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseVentas"
                     aria-expanded="true" aria-controls="collapseVentas">
                     <i class="fas fa-fw fa-cash-register"></i>
                     <span>Ventas</span>
@@ -85,7 +87,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentasListados"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseVentasListados"
                     aria-expanded="true" aria-controls="collapseVentasListados">
                     <i class="fas fa-fw fa-cash-register"></i>
                     <span>Listados</span>
@@ -100,6 +102,7 @@
                         <a class="collapse-item" href="{{ url_for('ventas.ventasVendedores') }}">Ventas por vendedor</a>
                         <a class="collapse-item" href="{{ url_for('ventas.remitos_vta') }}">Listado de remitos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.presupuestos') }}">Listado de presupuestos</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.ivaVentas') }}">IVA Ventas</a>
                     </div>
                 </div>
             </li>
@@ -111,7 +114,7 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulos"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseArticulos"
                     aria-expanded="true" aria-controls="collapseArticulos">
                     <i class="fas fa-fw fa-boxes-stacked"></i>
                     <span>Artículos</span>
@@ -129,7 +132,7 @@
                         <a class="collapse-item" href="{{ url_for('ofertas.nueva_oferta') }}">Nueva oferta</a>
                     </div>
                 </div>
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseArticulosListados"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseArticulosListados"
                     aria-expanded="true" aria-controls="collapseArticulosListados">
                     <i class="fas fa-fw fa-rectangle-list"></i>
                     <span>Listados</span>
@@ -143,6 +146,7 @@
                         <a class="collapse-item" href="{{ url_for('articulos.stock_sucursales') }}">Stock de sucursales</a>
                         <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Precios</a>
                         <a class="collapse-item" href="{{ url_for('articulos.lst_compuestos') }}">Compuestos</a>
+                        <a class="collapse-item" href="{{ url_for('articulos.listado_remitos_sucursales') }}">Remitos entre sucursales</a>
                         <a class="collapse-item" href="{{ url_for('ofertas.ofertas') }}">Ofertas</a>
                     </div>
                 </div>
@@ -153,7 +157,7 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBancos"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseBancos"
                     aria-expanded="true" aria-controls="collapseBancos">
                     <i class="fas fa-folid fa-building-columns"></i>
                     <span>Bancos</span>
@@ -176,7 +180,7 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEntCredito"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEntCredito"
                     aria-expanded="true" aria-controls="collapseEntCredito">
                     <i class="fas fa-folid fa-credit-card"></i>
                     <span>Tarjetas</span>
@@ -192,7 +196,7 @@
                 </div>
             </li>     
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCreditoPropio"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCreditoPropio"
                     aria-expanded="true" aria-controls="collapseCreditoPropio">
                     <i class="fas fa-folid fa-money-check-dollar"></i>
                     <span>Crédito propio</span>
@@ -218,7 +222,7 @@
             </div>
             <!-- Nav Item - Utilities Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProveedores"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseProveedores"
                     aria-expanded="true" aria-controls="collapseProveedores">
                     <i class="fas fa-folid fa-people-group"></i>
                     <span>Proveedores</span>
@@ -236,7 +240,7 @@
                 </div>
             </li>    
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCompras"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCompras"
                     aria-expanded="true" aria-controls="collapseCompras">
                     <i class="fas fa-regular fa-truck-ramp-box"></i>
                     <span>Compras</span>
@@ -249,12 +253,13 @@
                         <a class="collapse-item" href="{{ url_for('proveedores.nueva_compra') }}">Nueva compra</a>
                         <a class="collapse-item" href="{{ url_for('proveedores.remitosComp') }}">Listado de remitos</a>
                         <a class="collapse-item" href="{{ url_for('proveedores.nuevo_remitoComp') }}">Nuevo remito</a>
+                        <a class="collapse-item" href="{{ url_for('proveedores.ivaCompras') }}">IVA Compras</a>
                     </div>
                     
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGastos"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseGastos"
                     aria-expanded="true" aria-controls="collapseGastos">
                     <i class="fas fa-regular fa-comment-dollar"></i>
                     <span>Gastos</span>
@@ -273,7 +278,7 @@
             </div>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCaja"
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCaja"
                     aria-expanded="true" aria-controls="collapseCaja">
                     <i class="fas fa-solid fa-coins"></i>
                     <span>Caja</span>

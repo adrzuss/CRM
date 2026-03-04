@@ -66,24 +66,31 @@ async function checkArt(e){
     e.preventDefault();
     const id = document.getElementById('id').value;
     const codigo = document.getElementById('codigo').value;
-    const respuesta = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/0`);
-    const data = await respuesta.json();
-    if (data.success == false){
-        form_articulos.removeEventListener('submit', checkArt)
-        form_articulos.submit();
-    }
-    else{
-        if (data.articulo.id != id){
-            alert('El código ya figura en otro artículo')
-            preventDefault();
-            return false;
-        }
-        else{
+    
+    if (codigo != ''){
+        const respuesta = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/0`);
+        const data = await respuesta.json();
+        if (data.success == false){
             form_articulos.removeEventListener('submit', checkArt)
             form_articulos.submit();
         }
-        
+        else{
+            if (data.articulo.id != id){
+                alert('El código ya figura en otro artículo')
+                preventDefault();
+                return false;
+            }
+            else{
+                form_articulos.removeEventListener('submit', checkArt)
+                form_articulos.submit();
+            }
+            
+        }
     }
+    else{
+        form_articulos.removeEventListener('submit', checkArt)
+        form_articulos.submit();
+    } 
 }
 
 let form_articulos = document.getElementById('articulo_form');

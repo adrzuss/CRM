@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from datetime import date
 from models.proveedores import Proveedores, FacturaC, RemitoFacturas
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica
-from models.ctacteprov import CtaCteProv
 from services.bancos import BancoService
 from services.proveedores import procesar_nueva_compra, procesar_nuevo_gasto, get_factura, actualizar_precios_por_compras, \
     procesar_nuevo_remito, get_remito, procesar_nueva_op, get_movs_pendientes_ctacte, get_ordenes_pago
@@ -10,7 +9,7 @@ from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from utils.db import db
 from sqlalchemy.orm import aliased
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 
 bp_proveedores = Blueprint('proveedores', __name__, template_folder='../templates/proveedores')
 
@@ -329,3 +328,19 @@ def get_movs_ctacte(idproveedor):
         movs_ctacte = []
     
     return jsonify([{'id': r.id, 'fecha': r.fecha, 'tipo_comprobante': r.tipo_comprobante, 'nro_comprobante': r.nro_comprobante, 'saldo': (r.haber-r.debe-r.pagos)} for r in movs_ctacte]) 
+
+
+@bp_proveedores.route('/ivaCompras', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ivaCompras():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        iva_compras = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        iva_compras = db.session.execute(text("CALL iva_compras(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+    return render_template('iva-compras.html', iva_compras=iva_compras, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

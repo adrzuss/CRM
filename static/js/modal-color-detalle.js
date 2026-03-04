@@ -173,7 +173,7 @@ class ModalColorDetalleManager {
 
         try {
             // Obtener colores y detalles disponibles
-            const response = await fetch(`/articulos/api/${articleId}/colores-detalles`);
+            const response = await fetch(`${BASE_URL}/articulos/api/${articleId}/colores-detalles`);
             const data = await response.json();
 
             if (data.success) {
@@ -247,7 +247,7 @@ class ModalColorDetalleManager {
             if (typeof Swal !== 'undefined') {
                 Swal.fire('Error', 'Error de conexión', 'error');
             } else {
-                alert('Error: Error de conexión');
+                alert('Error: Error de conexión...');
             }
         }
     }

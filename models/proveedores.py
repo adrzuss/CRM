@@ -29,6 +29,7 @@ class FacturaC(db.Model):
     fecha = db.Column(db.Date, nullable=False)
     periodo = db.Column(db.Date, nullable=False)
     total = db.Column(db.Numeric(20,6), nullable=False)
+    neto = db.Column(db.Numeric(20,6), nullable=False)
     iva = db.Column(db.Numeric(20,6), nullable=False)
     exento = db.Column(db.Numeric(20,6), nullable=False)
     impint = db.Column(db.Numeric(20,6), nullable=False)
@@ -41,11 +42,12 @@ class FacturaC(db.Model):
     proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
     pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
     
-    def __init__(self, idproveedor, fecha, periodo, total, nro_comprobante, iva=0, exento=0, impint=0, idsucursal=0, idtipocomprobante=0, idusuario=0, idplancuenta=0):
+    def __init__(self, idproveedor, fecha, periodo, total, nro_comprobante, neto=0,iva=0, exento=0, impint=0, idsucursal=0, idtipocomprobante=0, idusuario=0, idplancuenta=0):
         self.idproveedor = idproveedor
         self.fecha = fecha
         self.periodo = periodo
         self.total = total
+        self.neto = neto
         self.nro_comprobante = nro_comprobante
         self.iva = iva
         self.exento = exento    
@@ -63,6 +65,7 @@ class ItemC(db.Model):
     cantidad = db.Column(db.Numeric(20,6), nullable=False)
     precio_unitario = db.Column(db.Numeric(20,6), nullable=False)
     precio_total = db.Column(db.Numeric(20,6), nullable=False)
+    neto = db.Column(db.Numeric(20,6), nullable=False)
     iva = db.Column(db.Numeric(20,6), nullable=False)
     idalciva = db.Column(db.Integer, db.ForeignKey('alc_iva.id'), nullable=False)   
     exento = db.Column(db.Numeric(20,6), nullable=False)
@@ -72,13 +75,14 @@ class ItemC(db.Model):
     articulo = db.relationship('Articulo', backref=db.backref('itemsc', lazy=True))
     factura = db.relationship('FacturaC', backref=db.backref('itemsc', lazy=True))
     
-    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, iva=0, idalciva=0, exento=0, impint=0, id_color=0, id_detalle=0):
+    def __init__(self, idfactura, id, idarticulo, cantidad, precio_unitario, precio_total, neto=0, iva=0, idalciva=0, exento=0, impint=0, id_color=0, id_detalle=0):
         self.idfactura = idfactura
         self.id = id
         self.idarticulo = idarticulo
         self.cantidad = cantidad
         self.precio_unitario = precio_unitario    
         self.precio_total = precio_total
+        self.neto = neto
         self.iva = iva
         self.idalciva = idalciva
         self.exento = exento

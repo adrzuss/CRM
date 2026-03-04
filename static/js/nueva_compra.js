@@ -560,6 +560,13 @@ function procesarTransaccion() {
         return false;
     }
     
+    // Validar campos required antes de enviar
+    if (!form.checkValidity()) {
+        console.warn('⚠️ [COMPRAS] Formulario no válido, mostrando errores...');
+        form.reportValidity();
+        return false;
+    }
+    
     // Marcar que el formulario está siendo enviado para evitar el warning de beforeunload
     isFormSubmited = true;
     

@@ -91,7 +91,10 @@ def grabarDatosPtoVta(form):
         ultima_deb_c = form['ultima_deb_c']
     ultimo_rem_x = form['ultimo_rem_x']
     ultimo_rec_x = form['ultimo_rec_x']
+    print('------------------------------------------------------------------------------------------')
+    print(f'Impresora pos: {form["pos_printer"]} - Fac. Electrónica: {form.get("fac_electronica", 0)}')
     pos_printer = form['pos_printer']
+    fac_electronica = form.get('fac_electronica', 0)
     try:    
         if idPuntoVenta:
             puntoVenta = PuntosVenta.query.get(idPuntoVenta)
@@ -109,14 +112,16 @@ def grabarDatosPtoVta(form):
             puntoVenta.ultimo_rem_x = ultimo_rem_x
             puntoVenta.ultimo_rec_x = ultimo_rec_x
             puntoVenta.pos_printer = pos_printer
+            puntoVenta.fac_electronica = fac_electronica
             db.session.commit()
             flash(f'Punto de venta actualizado: {puntoVenta.punto_vta}')
         else:
             puntoVenta = PuntosVenta(punto_venta, idsucursal, ultima_fac_a, ultima_fac_b, ultima_fac_c, ultima_deb_a, ultima_deb_b, ultima_deb_c, ultima_nc_a, ultima_nc_b, ultima_nc_c, ultimo_rem_x, ultimo_rec_x)
             db.session.add(puntoVenta)
             db.session.commit()
+            idPuntoVenta = puntoVenta.id
             flash(f'Punto de venta grabado: {puntoVenta.punto_vta}')
-        return puntoVenta    
+        return idPuntoVenta    
     except Exception as e:
         print(e)
         flash(f'Error grabando datos de Punto de venta: {e}', 'error')        
@@ -164,9 +169,12 @@ def getDatosSucEmpresa():
     return {
         'nombre': empresa.nombre_fantasia + ' - ' + sucursal.nombre,
         'direccion': sucursal.direccion,
-        'telefono': sucursal.telefono
+        'telefono': sucursal.telefono,
+        'cuit': empresa.documento if empresa else ''
     }
     
 def getPosPrinter(idPuntoVenta):
     puntoVenta = PuntosVenta.query.get(idPuntoVenta)
-    return puntoVenta.pos_printer if puntoVenta else None
+    posPrinter = puntoVenta.pos_printer if puntoVenta else None
+    facElectronica = puntoVenta.fac_electronica if puntoVenta else None
+    return posPrinter, facElectronica

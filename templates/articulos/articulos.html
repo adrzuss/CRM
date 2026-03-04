@@ -210,10 +210,12 @@
         tabla.on('draw', function () {
             let total = tabla.data().count();
             $('#contadorArticulos').text(total);
+            $('#tableLoader').hide(); // Ocultar spinner al cargar
         });
 
         // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"
         $('#btnFiltrar').click(function () {
+            $('#tableLoader').show(); // Mostrar spinner al recargar
             tabla.ajax.reload(); // Recargar la tabla con los nuevos filtros
         });
 

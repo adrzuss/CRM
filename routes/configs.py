@@ -203,7 +203,9 @@ def abm_sucursales_delete(id):
 @alertas_mensajes
 def puntos_venta(id=0):
     if request.method == 'POST':
-        puntoVenta = grabarDatosPtoVta(request.form)
+        idPuntoVenta = grabarDatosPtoVta(request.form)
+        puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+        idPuntoVenta = puntoVenta.id if puntoVenta else None
     else:
         idPuntoVenta = id
         if idPuntoVenta > 0:

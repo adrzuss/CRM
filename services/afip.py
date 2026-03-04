@@ -216,7 +216,7 @@ class AFIP:
                             'CbteFch': datetime.now().strftime("%Y%m%d"),
                             'ImpTotal': invoice_data['importe_total'],
                             'ImpTotConc': 0,  # Importe neto no gravado
-                            'ImpNeto': invoice_data['importev_neto'],
+                            'ImpNeto': invoice_data['importe_neto'],
                             'ImpOpEx': 0,  # Importe exento
                             'ImpIVA': invoice_data['importe_iva'],
                             'ImpTrib': 0,  # Importe de tributos

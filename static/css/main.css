@@ -798,7 +798,7 @@ body{
 }  
 
 .bg-dos {
-    background-color: rgba(15, 177, 189, 0.149);
+    background-color: rgba(105, 15, 189, 0.149);
     color: black;
 }  
 
@@ -1985,7 +1985,7 @@ body{
 .invoice-number {
     font-size: 1.8rem;
     font-weight: bold;
-    color: white;
+    color: rgba(103, 154, 209, 0.75);
     text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -2339,6 +2339,14 @@ kbd {
     border: none;
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
 }
+.section-header2, .card-header2 {
+    background: linear-gradient(135deg, #66eaa8 0%, #4b9ca2 100%);
+    color: white !important;
+    border-radius: 0.75rem 0.75rem 0 0;
+    padding: 1.25rem 2rem;
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
 .card {
     border-radius: 1rem;
     box-shadow: 0 0.25rem 2rem rgba(78, 115, 223, 0.08);
@@ -2350,6 +2358,15 @@ kbd {
 }
 .table thead th {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+.table2 thead th {
+    background: linear-gradient(135deg, #66eaa8 0%, #4b9ca2 100%);
     color: white;
     border: none;
     font-weight: 600;
@@ -2512,4 +2529,562 @@ Specificity: (0,1,0)
 
 .uppercase-input {
     text-transform: uppercase;
+}
+
+/* ========================================
+   ESTILOS PARA PUNTOS DE VENTA
+   ======================================== */
+
+/* Sección de datos generales - Azul corporativo */
+.pv-section-general {
+    background: linear-gradient(135deg, #3a7bd5 0%, #2c5aa0 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
+    color: white;
+}
+
+.pv-section-general .form-label,
+.pv-section-general label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.pv-section-general .form-control,
+.pv-section-general .form-select {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+}
+
+.pv-section-general .form-control:focus,
+.pv-section-general .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Sección de comprobantes - Verde éxito */
+.pv-section-comprobantes {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.pv-section-comprobantes .form-label,
+.pv-section-comprobantes label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.pv-section-comprobantes .form-control {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+}
+
+.pv-section-comprobantes .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Sección de remitos/recibos - Naranja */
+.pv-section-remitos {
+    background: linear-gradient(135deg, #fd7e14 0%, #dc6502 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
+    color: white;
+}
+
+.pv-section-remitos .form-label,
+.pv-section-remitos label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.pv-section-remitos .form-control {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+}
+
+.pv-section-remitos .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Sección de factura electrónica - Púrpura */
+.pv-section-factura-e {
+    background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    color: white;
+}
+
+.pv-section-factura-e .form-label,
+.pv-section-factura-e label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.pv-section-factura-e .form-control {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+}
+
+.pv-section-factura-e .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.pv-section-factura-e .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.pv-section-factura-e .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+/* Sección de impresoras - Gris elegante */
+.pv-section-impresoras {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    color: white;
+}
+
+.pv-section-impresoras .form-label,
+.pv-section-impresoras label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.pv-section-impresoras .form-select {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+}
+
+.pv-section-impresoras .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Títulos de secciones PV */
+.pv-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pv-section-title i {
+    font-size: 1.2rem;
+}
+
+/* Card principal de puntos de venta */
+.pv-card-main {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.pv-card-main .card-header {
+    background: linear-gradient(135deg, #0198a5 0%, #017a85 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.pv-card-main .card-header h3 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Tabla de puntos de venta mejorada */
+.pv-table-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.pv-table {
+    margin-bottom: 0;
+}
+
+.pv-table thead {
+    background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+}
+
+.pv-table thead th {
+    color: white;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+    border: none;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.pv-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.pv-table tbody tr:hover {
+    background-color: rgba(1, 152, 165, 0.08);
+    transform: scale(1.005);
+}
+
+.pv-table tbody td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    text-align: center;
+    border-color: #dee2e6;
+}
+
+/* Badge para punto de venta */
+.pv-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0198a5 0%, #017a85 100%);
+    color: white;
+}
+
+/* Badge para sucursal */
+.pv-sucursal-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Números de comprobantes */
+.pv-comprobante-num {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* Botón de editar punto de venta */
+.btn-editar-pv {
+    background: linear-gradient(135deg, #3a7bd5 0%, #2c5aa0 100%);
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-editar-pv:hover {
+    background: linear-gradient(135deg, #2c5aa0 0%, #1e3d6f 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(58, 123, 213, 0.4);
+}
+
+/* Indicador de factura electrónica */
+.pv-fe-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pv-fe-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.pv-fe-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ========================================
+   CONFIGURACIÓN - SECCIÓN LOGO
+   ======================================== */
+
+.config-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.config-card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    border: none;
+}
+
+.config-card-header h5 {
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.config-section {
+    background: linear-gradient(145deg, #f8f9fc 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.config-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5a5c69;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.config-section-title i {
+    color: #667eea;
+}
+
+/* Logo Upload Container */
+.logo-upload-container {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
+    border: 2px dashed #dee2e6;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-upload-container:hover {
+    border-color: #667eea;
+    background: linear-gradient(145deg, #f8f9fc 0%, #e9ecef 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.logo-upload-container.dragover {
+    border-color: #667eea;
+    background: linear-gradient(145deg, #e8edff 0%, #d4dbf9 100%);
+}
+
+.logo-preview-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.logo-preview-wrapper:hover .logo-preview {
+    transform: scale(1.05);
+}
+
+.logo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    background: linear-gradient(145deg, #f8f9fc 0%, #e9ecef 100%);
+}
+
+.logo-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-placeholder span {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.logo-upload-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.logo-upload-text strong {
+    color: #667eea;
+    cursor: pointer;
+}
+
+.logo-upload-text strong:hover {
+    text-decoration: underline;
+}
+
+.logo-upload-hint {
+    font-size: 0.75rem;
+    color: #adb5bd;
+}
+
+/* Input file oculto */
+.logo-input-file {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Botón eliminar logo */
+.logo-remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+.logo-preview-wrapper:hover .logo-remove-btn {
+    opacity: 1;
+}
+
+.logo-remove-btn:hover {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, #c82333 0%, #a71d2a 100%);
+}
+
+/* Sección de datos empresa */
+.config-section-empresa {
+    background: linear-gradient(145deg, #e8f4f8 0%, #d4eaf1 100%);
+    border-left: 4px solid #17a2b8;
+}
+
+.config-section-fiscal {
+    background: linear-gradient(145deg, #e8f8ed 0%, #d4f1df 100%);
+    border-left: 4px solid #28a745;
+}
+
+.config-section-contacto {
+    background: linear-gradient(145deg, #fff8e8 0%, #f1ebd4 100%);
+    border-left: 4px solid #ffc107;
+}
+
+.config-section-opciones {
+    background: linear-gradient(145deg, #f0e8f8 0%, #e1d4f1 100%);
+    border-left: 4px solid #6f42c1;
+}
+
+/* Labels modernos */
+.config-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+
+/* Inputs con estilo */
+.config-input {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.config-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.config-input-readonly {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+/* ========================================
+   LOGIN - LOGO Y EMPRESA
+   ======================================== */
+
+.login-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-logo {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.login-empresa-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #667eea;
+    letter-spacing: 0.5px;
+    margin: 0;
 }

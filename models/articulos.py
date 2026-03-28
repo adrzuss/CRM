@@ -24,6 +24,7 @@ class Articulo(db.Model):
     es_compuesto = db.Column(db.Boolean, nullable=False)
     pedir_en_ventas = db.Column(db.Enum(PedirEnVentas), default=PedirEnVentas.CANTIDAD, nullable=False)
     baja = db.Column(db.Date, nullable=False)
+    alta = db.Column(db.Date, nullable=False, default=date.today)
     con_colores = db.Column(db.Boolean, default=False)
     con_talles = db.Column(db.Boolean, default=False)
     iva = db.relationship('AlcIva', back_populates='articulos')
@@ -52,6 +53,7 @@ class Articulo(db.Model):
         self.con_colores = con_colores
         self.con_talles = con_talles
         self.baja = date(1900, 1, 1)
+        self.alta = date.today()
     
     @property
     def pedir_en_ventas_display(self):

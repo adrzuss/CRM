@@ -80,6 +80,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Ventas de artículos:</h6>
                         <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.nueva_nota_credito') }}">Nueva nota crédito</a>
                         <a class="collapse-item" href="{{ url_for('ventas.nuevo_remito') }}">Nuevo remito</a>
                         <a class="collapse-item" href="{{ url_for('ventas.nuevo_presupuesto') }}">Nuevo presupuesto</a>
                     </div>
@@ -100,6 +101,7 @@
                         <a class="collapse-item" href="{{ url_for('ventas.ventasArticulos') }}">Artículos vendidos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasClientes') }}">Ventas a clientes</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ventasVendedores') }}">Ventas por vendedor</a>
+                        <a class="collapse-item" href="{{ url_for('ventas.ventasTipoPago') }}">Ventas por tipo de pago</a>
                         <a class="collapse-item" href="{{ url_for('ventas.remitos_vta') }}">Listado de remitos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.presupuestos') }}">Listado de presupuestos</a>
                         <a class="collapse-item" href="{{ url_for('ventas.ivaVentas') }}">IVA Ventas</a>

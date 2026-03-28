@@ -1,12 +1,12 @@
 from flask import session, current_app, flash
 from sqlalchemy import text, func
-from models.configs import Configuracion, TipoComprobantes, PuntosVenta
+from models.configs import Configuracion, TipoComprobantes, PuntosVenta, LineasComprobantes
 from models.articulos import ListasPrecios
 from utils.db import db
 from models.sessions import TareasUsuarios
 from models.sucursales import Sucursales
 
-def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos):
+def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos, logo=None):
     configuracion = Configuracion.query.get(session['id_empresa'])
     if configuracion:
         if 'owner' in session:
@@ -23,6 +23,11 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
         configuracion.dias_vto_cta_cte = dias_vto_cta_cte
         configuracion.idplan_sistema = idplan_sistema
         configuracion.interes_mora_creditos = interes_mora_creditos
+        
+        # Actualizar logo si se proporciona (None = no cambiar, '' = eliminar, 'filename' = nuevo logo)
+        if logo is not None:
+            configuracion.logo = logo if logo else None
+        
         db.session.commit()
 
 def getOwner():
@@ -65,17 +70,17 @@ def save_and_update_lista_precios(nombre_lista_precio, markup):
         
         
 def grabarDatosPtoVta(form):
-    idPuntoVenta = form['id_puntoventa']
+    idPuntoVenta = form.get('id_puntoventa', '')
     punto_venta = form['puntoVenta']
     idsucursal = form['idsucursal']
     tipoIva = session.get('tipo_iva', None)
     if tipoIva == 1:
-        ultima_fac_a = form['ultima_fac_a']
-        ultima_nc_a = form['ultima_nc_a']
-        ultima_deb_a = form['ultima_deb_a']
-        ultima_fac_b = form['ultima_fac_b']
-        ultima_nc_b = form['ultima_nc_b']
-        ultima_deb_b = form['ultima_deb_b']
+        ultima_fac_a = form.get('ultima_fac_a', 0) or 0
+        ultima_nc_a = form.get('ultima_nc_a', 0) or 0
+        ultima_deb_a = form.get('ultima_deb_a', 0) or 0
+        ultima_fac_b = form.get('ultima_fac_b', 0) or 0
+        ultima_nc_b = form.get('ultima_nc_b', 0) or 0
+        ultima_deb_b = form.get('ultima_deb_b', 0) or 0
         ultima_fac_c = 0
         ultima_nc_c = 0
         ultima_deb_c = 0
@@ -86,15 +91,19 @@ def grabarDatosPtoVta(form):
         ultima_fac_b = 0
         ultima_nc_b = 0
         ultima_deb_b = 0
-        ultima_fac_c = form['ultima_fac_c']
-        ultima_nc_c = form['ultima_nc_c']
-        ultima_deb_c = form['ultima_deb_c']
-    ultimo_rem_x = form['ultimo_rem_x']
-    ultimo_rec_x = form['ultimo_rec_x']
+        ultima_fac_c = form.get('ultima_fac_c', 0) or 0
+        ultima_nc_c = form.get('ultima_nc_c', 0) or 0
+        ultima_deb_c = form.get('ultima_deb_c', 0) or 0
+    ultimo_rem_x = form.get('ultimo_rem_x', 0) or 0
+    ultimo_rec_x = form.get('ultimo_rec_x', 0) or 0
+    pos_printer = '1' if form.get('pos_printer') else ''
+    fac_electronica = 1 if form.get('fac_electronica') else 0
+    certificado_p12 = form.get('certificado', '')
+    clave_certificado = form.get('clave_cert', '')
+    
     print('------------------------------------------------------------------------------------------')
-    print(f'Impresora pos: {form["pos_printer"]} - Fac. Electrónica: {form.get("fac_electronica", 0)}')
-    pos_printer = form['pos_printer']
-    fac_electronica = form.get('fac_electronica', 0)
+    print(f'Impresora pos: {pos_printer} - Fac. Electrónica: {fac_electronica}')
+    
     try:    
         if idPuntoVenta:
             puntoVenta = PuntosVenta.query.get(idPuntoVenta)
@@ -113,10 +122,16 @@ def grabarDatosPtoVta(form):
             puntoVenta.ultimo_rec_x = ultimo_rec_x
             puntoVenta.pos_printer = pos_printer
             puntoVenta.fac_electronica = fac_electronica
+            puntoVenta.certificado_p12 = certificado_p12
+            puntoVenta.clave_certificado = clave_certificado
             db.session.commit()
             flash(f'Punto de venta actualizado: {puntoVenta.punto_vta}')
         else:
             puntoVenta = PuntosVenta(punto_venta, idsucursal, ultima_fac_a, ultima_fac_b, ultima_fac_c, ultima_deb_a, ultima_deb_b, ultima_deb_c, ultima_nc_a, ultima_nc_b, ultima_nc_c, ultimo_rem_x, ultimo_rec_x)
+            puntoVenta.pos_printer = pos_printer
+            puntoVenta.fac_electronica = fac_electronica
+            puntoVenta.certificado_p12 = certificado_p12
+            puntoVenta.clave_certificado = clave_certificado
             db.session.add(puntoVenta)
             db.session.commit()
             idPuntoVenta = puntoVenta.id
@@ -178,3 +193,55 @@ def getPosPrinter(idPuntoVenta):
     posPrinter = puntoVenta.pos_printer if puntoVenta else None
     facElectronica = puntoVenta.fac_electronica if puntoVenta else None
     return posPrinter, facElectronica
+
+# =============================================================================
+# LÍNEAS DE COMPROBANTES (Cabecera y Pie de Ticket)
+# =============================================================================
+
+def get_lineas_comprobantes(id_punto_vta):
+    """Obtiene las líneas de comprobantes de un punto de venta
+    Retorna un diccionario con las 10 líneas (vacías si no existen)
+    """
+    try:
+        lineas_db = LineasComprobantes.query.filter_by(idpuntovta=id_punto_vta).all()
+        
+        # Crear diccionario con las 10 líneas (vacías por defecto)
+        lineas = {}
+        for i in range(1, 11):
+            lineas[i] = {'texto': '', 'solo_en_ventas': False}
+        
+        # Llenar con datos de la BD
+        for linea in lineas_db:
+            lineas[linea.idlinea] = {
+                'texto': linea.texto,
+                'solo_en_ventas': linea.solo_en_ventas
+            }
+        
+        return lineas
+    except Exception as e:
+        print(f"Error al obtener líneas de comprobantes: {e}")
+        return {i: {'texto': '', 'solo_en_ventas': False} for i in range(1, 11)}
+
+def guardar_lineas_comprobantes(id_punto_vta, lineas_data):
+    """Guarda las líneas de comprobantes de un punto de venta
+    Elimina las líneas existentes y guarda solo las que tienen texto
+    """
+    try:
+        # Eliminar líneas existentes
+        LineasComprobantes.query.filter_by(idpuntovta=id_punto_vta).delete()
+        
+        # Insertar nuevas líneas (solo las que tienen texto)
+        for linea in lineas_data:
+            nueva_linea = LineasComprobantes(
+                idpuntovta=id_punto_vta,
+                idlinea=linea['idlinea'],
+                texto=linea['texto'],
+                solo_en_ventas=linea['solo_en_ventas']
+            )
+            db.session.add(nueva_linea)
+        
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        raise e

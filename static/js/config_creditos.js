@@ -3,7 +3,7 @@ async function get_documentos_plan(idplan) {
   try {
     const response = await fetch(`${BASE_URL}/creditos/get_documentos_por_plan/${idplan}`);
     if (response.ok != true) {
-        alert("Error al obtener los documentos para el plan.");
+        mostrarError("Error al obtener los documentos para el plan.");
         return;
     }
     const data = await response.json();
@@ -25,11 +25,11 @@ async function get_documentos_plan(idplan) {
         document.getElementById("documentos_plan").appendChild(item);
       });
     } else {
-      alert("Error al obtener los documentos para el plan: " + data.message);
+      mostrarError("Error al obtener los documentos para el plan: " + data.message);
     }
   } catch (error) {
     console.error("Error al obtener los documentos para el plan:", error);
-    alert("Error al obtener los documentos para el plan.");
+    mostrarError("Error al obtener los documentos para el plan.");
   }
 }
 
@@ -41,7 +41,7 @@ async function get_categorias_plan(idplan) {
   try {
     const response = await fetch(`${BASE_URL}/creditos/get_categorias_por_plan/${idplan}`);
     if (response.ok != true) {
-        alert("Error al obtener los documentos para el plan.");
+        mostrarError("Error al obtener las categorías para el plan.");
         return;
     }
     const data = await response.json();
@@ -63,11 +63,11 @@ async function get_categorias_plan(idplan) {
         document.getElementById("categorias_plan").appendChild(item);
       });
     } else {
-      alert("Error al obtener las categorias para el plan: " + data.message);
+      mostrarError("Error al obtener las categorías para el plan: " + data.message);
     }
   } catch (error) {
-    console.error("Error al obtener las categorias para el plan:", error);
-    alert("Error al obtener las categorias para el plan.");
+    console.error("Error al obtener las categorías para el plan:", error);
+    mostrarError("Error al obtener las categorías para el plan.");
   }
 }
 

@@ -9,7 +9,7 @@ document.getElementById('calcular_sucs').addEventListener('click', async functio
     let hasta = document.getElementById('hasta_sucs').value;
     const data = await getVentasSucursales(desde, hasta);
     if (data.success == false){
-        alert('Error al obtener ventas');
+        mostrarError('Error al obtener ventas');
     }
     else{
         let tbody = document.getElementById('tablaVtaSucursales').getElementsByTagName('tbody')[0];
@@ -40,7 +40,7 @@ document.getElementById('calcular_vend').addEventListener('click', async functio
     let hasta = document.getElementById('hasta_vend').value;
     const data = await getVentasVendedores(desde, hasta);
     if (data.success == false){
-        alert('Error al obtener ventas');
+        mostrarError('Error al obtener ventas');
     }
     else{
         let tbody = document.getElementById('tablaVtaVendedores').getElementsByTagName('tbody')[0];

@@ -1,0 +1,18 @@
+{# Formulario de edición - Alícuota Ingresos Brutos #}
+<h5 class="mb-3">Editar Alícuota Ing. Brutos</h5>
+<form hx-post="{{ url_for('configuraciones.update_alc_ib', id=item.id) }}" 
+      hx-target="#tabla-alicuotas_ib" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="alicuota" class="form-label">Alícuota (%)</label>
+        <input type="number" step="0.01" class="form-control" name="alicuota" id="alicuota" value="{{ item.alicuota }}" required>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

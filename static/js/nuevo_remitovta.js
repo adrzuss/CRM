@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           if (selectedPtoVta) {
             asignarPuntoVenta(selectedPtoVta);
           } else {
-            alert("Debe seleccionar un punto de venta.");
+            mostrarAdvertencia("Debe seleccionar un punto de venta.");
           }
         };
         modalContent.appendChild(confirmButton);
@@ -126,11 +126,11 @@ async function asignarPuntoVenta(idPuntoVenta) {
       document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
       document.getElementById("idcliente").focus();
     } else {
-      alert('Error al asignar el punto de venta: ' + result.message);
+      mostrarError('Error al asignar el punto de venta: ' + result.message);
     }
   } catch (error) {
     console.error('Error al llamar a la API:', error);
-    alert('Ocurrió un error al asignar el punto de venta.');
+    mostrarError('Ocurrió un error al asignar el punto de venta.');
   }
 }
 
@@ -214,12 +214,12 @@ async function fetchCliente(input) {
         // Si se encuentra un cliente por ID, asignarlo directamente
         if (data.cliente.baja == true) {
           limpiarDatosCliente();
-          alert("Cliente dado de baja. No puedes remitir a este cliente.");
+          mostrarAdvertencia("Cliente dado de baja. No puedes remitir a este cliente.");
           return;
         }
         asignarCliente(data.cliente);
       } else {
-        alert("No se encontraron clientes con ese ID.");
+        mostrarInfo("No se encontraron clientes con ese ID.");
       }
     } else {
       if (data.length > 1) {
@@ -230,7 +230,7 @@ async function fetchCliente(input) {
         asignarCliente(data[0]);
       } else {
         limpiarDatosCliente
-        alert("No se encontraron clientes con ese nombre.");
+        mostrarInfo("No se encontraron clientes con ese nombre.");
       }
     }
   }  
@@ -276,7 +276,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si se encuentra un cliente por ID, asignarlo directamente
       asignarArticulo(data.articulo, itemDiv);
     } else {
-      alert("No se encontraron articulos con ese ID.");
+      mostrarInfo("No se encontraron articulos con ese ID.");
     }
   } else {
     if (data.length > 1) {
@@ -286,7 +286,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si hay un solo resultado, asignar directamente
       asignarArticuloElegido(data[0], itemDiv);
     } else {
-      alert("No se encontraron articulos con ese detalle.");
+      mostrarInfo("No se encontraron articulos con ese detalle.");
     }
   }
 }
@@ -493,9 +493,10 @@ tablaItems.addEventListener(
 );
 
 // Eliminar fila
-tablaItems.addEventListener("click", (itemDiv) => {
+tablaItems.addEventListener("click", async (itemDiv) => {
   if (itemDiv.target.classList.contains("btn-eliminar") || itemDiv.target.closest('.btn-eliminar')) {
-    if (confirm('¿Está seguro de eliminar este artículo?')) {
+    const confirmado = await confirmar('¿Está seguro de eliminar este artículo?');
+    if (confirmado) {
       itemDiv.target.closest("tr").remove();
       updateTotalFactura();
       
@@ -509,19 +510,21 @@ tablaItems.addEventListener("click", (itemDiv) => {
   }
 });
 
-document.getElementById("invoice_form").addEventListener("submit", function (event) {
+document.getElementById("invoice_form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    
     if (document.querySelectorAll("#tabla-items tbody").length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un item al remito");
-      event.preventDefault();
+      mostrarAdvertencia("Debe agregar al menos un item al remito");
       return false;
     }
     
-    if (confirm("¿Grabar el remito?") === false) {
-      event.preventDefault();
-    } else {
-      // Asegurar que los campos color/detalle estén presentes antes del envío
-      ensureColorDetalleFields();
-      isFormSubmited = true;
+    const confirmado = await confirmar("¿Grabar el remito?");
+    if (!confirmado) {
+      return false;
     }
+    
+    // Asegurar que los campos color/detalle estén presentes antes del envío
+    ensureColorDetalleFields();
+    isFormSubmited = true;
+    this.submit();
   });

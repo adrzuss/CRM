@@ -1,99 +1,270 @@
 
     <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Ingreso de datos de configuracion</h6>
-                    <form action="{{ url_for('configuraciones.update_config') }}" method="post">
+        <div class="col-md-12">
+            <div class="card config-card">
+                <div class="card-header config-card-header">
+                    <h5><i class="fas fa-cogs"></i> Configuración General del Sistema</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('configuraciones.update_config') }}" method="post" enctype="multipart/form-data" id="formConfiguracion">
                         <div class="row">
-                            <div class="col-4 mb-3"> 
-                                <label for="descripcion">Propietario</label>
-                                <input class="form-control" type="text" name="propietario" id="propietario" placeholder="Nombre del propietario" value="{{ configuracion.nombre_propietario }}">
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label for="alicuota">Nombre de fantasia</label>
-                                <input class="form-control" type="text" name="fantasia" id="fantasia" placeholder="Nombre de fantasia" value="{{ configuracion.nombre_fantasia }}">
-                            </div>
-                            <div class="col-4 mb-3"> 
-                                <label for="tipo_iva">Responsibilidad IVA</label>
-                                <select class="form-select form-select-bg" name="tipo_iva" id="tipo_iva">
-                                    <option selected>Seleccione una opcion</option>
-                                    {% for iva in tipo_ivas %}
-                                        {% if iva.id == configuracion.tipo_iva %}
-                                            <option value="{{ iva.id }}" selected>{{ iva.descripcion }}</option>
-                                        {% else %}
-                                            <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
-                                        {% endif %}
-                                    {% endfor %}    
-                                </select>
-                            </div>
-                        </div>    
-                        <div class="row">
-                            <div class="col-2 mb-3"> 
-                                <label for="tipo_doc">Tipo documento</label>
-                                <select class="form-select form-select-bg" name="tipo_doc" id="tipo_doc">
-                                    <option selected>Seleccione una opcion</option>
-                                    {% for tipo_doc in tipo_docs %}
-                                        {% if tipo_doc.id == configuracion.tipo_documento %}
-                                            <option value="{{ tipo_doc.id }}" selected>{{ tipo_doc.nombre }}</option>
-                                        {% else %}
-                                            <option value="{{ tipo_doc.id }}">{{ tipo_doc.nombre }}</option>
-                                        {% endif %}
-                                    {% endfor %}    
-                                </select>
-                            </div>
-                            <div class="col-2 mb-3">
-                                <label for="documento">N° de Doc./CUIT/CUIL</label>
-                                <input class="form-control" type="text" name="documento" id="documento" placeholder="Numero de documento/CUIT/CUIL" value="{{ configuracion.documento }}">
-                            </div>    
-                            <div class="col-2 mb-3">
-                                <label for="telefono">Numeros de teléfono</label>
-                                <input class="form-control" type="text" name="telefono" id="telefono" placeholder="Numeros de telefonos" value="{{ configuracion.telefono }}">
-                            </div>    
-                            <div class="col-6 mb-3">
-                                <label for="mail">Direccion de mail</label>
-                                <input class="form-control" type="mail" name="mail" id="mail" placeholder="Direccion de mail" value="{{ configuracion.mail }}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-3 mb-3"> 
-                                <label for="dias_vto_cc">Días de vencimiento CTA CTE (0 a 90)</label>
-                                <input class="form-range" type="range" min="0" max="90" name="dias_vto_cc" id="dias_vto_cc" value="{{ configuracion.dias_vto_cta_cte }}" required>
-                                <label id="valor">{{ configuracion.dias_vto_cta_cte }}</label>
-                            </div>
-                            
-                            <div class="col-3 mb-3"> 
-                                <label for="iva">Vencimiento</label>
-                                <input class="form-control" type="text" name="vencimiento" id="vencimiento" value="{{ configuracion.vencimiento }} " readonly>
-                            </div>
-                            <div class="col-5 mb-3">
-                                <label for="licencia">Licencia</label>
-                                <input class="form-control" type="text" name="licencia" id="licencia" value="{{ configuracion.licencia }}" readonly>
-                            </div>    
-                        </div> 
-                        
-                        <div class="row">
-                            <div class="col-2 mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="cajaConApertura" name="cajaConApertura" {{ 'checked' if configuracion.caja_con_apertura else '' }} >
-                                    <label class="form-check-label" for=""> Caja con apertura </label>
+                            <!-- Columna izquierda: Datos de la empresa -->
+                            <div class="col-lg-8">
+                                <!-- Sección Datos Empresa -->
+                                <div class="config-section config-section-empresa">
+                                    <div class="config-section-title">
+                                        <i class="fas fa-building"></i> Datos de la Empresa
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="config-label" for="propietario">Propietario / Razón Social</label>
+                                            <input class="form-control config-input" type="text" name="propietario" id="propietario" placeholder="Nombre del propietario" value="{{ configuracion.nombre_propietario }}">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="config-label" for="fantasia">Nombre de Fantasía</label>
+                                            <input class="form-control config-input" type="text" name="fantasia" id="fantasia" placeholder="Nombre de fantasía" value="{{ configuracion.nombre_fantasia }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sección Datos Fiscales -->
+                                <div class="config-section config-section-fiscal">
+                                    <div class="config-section-title">
+                                        <i class="fas fa-file-invoice-dollar"></i> Datos Fiscales
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="tipo_iva">Responsabilidad IVA</label>
+                                            <select class="form-select config-input" name="tipo_iva" id="tipo_iva">
+                                                <option selected>Seleccione una opción</option>
+                                                {% for iva in tipo_ivas %}
+                                                    {% if iva.id == configuracion.tipo_iva %}
+                                                        <option value="{{ iva.id }}" selected>{{ iva.descripcion }}</option>
+                                                    {% else %}
+                                                        <option value="{{ iva.id }}">{{ iva.descripcion }}</option>
+                                                    {% endif %}
+                                                {% endfor %}    
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="config-label" for="tipo_doc">Tipo Documento</label>
+                                            <select class="form-select config-input" name="tipo_doc" id="tipo_doc">
+                                                <option selected>Seleccione</option>
+                                                {% for tipo_doc in tipo_docs %}
+                                                    {% if tipo_doc.id == configuracion.tipo_documento %}
+                                                        <option value="{{ tipo_doc.id }}" selected>{{ tipo_doc.nombre }}</option>
+                                                    {% else %}
+                                                        <option value="{{ tipo_doc.id }}">{{ tipo_doc.nombre }}</option>
+                                                    {% endif %}
+                                                {% endfor %}    
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5 mb-3">
+                                            <label class="config-label" for="documento">N° de Doc. / CUIT / CUIL</label>
+                                            <input class="form-control config-input" type="text" name="documento" id="documento" placeholder="Número de documento" value="{{ configuracion.documento }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sección Contacto -->
+                                <div class="config-section config-section-contacto">
+                                    <div class="config-section-title">
+                                        <i class="fas fa-address-card"></i> Datos de Contacto
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="telefono">Teléfonos</label>
+                                            <input class="form-control config-input" type="text" name="telefono" id="telefono" placeholder="Números de teléfono" value="{{ configuracion.telefono }}">
+                                        </div>
+                                        <div class="col-md-8 mb-3">
+                                            <label class="config-label" for="mail">Correo Electrónico</label>
+                                            <input class="form-control config-input" type="email" name="mail" id="mail" placeholder="correo@ejemplo.com" value="{{ configuracion.mail }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sección Opciones del Sistema -->
+                                <div class="config-section config-section-opciones">
+                                    <div class="config-section-title">
+                                        <i class="fas fa-sliders-h"></i> Opciones del Sistema
+                                    </div>
+                                    <div class="row align-items-end">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="dias_vto_cc">Días vencimiento Cta. Cte. <span class="badge bg-secondary" id="valorDias">{{ configuracion.dias_vto_cta_cte }}</span></label>
+                                            <input class="form-range" type="range" min="0" max="90" name="dias_vto_cc" id="dias_vto_cc" value="{{ configuracion.dias_vto_cta_cte }}" required>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="config-label" for="interesMora">Interés diario por mora</label>
+                                            <input class="form-control config-input" type="number" max="1" min="0" step="0.001" name="interesMora" id="interesMora" value="{{ configuracion.interes_mora_creditos }}" required>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="form-check mt-3">
+                                                <input class="form-check-input" type="checkbox" value="" id="cajaConApertura" name="cajaConApertura" {{ 'checked' if configuracion.caja_con_apertura else '' }}>
+                                                <label class="form-check-label config-label" for="cajaConApertura">Caja con apertura</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="vencimiento">Vencimiento Sistema</label>
+                                            <input class="form-control config-input config-input-readonly" type="text" name="vencimiento" id="vencimiento" value="{{ configuracion.vencimiento }}" readonly>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="licencia">Licencia</label>
+                                            <input class="form-control config-input config-input-readonly" type="text" name="licencia" id="licencia" value="{{ configuracion.licencia }}" readonly>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="config-label" for="idplanSistema">Plan Contratado</label>
+                                            <input class="form-control config-input config-input-readonly" type="text" name="idplanSistema" id="idplanSistema" value="{{ configuracion.nombre_plan }}" readonly>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-2 mb-3">
-                                <label for="interesMora">Interes díario por mora</label>
-                                <input class="form-control" type="number" max="1" min="0" step="0.001" name="interesMora" id="interesMora" value="{{ configuracion.interes_mora_creditos }}" required>
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label for="idplanSistema">Su plan</label>
-                                <input class="form-control" type="text" name="idplanSistema" id="idplanSistema" value="{{ configuracion.nombre_plan }}" readonly>
+
+                            <!-- Columna derecha: Logo -->
+                            <div class="col-lg-4">
+                                <div class="config-section h-100" style="background: linear-gradient(145deg, #f0f4ff 0%, #e0e8ff 100%); border-left: 4px solid #667eea;">
+                                    <div class="config-section-title">
+                                        <i class="fas fa-image"></i> Logo de la Empresa
+                                    </div>
+                                    
+                                    <div class="logo-upload-container" id="logoUploadContainer">
+                                        <input type="file" class="logo-input-file" name="logo" id="logoInput" accept="image/png, image/jpeg, image/gif, image/svg+xml">
+                                        
+                                        <div class="logo-preview-wrapper" id="logoPreviewWrapper">
+                                            {% if configuracion.logo %}
+                                                <img src="{{ url_for('static', filename='img/logos/' ~ configuracion.logo) }}" alt="Logo actual" class="logo-preview" id="logoPreview">
+                                                <button type="button" class="logo-remove-btn" id="logoRemoveBtn" title="Eliminar logo">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            {% else %}
+                                                <div class="logo-placeholder" id="logoPlaceholder">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>Sin logo</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <p class="logo-upload-text mb-1">
+                                            Arrastra una imagen aquí o <strong>haz clic para seleccionar</strong>
+                                        </p>
+                                        <p class="logo-upload-hint">
+                                            PNG, JPG, GIF o SVG (máx. 2MB)
+                                        </p>
+                                        
+                                        <input type="hidden" name="eliminar_logo" id="eliminarLogo" value="0">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <button class="btn btn-exito" type="submit">Grabar</button>
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button class="btn btn-exito btn-lg px-4" type="submit">
+                                <i class="fas fa-save me-2"></i> Guardar Configuración
+                            </button>
+                        </div>
                     </form>
                 </div>    
             </div>   
         </div>    
-        
-    </div>      
+    </div>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoInput = document.getElementById('logoInput');
+        const logoContainer = document.getElementById('logoUploadContainer');
+        const logoPreviewWrapper = document.getElementById('logoPreviewWrapper');
+        const eliminarLogoInput = document.getElementById('eliminarLogo');
+        const diasVtoRange = document.getElementById('dias_vto_cc');
+        const valorDias = document.getElementById('valorDias');
+
+        // Actualizar valor del range
+        if (diasVtoRange && valorDias) {
+            diasVtoRange.addEventListener('input', function() {
+                valorDias.textContent = this.value;
+            });
+        }
+
+        // Preview de imagen al seleccionar
+        if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        mostrarAdvertencia('El archivo es demasiado grande. Máximo 2MB.');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        logoPreviewWrapper.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview logo" class="logo-preview" id="logoPreview">
+                            <button type="button" class="logo-remove-btn" id="logoRemoveBtn" title="Eliminar logo">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        attachRemoveHandler();
+                        eliminarLogoInput.value = '0';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Drag and drop
+        if (logoContainer) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                logoContainer.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                logoContainer.addEventListener(eventName, () => logoContainer.classList.add('dragover'));
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                logoContainer.addEventListener(eventName, () => logoContainer.classList.remove('dragover'));
+            });
+
+            logoContainer.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                
+                if (file && file.type.startsWith('image/')) {
+                    logoInput.files = dt.files;
+                    logoInput.dispatchEvent(new Event('change'));
+                } else {
+                    mostrarAdvertencia('Por favor, selecciona una imagen válida.');
+                }
+            });
+        }
+
+        // Handler para eliminar logo
+        function attachRemoveHandler() {
+            const removeBtn = document.getElementById('logoRemoveBtn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    logoPreviewWrapper.innerHTML = `
+                        <div class="logo-placeholder" id="logoPlaceholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Sin logo</span>
+                        </div>
+                    `;
+                    logoInput.value = '';
+                    eliminarLogoInput.value = '1';
+                });
+            }
+        }
+
+        // Attach handler inicial si existe botón
+        attachRemoveHandler();
+    });
+    </script>

@@ -236,19 +236,11 @@ class ModalColorDetalleManager {
                 }
             } else {
                 console.error('Error al obtener colores y detalles:', data.message);
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire('Error', 'No se pudieron cargar los colores y detalles', 'error');
-                } else {
-                    alert('Error: No se pudieron cargar los colores y detalles');
-                }
+                mostrarError('No se pudieron cargar los colores y detalles');
             }
         } catch (error) {
             console.error('Error en la petición:', error);
-            if (typeof Swal !== 'undefined') {
-                Swal.fire('Error', 'Error de conexión', 'error');
-            } else {
-                alert('Error: Error de conexión...');
-            }
+            mostrarError('Error de conexión');
         }
     }
 

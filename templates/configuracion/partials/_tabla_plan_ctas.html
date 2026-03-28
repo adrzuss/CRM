@@ -1,0 +1,32 @@
+{# Tabla de Plan de Cuentas - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Cuenta</th>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in planCtas %}
+                <tr class="table table-light">
+                    <td>{{ cuenta.id }}</td>
+                    <td>{{ cuenta.nombre }}</td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_planCta', id=cuenta.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

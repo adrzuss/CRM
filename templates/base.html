@@ -25,8 +25,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
 
-    {% block adtional_css %}
+    {% block additional_css %}
     {% endblock %}
+
+    <!-- HTMX para actualizaciones dinámicas sin JavaScript -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
     <script>
         // Base URL para la aplicación
@@ -109,6 +112,10 @@
 
     <!-- Bootstrap 5 JS bundle (incluye Popper) desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 para alertas elegantes -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='js/swal-helpers.js')}}"></script>
 
     <!-- jQuery solo si tienes scripts propios que lo requieren -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js')}}"></script>

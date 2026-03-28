@@ -191,11 +191,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // No se encontraron artículos
                 limpiarArticulo(tipo);
-                alert('No se encontró ningún artículo');
+                mostrarInfo('No se encontró ningún artículo');
             }
         } catch (error) {
             console.error('Error buscando artículo:', error);
-            alert('Error al buscar artículo');
+            mostrarError('Error al buscar artículo');
         }
     }
 
@@ -291,11 +291,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 articuloSeleccionTipo = 'condicion';
                                 mostrarModalArticulos(data, articuloContainer);
                             } else {
-                                alert('No se encontró ningún artículo');
+                                mostrarInfo('No se encontró ningún artículo');
                             }
                         } catch (error) {
                             console.error('Error:', error);
-                            alert('Error al buscar artículo');
+                            mostrarError('Error al buscar artículo');
                         }
                     }
                 });

@@ -1,0 +1,45 @@
+{# Tabla de Monedas y Billetes - Partial para HTMX (con baja lógica) #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Detalle</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Baja</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for monedaBillete in monedasBilletes %}
+                    {% if monedaBillete.baja is none or monedaBillete.baja.year == 1900 %}
+                    <tr class="table table-light">
+                        <td>{{ monedaBillete.id }}</td>
+                        <td>{{ monedaBillete.descripcion }}</td>
+                        <td>${{ "{:,.2f}".format(monedaBillete.valor) }}</td>
+                        <td>{{ monedaBillete.baja if monedaBillete.baja and monedaBillete.baja.year != 1900 else '-' }}</td>
+                        <td>
+                            <button class="btn btn-exito btn-sm" 
+                                    hx-get="{{ url_for('configuraciones.get_monedabillete', id=monedaBillete.id) }}"
+                                    hx-target="#modal-config-body"
+                                    hx-swap="innerHTML"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalConfigEditar">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-peligro btn-sm"
+                                    hx-post="{{ url_for('configuraciones.delete_monedabillete', id=monedaBillete.id) }}"
+                                    hx-target="#tabla-monedas_billetes"
+                                    hx-swap="innerHTML"
+                                    hx-confirm="¿Está seguro de dar de baja este registro?">
+                                <i class="fas fa-ban"></i> Baja
+                            </button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -117,7 +117,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
             // Si se encuentra un cliente por ID, asignarlo directamente
             asignarArticulo(data.articulo, itemDiv);
         } else {
-            alert("No se encontraron articulos con ese ID.");
+            mostrarInfo('No se encontraron artículos con ese ID', 'Sin resultados');
         }
     } else {
         if (data.length > 1) {
@@ -127,7 +127,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
             // Si hay un solo resultado, asignar directamente
             asignarArticuloElegido(data[0], itemDiv);
         } else {
-            alert("No se encontraron articulos con ese detalle.");
+            mostrarInfo('No se encontraron artículos con ese detalle', 'Sin resultados');
         }
     }
 }
@@ -265,26 +265,24 @@ tablaItems.addEventListener("click", (itemDiv) => {
     }
 });
 
-document.getElementById('invoice_form').addEventListener('submit', function(event) {
-    if (document.querySelectorAll('#tabla-items tbody').length === 0) {
-        event.preventDefault();
-        alert('Debe agregar al menos un item al remito');
-        event.preventDefault();
+document.getElementById('invoice_form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    if (document.querySelectorAll('#tabla-items tbody tr').length === 0) {
+        mostrarAdvertencia('Debe agregar al menos un item al remito', 'Sin items');
         return false;
     } 
     const idDestino = document.getElementById('iddestino').value;
     const idSucursal = document.getElementById('id_sucursal').value;
     if (idDestino == idSucursal){
-        alert('El destino y la sucursal no pueden ser la misma');
-        event.preventDefault();
+        mostrarAdvertencia('El destino y la sucursal no pueden ser la misma');
         return false;
     }
 
-    if (confirm('¿Grabar el remito a sucursal?') == false) {
-        event.preventDefault();
-    }
-    else{
+    const confirmado = await confirmar('¿Grabar el remito a sucursal?', 'Confirmar');
+    if (confirmado) {
         isFormSubmited = true;
+        this.submit();
     }
 });
 

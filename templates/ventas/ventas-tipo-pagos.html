@@ -1,0 +1,535 @@
+{% extends "base.html" %}
+
+{% block additional_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/dataTables.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tabs-generales.css')}}">
+{% endblock %}
+
+{% block body %}
+
+<!-- Breadcrumb moderno -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('ventas.ventas', id=0) }}">
+                <i class="fas fa-shopping-cart me-1"></i>Ventas
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-credit-card me-1"></i>Ventas por Tipo de Pago
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary text-white">
+            <i class="fas fa-credit-card"></i>
+        </div>
+        <div class="ms-3 flex-grow-1">
+            <h1 class="page-title mb-0">Ventas por Tipo de Pago y Listas de precios</h1>
+            <p class="page-subtitle text-muted mb-0">Análisis de ventas agrupadas por forma de pago y tipo de comprobante</p>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-outline-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel me-1"></i>Exportar Excel
+            </button>
+            <button class="btn btn-outline-info" onclick="imprimirReporte()">
+                <i class="fas fa-print me-1"></i>Imprimir
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <h5 class="card-title mb-0">Filtros de Búsqueda</h5>
+                <div class="ms-auto">
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                        <i class="fas fa-broom me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form action="" method="post" id="filtrosForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="date" name="desde" id="desde" class="form-control" value="{{ desde }}">
+                            <label for="desde"><i class="fas fa-calendar-alt me-2"></i>Fecha Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="date" name="hasta" id="hasta" class="form-control" value="{{ hasta }}">
+                            <label for="hasta"><i class="fas fa-calendar-check me-2"></i>Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary h-100 w-100">
+                            <i class="fas fa-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-primary mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Período:</strong> 
+                            {{ desde }} al {{ hasta }} 
+                            <span class="badge bg-primary ms-2">{{ porVentas|length }} registros</span>
+                            {% if porVentas %}
+                                <span class="badge bg-success ms-1">
+                                    Total Cobrado: ${{ "{:,.2f}".format(porVentas|sum(attribute='total')) }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Tab links -->
+    <div class="tab">
+        <button class="tablinks bg-uno active" onclick="openTab(event, 'VtaTipoPago')">Tipos de pagos</button>
+        <button class="tablinks bg-dos" onclick="openTab(event, 'VtaListas')">Listas de precios</button>
+    </div>
+
+    <div class="tabcontent" id="VtaTipoPago">
+        <!-- Dashboard de métricas -->
+        {% if porVentas %}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Total Registros</h6>
+                                <h3 class="mb-0">{{ porVentas|length }}</h3>
+                            </div>
+                            <i class="fas fa-list-ol fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Total Cobrado</h6>
+                                <h3 class="mb-0">${{ "{:,.0f}".format(porVentas|sum(attribute='total')) }}</h3>
+                            </div>
+                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Formas de Pago</h6>
+                                <h3 class="mb-0">{{ porVentas|map(attribute='pagos_cobros')|unique|list|length }}</h3>
+                            </div>
+                            <i class="fas fa-credit-card fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tabla de ventas por tipo de pago -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>Detalle de Ventas por Tipo de Pago
+                </h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="imprimirReporte()">
+                        <i class="fas fa-print me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if porVentas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="dataTableVentas">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID Tipo</th>
+                                    <th><i class="fas fa-file-invoice me-1"></i>Tipo Comprobante</th>
+                                    <th><i class="fas fa-user me-1"></i>Usuario</th>
+                                    <th><i class="fas fa-credit-card me-1"></i>Forma de Pago</th>
+                                    <th class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for venta in porVentas %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <code class="bg-light px-2 py-1 rounded">
+                                                {{ venta.idtipocomprobante }}
+                                            </code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-file-alt me-1"></i>{{ venta.tipo_comprobante }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                                    {{ venta.usuario[:1].upper() if venta.usuario else 'N' }}
+                                                </div>
+                                                <span>{{ venta.usuario or 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% set pago = venta.pagos_cobros|lower %}
+                                            <span class="badge 
+                                                {% if 'efectivo' in pago %}bg-success
+                                                {% elif 'tarjeta' in pago or 'debito' in pago or 'credito' in pago %}bg-info
+                                                {% elif 'transferencia' in pago %}bg-warning text-dark
+                                                {% elif 'cuenta' in pago or 'cta' in pago %}bg-primary
+                                                {% else %}bg-secondary{% endif %}">
+                                                {% if 'efectivo' in pago %}<i class="fas fa-money-bill-wave me-1"></i>
+                                                {% elif 'tarjeta' in pago or 'debito' in pago or 'credito' in pago %}<i class="fas fa-credit-card me-1"></i>
+                                                {% elif 'transferencia' in pago %}<i class="fas fa-university me-1"></i>
+                                                {% elif 'cuenta' in pago or 'cta' in pago %}<i class="fas fa-book me-1"></i>
+                                                {% else %}<i class="fas fa-coins me-1"></i>{% endif %}
+                                                {{ venta.pagos_cobros }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success fs-6">
+                                                ${{ "{:,.2f}".format(venta.total) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end">TOTAL GENERAL:</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success fs-5">
+                                            <i class="fas fa-calculator me-1"></i>
+                                            ${{ "{:,.2f}".format(ventas|sum(attribute='total')) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <!-- Estado vacío -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay datos disponibles</h5>
+                        <p class="text-muted">No se encontraron ventas por tipo de pago en el período seleccionado</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>    
+    <div class="tabcontent" id="VtaListas">
+        {% if porListaPrecio %}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-uno">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Total Registros</h6>
+                                <h3 class="mb-0">{{ porListaPrecio|length }}</h3>
+                            </div>
+                            <i class="fas fa-list-ol fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-dos">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Total Cobrado</h6>
+                                <h3 class="mb-0">${{ "{:,.0f}".format(porListaPrecio|sum(attribute='total')) }}</h3>
+                            </div>
+                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-tres">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-0">Listas de precios</h6>
+                                <h3 class="mb-0">{{ porListaPrecio|map(attribute='pagos_cobros')|unique|list|length }}</h3>
+                            </div>
+                            <i class="fas fa-credit-card fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tabla de ventas por tipo de pago -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>Detalle de Ventas por Listas de precio
+                </h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                        <i class="fas fa-file-excel me-1"></i>Excel
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="imprimirReporte()">
+                        <i class="fas fa-print me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if porListaPrecio %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="dataTableVentas">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center"><i class="fas fa-hashtag me-1"></i>ID Tipo</th>
+                                    <th><i class="fas fa-file-invoice me-1"></i>Tipo Comprobante</th>
+                                    <th><i class="fas fa-user me-1"></i>Usuario</th>
+                                    <th><i class="fas fa-credit-card me-1"></i>Lista de precio</th>
+                                    <th class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                {% for listaP in porListaPrecio %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <code class="bg-light px-2 py-1 rounded">
+                                                {{ listaP.idtipocomprobante }}
+                                            </code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-file-alt me-1"></i>{{ listaP.tipo_comprobante }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                                    {{ listaP.usuario[:1].upper() if listaP.usuario else 'N' }}
+                                                </div>
+                                                <span>{{ listaP.usuario or 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% set lista = listaP.lista|lower %}
+                                            <span class="badge 
+                                                {% if 'contado' in lista %}bg-success
+                                                {% elif 'mercado pago' in lista or 'tarjeta' in lista or 'transferencia' in lista %}bg-info
+                                                {% elif 'cheques' in lista %}bg-warning text-dark
+                                                {% elif 'cuenta corriente' in lista or 'cta' in lista %}bg-primary
+                                                {% else %}bg-secondary{% endif %}">
+                                                {% if 'contado' in lista %}<i class="fas fa-money-bill-wave me-1"></i>
+                                                {% elif 'tarjeta' in lista or 'debito' in lista or 'credito' in lista %}<i class="fas fa-credit-card me-1"></i>
+                                                {% elif 'transferencia' in lista %}<i class="fas fa-university me-1"></i>
+                                                {% elif 'cuenta corriente' in lista or 'cta' in lista %}<i class="fas fa-book me-1"></i>
+                                                {% else %}<i class="fas fa-coins me-1"></i>{% endif %}
+                                                {{ listaP.lista }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success fs-6">
+                                                ${{ "{:,.2f}".format(listaP.total) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end">TOTAL GENERAL:</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success fs-5">
+                                            <i class="fas fa-calculator me-1"></i>
+                                            ${{ "{:,.2f}".format(porListaPrecio|sum(attribute='total')) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <!-- Estado vacío -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay datos disponibles</h5>
+                        <p class="text-muted">No se encontraron ventas por lista de precio en el período seleccionado</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>        
+</div>
+
+<script>
+
+function openTab(evt, tabName){
+    // Aquí puedes agregar la lógica para mostrar el contenido relacionado con "Tipo de pago"
+    // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+// Funciones de utilidad
+function limpiarFiltros() {
+    document.getElementById('filtrosForm').reset();
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    document.getElementById('desde').value = hace30Dias.toISOString().split('T')[0];
+    document.getElementById('hasta').value = hoy.toISOString().split('T')[0];
+}
+
+function exportarExcel() {
+    const params = new URLSearchParams({
+        desde: document.getElementById('desde').value,
+        hasta: document.getElementById('hasta').value,
+        formato: 'excel'
+    });
+    window.open(`${window.location.pathname}?${params.toString()}`, '_blank');
+}
+
+function imprimirReporte() {
+    const contenido = document.querySelector('.table-responsive').innerHTML;
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Ventas por Tipo de Pago</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    @media print {
+                        .btn { display: none !important; }
+                        body { font-size: 12px; }
+                        .badge { color: black !important; border: 1px solid #ddd; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h2 class="text-center mb-4">Ventas por Tipo de Pago</h2>
+                    <p class="text-center text-muted">Período: {{ desde }} al {{ hasta }}</p>
+                    <hr>
+                    ${contenido}
+                </div>
+            </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
+// Inicialización al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar el primer tab por defecto
+    document.getElementById('VtaTipoPago').style.display = 'block';
+    
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    
+    if (!desdeInput.value || !hastaInput.value) {
+        const hoy = new Date();
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+        
+        if (!desdeInput.value) {
+            desdeInput.value = hace30Dias.toISOString().split('T')[0];
+        }
+        if (!hastaInput.value) {
+            hastaInput.value = hoy.toISOString().split('T')[0];
+        }
+    }
+    
+    
+    // Inicializar DataTables
+    const table = document.getElementById('dataTableVentas');
+    if (table && typeof $ !== 'undefined') {
+        $(table).DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            pageLength: 25,
+            order: [[4, 'desc']], // Ordenar por total descendente
+            columnDefs: [
+                { targets: [0], className: 'text-center' },
+                { targets: [4], className: 'text-end' }
+            ],
+            responsive: true
+        });
+    }
+    
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F5') {
+        e.preventDefault();
+        document.getElementById('filtrosForm').submit();
+    }
+    if (e.key === 'F12') {
+        e.preventDefault();
+        exportarExcel();
+    }
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        imprimirReporte();
+    }
+});
+</script>
+
+<script src="/static/vendor/datatable/jquery-3.7.1.js"></script>
+<script src="/static/vendor/datatable/datatables.js"></script>
+<script src="/static/js/dataTables.js"></script>
+
+{% endblock %}

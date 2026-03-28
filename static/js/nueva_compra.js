@@ -143,7 +143,7 @@ async function fetchProveedor(input) {
       asignarProveedor(data[0]);
     } else {
       limpiarDatosProveedor();
-      alert("No se encontraron proveedores con ese nombre.");
+      mostrarInfo('No se encontraron proveedores con ese nombre.');
     }
     //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
   }
@@ -183,7 +183,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       asignarArticulo(data.articulo, itemDiv);
       
     } else {
-      alert("No se encontraron articulos con ese ID.");
+      mostrarInfo('No se encontraron artículos con ese ID.');
     }
   } else {
     if (data.length > 1) {
@@ -194,7 +194,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       asignarArticuloElegido(data[0], itemDiv);
       
     } else {
-      alert("No se encontraron articulos con ese detalle.");
+      mostrarInfo('No se encontraron artículos con ese detalle.');
     }
   }
 }
@@ -410,26 +410,25 @@ tablaItems.addEventListener("click", (itemDiv) => {
 
 document
   .getElementById("invoice_form")
-  .addEventListener("submit", function (event) {
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
+    
     if (document.querySelectorAll("#tabla-items tbody").length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un item a la factura");
-      event.preventDefault();
+      mostrarAdvertencia('Debe agregar al menos un item a la factura');
       return false;
     }
 
     if (checkTotales() === false) {
-      event.preventDefault();
-      alert(
-        'El total debe ser mayor a cera y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura'
+      mostrarAdvertencia(
+        'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." debe ser igual al total de la factura'
       );
-      event.preventDefault();
       return false;
     }
-    if (confirm("¿Grabar la factura?") === false) {
-      event.preventDefault();
-    } else {
+    
+    const confirmado = await confirmar('¿Grabar la factura?');
+    if (confirmado) {
       isFormSubmited = true;
+      this.submit();
     }
   });
 
@@ -524,7 +523,7 @@ function abrirModalPagos() {
 }
 
 // Personalizar procesamiento para compras
-function procesarTransaccion() {
+async function procesarTransaccion() {
     console.log('🚚 [COMPRAS] procesarTransaccion() llamada');
     
     // Usar las funciones universales para verificar totales
@@ -534,13 +533,15 @@ function procesarTransaccion() {
             `Falta pagar $${diferencia.toFixed(2)}` : 
             `Sobra $${Math.abs(diferencia).toFixed(2)}`;
         
-        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+        const continuarAsi = await confirmar(`${mensaje}. ¿Desea continuar de todas formas?`);
+        if (!continuarAsi) {
             return false;
         }
     }
     
     // Confirmar grabado
-    if (!confirm('¿Grabar la compra?')) {
+    const confirmarGrabado = await confirmar('¿Grabar la compra?');
+    if (!confirmarGrabado) {
         return false;
     }
     
@@ -556,7 +557,7 @@ function procesarTransaccion() {
     const form = document.querySelector('form#invoice_form');
     if (!form) {
         console.error('❌ [COMPRAS] Formulario no encontrado');
-        alert('Error: No se pudo grabar la compra. Formulario no encontrado.');
+        mostrarError('No se pudo grabar la compra. Formulario no encontrado.');
         return false;
     }
     

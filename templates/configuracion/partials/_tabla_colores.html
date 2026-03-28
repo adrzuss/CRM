@@ -1,0 +1,32 @@
+{# Tabla de Colores - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Color</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for color in colores %}
+                <tr class="table table-light">
+                    <td>{{ color.nombre }}</td>
+                    <td><div style="width: 30px; height: 30px; background-color: {{ color.color }}; border: 1px solid #ccc;"></div></td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_color', id=color.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

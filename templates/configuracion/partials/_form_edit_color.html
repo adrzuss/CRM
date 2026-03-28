@@ -1,0 +1,18 @@
+{# Formulario de edición - Color #}
+<h5 class="mb-3">Editar Color</h5>
+<form hx-post="{{ url_for('configuraciones.update_color', id=item.id) }}" 
+      hx-target="#tabla-colores" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="color" class="form-label">Color</label>
+        <input type="color" class="form-control" name="color" id="color" value="{{ item.color }}" style="width: 100px; height: 40px;">
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

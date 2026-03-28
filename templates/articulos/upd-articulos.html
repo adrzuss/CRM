@@ -8,6 +8,9 @@
 
 <!-- Contenedor principal con diseño moderno -->
 <div class="container-fluid px-4 py-3">
+
+    {% include 'partials/_modal-articulos.html' %}
+
     <!-- Breadcrumbs modernos -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb modern-breadcrumb">
@@ -70,6 +73,12 @@
                 </div>
                 <div class="card-body p-4">
                     <!-- Fila 1: ID, Código y Detalle -->
+                    <div class="row">
+                        <div class="col-2"></div>
+                        <div class="col-6">
+                            <span class="text-info">Si no ingresa un código el sistema asigna uno</span>
+                        </div>  
+                    </div>      
                     <div class="row mb-4">
                         <div class="col-2">
                             <div class="form-floating">
@@ -80,9 +89,10 @@
                         </div>
                         <div class="col-4">
                             <div class="form-floating">
+                                
                                 <input class="form-control form-control-modern" type="text" name="codigo" id="codigo" 
                                        placeholder="Código del artículo" value="{{ articulo.codigo }}">
-                                <label for="codigo"><i class="fas fa-barcode me-2"></i>Código <span class="text-danger">Si no ingresa un código el sistema asigna uno</span></label>
+                                <label for="codigo"><i class="fas fa-barcode me-2"></i>Código</label>
                             </div>
                         </div>
                         <div class="col-6">
@@ -542,7 +552,10 @@
                     <a class="btn btn-moderno btn-primario col-1 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
                 
                 {% endif %}
+                <button class="btn btn-moderno btn-secundario col-2 m-3" type="button" onclick="abrirModalMovArticulos({{ articulo.id }})">Mov. del artículo</button>
+                <button class="btn btn-moderno btn-terciario col-2 m-3" type="button" onclick="abrirModalMovArticulosDetalle({{ articulo.id }})">Mov. del artículo detallado</button>
             </div>
+            
         </div>
     </div>      
     </form>

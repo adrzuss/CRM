@@ -277,11 +277,10 @@
                 <div class="btn-group shadow-sm" role="group">
                     <a href="{{ url_for('ventas.imprimir_factura_vta', id=factura.id) }}" 
                        class="btn btn-primary btn-lg">
-                        <i class="fas fa-print me-2"></i>Imprimir
-                    </a>
-                    <a href="{{ url_for('ventas.imprimir_factura_vta2', id=factura.id) }}" 
+                        <i class="fas fa-print me-2"></i>Factura PDF
+                    <a href="#" id="printBtn" 
                        class="btn btn-outline-primary btn-lg">
-                        <i class="fas fa-file-alt me-2"></i>Imprimir 2
+                        <i class="fas fa-file-alt me-2"></i>Factura Tkt
                     </a>
                     <a href="{{ url_for('ventas.enivar_factura_vta_mail', id=factura.id, idcliente=factura.idcliente) }}" 
                        class="btn btn-success btn-lg">
@@ -290,10 +289,14 @@
                 </div>
             </div>
         </div>
+        <div id="status" style="display:none;"></div>
 
     </div>
 
 <!-- Script para contraste automático de colores -->
 <script src="{{ url_for('static', filename='js/color-contrast.js') }}"></script>
+
+<script type="module" src="{{ url_for('static', filename='js/factura-vta.js') }}"></script>
+
 
 {% endblock %}

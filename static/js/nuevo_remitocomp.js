@@ -129,7 +129,7 @@ async function fetchProveedor(input) {
       asignarProveedor(data[0]);
     } else {
       limpiarDatosProveedor();
-      alert("No se encontraron proveedores con ese nombre.");
+      mostrarInfo('No se encontraron proveedores con ese nombre.');
     }
     //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
   }
@@ -155,7 +155,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si se encuentra un articulo por ID, asignarlo directamente
       asignarArticulo(data.articulo, itemDiv);
     } else {
-      alert("No se encontraron articulos con ese ID.");
+      mostrarInfo('No se encontraron artículos con ese ID.');
     }
   } else {
     if (data.length > 1) {
@@ -165,7 +165,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si hay un solo resultado, asignar directamente
       asignarArticuloElegido(data[0], itemDiv);
     } else {
-      alert("No se encontraron articulos con ese detalle.");
+      mostrarInfo('No se encontraron artículos con ese detalle.');
     }
   }
 }
@@ -326,17 +326,17 @@ tablaItems.addEventListener("click", (itemDiv) => {
 
 document
   .getElementById("invoice_form")
-  .addEventListener("submit", function (event) {
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
+    
     if (document.querySelectorAll("#tabla-items tbody").length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un item al remito");
-      event.preventDefault();
+      mostrarAdvertencia('Debe agregar al menos un item al remito');
       return false;
     }
 
-    if (confirm("¿Grabar el remito?") === false) {
-      event.preventDefault();
-    } else {
+    const confirmado = await confirmar('¿Grabar el remito?');
+    if (confirmado) {
       isFormSubmited = true;
+      this.submit();
     }
   });

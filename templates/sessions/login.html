@@ -63,7 +63,13 @@
                             <div class="col-lg-6">
                                 <div class="p-5">
                                     <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Bienvenido!</h1>
+                                        {% if logo %}
+                                        <div class="login-logo-container mb-3">
+                                            <img src="{{ url_for('static', filename='img/logos/' ~ logo) }}" alt="Logo" class="login-logo">
+                                        </div>
+                                        {% endif %}
+                                        <h1 class="h4 text-gray-900 mb-2">Bienvenido!</h1>
+                                        <p class="login-empresa-name mb-4">{{ empresa }}</p>
                                     </div>
                                     <form class="ingresar" method="POST">
                                         <div class="form-group">

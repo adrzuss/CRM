@@ -1,0 +1,52 @@
+{# =============================================================================
+   MODAL GENÉRICO PARA EDICIÓN DE CONFIGURACIONES
+   =============================================================================
+   Este modal se reutiliza para editar cualquier entidad de configuración.
+   El contenido se carga dinámicamente mediante HTMX.
+#}
+
+<div class="modal fade" id="modalConfigEditar" tabindex="-1" aria-labelledby="modalConfigEditarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfigEditarLabel">Editar registro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="modal-config-body">
+                <!-- El contenido se carga dinámicamente con HTMX -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cerrar modal después de una actualización exitosa
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.successful && evt.detail.elt.closest('#modal-config-body')) {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('modalConfigEditar'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    });
+    
+    // Mostrar notificaciones flash
+    document.body.addEventListener('showFlash', function(evt) {
+        var msg = evt.detail.message || 'Operación realizada';
+        var tipo = evt.detail.type || 'success';
+        // Crear toast o alerta
+        var alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-' + tipo + ' alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = msg + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+        document.body.appendChild(alertDiv);
+        setTimeout(function() {
+            alertDiv.remove();
+        }, 3000);
+    });
+</script>

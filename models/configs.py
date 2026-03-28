@@ -38,14 +38,13 @@ class Configuracion(db.Model):
     clave = db.Column(db.String(100), nullable=False)
     vencimiento = db.Column(db.Date, nullable=False)
     licencia = db.Column(db.String(200), nullable=False)
-    paso_cert = db.Column(db.String(200))
-    paso_key = db.Column(db.String(200))
     dias_vto_cta_cte = db.Column(db.SmallInteger, nullable=False, default=0)
     caja_con_apertura = db.Column(db.Boolean, nullable=False, default=False)
     idplan_sistema = db.Column(db.Integer, db.ForeignKey('planes_sistema.id'), nullable=False)
     interes_mora_creditos = db.Column(db.Numeric(20,6), nullable=False, default=0)
+    logo = db.Column(db.String(255), nullable=True)
     
-    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia, caja_con_apertura, idplan_sistema, interes_mora_creditos):
+    def __init__(self, nombre_propietario, nombre_fantasia, tipo_iva, tipo_documento, documento, telefono, mail, clave, vencimiento, licencia, caja_con_apertura, idplan_sistema, interes_mora_creditos, logo=None):
         self.nombre_propietario = nombre_propietario
         self.nombre_fantasia = nombre_fantasia
         self.tipo_iva = tipo_iva
@@ -59,7 +58,7 @@ class Configuracion(db.Model):
         self.caja_con_apertura = caja_con_apertura
         self.idplan_sistema = idplan_sistema
         self.interes_mora_creditos = interes_mora_creditos
-
+        self.logo = logo
 class Categorias(db.Model):
     __tablename__ = 'categorias'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -192,7 +191,19 @@ class PuntosVenta(db.Model):
         self.ultima_nc_c = ultima_nc_c
         self.ultimo_rem_x = ultimo_rem_x
         self.ultimo_rec_x = ultimo_rec_x
-        
+
+class LineasComprobantes(db.Model):
+    __tablename__ = 'lineas_comprobantes'
+    idpuntovta = db.Column(db.Integer, db.ForeignKey('puntos_venta.id'), primary_key=True)
+    idlinea = db.Column(db.Integer, primary_key=True)
+    texto = db.Column(db.String(50), nullable=False)
+    solo_en_ventas = db.Column(db.Boolean, nullable=False, default=False)
+    
+    def __init__(self, idpuntovta, idlinea, texto, solo_en_ventas=False):
+        self.idpuntovta = idpuntovta
+        self.idlinea = idlinea
+        self.texto = texto
+        self.solo_en_ventas = solo_en_ventas
 class PlanCtas(db.Model):
     __tablename__ = 'plan_ctas'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

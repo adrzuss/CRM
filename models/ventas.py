@@ -102,6 +102,17 @@ class PagosFV(db.Model):
         self.total = total
         self.entidad = entidad
 
+class ControlNc(db.Model):
+    id_comprobante = db.Column(db.Integer, primary_key=True)
+    id_comprobante_org = db.Column(db.Integer, nullable=False)
+    fecha = db.Column(db.Date, nullable=False)
+    id_comprobante_ingresado = db.Column(db.Integer, nullable=True)
+    
+    def __init__(self, id_comprobante, id_comprobante_org, fecha, id_comprobante_ingresado=None):
+        self.id_comprobante = id_comprobante
+        self.id_comprobante_org = id_comprobante_org
+        self.fecha = fecha
+        self.id_comprobante_ingresado = id_comprobante_ingresado
 class RemitosVtaFactura(db.Model):
     __tablename__ = 'remitosvta_facturas'
     idremito = db.Column(db.Integer, db.ForeignKey('facturav.id'), primary_key=True)

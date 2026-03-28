@@ -1,0 +1,205 @@
+{# =============================================================================
+   MACROS REUTILIZABLES PARA CONFIGURACIONES ABM
+   =============================================================================
+   Uso:
+   {% from 'configuracion/partials/_macros_config.html' import config_section, config_table %}
+   {{ config_section('Alícuotas IVA', 'alicuotas_iva', campos_form, campos_tabla, datos) }}
+#}
+
+{# -----------------------------------------------------------------------------
+   MACRO: input_field
+   Genera un campo de formulario según el tipo especificado
+   ----------------------------------------------------------------------------- #}
+{% macro input_field(campo) %}
+    <div class="mb-3 {{ 'col-' + campo.col|string if campo.col else '' }}">
+        <label for="{{ campo.name }}" class="form-label">{{ campo.label }}</label>
+        {% if campo.type == 'text' %}
+            <input type="text" class="form-control" name="{{ campo.name }}" id="{{ campo.name }}" 
+                   placeholder="{{ campo.placeholder|default('') }}" 
+                   value="{{ campo.value|default('') }}"
+                   {{ 'required' if campo.required else '' }}>
+        {% elif campo.type == 'number' %}
+            <input type="number" class="form-control" name="{{ campo.name }}" id="{{ campo.name }}"
+                   step="{{ campo.step|default('0.01') }}"
+                   min="{{ campo.min|default('') }}"
+                   max="{{ campo.max|default('') }}"
+                   placeholder="{{ campo.placeholder|default('') }}"
+                   value="{{ campo.value|default('') }}"
+                   {{ 'required' if campo.required else '' }}>
+        {% elif campo.type == 'color' %}
+            <input type="color" class="form-control" name="{{ campo.name }}" id="{{ campo.name }}"
+                   value="{{ campo.value|default('#000000') }}">
+        {% elif campo.type == 'date' %}
+            <input type="date" class="form-control" name="{{ campo.name }}" id="{{ campo.name }}"
+                   value="{{ campo.value|default('') }}"
+                   {{ 'readonly' if campo.readonly else '' }}>
+        {% elif campo.type == 'select' %}
+            <select class="form-select" name="{{ campo.name }}" id="{{ campo.name }}" {{ 'required' if campo.required else '' }}>
+                <option value="">Seleccione una opción</option>
+                {% for opcion in campo.opciones %}
+                    <option value="{{ opcion.value }}" {{ 'selected' if opcion.selected else '' }}>{{ opcion.text }}</option>
+                {% endfor %}
+            </select>
+        {% elif campo.type == 'hidden' %}
+            <input type="hidden" name="{{ campo.name }}" id="{{ campo.name }}" value="{{ campo.value|default('') }}">
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{# -----------------------------------------------------------------------------
+   MACRO: config_form
+   Genera el formulario de alta/edición para una sección de configuración
+   ----------------------------------------------------------------------------- #}
+{% macro config_form(entidad, titulo_form, campos, endpoint_add) %}
+<div class="card">
+    <div class="card-body">
+        <h6>{{ titulo_form }}</h6>
+        <form hx-post="{{ url_for(endpoint_add) }}" 
+              hx-target="#tabla-{{ entidad }}" 
+              hx-swap="innerHTML"
+              hx-on::after-request="if(event.detail.successful) this.reset()">
+            <div class="row">
+                {% for campo in campos %}
+                    {% if campo.type != 'hidden' %}
+                        {{ input_field(campo) }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <button class="btn btn-exito" type="submit">Grabar</button>
+        </form>
+    </div>    
+</div>
+{% endmacro %}
+
+{# -----------------------------------------------------------------------------
+   MACRO: config_table
+   Genera la tabla de listado con acciones de editar/eliminar
+   ----------------------------------------------------------------------------- #}
+{% macro config_table(entidad, columnas, datos, endpoint_update, endpoint_delete, tiene_baja=false) %}
+<div class="card" id="tabla-{{ entidad }}">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-dark">
+                <thead>
+                    <tr>
+                        {% for col in columnas %}
+                            <th scope="col">{{ col.header }}</th>
+                        {% endfor %}
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datos %}
+                        {% if not tiene_baja or (item.baja is defined and item.baja == none) or (item.baja is defined and item.baja.year == 1900) %}
+                        <tr class="table table-light">
+                            {% for col in columnas %}
+                                <td>
+                                    {% if col.type == 'color' %}
+                                        <div style="width: 30px; height: 30px; background-color: {{ item[col.field] }};"></div>
+                                    {% elif col.type == 'currency' %}
+                                        ${{ "{:,.2f}".format(item[col.field]) }}
+                                    {% elif col.type == 'date' %}
+                                        {{ item[col.field] if item[col.field] and item[col.field].year != 1900 else '-' }}
+                                    {% else %}
+                                        {{ item[col.field] }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td>
+                                <button class="btn btn-exito btn-sm" 
+                                        hx-get="{{ url_for(endpoint_update, id=item.id) }}"
+                                        hx-target="#modal-config-body"
+                                        hx-swap="innerHTML"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalConfigEditar">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                {% if tiene_baja %}
+                                <button class="btn btn-peligro btn-sm"
+                                        hx-post="{{ url_for(endpoint_delete, id=item.id) }}"
+                                        hx-target="#tabla-{{ entidad }}"
+                                        hx-swap="innerHTML"
+                                        hx-confirm="¿Está seguro de dar de baja este registro?">
+                                    <i class="fas fa-ban"></i> Baja
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>    
+</div>
+{% endmacro %}
+
+{# -----------------------------------------------------------------------------
+   MACRO: config_section
+   Genera una sección completa de configuración (formulario + tabla)
+   ----------------------------------------------------------------------------- #}
+{% macro config_section(titulo, entidad, titulo_form, campos_form, columnas_tabla, datos, endpoint_add, endpoint_update, endpoint_delete, tiene_baja=false) %}
+<div class="card m-3">
+    <h4 class="m-3">{{ titulo }}</h4>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-5">
+                {{ config_form(entidad, titulo_form, campos_form, endpoint_add) }}
+            </div>
+            <div class="col-md-7">
+                {{ config_table(entidad, columnas_tabla, datos, endpoint_update, endpoint_delete, tiene_baja) }}
+            </div>
+        </div>
+    </div>    
+</div>
+{% endmacro %}
+
+{# -----------------------------------------------------------------------------
+   MACRO: config_table_only
+   Para secciones que solo muestran tabla sin formulario de alta
+   ----------------------------------------------------------------------------- #}
+{% macro config_table_only(entidad, columnas, datos, endpoint_update, endpoint_delete, tiene_baja=false) %}
+<div class="card" id="tabla-{{ entidad }}">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-dark">
+                <thead>
+                    <tr>
+                        {% for col in columnas %}
+                            <th scope="col">{{ col.header }}</th>
+                        {% endfor %}
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in datos %}
+                        <tr class="table table-light">
+                            {% for col in columnas %}
+                                <td>
+                                    {% if col.type == 'color' %}
+                                        <div style="width: 30px; height: 30px; background-color: {{ item[col.field] }};"></div>
+                                    {% elif col.type == 'currency' %}
+                                        ${{ "{:,.2f}".format(item[col.field]) }}
+                                    {% else %}
+                                        {{ item[col.field] }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td>
+                                <button class="btn btn-exito btn-sm" 
+                                        hx-get="{{ url_for(endpoint_update, id=item.id) }}"
+                                        hx-target="#modal-config-body"
+                                        hx-swap="innerHTML"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalConfigEditar">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>    
+</div>
+{% endmacro %}

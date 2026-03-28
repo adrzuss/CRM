@@ -1,3 +1,61 @@
+<!-- Estilos responsivos para el modal de transacciones -->
+<style>
+/* Modal responsivo */
+#transaccionesModal .modal-dialog {
+    max-height: 95vh;
+}
+#transaccionesModal .modal-content {
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+}
+#transaccionesModal .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Tabs compactos en pantallas pequeñas */
+@media (max-width: 991px) {
+    .payment-tabs .payment-hint { display: none; }
+    .payment-tabs .payment-icon { font-size: 1.2rem; }
+    .payment-tabs .nav-link { padding: 0.5rem 0.3rem; }
+}
+@media (max-width: 767px) {
+    .payment-tabs { flex-wrap: nowrap; overflow-x: auto; }
+    .payment-tabs .nav-item { flex: 0 0 auto; min-width: 70px; }
+    .payment-tabs .payment-label { font-size: 0.7rem; }
+    .payment-tabs .payment-icon { font-size: 1rem; }
+}
+
+/* Monitores con poca altura */
+@media (max-height: 700px) {
+    #transaccionesModal .modal-body { max-height: calc(100vh - 160px); }
+    .payment-card-header { padding: 0.5rem 1rem; }
+    .payment-card-header h5 { font-size: 1rem; margin-bottom: 0; }
+    .payment-card-header p { display: none; }
+    .payment-card-body { padding: 0.75rem; }
+    .payment-tabs .payment-hint { display: none; }
+    .payment-tabs .nav-link { padding: 0.4rem 0.5rem; }
+    #transaccionesModal .modal-footer { padding: 0.5rem 1rem; }
+}
+@media (max-height: 600px) {
+    #transaccionesModal .modal-body { max-height: calc(100vh - 140px); }
+    .payment-card-header { display: none; }
+    .form-group { margin-bottom: 0.5rem; }
+    .input-group-lg .form-control { font-size: 1rem; padding: 0.375rem 0.75rem; }
+}
+
+/* Footer compacto en móvil */
+@media (max-width: 767px) {
+    #transaccionesModal .modal-footer .row { flex-direction: column; gap: 0.5rem; }
+    #transaccionesModal .modal-footer .col-md-8,
+    #transaccionesModal .modal-footer .col-md-4 { width: 100%; text-align: center !important; }
+    #transaccionesModal .modal-footer h3 { font-size: 1.2rem; }
+    #transaccionesModal .modal-footer h5 { font-size: 0.9rem; }
+}
+</style>
+
 {% 
     set modal_config = {
         'type': modal_type|default('pago'),
@@ -30,7 +88,7 @@
 {% set available_methods = modal_config.methods if modal_config.methods != ['efectivo', 'tarjetas', 'ctacte', 'credito', 'bonificacion'] else config.methods %}
 
 <div class="modal fade" id="transaccionesModal" tabindex="-1" role="dialog" aria-labelledby="transaccionesModalLabel">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-lg modal-xl modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header bg-{{ config.color }} text-white">
                 <h5 class="modal-title" id="transaccionesModalLabel">
@@ -172,7 +230,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-8 col-md-6">
                                             <div class="form-group">
                                                 <label for="efectivo" class="form-label">Efectivo</label>
                                                 <div class="input-group input-group-lg">
@@ -202,7 +260,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-6 col-md-4">
                                             <div class="form-group">
                                                 <label for="entidad" class="form-label">Entidad</label>
                                                 <select class="form-select" name="entidad" id="entidad">
@@ -215,7 +273,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="cuotas" class="form-label">Cuotas</label>
                                                 <input type="number" name="cuotas" id="cuotas" 
@@ -223,14 +281,14 @@
                                                        min="1" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-6 col-md-3">
                                             <div class="form-group">
                                                 <label for="coeficiente" class="form-label">Coeficiente</label>
                                                 <input type="number" name="coeficiente" id="coeficiente" 
                                                        class="form-control" step="0.0001" value="1" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-6 col-md-3">
                                             <div class="form-group">
                                                 <label for="tarjeta" class="form-label">Importe Tarjeta</label>
                                                 <div class="input-group">
@@ -245,21 +303,21 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-6 col-md-4">
                                             <div class="form-group">
                                                 <label for="documento" class="form-label">Documento</label>
                                                 <input type="text" name="documento" id="documento" 
                                                        class="form-control" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-6 col-md-4">
                                             <div class="form-group">
                                                 <label for="telefono" class="form-label">Teléfono</label>
                                                 <input type="text" name="telefono" id="telefono" 
                                                        class="form-control" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="total_tarjeta" class="form-label">Total a pagar</label>
                                                 <div class="input-group">
@@ -288,7 +346,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-8 col-md-6">
                                             <div class="form-group">
                                                 <label for="ctacte" class="form-label">Cuenta Corriente</label>
                                                 <div class="input-group input-group-lg">
@@ -320,7 +378,7 @@
                                     <input type="hidden" name="idcredito" id="idcredito" value="">
                                     
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-8 col-md-6">
                                             <div class="form-group">
                                                 <label for="credito" class="form-label">Monto a Crédito</label>
                                                 <div class="input-group input-group-lg">
@@ -349,7 +407,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-sm-8 col-md-6">
                                             <div class="form-group">
                                                 <label for="bonificacion" class="form-label">Bonificación</label>
                                                 <div class="input-group input-group-lg">
@@ -378,7 +436,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="banco" class="form-label">Banco</label>
                                                 <select class="form-select" name="banco" id="banco">
@@ -391,35 +449,35 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="cantCheques" class="form-label">Cantidad</label>
                                                 <input type="number" name="cantCheques" id="cantCheques" 
                                                        class="form-control" value="0" min="0" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="fechaEmision" class="form-label">F. Emisión</label>
                                                 <input type="date" name="fechaEmision" id="fechaEmision" 
                                                        class="form-control" value="{{ 'now'|date('Y-m-d') }}">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="vtoCheque" class="form-label">Vto. 1° Cheque</label>
                                                 <input type="date" name="vtoCheque" id="vtoCheque" 
                                                        class="form-control" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="diasCheques" class="form-label">Días entre cheques</label>
                                                 <input type="number" name="diasCheques" id="diasCheques" 
                                                        class="form-control" value="30" min="1" max="365" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="importeCheques" class="form-label">Importe</label>
                                                 <div class="input-group">
@@ -477,7 +535,7 @@
                                 </div>
                                 <div class="payment-card-body">
                                     <div class="row">
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="tipoValor" class="form-label">Tipo</label>
                                                 <select class="form-select" name="tipoValor" id="tipoValor">
@@ -487,14 +545,14 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="numeroValor" class="form-label">Número</label>
                                                 <input type="text" name="numeroValor" id="numeroValor" 
                                                        class="form-control" onfocus="this.select()">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="bancoValor" class="form-label">Banco</label>
                                                 <select class="form-select" name="bancoValor" id="bancoValor">
@@ -507,21 +565,21 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="fechaEmisionValor" class="form-label">F. Emisión</label>
                                                 <input type="date" name="fechaEmisionValor" id="fechaEmisionValor" 
                                                        class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="fechaVtoValor" class="form-label">F. Vencimiento</label>
                                                 <input type="date" name="fechaVtoValor" id="fechaVtoValor" 
                                                        class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="importeValor" class="form-label">Importe</label>
                                                 <div class="input-group">

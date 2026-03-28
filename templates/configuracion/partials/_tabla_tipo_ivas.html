@@ -1,0 +1,32 @@
+{# Tabla de Tipos de IVA - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Lista</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo_iva in tipo_ivas %}
+                <tr class="table table-light">
+                    <td>{{ tipo_iva.id }}</td>
+                    <td>{{ tipo_iva.descripcion }}</td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_tipo_iva', id=tipo_iva.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

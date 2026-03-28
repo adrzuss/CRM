@@ -53,11 +53,11 @@
             document.getElementById("punto_vta").textContent = 'Punto de venta: ' + idPuntoVenta;
             document.getElementById("idcliente").focus();
             } else {
-            alert('Error al asignar el punto de venta: ' + result.message);
+            mostrarError('Error al asignar el punto de venta: ' + result.message);
             }
         } catch (error) {
             console.error('Error al llamar a la API:', error);
-            alert('Ocurrió un error al asignar el punto de venta.');
+            mostrarError('Ocurrió un error al asignar el punto de venta.');
         }
     };
 
@@ -96,7 +96,7 @@
             if (selectedPtoVta) {
             asignarPuntoVenta(selectedPtoVta);
             } else {
-            alert("Debe seleccionar un punto de venta.");
+            mostrarAdvertencia("Debe seleccionar un punto de venta.");
             }
         };
         modalContent.appendChild(confirmButton);
@@ -127,12 +127,12 @@
                     // Si se encuentra un cliente por ID, asignarlo directamente
                     if (data.cliente.baja == true) {
                     limpiarDatosCliente();
-                    alert("Cliente dado de baja. No puedes facturar a este cliente.");
+                    mostrarAdvertencia("Cliente dado de baja. No puedes facturar a este cliente.");
                     return;
                     }
                     asignarCliente(data.cliente);
                 } else {
-                    alert("No se encontraron clientes con ese ID.");
+                    mostrarInfo("No se encontraron clientes con ese ID.");
                 }
             } else {
             if (data.length > 1) {
@@ -143,7 +143,7 @@
                 asignarCliente(data[0]);
             } else {
                 limpiarDatosCliente
-                alert("No se encontraron clientes con ese nombre.");
+                mostrarInfo("No se encontraron clientes con ese nombre.");
             }
             }
         }  
@@ -240,7 +240,7 @@ async function cuotasPendientes(idcliente) {
         }
     } catch (error) {
         console.error("Error al obtener cuotas pendientes:", error);
-        alert("Error al obtener cuotas pendientes.");
+        mostrarError("Error al obtener cuotas pendientes.");
     }
 }
 
@@ -295,7 +295,7 @@ function abrirModalPagos(){
   //Comprobamos que haya cuotas seleccionadas
   const total = document.getElementById("edt_total_cuotas").value;
   if (total === "0.00") {
-      alert("Por favor, seleccione al menos una cuota para cobrar.");
+      mostrarAdvertencia("Por favor, seleccione al menos una cuota para cobrar.");
       return;
   }
   
@@ -359,7 +359,7 @@ async function cobrarCuotas() {
     //event.preventDefault();
     if (checkPagos() === false) {
         console.log('💵 [COBRANZAS] ❌ checkPagos() falló');
-        alert("El monto del pago es menor que el total de cuotas.");
+        mostrarAdvertencia("El monto del pago es menor que el total de cuotas.");
         event.preventDefault();
         return;
     }
@@ -368,7 +368,7 @@ async function cobrarCuotas() {
         console.log('💵 [COBRANZAS] ✅ checkPagos() pasó correctamente');
         const checkboxes = document.querySelectorAll('input[name="cuotas"]:checked');
         if (checkboxes.length === 0) {
-            alert("Por favor, seleccione al menos una cuota para cobrar.");
+            mostrarAdvertencia("Por favor, seleccione al menos una cuota para cobrar.");
             event.preventDefault();
             return;
         }
@@ -422,7 +422,7 @@ async function cobrarCuotas() {
                     // Si el servidor devuelve HTML pero la operación fue exitosa
                     if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html>')) {
                         console.log('💵 [COBRANZAS] 🌐 El servidor devolvió HTML - probablemente exitoso');
-                        alert('✅ ¡Cobro procesado exitosamente! (El servidor devolvió HTML en lugar de JSON)');
+                        mostrarExito('¡Cobro procesado exitosamente! (El servidor devolvió HTML en lugar de JSON)');
                         $("#transaccionesModal").modal("hide");
                         cuotasPendientes(idCliente);
                         return;
@@ -443,7 +443,7 @@ async function cobrarCuotas() {
                     console.log('💵 [COBRANZAS] ✅ Cobro procesado exitosamente');
                     
                     // Mostrar alert de éxito
-                    alert(`✅ ¡Éxito! ${serverMessage || 'Cuotas cobradas correctamente'}`);
+                    mostrarExito(serverMessage || 'Cuotas cobradas correctamente', '¡Éxito!');
                     
                     // También mostrar mensaje en la página
                     mostrarMensaje(serverMessage || "Cuotas cobradas correctamente", "success");
@@ -458,7 +458,7 @@ async function cobrarCuotas() {
                     console.error('💵 [COBRANZAS] ❌ Datos completos:', data);
                     
                     // Mostrar alert de error
-                    alert(`❌ Error: ${serverMessage || 'Error al procesar el pago'}`);
+                    mostrarError(serverMessage || 'Error al procesar el pago');
                     
                     // También mostrar mensaje en la página
                     mostrarMensaje(serverMessage || "Error al procesar el pago", "error");
@@ -470,7 +470,7 @@ async function cobrarCuotas() {
                 console.error("💵 [COBRANZAS] 💥 Error completo:", error);
                 
                 // Mostrar alert de error de conexión
-                alert(`❌ Error de conexión: No se pudo procesar el cobro. ${error.message}`);
+                mostrarError('No se pudo procesar el cobro. ' + error.message, 'Error de conexión');
                 
                 // También mostrar mensaje en la página
                 mostrarMensaje("Error al procesar la operación", "error");
@@ -549,7 +549,7 @@ function checkPagos() {
     let totalCuotas = 0;
     totalCuotas = parseFloat(document.getElementById("edt_total_cuotas").value);
     if (totalCuotas === 0) {
-        alert("Por favor, ingrese un monto para pagar.");
+        mostrarAdvertencia("Por favor, ingrese un monto para pagar.");
         return false;
     }
     else {
@@ -561,7 +561,7 @@ function checkPagos() {
         const totalPagos = efectivo + tarjeta + ctacte + bonificacion;
         
         if (totalPagos === 0) {
-            alert("Por favor, ingrese un monto válido para pagar.");
+            mostrarAdvertencia("Por favor, ingrese un monto válido para pagar.");
             return false;
         }
         else {

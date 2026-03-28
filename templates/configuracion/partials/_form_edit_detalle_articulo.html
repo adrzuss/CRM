@@ -1,0 +1,14 @@
+{# Formulario de edición - Detalle de Artículo #}
+<h5 class="mb-3">Editar Detalle de Artículo</h5>
+<form hx-post="{{ url_for('configuraciones.update_detalle_articulo', id=item.id) }}" 
+      hx-target="#tabla-detalles_articulos" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

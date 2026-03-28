@@ -7,7 +7,7 @@ from services.articulos import actualizarStock, get_articulo_by_codigo
 from services.configs import discrimina_iva
 
 from utils.utils import format_currency, precio
-from models.ventas import Factura, Item, PagosFV, Presupuesto, ItemP, PresupuestoFactura, RemitosVtaFactura
+from models.ventas import Factura, Item, PagosFV, ControlNc, Presupuesto, ItemP, PresupuestoFactura, RemitosVtaFactura
 from models.clientes import Clientes
 from models.articulos import Articulo, ListasPrecios, Stock, Colores, DetallesArticulos
 from models.entidades_cred import MovEntidades
@@ -326,6 +326,10 @@ def procesar_nueva_venta(form, id_sucursal):
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
         discrimina = discrimina_iva(id_tipo_comprobante)
+        #Datos del comprobante original si es una noa de crédito
+        id_comprobante_original = form.get('id_comprobante_original', None)
+        total_comp_original = form.get('total_comp_original', None)
+        nota_credito = form.get('nota_credito', 0)
         # Crear la factura
         nueva_factura = Factura(
             idcliente=idcliente,
@@ -347,7 +351,7 @@ def procesar_nueva_venta(form, id_sucursal):
         total = 0
         neto = 0
         total_bonificacion = 0
-        total, neto, total_bonificacion, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal, descuento)
+        total, neto, total_bonificacion, total_iva, total_exento, total_impint = procesar_items(form, idfactura, discrimina, id_sucursal, descuento, id_tipo_comprobante)
         nueva_factura.total = total
         nueva_factura.neto = neto
         nueva_factura.bonificacion = total_bonificacion
@@ -358,7 +362,10 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento 
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito)
+        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito)
+        #Grabo el comprobante original si es una nota de crédito
+        if id_comprobante_original:
+            procesar_nueva_nc(idfactura, id_comprobante_original)
         # Si se está facturando un presupuesto se vincula el mismo a la factura 
         if idPresupuesto:
             presupuesto = Presupuesto.query.get(idPresupuesto)
@@ -389,7 +396,7 @@ def procesar_nueva_venta(form, id_sucursal):
         raise Exception(f"Error grabando venta: {e}")
     return nro_comprobante, idfactura
 
-def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
+def procesar_items(form, idfactura, discrimina, id_sucursal, descuento, id_tipo_comprobante):
     total = Decimal(0)
     total_neto = Decimal(0)
     total_bonificacion = Decimal(0)
@@ -495,13 +502,17 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento):
                     total_impint += impint
 
                     # Actualizar el stock
-                    actualizarStock(id_sucursal, articulo.id, -cantidad, id_sucursal)
+                    if id_tipo_comprobante in [1, 2, 3, 10, 11, 12]: # Solo actualizamos stock para facturas A, B y C
+                        tipoMovimiento = 'Venta'
+                    else:
+                        tipoMovimiento = 'NotaCredito'    
+                    actualizarStock(id_sucursal, articulo.id, -cantidad, tipoMovimiento)
     except SQLAlchemyError as e:
         print(f"Error procesando items: {e}")            
     
     return total, total_neto, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito):
+def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito):
     #Calculamos el total de pagos para calcular si hay vuelto
     #El vuelto solo impacta en el total del efectivo
     
@@ -540,6 +551,8 @@ def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entida
                 credito.estado = 5 #facturado
                 credito.idfactura = idfactura
                 credito.fecha_inicio = datetime.now()
+        if nota_credito and Decimal(nota_credito) > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=20, tipo=20, entidad=0, total=-1*Decimal(nota_credito)))
         #Si hay vuelto lo registramos        
         if (totalPagos) > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=99, tipo=1, entidad=0, total=Decimal(totalPagos)))
@@ -550,6 +563,15 @@ def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entida
     except Exception as e:
         print(f"Error procesando pagos: {e}")
         raise Exception(f"Error procesando pagos: {e}")
+
+def procesar_nueva_nc(idfactura, id_comprobante_original):
+    try:
+        control_nc = ControlNc(id_comprobante=idfactura, id_comprobante_org=id_comprobante_original, fecha=datetime.now())
+        db.session.add(control_nc)
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error procesando nueva nota de crédito: {e}")
+        raise Exception(f"Error procesando nueva nota de crédito: {e}")
 
 def procesar_nuevo_remito(form, id_sucursal):
     try:
@@ -648,7 +670,7 @@ def procesar_items_remito(form, idremito, id_sucursal):
                 )
                 db.session.add(nuevo_item)
                 # Actualizar el stock
-                actualizarStock(stock.idstock, articulo.id, -cantidad, id_sucursal)
+                actualizarStock(id_sucursal, articulo.id, -cantidad)
     
     return True
 
@@ -986,6 +1008,7 @@ def get_factura(id):
                 Clientes.direccion,
                 ListasPrecios.nombre.label('lista'),
                 TipoComprobantes.nombre.label('tipo_comprobante'),
+                TipoComprobantes.letra.label('letra_comprobante'),
                 TipoCompAplica.id_tipo_oper.label('tipo_oper')) \
             .join(Clientes, Clientes.id == Factura.idcliente) \
             .outerjoin(ListasPrecios, ListasPrecios.id == Factura.idlista) \
@@ -1317,3 +1340,90 @@ def generar_presupuesto(id_presupuesto):
             return response
 
 #----------------- fin presupuestos ------------------#
+
+#----------------- notas de credito ------------------#
+
+def get_comprobantes_para_nc(desde, hasta, nro_comprobante=''):
+    """
+    Busca comprobantes de venta disponibles para generar nota de crédito.
+    Llama al procedimiento almacenado get_comprobantes_para_nc.
+    
+    Args:
+        desde: Fecha desde (formato YYYY-MM-DD)
+        hasta: Fecha hasta (formato YYYY-MM-DD)
+        nro_comprobante: Número de comprobante a buscar (puede ser vacío)
+    
+    Returns:
+        Lista de diccionarios con los comprobantes encontrados
+    """
+    try:
+        resultado = db.session.execute(
+            text("CALL get_comprobantes_para_nc(:desde, :hasta, :nro_comprobante)"),
+            {'desde': desde, 'hasta': hasta, 'nro_comprobante': nro_comprobante or ''}
+        ).fetchall()
+        
+        comprobantes = []
+        for row in resultado:
+            # Soportar ambos nombres de campo: nrocomprobante o nro_comprobante
+            
+            comprobantes.append({
+                'id': row.id,
+                'idcliente': row.idcliente,
+                'idtipocomp': row.idtipocomp,
+                'total': float(row.total) if row.total else 0,
+                'cliente': row.cliente,
+                'tipo_comp': row.tipo_comp,
+                'nro_comprobante': row.nro_comprobante,
+                'idlista': row.idlista
+            })
+        
+        return comprobantes
+    except Exception as e:
+        print(f"Error al buscar comprobantes para NC: {e}")
+        return []
+
+
+def get_items_comprobante_venta(idcomprobante):
+    """
+    Obtiene los items de un comprobante de venta para generar nota de crédito.
+    Llama al procedimiento almacenado get_items_comprobante_venta y complementa
+    con datos del artículo (código y descripción).
+    
+    Args:
+        idcomprobante: ID del comprobante de venta
+    
+    Returns:
+        Lista de diccionarios con los items del comprobante
+    """
+    try:
+        resultado = db.session.execute(
+            text("CALL get_items_comprobante_venta(:idcomprobante)"),
+            {'idcomprobante': idcomprobante}
+        ).fetchall()
+        
+        items = []
+        for row in resultado:
+            # Obtener datos del artículo (código y descripción)
+            articulo = Articulo.query.get(row.idarticulo)
+            
+            cantidad = float(row.cantidad) if row.cantidad else 0
+            precio_unitario = float(row.precio_unitario) if row.precio_unitario else 0
+            precio_total = cantidad * precio_unitario
+            
+            items.append({
+                'idarticulo': row.idarticulo,
+                'codigo': articulo.codigo if articulo else '',
+                'descripcion': articulo.detalle if articulo else '',
+                'idcolor': row.idcolor or 0,
+                'iddetalle': row.iddetalle or 0,
+                'cantidad': cantidad,
+                'precio_unitario': precio_unitario,
+                'precio_total': round(precio_total, 2)
+            })
+        
+        return items
+    except Exception as e:
+        print(f"Error al obtener items del comprobante: {e}")
+        return []
+
+#----------------- fin notas de credito ------------------#

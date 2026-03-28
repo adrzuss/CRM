@@ -10,7 +10,8 @@ from services.articulos import get_listado_precios, obtener_stock_sucursales, up
                                eliminarComp, obtenerArticulosMarcaRubro, procesar_nuevo_balance, \
                                procesar_cambio_precio, procesar_remito_a_sucursal, get_listado_articulos, \
                                get_listado_stock, get_listado_stock_faltantes, enviar_remito_sucursal, recibir_remito_sucursal, \
-                               get_remitos_sucursales, get_detalle_remito, guardar_articulo
+                               get_remitos_sucursales, get_detalle_remito, guardar_articulo, get_detalle_articulo, \
+                               get_detalle_full_articulo    
 from sqlalchemy import func, and_, or_
 from sqlalchemy.sql import text
 from utils.db import db
@@ -293,7 +294,7 @@ def cambio_precio():
 filtra los articulos según las condiciones de la petición
 para pasarlos a la carga de precios
 """
-@bp_articulos.route('/filtrar_articulos/<int:marca>/<int:rubro>/<int:lista_precio>/<float:porcentaje>')
+@bp_articulos.route('/filtrar_articulos/<int:marca>/<int:rubro>/<int:lista_precio>/<float:porcentaje>', methods=['GET'])
 def filtrar_articulos(marca, rubro, lista_precio, porcentaje):
     resultado = obtenerArticulosMarcaRubro(marca, rubro, lista_precio, Decimal(porcentaje))
     return jsonify(success=True, articulos=resultado)
@@ -786,3 +787,34 @@ def detalle_remito_sucursal(idremito):
         return jsonify({'success': True, 'remito': detalle})
     else:
         return jsonify({'success': False, 'message': 'Remito no encontrado'})
+
+@bp_articulos.route('/detalle_articulo/<int:idarticulo>', methods=['GET'])
+@check_session
+def detalle_articulo(idarticulo):
+    '''Endpoint para obtener el detalle de un artículo incluyendo stock por sucursal'''
+    detalle = get_detalle_articulo(idarticulo)
+    try:
+        if detalle:
+            return jsonify({'success': True, 'articulo': detalle})
+        else:
+            return jsonify({'success': False, 'message': 'Artículo no encontrado'})
+    except Exception as e:
+        print(f"Error al convertir el detalle a JSON: {e}")
+        return jsonify({'success': False, 'message': 'Error al procesar el detalle del artículo'})    
+    
+@bp_articulos.route('/detalle_full_articulo/<int:idarticulo>', methods=['GET'])
+@check_session
+def detalle_full_articulo(idarticulo):
+    '''Endpoint para obtener el detalle completo de un artículo incluyendo stock por sucursal'''
+    
+    detalle = get_detalle_full_articulo(idarticulo)
+    
+    try:
+        if detalle:
+            return jsonify({'success': True, 'articulo': detalle})
+        else:
+            return jsonify({'success': False, 'message': 'Artículo no encontrado'})
+    except Exception as e:
+        print(f"Error al convertir el detalle a JSON: {e}")
+        return jsonify({'success': False, 'message': 'Error al procesar el detalle del artículo'})    
+    

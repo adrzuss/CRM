@@ -13,7 +13,7 @@ codigo.addEventListener('blur', function() {
 
 // Seleccionar todos los botones con la clase 'eliminarCompuesto'
 document.querySelectorAll('.eliminarCompuesto').forEach(function(boton) {
-    boton.addEventListener('click', function(event) {
+    boton.addEventListener('click', async function(event) {
         event.preventDefault(); // Prevenir la acción por defecto del enlace
 
         // Obtener los atributos únicos del botón
@@ -21,9 +21,9 @@ document.querySelectorAll('.eliminarCompuesto').forEach(function(boton) {
         const idArtComp = this.dataset.idart_comp;
 
         // Pedir confirmación
-        const confirmar = confirm(`¿Estás seguro de que quieres eliminar el compuesto con ID ${idArticulo} y Compuesto ID ${idArtComp}?`);
+        const confirmado = await confirmarEliminar(`¿Estás seguro de que quieres eliminar el compuesto con ID ${idArticulo} y Compuesto ID ${idArtComp}?`);
 
-        if (confirmar) {
+        if (confirmado) {
             // Redirigir al enlace original
             window.location.href = this.href;
         }
@@ -52,13 +52,13 @@ async function fetchArticulo(idart_org, id, idlista) {
             // Si se encuentra un cliente por ID, asignarlo directamente
             if (idart_org == data.articulo.id){
                 limpiarDatos();
-                alert('No se puede componer un artículo con el mismo');
+                mostrarAdvertencia('No se puede componer un artículo con el mismo');
             }
             else{
                 asignarArticulo(data.articulo);
             }
         } else {
-            alert("No se encontraron articulos con ese ID.");
+            mostrarInfo('No se encontraron artículos con ese ID', 'Sin resultados');
         }
     } else {
         if (data.length > 1) {
@@ -68,13 +68,13 @@ async function fetchArticulo(idart_org, id, idlista) {
             // Si hay un solo resultado, asignar directamente
             if (idart_org == data[0].id){
                 limpiarDatos();
-                alert('No se puede componer un artículo con el mismo');
+                mostrarAdvertencia('No se puede componer un artículo con el mismo');
             }
             else{
                 asignarArticuloElegido(data[0]);
             }
         } else {
-            alert("No se encontraron articulos con ese detalle.");
+            mostrarInfo('No se encontraron artículos con ese detalle', 'Sin resultados');
         }
     }
 }

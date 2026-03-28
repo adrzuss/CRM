@@ -27,7 +27,7 @@ class Config:
     LOGO_PATH = os.getenv('LOGO_PATH')
     UPLOAD_FOLDER = 'static/img/articulos'
     UPLOAD_FOLDER_CREDITOS = 'static/img/creditos'
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
     FE_FILES_FOLDER = 'cert_fe'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Tamaño máximo de archivo de 16MB
     # Duración de la sesión (30 minutos)

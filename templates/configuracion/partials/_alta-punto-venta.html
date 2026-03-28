@@ -1,137 +1,165 @@
-<div class="card text-center">
+<div class="card pv-card-main">
+    <div class="card-header">
+        <h3><i class="fas fa-cash-register me-2"></i>{{ 'Editar punto de venta #' ~ puntoVenta.id if puntoVenta else 'Nuevo punto de venta' }}</h3>
+    </div>
     <div class="card-body">
-        <h3>Ingreso de punto de venta nuevo</h3>
-        <form  method="post" action="{{ url_for('configuraciones.puntos_venta', id=0) }}" id="puntoventa_form">
-            <div class="row justify-content-md-center">
-                <div class="col-10">
-                    <div class="card-body text-bg-primary mb-3">
-                        <h5 class="card-title">Datos generles del punto de venta</h5>
-                        <div class="row">
-                            <div class="col-1 mb-3"> 
-                                <label for="id_puntoventa">#ID</label>
-                                <input class="form-control" type="text" name="id_puntoventa" id="id_puntoventa" value="{{ puntoVenta.id }}" readonly>
-                            </div>
-                            <div class="col-3 mb-3"> 
-                                <label for="puntoVenta">Punto de venta</label>
-                                <input class="form-control" type="text" name="puntoVenta" id="puntoVenta" placeholder="Ingrese el punto de venta" value="{{ puntoVenta.punto_vta }}">
-                            </div>
-                            <div class="col-4 mb-3"> 
-                                <label for="idsucursal">Sucursal</label>
-                                <select name="idsucursal" id="idsucursal" class="form-select form-select-md">
-                                    {% for sucursal in sucursales %}
-                                        {% if (puntoVenta.idsucursal != None) and (sucursal.id == puntoVenta.idsucursal) %}
-                                            <option value="{{ sucursal.id }}" selected>{{ sucursal.nombre }} </option>
-                                        {% else %}
-                                            <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
-                                        {% endif %}    
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>    
-                    </div>    
-                    <div class="card-body text-bg-success mb-3">
-                        <h5 class="card-title">Comprobantes de venta, crédito y débito</h5>
-                        {% if session['tipo_iva'] == 1 %}
-                            <div class="row">
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_fac_a">Ultima factura A</label>
-                                    <input class="form-control" type="text" name="ultima_fac_a" id="ultima_fac_a" placeholder="Ingrese la ultima factura A" value="{{ puntoVenta.ultima_fac_a }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_nc_a">Ultima nota de credito A</label>
-                                    <input class="form-control" type="text" name="ultima_nc_a" id="ultima_nc_a" placeholder="Ingrese la ultima nota de credito A" value="{{ puntoVenta.ultima_nc_a }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_deb_a">Ultima nota de debito A</label>
-                                    <input class="form-control" type="text" name="ultima_deb_a" id="ultima_deb_a" placeholder="Ingrese la ultima nota de debito A" value="{{ puntoVenta.ultima_deb_a }}">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_fac_b">Ultima factura B</label>
-                                    <input class="form-control" type="text" name="ultima_fac_b" id="ultima_fac_b" placeholder="Ingrese la ultima factura B" value="{{ puntoVenta.ultima_fac_b }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_nc_b">Ultima nota de credito B</label>
-                                    <input class="form-control" type="text" name="ultima_nc_b" id="ultima_nc_b" placeholder="Ingrese la ultima nota de credito B" value="{{ puntoVenta.ultima_nc_b }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_deb_b">Ultima nota de debito B</label>
-                                    <input class="form-control" type="text" name="ultima_deb_b" id="ultima_deb_b" placeholder="Ingrese la ultima nota de debito B" value="{{ puntoVenta.ultima_deb_b }}">
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="row">
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_fac_c">Ultima factura C</label>
-                                    <input class="form-control" type="text" name="ultima_fac_c" id="ultima_fac_c" placeholder="Ingrese la ultima factura C" value="{{ puntoVenta.ultima_fac_c }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_nc_c">Ultima nota de credito C</label>
-                                    <input class="form-control" type="text" name="ultima_nc_c" id="ultima_nc_c" placeholder="Ingrese la ultima nota de credito C" value="{{ puntoVenta.ultima_nc_c }}">
-                                </div>
-                                <div class="col-3 mb-3"> 
-                                    <label for="ultima_deb_c">Ultima nota de debito C</label>
-                                    <input class="form-control" type="text" name="ultima_deb_c" id="ultima_deb_c" placeholder="Ingrese la ultima nota de debito C" value="{{ puntoVenta.ultima_deb_c }}">
-                                </div>
-                            </div>    
-                        {% endif %}
-                    </div>    
-                    <div class="card-body text-bg-danger mb-3">
-                        <h5 class="card-title">Comprobantes remitos y recibos</h5>
-                        <div class="row">
-                            <div class="col-3 mb-3"> 
-                                <label for="ultimo_rem_x">Ultimo Remito X</label>
-                                <input class="form-control" type="text" name="ultimo_rem_x" id="ultimo_rem_x" placeholder="Ingrese el ultimo Remito X" value="{{ puntoVenta.ultimo_rem_x }}">
-                            </div>
-                            <div class="col-3 mb-3"> 
-                                <label for="ultimo_rec_x">Ultimo Recibo X</label>
-                                <input class="form-control" type="text" name="ultimo_rec_x" id="ultimo_rec_x" placeholder="Ingrese el ultimo Recibo X" value="{{ puntoVenta.ultimo_rec_x }}">
-                            </div>
-                        </div>    
-                    </div>    
-                    <div class="card-body text-bg-warning mb-3">
-                        <h5 class="card-title">Configuración de factura electrónica y certificados</h5>
-                        <div class="row">
-                            <div class="col-3 mb-3">
-                                <label for="fac_electronica">Factura Electrónica</label>
-                                {% if puntoVenta.fac_electronica == 1 %}
-                                    <input class="class=form-check-input me-1" type="checkbox" name="fac_electronica" id="fac_electronica" value="1" checked>
+        <form method="post" action="{{ url_for('configuraciones.puntos_venta', id=0) }}" id="puntoventa_form">
+            <input type="hidden" name="id_puntoventa" value="{{ puntoVenta.id if puntoVenta else '' }}">
+            
+            {# ==================== DATOS GENERALES ==================== #}
+            <div class="pv-section-general">
+                <h5 class="pv-section-title">
+                    <i class="fas fa-info-circle"></i> Datos generales del punto de venta
+                </h5>
+                <div class="row">
+                    <div class="col-md-2 mb-3"> 
+                        <label for="id_puntoventa" class="form-label">#ID</label>
+                        <input class="form-control" type="text" name="id_puntoventa_display" id="id_puntoventa_display" value="{{ puntoVenta.id if puntoVenta else 'Nuevo' }}" readonly>
+                    </div>
+                    <div class="col-md-3 mb-3"> 
+                        <label for="puntoVenta" class="form-label">Punto de venta</label>
+                        <input class="form-control" type="number" name="puntoVenta" id="puntoVenta" placeholder="Ej: 1, 2, 3..." value="{{ puntoVenta.punto_vta if puntoVenta else '' }}" required>
+                    </div>
+                    <div class="col-md-5 mb-3"> 
+                        <label for="idsucursal" class="form-label">Sucursal</label>
+                        <select name="idsucursal" id="idsucursal" class="form-select" required>
+                            <option value="">Seleccione una sucursal</option>
+                            {% for sucursal in sucursales %}
+                                {% if puntoVenta and sucursal.id == puntoVenta.idsucursal %}
+                                    <option value="{{ sucursal.id }}" selected>{{ sucursal.nombre }}</option>
                                 {% else %}
-                                    <input class="class=form-check-input me-1" type="checkbox" name="fac_electronica" id="fac_electronica" value="0">
-                                {% endif %}
-                            </div>
-                            <div class="col-3 mb-3"> 
-                                <label for="certificado">Certificado p12/pfx</label>
-                                <input class="form-control" type="text" name="certificado" id="certificado" placeholder="Ingrese el nombre del certificado p12/pfx" value="{{ puntoVenta.certificado_p12 }}">
-                            </div>    
-                            <div class="col-3 mb-3"> 
-                                <label for="calve_cert">Clave del certificado</label>
-                                <input class="form-control" type="text" name="clave_cert" id="clave_cert" placeholder="Ingrese la calve del certificado p12/pfx" value="{{ puntoVenta.clave_certificado }}">
-                            </div>    
+                                    <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
+                                {% endif %}    
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>    
+            </div>
+            
+            {# ==================== COMPROBANTES DE VENTA ==================== #}
+            <div class="pv-section-comprobantes">
+                <h5 class="pv-section-title">
+                    <i class="fas fa-file-invoice-dollar"></i> Comprobantes de venta, crédito y débito
+                </h5>
+                {% if session['tipo_iva'] == 1 %}
+                    {# Responsable Inscripto - Facturas A y B #}
+                    <div class="row">
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_fac_a" class="form-label">Última factura A</label>
+                            <input class="form-control" type="number" name="ultima_fac_a" id="ultima_fac_a" placeholder="0" value="{{ puntoVenta.ultima_fac_a if puntoVenta else 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_nc_a" class="form-label">Última NC A</label>
+                            <input class="form-control" type="number" name="ultima_nc_a" id="ultima_nc_a" placeholder="0" value="{{ puntoVenta.ultima_nc_a if puntoVenta else 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_deb_a" class="form-label">Última ND A</label>
+                            <input class="form-control" type="number" name="ultima_deb_a" id="ultima_deb_a" placeholder="0" value="{{ puntoVenta.ultima_deb_a if puntoVenta else 0 }}">
                         </div>
                     </div>
-                    <div class="card-body text-bg-light mb-3">
-                        <h5 class="card-title">Configuración de impresoras de comprobantes</h5>
-                        <div class="row">
-                            <div class="col-3 mb-3">
-                                <label for="pos_printer">Impresora POS</label>
-                                <select class="form-select form-select-md" name="pos_printer" id="pos_printer">
-                                    {% for printer in posPrinters %}
-                                        {% if printer.name == puntoVenta.pos_printer %}
-                                            <option value="{{ printer.name }}" selected>{{ printer.name }}</option>
-                                        {% else %}
-                                            <option value="{{ printer.name }}">{{ printer.name }}</option>
-                                        {% endif %}    
-                                    {% endfor %}
-                                </select>    
-                            </div>
-                            
+                    <div class="row">
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_fac_b" class="form-label">Última factura B</label>
+                            <input class="form-control" type="number" name="ultima_fac_b" id="ultima_fac_b" placeholder="0" value="{{ puntoVenta.ultima_fac_b if puntoVenta else 0 }}">
                         </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_nc_b" class="form-label">Última NC B</label>
+                            <input class="form-control" type="number" name="ultima_nc_b" id="ultima_nc_b" placeholder="0" value="{{ puntoVenta.ultima_nc_b if puntoVenta else 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_deb_b" class="form-label">Última ND B</label>
+                            <input class="form-control" type="number" name="ultima_deb_b" id="ultima_deb_b" placeholder="0" value="{{ puntoVenta.ultima_deb_b if puntoVenta else 0 }}">
+                        </div>
+                    </div>
+                {% else %}
+                    {# Monotributo / Exento - Facturas C #}
+                    <div class="row">
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_fac_c" class="form-label">Última factura C</label>
+                            <input class="form-control" type="number" name="ultima_fac_c" id="ultima_fac_c" placeholder="0" value="{{ puntoVenta.ultima_fac_c if puntoVenta else 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_nc_c" class="form-label">Última NC C</label>
+                            <input class="form-control" type="number" name="ultima_nc_c" id="ultima_nc_c" placeholder="0" value="{{ puntoVenta.ultima_nc_c if puntoVenta else 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3"> 
+                            <label for="ultima_deb_c" class="form-label">Última ND C</label>
+                            <input class="form-control" type="number" name="ultima_deb_c" id="ultima_deb_c" placeholder="0" value="{{ puntoVenta.ultima_deb_c if puntoVenta else 0 }}">
+                        </div>
+                    </div>    
+                {% endif %}
+            </div>
+            
+            {# ==================== REMITOS Y RECIBOS ==================== #}
+            <div class="pv-section-remitos">
+                <h5 class="pv-section-title">
+                    <i class="fas fa-truck"></i> Comprobantes remitos y recibos
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3"> 
+                        <label for="ultimo_rem_x" class="form-label">Último Remito X</label>
+                        <input class="form-control" type="number" name="ultimo_rem_x" id="ultimo_rem_x" placeholder="0" value="{{ puntoVenta.ultimo_rem_x if puntoVenta else 0 }}">
+                    </div>
+                    <div class="col-md-4 mb-3"> 
+                        <label for="ultimo_rec_x" class="form-label">Último Recibo X</label>
+                        <input class="form-control" type="number" name="ultimo_rec_x" id="ultimo_rec_x" placeholder="0" value="{{ puntoVenta.ultimo_rec_x if puntoVenta else 0 }}">
+                    </div>
+                </div>    
+            </div>
+            
+            {# ==================== FACTURA ELECTRÓNICA ==================== #}
+            <div class="pv-section-factura-e">
+                <h5 class="pv-section-title">
+                    <i class="fas fa-bolt"></i> Configuración de factura electrónica
+                </h5>
+                <div class="row align-items-center">
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label d-block">Factura Electrónica</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="fac_electronica" id="fac_electronica" value="1" {{ 'checked' if puntoVenta and puntoVenta.fac_electronica else '' }}>
+                            <label class="form-check-label" for="fac_electronica">
+                                {{ 'Activa' if puntoVenta and puntoVenta.fac_electronica else 'Inactiva' }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-5 mb-3"> 
+                        <label for="certificado" class="form-label">Certificado p12/pfx</label>
+                        <input class="form-control" type="text" name="certificado" id="certificado" placeholder="Nombre del archivo certificado" value="{{ puntoVenta.certificado_p12 if puntoVenta else '' }}">
+                    </div>    
+                    <div class="col-md-5 mb-3"> 
+                        <label for="clave_cert" class="form-label">Clave del certificado</label>
+                        <input class="form-control" type="password" name="clave_cert" id="clave_cert" placeholder="Clave del certificado" value="{{ puntoVenta.clave_certificado if puntoVenta else '' }}">
+                    </div>    
+                </div>
+            </div>
+            
+            {# ==================== IMPRESIÓN ==================== #}
+            <div class="pv-section-impresoras">
+                <h5 class="pv-section-title">
+                    <i class="fas fa-print"></i> Configuración de impresión
+                </h5>
+                <div class="row align-items-center">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label d-block">Tipo de impresión</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="pos_printer" id="pos_printer" value="1" {{ 'checked' if puntoVenta and puntoVenta.pos_printer else '' }}>
+                            <label class="form-check-label" for="pos_printer">
+                                Impresora POS (Térmica)
+                            </label>
+                        </div>
+                        <small class="text-muted">Si está activo, imprime en formato ticket (80mm) usando la impresora por defecto del sistema. Si no, genera PDF A4.</small>
                     </div>
                 </div>
             </div>
-            <button class="btn btn-exito" type="submit">Grabar</button>
+            
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-exito btn-lg" type="submit">
+                    <i class="fas fa-save me-2"></i>Guardar punto de venta
+                </button>
+                <a href="{{ url_for('configuraciones.puntos_venta', id=0) }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Nuevo
+                </a>
+            </div>
         </form>
     </div>    
 </div>   

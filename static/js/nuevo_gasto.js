@@ -69,7 +69,7 @@ async function fetchProveedor(input) {
         asignarProveedor(data[0]);
       } else {
         limpiarDatosProveedor();
-        alert("No se encontraron proveedores con ese nombre.");
+        mostrarInfo("No se encontraron proveedores con ese nombre.");
       }
       //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
     }
@@ -168,22 +168,26 @@ document.getElementById('idproveedor').addEventListener('blur', function() {
     fetchProveedor(idproveedor);
 });
 
-document.getElementById('invoice_form').addEventListener('submit', function(event) {
+document.getElementById('invoice_form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
     const totalFac = parseFloat(document.getElementById('total').value);
     if (totalFac <= 0) {
-        event.preventDefault();
-        alert('El total debe ser mayor a 0');
+        mostrarAdvertencia('El total debe ser mayor a 0');
+        return;
     }   
     
     if (checkTotales() == false){
-        event.preventDefault();
-        alert('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
+        mostrarAdvertencia('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
+        return;
     }    
-    if (confirm('¿Grabar la factura?') == false) {
-        event.preventDefault();
+    
+    const confirmado = await confirmar('¿Grabar la factura?');
+    if (!confirmado) {
+        return;
     }
-    else{
-        isFormSubmited = true;
-    }
+    
+    isFormSubmited = true;
+    this.submit();
 });
  

@@ -241,7 +241,7 @@ function saleccionarPtoVta(datos) {
     if (selectedPtoVta) {
       asignarPuntoVenta(selectedPtoVta);
     } else {
-      alert("Debe seleccionar un punto de venta.");
+      mostrarAdvertencia("Debe seleccionar un punto de venta.");
     }
   };
   modalContent.appendChild(confirmButton);
@@ -250,6 +250,31 @@ function saleccionarPtoVta(datos) {
 }
 
 function abrirModalPagos(){
+  // Validar datos requeridos antes de abrir el modal de pagos
+  const idcliente = document.getElementById('idcliente')?.value;
+  const idlista = document.getElementById('idlista')?.value;
+  const cantidadProductos = document.querySelectorAll("#tabla-items tbody tr").length;
+  
+  // Verificar cliente cargado
+  if (!idcliente || idcliente === '' || idcliente === '0') {
+    mostrarAdvertencia("Debe seleccionar un cliente antes de continuar con el pago.");
+    document.getElementById('idcliente')?.focus();
+    return;
+  }
+  
+  // Verificar lista de precios
+  if (!idlista || idlista === '' || idlista === '0') {
+    mostrarAdvertencia("Debe seleccionar una lista de precios antes de continuar con el pago.");
+    return;
+  }
+  
+  // Verificar al menos un producto
+  if (cantidadProductos === 0) {
+    mostrarAdvertencia("Debe agregar al menos un producto antes de continuar con el pago.");
+    document.getElementById('agregarArticulo')?.focus();
+    return;
+  }
+  
   //Calcular ofertas de cierre
   calcularOfetasDeCierre();
   
@@ -301,7 +326,7 @@ window.abrirModalPagos = abrirModalPagos;
 window.procesarTransaccion = procesarTransaccion;
 
 // Función personalizada para procesar transacción en nueva venta
-function procesarTransaccion() {
+async function procesarTransaccion() {
     console.log('procesarTransaccion() llamada para nueva venta');
     
     // Usar la validación del modal universal
@@ -311,7 +336,8 @@ function procesarTransaccion() {
             `Falta pagar $${diferencia.toFixed(2)}` : 
             `Sobra $${Math.abs(diferencia).toFixed(2)}`;
         
-        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+        const continuar = await confirmar(`${mensaje}. ¿Desea continuar de todas formas?`);
+        if (!continuar) {
             return false;
         }
     }
@@ -326,7 +352,7 @@ function procesarTransaccion() {
     const form = document.getElementById('invoice_form');
     if (!form) {
         console.error('Formulario invoice_form no encontrado');
-        alert('Error: No se pudo grabar la venta. Formulario no encontrado.');
+        mostrarError('No se pudo grabar la venta. Formulario no encontrado.');
         return false;
     }
     
@@ -346,6 +372,9 @@ function procesarTransaccion() {
         console.log('Respuesta del servidor:', data);
         
         if (data.success) {
+            // Mostrar mensaje de éxito con el número de comprobante
+            toastExito(`Factura ${data.nro_comprobante || data.id} grabada exitosamente`);
+            
             // Verificar si tiene facturación electrónica e impresora POS
             const tieneFacElectronica = document.getElementById('fac_electronica')?.value === 'true';
             const posPrinter = document.getElementById('pos_printer')?.value || '';
@@ -374,8 +403,11 @@ function procesarTransaccion() {
                         const response = await fetch(`${BASE_URL}/ventas/facturar_venta/${ptoVta}/${facturaId}`);
                         const result = await response.json().catch(() => null);
                         
-                        if (!result || !result.success) {
+                        if (result && result.success) {
+                            toastExito(`CAE: ${result.cae}`);
+                        } else {
                             console.warn('Advertencia al facturar electrónicamente:', result?.message || 'Error desconocido');
+                            toastAdvertencia('Error en facturación electrónica. Verifique el CAE.');
                         }
                     }
                     
@@ -430,12 +462,12 @@ function procesarTransaccion() {
             }, { once: true });
             
         } else {
-            alert(`❌ Error: ${data.message || 'No se pudo grabar la venta'}`);
+            mostrarError(`${data.message || 'No se pudo grabar la venta'}`);
         }
     })
     .catch(error => {
         console.error('Error al grabar venta:', error);
-        alert('❌ Error de conexión al grabar la venta (Mensaje' + error.message + ' - Detalle: ' + error.error_detalle + '). URL: ' + url);
+        mostrarError('Error de conexión al grabar la venta (Mensaje' + error.message + ' - Detalle: ' + error.error_detalle + '). URL: ' + url);
         
     });
     
@@ -579,11 +611,11 @@ async function asignarPuntoVenta(idPuntoVenta) {
       document.getElementById("pos_printer").value = result.posPrinter || '';
       document.getElementById("idcliente").focus();
     } else {
-      alert('Error al asignar el punto de venta: ' + result.message);
+      mostrarError('Error al asignar el punto de venta: ' + result.message);
     }
   } catch (error) {
     console.error('Error al llamar a la API:', error);
-    alert('Ocurrió un error al asignar el punto de venta.');
+    mostrarError('Ocurrió un error al asignar el punto de venta.');
   }
 }
 
@@ -751,12 +783,12 @@ async function fetchCliente(input) {
         // Si se encuentra un cliente por ID, asignarlo directamente
         if (data.cliente.baja == true) {
           limpiarDatosCliente();
-          alert("Cliente dado de baja. No puedes facturar a este cliente.");
+          mostrarAdvertencia("Cliente dado de baja. No puedes facturar a este cliente.");
           return;
         }
         asignarCliente(data.cliente);
       } else {
-        alert("No se encontraron clientes con ese ID.");
+        mostrarInfo("No se encontraron clientes con ese ID.");
       }
     } else {
       if (data.length > 1) {
@@ -767,7 +799,7 @@ async function fetchCliente(input) {
         asignarCliente(data[0]);
       } else {
         limpiarDatosCliente
-        alert("No se encontraron clientes con ese nombre.");
+        mostrarInfo("No se encontraron clientes con ese nombre.");
       }
     }
   }  
@@ -838,6 +870,7 @@ function asignarCliente(cliente) {
 
 async function fetchArticulo(id, idlista, itemDiv) {
   let response;
+  console.log("🔍 Buscando artículo con ID o detalle:", id, "en lista de precios ID:", idlista);
   if (!isNaN(id)) {
     response = await fetch(`${BASE_URL}/articulos/articulo/${id}/${idlista}`);
   } else {
@@ -851,7 +884,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
     const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
     nuevoInputCodigo.value = "";
     nuevoInputCodigo.focus();
-    alert("Error en la búsqueda de artículos");
+    mostrarError("Error en la búsqueda de artículos");
     return;
   }
   //const data = await response.json();
@@ -860,14 +893,14 @@ async function fetchArticulo(id, idlista, itemDiv) {
   if (data.success) {
     if (data.articulo && data.articulo.baja == true) {
       // Artículo dado de baja
-      alert("El artículo está dado de baja.");
+      mostrarAdvertencia("El artículo está dado de baja.");
       return;
     }
 
     if (data.articulo) {
       asignarArticulo(data.articulo, itemDiv);
     } else {
-      alert("No se encontraron articulos con ese ID.");
+      mostrarInfo("No se encontraron articulos con ese ID.");
     }
   } else {
     if (data.length > 1) {
@@ -888,7 +921,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
         
       //asignarArticuloElegido(data[0], itemDiv);
     } else {
-      alert("No se encontraron articulos con ese detalle.");
+      mostrarInfo("No se encontraron articulos con ese detalle.");
     }
   }
 }
@@ -1092,13 +1125,13 @@ function checkDatosTarjeta() {
   const entidad = parseInt(document.getElementById("entidad").value);
   if (totTarjeta > 0) {
     if (entidad <= 0 || isNaN(entidad)) {
-      alert("Debe completar correctamente los datos de tarjeta");
+      mostrarAdvertencia("Debe completar correctamente los datos de tarjeta");
       return false;
     }
     return true;
   } else {
     if ((totTarjeta > 0) || (entidad > 0)) {
-      alert("Debe completar correctamente los datos de tarjeta");
+      mostrarAdvertencia("Debe completar correctamente los datos de tarjeta");
       return false;
     }else{
       return true;
@@ -1117,6 +1150,105 @@ document.getElementById("idcliente").addEventListener("blur", function () {
   const idcliente = this.value;
   fetchCliente(idcliente);
 });
+
+// Event listener para cambio de lista de precios
+// Variable para guardar la lista de precios anterior
+let listaAnterior = null;
+
+// Guardar valor anterior al hacer focus en el select
+document.getElementById("idlista").addEventListener("focus", function () {
+  listaAnterior = this.value;
+});
+
+document.getElementById("idlista").addEventListener("change", async function () {
+  await recalcularPreciosPorLista(this);
+});
+
+/**
+ * Recalcula los precios de todos los productos según la nueva lista de precios
+ */
+async function recalcularPreciosPorLista(selectElement) {
+  const filas = document.querySelectorAll("#tabla-items tbody tr");
+  
+  // Si no hay productos, no hacer nada (y actualizar listaAnterior)
+  if (filas.length === 0) {
+    listaAnterior = selectElement.value;
+    return;
+  }
+  
+  const idlista = selectElement.value;
+  
+  // Pedir confirmación
+  const confirmado = await confirmar(`¿Desea actualizar los precios de ${filas.length} producto(s) con la nueva lista de precios?`);
+  if (!confirmado) {
+    // Restaurar la lista anterior
+    if (listaAnterior !== null) {
+      selectElement.value = listaAnterior;
+    }
+    return;
+  }
+  
+  // Actualizar listaAnterior con el nuevo valor confirmado
+  listaAnterior = idlista;
+  
+  let productosActualizados = 0;
+  let productosSinPrecio = [];
+  
+  // Recorrer cada fila y actualizar precio
+  for (const fila of filas) {
+    const codigo = fila.querySelector(".codigo-articulo")?.value;
+    
+    if (!codigo || codigo === '') {
+      continue;
+    }
+    
+    try {
+      const response = await fetch(`${BASE_URL}/articulos/articulo/${codigo}/${idlista}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.articulo) {
+          const precioUnitario = parseFloat(data.articulo.precio);
+          const cantidad = parseFloat(fila.querySelector(".cantidad").value) || 1;
+          const inputPrecio = fila.querySelector(".precio-unitario");
+          
+          if (!isNaN(precioUnitario) && precioUnitario > 0) {
+            inputPrecio.value = precioUnitario.toFixed(2);
+            
+            // Actualizar clase de oferta
+            inputPrecio.classList.remove("precio-destacado", "precio-normal");
+            inputPrecio.classList.add(data.articulo.oferta ? "precio-destacado" : "precio-normal");
+            
+            // Actualizar precio total de la línea
+            fila.querySelector(".precio-total").value = (precioUnitario * cantidad).toFixed(2);
+            
+            productosActualizados++;
+          } else {
+            productosSinPrecio.push(codigo);
+          }
+        } else {
+          productosSinPrecio.push(codigo);
+        }
+      } else {
+        productosSinPrecio.push(codigo);
+      }
+    } catch (error) {
+      console.error(`Error al obtener precio para artículo ${codigo}:`, error);
+      productosSinPrecio.push(codigo);
+    }
+  }
+  
+  // Actualizar total de la factura
+  updateTotalFactura();
+  
+  // Mostrar resultado
+  if (productosSinPrecio.length > 0) {
+    mostrarAdvertencia(`Se actualizaron ${productosActualizados} productos. Los siguientes artículos no tienen precio en la nueva lista: ${productosSinPrecio.join(', ')}`);
+  } else if (productosActualizados > 0) {
+    toastExito(`Se actualizaron los precios de ${productosActualizados} producto(s)`);
+  }
+}
 
 document.getElementById("tabla-items").addEventListener("input", function (e) {
   if (
@@ -1189,19 +1321,21 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
     event.preventDefault();
 
     if (document.querySelectorAll("#tabla-items tbody tr").length === 0) {
-        alert("Debe agregar al menos un item a la factura");
+        mostrarAdvertencia("Debe agregar al menos un item a la factura");
         return false;
     }
     if (checkDatosTarjeta() === false) {
         return false;
     }
     if (!window.checkTotales || !window.checkTotales()) {
-        alert(
+        mostrarAdvertencia(
             'El total debe ser mayor a cero y/o la suma de "Efectivo" + "Tarjeta" + "Cta. cte." + "Crédito" debe ser igual al total de la factura'
         );
         return false;
     }
-    if (confirm("¿Grabar la factura?") === false) {
+    
+    const confirmado = await confirmar("¿Grabar la factura?");
+    if (!confirmado) {
         return false;
     }
 
@@ -1245,7 +1379,7 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
             posPrinter = document.getElementById("posPrinter").value;
             if (posPrinter != ""){
               try {
-                  alert('voy a imprimir la factura');
+                  console.log('Imprimiendo factura...');
                   await imprimirFactura(result.id);
               } catch (error) {
                   console.error('Error al imprimir la factura:', error);
@@ -1254,13 +1388,13 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
 
             window.location.href = `${BASE_URL}/ventas/nueva_venta`;
         } else {
-            alert(result.message);
+            mostrarError(result.message);
             window.location.href = `${BASE_URL}/ventas/nueva_venta`;
         }
     }
     catch (error) {
         console.error(error);
-        alert('Error al procesar la venta');
+        mostrarError('Error al procesar la venta');
         window.location.href = `${BASE_URL}/ventas/nueva_venta`;
     }
 });
@@ -1582,7 +1716,7 @@ async function imprimirFactura(id) {
     } catch (error) {
         console.error('Error detallado:', error);
         console.error('Stack trace:', error.stack);
-        alert(`Error al imprimir la factura: ${error.message}`);
+        mostrarError(`Error al imprimir la factura: ${error.message}`);
         return false;
     }
 }

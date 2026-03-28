@@ -209,6 +209,62 @@ class BrowserPrinterService extends BasePrinterService {
 class POSPrinterService extends BasePrinterService {
     constructor() {
         super();
+        this._lineasCache = {}; // Cache para líneas de comprobantes
+    }
+    
+    /**
+     * Obtiene las líneas de comprobantes de un punto de venta
+     * @param {number} puntoVtaId - ID del punto de venta
+     * @param {boolean} soloVentas - Si true, retorna todas las líneas; si false, solo las que no son "solo_en_ventas"
+     * @returns {Promise<Object>} Objeto con arrays cabecera y pie
+     */
+    async _getLineasComprobantes(puntoVtaId, soloVentas = true) {
+        try {
+            // Verificar cache
+            const cacheKey = `${puntoVtaId}_${soloVentas}`;
+            if (this._lineasCache[cacheKey]) {
+                return this._lineasCache[cacheKey];
+            }
+            
+            const response = await fetch(`/configuracion/api/lineas_comprobantes/${puntoVtaId}`);
+            if (!response.ok) {
+                console.warn('No se pudieron obtener las líneas de comprobantes');
+                return { cabecera: [], pie: [] };
+            }
+            
+            const data = await response.json();
+            if (!data.success) {
+                return { cabecera: [], pie: [] };
+            }
+            
+            // Filtrar según soloVentas
+            let cabecera = data.cabecera || [];
+            let pie = data.pie || [];
+            
+            if (!soloVentas) {
+                // Para remitos/delivery, excluir las líneas marcadas como "solo_en_ventas"
+                cabecera = cabecera.filter(l => !l.solo_en_ventas);
+                pie = pie.filter(l => !l.solo_en_ventas);
+            }
+            
+            const resultado = { cabecera, pie };
+            console.log(`Líneas comprobantes para PV ${puntoVtaId}:`, resultado);
+            this._lineasCache[cacheKey] = resultado;
+            return resultado;
+        } catch (error) {
+            console.error('Error al obtener líneas de comprobantes:', error);
+            return { cabecera: [], pie: [] };
+        }
+    }
+    
+    /**
+     * Genera HTML para las líneas de cabecera/pie
+     * @param {Array} lineas - Array de objetos con texto
+     * @returns {string} HTML de las líneas
+     */
+    _renderLineas(lineas) {
+        if (!lineas || lineas.length === 0) return '';
+        return lineas.map(l => `<p class="linea-ticket">${l.texto}</p>`).join('');
     }
     
     async listPrinters() {
@@ -283,6 +339,12 @@ class POSPrinterService extends BasePrinterService {
             const vencimientoCae = esArray ? factura[10] : (factura.cae_vto || factura.vencimiento_cae || '');
             const puntoVta = esArray ? factura[8] : (factura.punto_vta || 1);
             const tipoComprobante = esArray ? factura[6] : (factura.id_tipo_comprobante || 11);
+            const letraComprobante = esArray ? (factura[19] || '') : (factura.letra_comprobante || '');
+            
+            // Obtener líneas de comprobantes (todas las líneas para ventas)
+            const lineasComp = await this._getLineasComprobantes(puntoVta, true);
+            const lineasCabeceraHtml = this._renderLineas(lineasComp.cabecera);
+            const lineasPieHtml = this._renderLineas(lineasComp.pie);
             
             // Extraer número de comprobante sin el punto de venta
             const nroComprobantePuro = numero ? parseInt(numero.toString().split('-').pop()) : 0;
@@ -387,6 +449,11 @@ class POSPrinterService extends BasePrinterService {
                             margin-top: 10px; 
                             font-size: 10px;
                         }
+                        .linea-ticket {
+                            text-align: center;
+                            font-size: 10px;
+                            margin: 2px 0;
+                        }
                         .cae-info { 
                             font-size: 9px; 
                             margin-top: 5px;
@@ -416,10 +483,16 @@ class POSPrinterService extends BasePrinterService {
                         ${empresaDomicilio ? `<p>${empresaDomicilio}</p>` : ''}
                     </div>
                     
+                    ${lineasCabeceraHtml ? `
+                    <div class="lineas-cabecera">
+                        ${lineasCabeceraHtml}
+                    </div>
+                    ` : ''}
+                    
                     <div class="divider"></div>
                     
                     <div class="info">
-                        <span>Comprobante:</span> ${numero}
+                        <span>Comprobante:</span> ${letraComprobante ? letraComprobante + ' - ' : ''}${numero}
                     </div>
                     <div class="info">
                         <span>Fecha:</span> ${fecha}
@@ -455,6 +528,12 @@ class POSPrinterService extends BasePrinterService {
                             <div id="qrcode"></div>
                         </div>
                         ` : ''}
+                    ` : ''}
+                    
+                    ${lineasPieHtml ? `
+                    <div class="lineas-pie">
+                        ${lineasPieHtml}
+                    </div>
                     ` : ''}
                     
                     <div class="footer">
@@ -498,10 +577,16 @@ class POSPrinterService extends BasePrinterService {
             const fecha = esArray ? factura[1] : factura.fecha;
             const cliente = esArray ? factura[13] : factura.cliente;
             const total = esArray ? factura[2] : factura.total;
+            const puntoVta = esArray ? factura[8] : (factura.punto_vta || 1);
             const cuit = esArray ? factura[15] : (factura.cuit || '');
             const condicionIva = esArray ? factura[16] : (factura.condicion_iva || '');
             const cae = esArray ? factura[9] : (factura.cae || '');
             const vencimientoCae = esArray ? factura[10] : (factura.vencimiento_cae || '');
+            
+            // Obtener líneas de comprobantes (solo las que NO son "solo_en_ventas" para remitos)
+            const lineasComp = await this._getLineasComprobantes(puntoVta, false);
+            const lineasCabeceraHtml = this._renderLineas(lineasComp.cabecera);
+            const lineasPieHtml = this._renderLineas(lineasComp.pie);
             
             const empresaNombre = typeof empresa === 'object' ? 
                 empresa.nombre || empresa['nombre'] : empresa;
@@ -512,16 +597,18 @@ class POSPrinterService extends BasePrinterService {
             
             // Construir HTML para ticket térmico
             let itemsHtml = '';
+            
             items.forEach(item => {
                 const esItemArray = Array.isArray(item);
                 const cantidad = esItemArray ? item[1] : item.cantidad;
                 const descripcion = esItemArray ? item[6] : item.descripcion;
+                const unitario = esItemArray ? item[2] : item.precio_unitario;
                 const precio = esItemArray ? item[3] : item.precio_total;
-                
                 itemsHtml += `
                     <tr>
-                        <td class="qty">${cantidad}</td>
+                        <td class="qty">${parseFloat(cantidad).toFixed(2)}</td>
                         <td class="desc">${descripcion}</td>
+                        <td class="desc"> <small>$${parseFloat(unitario).toFixed(2)}</small></td>
                         <td class="price">$${parseFloat(precio).toFixed(2)}</td>
                     </tr>
                 `;
@@ -539,7 +626,7 @@ class POSPrinterService extends BasePrinterService {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Ticket</title>
+                    <title>Remito</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { 
@@ -573,6 +660,11 @@ class POSPrinterService extends BasePrinterService {
                             margin-top: 10px; 
                             font-size: 10px;
                         }
+                        .linea-ticket {
+                            text-align: center;
+                            font-size: 10px;
+                            margin: 2px 0;
+                        }
                         .cae-info { 
                             font-size: 9px; 
                             margin-top: 5px;
@@ -593,6 +685,12 @@ class POSPrinterService extends BasePrinterService {
                         ${empresaDomicilio ? `<p>${empresaDomicilio}</p>` : ''}
                         <p> DOCUMENTO NO VÁLIDO COMO FACTURA</p>
                     </div>
+                    
+                    ${lineasCabeceraHtml ? `
+                    <div class="lineas-cabecera">
+                        ${lineasCabeceraHtml}
+                    </div>
+                    ` : ''}
                     
                     <div class="divider"></div>
                     
@@ -628,6 +726,12 @@ class POSPrinterService extends BasePrinterService {
                             <div>CAE: ${cae}</div>
                             <div>Vto CAE: ${vencimientoCae}</div>
                         </div>
+                    ` : ''}
+                    
+                    ${lineasPieHtml ? `
+                    <div class="lineas-pie">
+                        ${lineasPieHtml}
+                    </div>
                     ` : ''}
                     
                     <div class="footer">

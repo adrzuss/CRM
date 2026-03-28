@@ -1,0 +1,18 @@
+{# Formulario de edición - Tipo IVA #}
+<h5 class="mb-3">Editar Tipo IVA</h5>
+<form hx-post="{{ url_for('configuraciones.update_tipo_iva', id=item.id) }}" 
+      hx-target="#tabla-tipo_ivas" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="id_afip" class="form-label">ID AFIP</label>
+        <input type="number" class="form-control" name="id_afip" id="id_afip" value="{{ item.id_afip }}">
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

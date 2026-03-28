@@ -1,0 +1,14 @@
+{# Formulario de edición - Tarea #}
+<h5 class="mb-3">Editar Tarea</h5>
+<form hx-post="{{ url_for('configuraciones.update_tarea', id=item.id) }}" 
+      hx-target="#tabla-tareas" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="tarea" class="form-label">Tarea</label>
+        <input type="text" class="form-control" name="tarea" id="tarea" value="{{ item.tarea }}" required>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

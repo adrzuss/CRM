@@ -1,11 +1,15 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g, current_app
 from sqlalchemy import and_
+from werkzeug.utils import secure_filename
+import os
+import uuid
 from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, \
-                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema
+                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema, LineasComprobantes
 from models.sessions import Tareas
 from models.articulos import ListasPrecios, Colores, DetallesArticulos
 from models.sucursales import Sucursales
-from services.configs import grabar_configuracion, save_and_update_lista_precios, grabarDatosPtoVta, validar_cuit
+from services.configs import grabar_configuracion, save_and_update_lista_precios, grabarDatosPtoVta, validar_cuit, \
+                            get_lineas_comprobantes, guardar_lineas_comprobantes
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
@@ -32,6 +36,7 @@ def configuraciones():
                                      Configuracion.caja_con_apertura,
                                      Configuracion.idplan_sistema,
                                      Configuracion.interes_mora_creditos,
+                                     Configuracion.logo,
                                      PlanesSistema.nombre.label('nombre_plan')
                                      ).join(PlanesSistema, PlanesSistema.id == Configuracion.idplan_sistema
                                      ).filter(Configuracion.id == session['id_empresa']).first()
@@ -59,11 +64,55 @@ def update_config():
     tipo_doc = request.form['tipo_doc']
     documento = request.form['documento']
     dias_vto_cta_cte = request.form['dias_vto_cc']
-    idplan_sistema = request.form['idplanSistema']
+    idplan_sistema = request.form.get('idplanSistema', '')
     interes_mora_creditos = request.form['interesMora']
-    grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc,documento, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos)
-    flash('Datos de configuracion grabados')
-    return redirect('configuraciones')
+    eliminar_logo = request.form.get('eliminar_logo', '0') == '1'
+    
+    # Procesar logo
+    logo_filename = None
+    logo_file = request.files.get('logo')
+    
+    idplan_sistema = PlanesSistema.query.filter_by(nombre=idplan_sistema).first().id if idplan_sistema else None
+    
+    if eliminar_logo:
+        # Marcar para eliminar el logo actual
+        logo_filename = ''
+    elif logo_file and logo_file.filename:
+        # Validar extensión usando configuración global
+        allowed_extensions = current_app.config.get('ALLOWED_EXTENSIONS', {'png', 'jpg', 'jpeg', 'gif', 'svg'})
+        file_ext = logo_file.filename.rsplit('.', 1)[-1].lower() if '.' in logo_file.filename else ''
+        
+        if file_ext in allowed_extensions:
+            # Crear carpeta si no existe
+            logos_dir = os.path.join(current_app.root_path, 'static', 'img', 'logos')
+            os.makedirs(logos_dir, exist_ok=True)
+            
+            # Generar nombre único
+            unique_name = f"logo_{session.get('id_empresa', 'default')}_{uuid.uuid4().hex[:8]}.{file_ext}"
+            logo_path = os.path.join(logos_dir, unique_name)
+            
+            # Eliminar logo anterior si existe
+            try:
+                config_actual = Configuracion.query.get(session['id_empresa'])
+                if config_actual and config_actual.logo:
+                    old_logo_path = os.path.join(logos_dir, config_actual.logo)
+                    if os.path.exists(old_logo_path):
+                        os.remove(old_logo_path)
+            except Exception as e:
+                print(f"Error al eliminar logo anterior: {e}")
+            
+            # Guardar nuevo archivo
+            logo_file.save(logo_path)
+            logo_filename = unique_name
+        else:
+            flash('Formato de imagen no válido. Use PNG, JPG, GIF o SVG.', 'warning')
+    try:
+        grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, documento, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos, logo_filename)
+        flash('Datos de configuracion grabados')
+        return redirect('configuraciones')
+    except Exception as e:
+        flash(f'Error grabando configuración: {e}', 'error')
+        return redirect('configuraciones')
 
 @bp_configuraciones.route('/add_alc_iva', methods=['POST'])
 @check_session
@@ -214,19 +263,7 @@ def puntos_venta(id=0):
             puntoVenta = None    
     sucursales = Sucursales.query.all()    
     puntos_venta = PuntosVenta.query.all()
-    from services.printer_service import get_printer_service
-    try:
-        printer_service = get_printer_service()
-        
-        result = printer_service.list_printers()
-        if result['success']:
-            printers = result['printers']
-        else:
-            print(f"Error: {result['error']}")
-            printers = []
-    except Exception as e:
-        print(f'Error listando impresoras: {e}')
-    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, posPrinters=printers, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_configuraciones.route('/get_tipos_comprobantes/<id_tipo_iva>/<aplica>')
 @check_session
@@ -274,3 +311,375 @@ def add_detalle_articulo():
     db.session.commit()
     flash('Detalle de artículo grabado')
     return redirect('configuraciones')
+
+# =============================================================================
+# HTMX ENDPOINTS - CRUD COMPLETO PARA CONFIGURACIONES
+# =============================================================================
+
+# --- Helpers para renderizar tablas parciales ---
+def render_tabla_alicuotas_iva():
+    alicuotas = AlcIva.query.all()
+    return render_template('partials/_tabla_alc_iva.html', alicuotas=alicuotas)
+
+def render_tabla_alicuotas_ib():
+    ingBtos = AlcIB.query.all()
+    return render_template('partials/_tabla_alc_ib.html', ingBtos=ingBtos)
+
+def render_tabla_listas_precios():
+    listas_precios = ListasPrecios.query.all()
+    return render_template('partials/_tabla_listas_precios.html', listas_precios=listas_precios)
+
+def render_tabla_tareas():
+    tareas = Tareas.query.all()
+    return render_template('partials/_tabla_tareas.html', tareas=tareas)
+
+def render_tabla_plan_ctas():
+    planCtas = PlanCtas.query.all()
+    return render_template('partials/_tabla_plan_ctas.html', planCtas=planCtas)
+
+def render_tabla_categorias():
+    categorias = Categorias.query.all()
+    return render_template('partials/_tabla_categorias.html', categorias=categorias)
+
+def render_tabla_monedas_billetes():
+    monedasBilletes = MonedasBilletes.query.all()
+    return render_template('partials/_tabla_monedas_billetes.html', monedasBilletes=monedasBilletes)
+
+def render_tabla_colores():
+    colores = Colores.query.all()
+    return render_template('partials/_tabla_colores.html', colores=colores)
+
+def render_tabla_detalles_articulos():
+    detalles_articulos = DetallesArticulos.query.all()
+    return render_template('partials/_tabla_detalles_articulos.html', detalles_articulos=detalles_articulos)
+
+def render_tabla_tipo_ivas():
+    tipo_ivas = TipoIva.query.all()
+    return render_template('partials/_tabla_tipo_ivas.html', tipo_ivas=tipo_ivas)
+
+def render_tabla_tipo_docs():
+    tipo_docs = TipoDocumento.query.all()
+    return render_template('partials/_tabla_tipo_docs.html', tipo_docs=tipo_docs)
+
+# --- HTMX: Alícuotas IVA ---
+@bp_configuraciones.route('/htmx/add_alc_iva', methods=['POST'])
+@check_session
+def htmx_add_alc_iva():
+    descripcion = request.form['descripcion']
+    alicuota = request.form['alicuota']
+    alciva = AlcIva(descripcion, alicuota)
+    db.session.add(alciva)
+    db.session.commit()
+    return render_tabla_alicuotas_iva()
+
+@bp_configuraciones.route('/htmx/get_alc_iva/<int:id>', methods=['GET'])
+@check_session
+def get_alc_iva(id):
+    item = AlcIva.query.get_or_404(id)
+    return render_template('partials/_form_edit_alc_iva.html', item=item, entidad='alicuotas_iva')
+
+@bp_configuraciones.route('/htmx/update_alc_iva/<int:id>', methods=['POST'])
+@check_session
+def update_alc_iva(id):
+    item = AlcIva.query.get_or_404(id)
+    item.descripcion = request.form['descripcion']
+    item.alicuota = request.form['alicuota']
+    db.session.commit()
+    return render_tabla_alicuotas_iva()
+
+# --- HTMX: Alícuotas Ingresos Brutos ---
+@bp_configuraciones.route('/htmx/add_alc_ib', methods=['POST'])
+@check_session
+def htmx_add_alc_ib():
+    descripcion = request.form['descripcion']
+    alicuota = request.form['alicuota']
+    alcib = AlcIB(descripcion, alicuota)
+    db.session.add(alcib)
+    db.session.commit()
+    return render_tabla_alicuotas_ib()
+
+@bp_configuraciones.route('/htmx/get_alc_ib/<int:id>', methods=['GET'])
+@check_session
+def get_alc_ib(id):
+    item = AlcIB.query.get_or_404(id)
+    return render_template('partials/_form_edit_alc_ib.html', item=item, entidad='alicuotas_ib')
+
+@bp_configuraciones.route('/htmx/update_alc_ib/<int:id>', methods=['POST'])
+@check_session
+def update_alc_ib(id):
+    item = AlcIB.query.get_or_404(id)
+    item.descripcion = request.form['descripcion']
+    item.alicuota = request.form['alicuota']
+    db.session.commit()
+    return render_tabla_alicuotas_ib()
+
+# --- HTMX: Listas de Precios ---
+@bp_configuraciones.route('/htmx/add_lista_precio', methods=['POST'])
+@check_session
+def htmx_add_lista_precio():
+    nombre = request.form['nombre']
+    markup = request.form['markup']
+    save_and_update_lista_precios(nombre, markup)
+    return render_tabla_listas_precios()
+
+@bp_configuraciones.route('/htmx/get_lista_precio/<int:id>', methods=['GET'])
+@check_session
+def get_lista_precio(id):
+    item = ListasPrecios.query.get_or_404(id)
+    return render_template('partials/_form_edit_lista_precio.html', item=item, entidad='listas_precios')
+
+@bp_configuraciones.route('/htmx/update_lista_precio/<int:id>', methods=['POST'])
+@check_session
+def update_lista_precio(id):
+    item = ListasPrecios.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    item.markup = request.form['markup']
+    db.session.commit()
+    return render_tabla_listas_precios()
+
+# --- HTMX: Tareas ---
+@bp_configuraciones.route('/htmx/add_tarea', methods=['POST'])
+@check_session
+def htmx_add_tarea():
+    nombre_tarea = request.form['tarea']
+    tarea = Tareas(nombre_tarea)
+    db.session.add(tarea)
+    db.session.commit()
+    return render_tabla_tareas()
+
+@bp_configuraciones.route('/htmx/get_tarea/<int:id>', methods=['GET'])
+@check_session
+def get_tarea(id):
+    item = Tareas.query.get_or_404(id)
+    return render_template('partials/_form_edit_tarea.html', item=item, entidad='tareas')
+
+@bp_configuraciones.route('/htmx/update_tarea/<int:id>', methods=['POST'])
+@check_session
+def update_tarea(id):
+    item = Tareas.query.get_or_404(id)
+    item.tarea = request.form['tarea']
+    db.session.commit()
+    return render_tabla_tareas()
+
+# --- HTMX: Plan de Cuentas ---
+@bp_configuraciones.route('/htmx/add_planCta', methods=['POST'])
+@check_session
+def htmx_add_planCta():
+    nombre = request.form['nombre']
+    planCta = PlanCtas(nombre=nombre)
+    db.session.add(planCta)
+    db.session.commit()
+    return render_tabla_plan_ctas()
+
+@bp_configuraciones.route('/htmx/get_planCta/<int:id>', methods=['GET'])
+@check_session
+def get_planCta(id):
+    item = PlanCtas.query.get_or_404(id)
+    return render_template('partials/_form_edit_plan_cta.html', item=item, entidad='plan_ctas')
+
+@bp_configuraciones.route('/htmx/update_planCta/<int:id>', methods=['POST'])
+@check_session
+def update_planCta(id):
+    item = PlanCtas.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    db.session.commit()
+    return render_tabla_plan_ctas()
+
+# --- HTMX: Categorías ---
+@bp_configuraciones.route('/htmx/add_categoria', methods=['POST'])
+@check_session
+def htmx_add_categoria():
+    nombre = request.form['nombre']
+    categoria = Categorias(nombre=nombre)
+    db.session.add(categoria)
+    db.session.commit()
+    return render_tabla_categorias()
+
+@bp_configuraciones.route('/htmx/get_categoria/<int:id>', methods=['GET'])
+@check_session
+def get_categoria(id):
+    item = Categorias.query.get_or_404(id)
+    return render_template('partials/_form_edit_categoria.html', item=item, entidad='categorias')
+
+@bp_configuraciones.route('/htmx/update_categoria/<int:id>', methods=['POST'])
+@check_session
+def update_categoria(id):
+    item = Categorias.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    db.session.commit()
+    return render_tabla_categorias()
+
+# --- HTMX: Monedas y Billetes (con baja lógica) ---
+@bp_configuraciones.route('/htmx/add_monedabillete', methods=['POST'])
+@check_session
+def htmx_add_monedabillete():
+    descripcion = request.form['descripcion']
+    valor = request.form['valor']
+    monedaBillete = MonedasBilletes(descripcion, valor)
+    db.session.add(monedaBillete)
+    db.session.commit()
+    return render_tabla_monedas_billetes()
+
+@bp_configuraciones.route('/htmx/get_monedabillete/<int:id>', methods=['GET'])
+@check_session
+def get_monedabillete(id):
+    item = MonedasBilletes.query.get_or_404(id)
+    return render_template('partials/_form_edit_moneda_billete.html', item=item, entidad='monedas_billetes')
+
+@bp_configuraciones.route('/htmx/update_monedabillete/<int:id>', methods=['POST'])
+@check_session
+def update_monedabillete(id):
+    item = MonedasBilletes.query.get_or_404(id)
+    item.descripcion = request.form['descripcion']
+    item.valor = request.form['valor']
+    db.session.commit()
+    return render_tabla_monedas_billetes()
+
+@bp_configuraciones.route('/htmx/delete_monedabillete/<int:id>', methods=['POST'])
+@check_session
+def delete_monedabillete(id):
+    item = MonedasBilletes.query.get_or_404(id)
+    item.baja = date.today()
+    db.session.commit()
+    return render_tabla_monedas_billetes()
+
+# --- HTMX: Colores ---
+@bp_configuraciones.route('/htmx/add_color', methods=['POST'])
+@check_session
+def htmx_add_color():
+    nombre = request.form['nombre']
+    codColor = request.form['color']
+    color = Colores(nombre, codColor)
+    db.session.add(color)
+    db.session.commit()
+    return render_tabla_colores()
+
+@bp_configuraciones.route('/htmx/get_color/<int:id>', methods=['GET'])
+@check_session
+def get_color(id):
+    item = Colores.query.get_or_404(id)
+    return render_template('partials/_form_edit_color.html', item=item, entidad='colores')
+
+@bp_configuraciones.route('/htmx/update_color/<int:id>', methods=['POST'])
+@check_session
+def update_color(id):
+    item = Colores.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    item.color = request.form['color']
+    db.session.commit()
+    return render_tabla_colores()
+
+# --- HTMX: Detalles de Artículos ---
+@bp_configuraciones.route('/htmx/add_detalle_articulo', methods=['POST'])
+@check_session
+def htmx_add_detalle_articulo():
+    nombre = request.form['nombre']
+    detalle = DetallesArticulos(nombre)
+    db.session.add(detalle)
+    db.session.commit()
+    return render_tabla_detalles_articulos()
+
+@bp_configuraciones.route('/htmx/get_detalle_articulo/<int:id>', methods=['GET'])
+@check_session
+def get_detalle_articulo(id):
+    item = DetallesArticulos.query.get_or_404(id)
+    return render_template('partials/_form_edit_detalle_articulo.html', item=item, entidad='detalles_articulos')
+
+@bp_configuraciones.route('/htmx/update_detalle_articulo/<int:id>', methods=['POST'])
+@check_session
+def update_detalle_articulo(id):
+    item = DetallesArticulos.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    db.session.commit()
+    return render_tabla_detalles_articulos()
+
+# --- HTMX: Tipo IVA ---
+@bp_configuraciones.route('/htmx/get_tipo_iva/<int:id>', methods=['GET'])
+@check_session
+def get_tipo_iva(id):
+    item = TipoIva.query.get_or_404(id)
+    return render_template('partials/_form_edit_tipo_iva.html', item=item, entidad='tipo_ivas')
+
+@bp_configuraciones.route('/htmx/update_tipo_iva/<int:id>', methods=['POST'])
+@check_session
+def update_tipo_iva(id):
+    item = TipoIva.query.get_or_404(id)
+    item.descripcion = request.form['descripcion']
+    item.id_afip = request.form.get('id_afip', 0)
+    db.session.commit()
+    return render_tabla_tipo_ivas()
+
+# --- HTMX: Tipo Documento ---
+@bp_configuraciones.route('/htmx/get_tipo_doc/<int:id>', methods=['GET'])
+@check_session
+def get_tipo_doc(id):
+    item = TipoDocumento.query.get_or_404(id)
+    return render_template('partials/_form_edit_tipo_doc.html', item=item, entidad='tipo_docs')
+
+@bp_configuraciones.route('/htmx/update_tipo_doc/<int:id>', methods=['POST'])
+@check_session
+def update_tipo_doc(id):
+    item = TipoDocumento.query.get_or_404(id)
+    item.nombre = request.form['nombre']
+    item.id_afip = request.form.get('id_afip', 0)
+    db.session.commit()
+    return render_tabla_tipo_docs()
+
+# =============================================================================
+# LÍNEAS DE COMPROBANTES (Cabecera y Pie de Ticket)
+# =============================================================================
+
+@bp_configuraciones.route('/lineas_comprobantes/<int:id_punto_vta>', methods=['GET'])
+@check_session
+def lineas_comprobantes(id_punto_vta):
+    """Obtiene las líneas de comprobantes de un punto de venta"""
+    lineas = get_lineas_comprobantes(id_punto_vta)
+    punto_vta = PuntosVenta.query.get_or_404(id_punto_vta)
+    return render_template('partials/_modal-lineas-comprobantes.html', 
+                          lineas=lineas, 
+                          punto_vta=punto_vta)
+
+@bp_configuraciones.route('/lineas_comprobantes/<int:id_punto_vta>', methods=['POST'])
+@check_session
+def guardar_lineas(id_punto_vta):
+    """Guarda las líneas de comprobantes de un punto de venta"""
+    try:
+        lineas_data = []
+        for i in range(1, 11):
+            texto = request.form.get(f'linea_{i}', '').strip()
+            solo_en_ventas = request.form.get(f'solo_ventas_{i}') == 'on'
+            if texto:  # Solo guardar si tiene texto
+                lineas_data.append({
+                    'idlinea': i,
+                    'texto': texto,
+                    'solo_en_ventas': solo_en_ventas
+                })
+        
+        guardar_lineas_comprobantes(id_punto_vta, lineas_data)
+        return jsonify(success=True, message='Líneas guardadas correctamente')
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+@bp_configuraciones.route('/api/lineas_comprobantes/<int:id_punto_vta>', methods=['GET'])
+@check_session
+def api_lineas_comprobantes(id_punto_vta):
+    """API JSON para obtener las líneas de comprobantes de un punto de venta"""
+    lineas = get_lineas_comprobantes(id_punto_vta)
+    # Convertir a formato para JS: separar cabecera y pie
+    cabecera = []
+    pie = []
+    for i in range(1, 6):
+        if lineas[i]['texto']:
+            cabecera.append({
+                'linea': i,
+                'texto': lineas[i]['texto'],
+                'solo_en_ventas': lineas[i]['solo_en_ventas']
+            })
+    for i in range(6, 11):
+        if lineas[i]['texto']:
+            pie.append({
+                'linea': i,
+                'texto': lineas[i]['texto'],
+                'solo_en_ventas': lineas[i]['solo_en_ventas']
+            })
+    return jsonify(success=True, cabecera=cabecera, pie=pie)

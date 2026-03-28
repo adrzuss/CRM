@@ -112,7 +112,7 @@ def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=Fa
                         actualizoCostos = True
                         articulo.costo = precio_unitario
                     # Actualizar el stock
-                    actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
+                    actualizarStock(id_sucursal, articulo.id, cantidad, 'Compra')
                     actulizarProvByArt(codigo, articulo.id, idproveedor)
         return total, actualizoCostos
     except SQLAlchemyError as e:
@@ -303,7 +303,7 @@ def procesar_itemsR(form, idremito, id_sucursal, idproveedor):
                     )
                     db.session.add(nuevo_item)
                     # Actualizar el stock
-                    actualizarStock(stock.idstock, articulo.id, cantidad, id_sucursal)
+                    actualizarStock(id_sucursal, articulo.id, cantidad)
                     actulizarProvByArt(codigo, articulo.id, idproveedor)
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando items: {e}")

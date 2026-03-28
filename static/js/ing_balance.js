@@ -103,7 +103,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
             // Si se encuentra un articulo por ID, asignarlo directamente
             asignarArticulo(data.articulo, itemDiv);
         } else {
-            alert("No se encontraron articulos con ese ID.");
+            mostrarInfo('No se encontraron artículos con ese ID', 'Sin resultados');
         }
     } else {
         if (data.length > 1) {
@@ -113,7 +113,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
             // Si hay un solo resultado, asignar directamente
             asignarArticuloElegido(data[0], itemDiv);
         } else {
-            alert("No se encontraron articulos con ese detalle.");
+            mostrarInfo('No se encontraron artículos con ese detalle', 'Sin resultados');
         }
     }
 }
@@ -202,7 +202,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
     // Mostrar modal con los datos
     window.universalSearchModal.show('articulos', articulos || [], callback);
 }
-}
+
         
 function removeItem(itemDiv) {
     itemDiv.remove();
@@ -257,19 +257,18 @@ tablaItems.addEventListener("click", (itemDiv) => {
     }
 });
 
-document.getElementById('invoice_form').addEventListener('submit', function(event) {
-    if (document.querySelectorAll('#tabla-items tbody').length === 0) {
-        event.preventDefault();
-        alert('Debe agregar al menos un item al ingreso de balance');
-        event.preventDefault();
+document.getElementById('invoice_form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    if (document.querySelectorAll('#tabla-items tbody tr').length === 0) {
+        mostrarAdvertencia('Debe agregar al menos un item al ingreso de balance', 'Sin items');
         return false;
     } 
     
-    if (confirm('¿Grabar el ingreso de balance?') == false) {
-        event.preventDefault();
-    }
-    else{
+    const confirmado = await confirmar('¿Grabar el ingreso de balance?', 'Confirmar');
+    if (confirmado) {
         isFormSubmited = true;
+        this.submit();
     }
 });
         

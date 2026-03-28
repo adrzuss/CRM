@@ -72,7 +72,7 @@ async function fetchProveedor(input) {
         asignarProveedor(data[0]);
       } else {
         limpiarDatosProveedor();
-        alert("No se encontraron proveedores con ese nombre.");
+        mostrarInfo("No se encontraron proveedores con ese nombre.");
       }
       //document.getElementById("proveedor_nombre").value = "Proveedor no encontrado";
     }
@@ -198,26 +198,27 @@ document.getElementById('idproveedor').addEventListener('blur', function() {
     fetchProveedor(idproveedor);
 });
 
-document.getElementById('invoice_form').addEventListener('submit', function(event) {
+document.getElementById('invoice_form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
     const totalFac = parseFloat(document.getElementById('total').value);
     if (totalFac <= 0) {
-        event.preventDefault();
-        alert('El total debe ser mayor a 0');
+        mostrarAdvertencia('El total debe ser mayor a 0');
         return;
     }   
     
     if (checkTotales() == false){
-        event.preventDefault();
-        alert('Debe ingresar un pago válido');
+        mostrarAdvertencia('Debe ingresar un pago válido');
         return;
     }
 
-    if (confirm('¿Grabar Orden de pago?') == false) {
-        event.preventDefault();
+    const confirmado = await confirmar('¿Grabar Orden de pago?');
+    if (!confirmado) {
+        return;
     }
-    else{
-        isFormSubmited = true;
-    }
+    
+    isFormSubmited = true;
+    this.submit();
 });
  
 function generarCheque(){
@@ -228,23 +229,23 @@ function generarCheque(){
     const diasEntreCheques = parseInt(document.getElementById("diasCheques").value);
 
     if (banco == 0){
-        alert("Debe seleccionar un banco");
+        mostrarAdvertencia("Debe seleccionar un banco");
         return;
     }
     if (!cantCheques || cantCheques == 0){
-        alert("Debe ingresar cantidad de cheques");
+        mostrarAdvertencia("Debe ingresar cantidad de cheques");
         return;
     }
     if (!vtoChequeInput){
-        alert("Debe ingresar fecha de vencimiento");
+        mostrarAdvertencia("Debe ingresar fecha de vencimiento");
         return;
     }
     if (!importeCheques || importeCheques == 0){
-        alert("Debe ingresar importe");
+        mostrarAdvertencia("Debe ingresar importe");
         return;
     }
     if (diasEntreCheques < 1){
-        alert("Debe ingresar dias entre cheques");
+        mostrarAdvertencia("Debe ingresar dias entre cheques");
         return;
     }
 

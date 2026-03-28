@@ -20,7 +20,7 @@
         const tasa_interes = document.getElementById("tasa_interes").value;
         const monto_total = document.getElementById("monto_total").value;
         if (cuotas === null || cuotas === "" || tasa_interes === null || tasa_interes === "" || monto_total === null || monto_total === "") {
-            alert("Faltan datos obligatorios");
+            mostrarAdvertencia("Faltan datos obligatorios");
             return;
         }
         response = await fetch(`${BASE_URL}/creditos/generar_cuotas?cuotas=${cuotas}&&tasa_interes=${tasa_interes}&&monto_total=${monto_total}`);
@@ -54,7 +54,8 @@
         }
     });
 
-    document.getElementById("otorgamiento_form").addEventListener("submit", function (event) {
+    document.getElementById("otorgamiento_form").addEventListener("submit", async function (event) {
+        event.preventDefault();
         let idCliente = document.getElementById("idcliente").value;
         let idPlan = document.getElementById("idplan").value;
         let cuotas = document.getElementById("cuotas").value;
@@ -62,8 +63,9 @@
         let tasa_interes = document.getElementById("tasa_interes").value;
         let fecha_solicitud = document.getElementById("fecha_solicitud").value;
         
-        if (confirm("¿Grabar los datos del crédito?") === false) {
-            event.preventDefault();
+        const confirmado = await confirmar("¿Grabar los datos del crédito?");
+        if (confirmado) {
+            this.submit();
         }
     });
 
@@ -112,7 +114,7 @@
                     }    
                 });
             } else {
-                alert("No se encontraron documentos para este plan");
+                mostrarInfo("No se encontraron documentos para este plan");
             }    
         }    
     };
@@ -168,12 +170,12 @@
                     // Si se encuentra un cliente por ID, asignarlo directamente
                     if (data.cliente.baja == true) {
                     limpiarDatosCliente();
-                    alert("Cliente dado de baja. No puedes facturar a este cliente.");
+                    mostrarAdvertencia("Cliente dado de baja. No puedes facturar a este cliente.");
                     return;
                     }
                     asignarCliente(data.cliente);
                 } else {
-                    alert("No se encontraron clientes con ese ID.");
+                    mostrarInfo("No se encontraron clientes con ese ID.");
                 }
             } else {
             if (data.length > 1) {
@@ -184,7 +186,7 @@
                 asignarCliente(data[0]);
             } else {
                 limpiarDatosCliente
-                alert("No se encontraron clientes con ese nombre.");
+                mostrarInfo("No se encontraron clientes con ese nombre.");
             }
             }
         }  
@@ -237,7 +239,7 @@
 
             if (!response.ok) {
                 limpiarDatosGarante(input);
-                alert("Error en la búsqueda del garante");
+                mostrarError("Error en la búsqueda del garante");
                 return;
             }
             const data = await response.json();
@@ -245,7 +247,7 @@
             if (data.success && data.cliente) {
                 if (data.cliente.baja == true) {
                     limpiarDatosGarante(input);
-                    alert("Garante dado de baja.");
+                    mostrarAdvertencia("Garante dado de baja.");
                     return;
                 }
                 asignarGarante(input, data.cliente);
@@ -258,7 +260,7 @@
                 } else 
                 {
                     limpiarDatosGarante(input);
-                    alert("No se encontró garante.");
+                    mostrarInfo("No se encontró garante.");
                 }    
             }
         } else {
@@ -270,7 +272,7 @@
         idCliente = document.getElementById("idcliente").value;
         if ( idCliente === input.value )  {
             limpiarDatosGarante(input);
-            alert("No puedes asignar como garante al mismo cliente.");
+            mostrarAdvertencia("No puedes asignar como garante al mismo cliente.");
             input.focus();
             return;
         }
@@ -327,7 +329,7 @@
                         planesSeleccionados.appendChild(planesOption);
                     });
                 } else {
-                    alert("No se encontraron planes para este cliente");
+                    mostrarInfo("No se encontraron planes para este cliente");
                     limpiarDatosCliente();
                 }
             } else {

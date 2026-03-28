@@ -1,0 +1,32 @@
+{# Tabla de Categorías - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Lista</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for categoria in categorias %}
+                <tr class="table table-light">
+                    <td>{{ categoria.id }}</td>
+                    <td>{{ categoria.nombre }}</td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_categoria', id=categoria.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

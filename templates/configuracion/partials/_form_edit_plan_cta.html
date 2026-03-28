@@ -1,0 +1,14 @@
+{# Formulario de edición - Plan de Cuentas #}
+<h5 class="mb-3">Editar Plan de Cuentas</h5>
+<form hx-post="{{ url_for('configuraciones.update_planCta', id=item.id) }}" 
+      hx-target="#tabla-plan_ctas" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Cuenta</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

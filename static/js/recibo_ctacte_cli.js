@@ -54,7 +54,7 @@ function checkMovCtaCte() {
         return true;
     }
     else{
-        alert('Faltan datos obligatorios');
+        mostrarAdvertencia('Faltan datos obligatorios');
         return false;
     }
 }
@@ -110,7 +110,7 @@ async function initializePuntoVenta() {
           if (selectedPtoVta) {
             asignarPuntoVenta(selectedPtoVta);
           } else {
-            alert("Debe seleccionar un punto de venta.");
+            mostrarAdvertencia("Debe seleccionar un punto de venta.");
           }
         };
         modalContent.appendChild(confirmButton);
@@ -157,10 +157,10 @@ async function asignarPuntoVenta(idPuntoVenta) {
         idclienteElement.focus();
       }
     } else {
-      alert('Error al asignar el punto de venta: ' + result.message);
+      mostrarError('Error al asignar el punto de venta: ' + result.message);
     }
   } catch (error) {
     console.error('Error al llamar a la API:', error);
-    alert('Ocurrió un error al asignar el punto de venta.');
+    mostrarError('Ocurrió un error al asignar el punto de venta.');
   }
 };

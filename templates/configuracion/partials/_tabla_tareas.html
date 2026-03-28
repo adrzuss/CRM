@@ -1,0 +1,32 @@
+{# Tabla de Tareas - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Lista</th>
+                    <th scope="col">Tarea</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tarea in tareas %}
+                <tr class="table table-light">
+                    <td>{{ tarea.id }}</td>
+                    <td>{{ tarea.tarea }}</td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_tarea', id=tarea.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

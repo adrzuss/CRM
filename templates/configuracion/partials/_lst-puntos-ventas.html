@@ -1,82 +1,73 @@
-<div class="m-3 card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Listado de puntos de ventas por sucursales</h6>
+<div class="pv-table-container">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h5 class="m-0 fw-bold">
+            <i class="fas fa-list me-2"></i>Listado de puntos de venta por sucursales
+        </h5>
+        <span class="pv-badge">{{ puntos_venta|length }} registros</span>
     </div>
     <div class="card-body">
-        <div class='input-group mb-3'>
-            
-        </div>
         <div class="table-responsive">
-            
-            <table class="display table table-bordered table-striped" id="dataTable" width="100%">
-                
-                <thead class="thead-dark">
+            <table class="display table table-bordered table-hover" id="dataTable" width="100%">
+                <thead>
                     <tr>
-                        <th scope="col">#Id</th>
-                        <th scope="col">Pto vta.</th>
+                        <th scope="col" class="text-center" style="width: 60px;">#Id</th>
+                        <th scope="col" class="text-center" style="width: 80px;">Pto Vta</th>
                         <th scope="col">Sucursal</th>
                         {% if session['tipo_iva'] == 1 %}
-                            <th scope="col">Ult. F A</th>
-                            <th scope="col">Ult. NC A</th>
-                            <th scope="col">Ult. ND A</th>
-                            <th scope="col">Ult. F B</th>
-                            <th scope="col">Ult. NC B</th>
-                            <th scope="col">Ult. ND B</th>
+                            <th scope="col" class="text-center">Ult. FA</th>
+                            <th scope="col" class="text-center">Ult. NCA</th>
+                            <th scope="col" class="text-center">Ult. NDA</th>
+                            <th scope="col" class="text-center">Ult. FB</th>
+                            <th scope="col" class="text-center">Ult. NCB</th>
+                            <th scope="col" class="text-center">Ult. NDB</th>
                         {% else %}
-                            <th scope="col">Ult. F C</th>
-                            <th scope="col">Ult. NC C</th>
-                            <th scope="col">Ult. ND C</th>
+                            <th scope="col" class="text-center">Ult. FC</th>
+                            <th scope="col" class="text-center">Ult. NCC</th>
+                            <th scope="col" class="text-center">Ult. NDC</th>
                         {% endif %}
-                        <th scope="col">Ult. Rem X</th>
-                        <th scope="col">Ult. Rec X</th>
-                        <th scope="col" style="width: 15%;">Acciones</th>
+                        <th scope="col" class="text-center">Ult. RemX</th>
+                        <th scope="col" class="text-center">Ult. RecX</th>
+                        <th scope="col" class="text-center" style="width: 100px;">Acciones</th>
                     </tr>
                 </thead>
-                <tfoot class="thead-dark">
-                    <tr>
-                        <th scope="col">#Id</th>
-                        <th scope="col">Pto vta.</th>
-                        <th scope="col">Sucursal</th>
-                        {% if session['tipo_iva'] == 1 %}
-                            <th scope="col">Ult. F A</th>
-                            <th scope="col">Ult. NC A</th>
-                            <th scope="col">Ult. ND A</th>
-                            <th scope="col">Ult. F B</th>
-                            <th scope="col">Ult. NC B</th>
-                            <th scope="col">Ult. ND B</th>
-                        {% else %}
-                            <th scope="col">Ult. F C</th>
-                            <th scope="col">Ult. NC C</th>
-                            <th scope="col">Ult. ND C</th>
-                        {% endif %}
-                        <th scope="col">Ult. Rem X</th>
-                        <th scope="col">Ult. Rec X</th>
-                        <th scope="col">Acciones</th>
-                    </tr>
-                </tfoot>
                 <tbody>
                     {% for punto in puntos_venta %}
-                    <tr class="">
-                        <td scope="row">{{ punto.id }}</td>
-                        <td>{{ punto.punto_vta }}</td>
-                        <td>{{ punto.sucursal.nombre }}</td>
-                        {% if session['tipo_iva'] == 1 %}
-                            <td>{{ punto.ultima_fac_a }}</td>
-                            <td>{{ punto.ultima_nc_a }}</td>
-                            <td>{{ punto.ultima_deb_a }}</td>
-                            <td>{{ punto.ultima_fac_b }}</td>
-                            <td>{{ punto.ultima_nc_b }}</td>
-                            <td>{{ punto.ultima_deb_b }}</td>
-                        {% else %}
-                            <td>{{ punto.ultima_fac_c }}</td>
-                            <td>{{ punto.ultima_nc_c }}</td>
-                            <td>{{ punto.ultima_deb_c }}</td>
-                        {% endif %}
-                        <td>{{ punto.ultimo_rem_x }}</td>
-                        <td>{{ punto.ultimo_rec_x }}</td>
+                    <tr>
+                        <td class="text-center fw-bold">{{ punto.id }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-primary rounded-pill">{{ punto.punto_vta }}</span>
+                        </td>
                         <td>
-                            <a href="{{ url_for('configuraciones.puntos_venta', id=punto.id) }}" class="btn btn-primary">Editar</a>
-                            <a href="#" class="btn btn-peligro">Eliminar</a>
+                            <span class="pv-sucursal-badge">
+                                <i class="fas fa-store me-1"></i>{{ punto.sucursal.nombre }}
+                            </span>
+                        </td>
+                        {% if session['tipo_iva'] == 1 %}
+                            <td class="text-center">{{ punto.ultima_fac_a }}</td>
+                            <td class="text-center">{{ punto.ultima_nc_a }}</td>
+                            <td class="text-center">{{ punto.ultima_deb_a }}</td>
+                            <td class="text-center">{{ punto.ultima_fac_b }}</td>
+                            <td class="text-center">{{ punto.ultima_nc_b }}</td>
+                            <td class="text-center">{{ punto.ultima_deb_b }}</td>
+                        {% else %}
+                            <td class="text-center">{{ punto.ultima_fac_c }}</td>
+                            <td class="text-center">{{ punto.ultima_nc_c }}</td>
+                            <td class="text-center">{{ punto.ultima_deb_c }}</td>
+                        {% endif %}
+                        <td class="text-center">{{ punto.ultimo_rem_x }}</td>
+                        <td class="text-center">{{ punto.ultimo_rec_x }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('configuraciones.puntos_venta', id=punto.id) }}" 
+                               class="btn btn-editar-pv btn-sm" 
+                               title="Editar punto de venta">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-info btn-sm ml-1" 
+                                    title="Configurar líneas de ticket"
+                                    onclick="abrirModalLineas({{ punto.id }}, {{ punto.punto_vta }})">
+                                <i class="fas fa-file-alt"></i>
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -85,5 +76,85 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para configurar líneas de comprobantes -->
+<div class="modal fade" id="modalLineasComprobantes" tabindex="-1" role="dialog" aria-labelledby="modalLineasLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalLineasLabel">
+                    <i class="fas fa-file-alt me-2"></i>Configurar Líneas de Ticket - Punto de Venta: <span id="pvNumero"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalLineasBody">
+                <!-- Contenido cargado dinámicamente -->
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Cargando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let puntoVtaActual = null;
+
+function abrirModalLineas(idPuntoVta, numeroPv) {
+    puntoVtaActual = idPuntoVta;
+    document.getElementById('pvNumero').textContent = numeroPv;
+    
+    // Cargar contenido del modal
+    fetch(`/configuracion/lineas_comprobantes/${idPuntoVta}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('modalLineasBody').innerHTML = html;
+            $('#modalLineasComprobantes').modal('show');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('modalLineasBody').innerHTML = 
+                '<div class="alert alert-danger">Error al cargar las líneas</div>';
+            $('#modalLineasComprobantes').modal('show');
+        });
+}
+
+function guardarLineasComprobantes() {
+    const form = document.getElementById('formLineasComprobantes');
+    const formData = new FormData(form);
+    
+    fetch(`/configuracion/lineas_comprobantes/${puntoVtaActual}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${data.message}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            `;
+            document.getElementById('modalLineasBody').insertBefore(alertDiv, document.getElementById('formLineasComprobantes'));
+            
+            // Cerrar modal después de 1.5 segundos
+            setTimeout(() => {
+                $('#modalLineasComprobantes').modal('hide');
+            }, 1500);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar las líneas');
+    });
+}
+</script>
 
 

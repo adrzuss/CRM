@@ -1,0 +1,208 @@
+{# =============================================================================
+   FORMULARIOS DE EDICIÓN PARA MODAL - GENERADOS DINÁMICAMENTE
+   =============================================================================
+#}
+
+{# Alícuota IVA #}
+{% macro form_alc_iva(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_alc_iva', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="alicuota" class="form-label">Alícuota</label>
+        <input type="number" step="0.01" class="form-control" name="alicuota" id="alicuota" value="{{ item.alicuota }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Alícuota Ingresos Brutos #}
+{% macro form_alc_ib(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_alc_ib', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="alicuota" class="form-label">Alícuota</label>
+        <input type="number" step="0.01" class="form-control" name="alicuota" id="alicuota" value="{{ item.alicuota }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Lista de Precios #}
+{% macro form_lista_precio(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_lista_precio', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="markup" class="form-label">Markup</label>
+        <input type="number" step="0.01" class="form-control" name="markup" id="markup" value="{{ item.markup }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Tarea #}
+{% macro form_tarea(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_tarea', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="tarea" class="form-label">Tarea</label>
+        <input type="text" class="form-control" name="tarea" id="tarea" value="{{ item.tarea }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Plan de Cuentas #}
+{% macro form_plan_cta(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_planCta', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Cuenta</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Categoría #}
+{% macro form_categoria(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_categoria', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Categoría</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Moneda/Billete #}
+{% macro form_moneda_billete(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_monedabillete', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="valor" class="form-label">Valor</label>
+        <input type="number" class="form-control" name="valor" id="valor" value="{{ item.valor }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Color #}
+{% macro form_color(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_color', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="color" class="form-label">Color</label>
+        <input type="color" class="form-control" name="color" id="color" value="{{ item.color }}" style="width: 100px; height: 40px;">
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Detalle de Artículo #}
+{% macro form_detalle_articulo(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_detalle_articulo', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Tipo IVA #}
+{% macro form_tipo_iva(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_tipo_iva', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="id_afip" class="form-label">ID AFIP</label>
+        <input type="number" class="form-control" name="id_afip" id="id_afip" value="{{ item.id_afip }}">
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}
+
+{# Tipo Documento #}
+{% macro form_tipo_doc(item, entidad) %}
+<form hx-post="{{ url_for('configuraciones.update_tipo_doc', id=item.id) }}" 
+      hx-target="#tabla-{{ entidad }}" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="id_afip" class="form-label">ID AFIP</label>
+        <input type="number" class="form-control" name="id_afip" id="id_afip" value="{{ item.id_afip }}">
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>
+{% endmacro %}

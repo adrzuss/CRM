@@ -7,7 +7,7 @@ from models.sessions import Usuarios
 from models.sucursales import Sucursales
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
-                            generar_presupuesto
+                            generar_presupuesto, get_comprobantes_para_nc, get_items_comprobante_venta
 from services.configs import getDatosSucEmpresa, getPosPrinter
 from utils.db import db
 from utils.utils import check_session
@@ -92,8 +92,7 @@ def nueva_venta():
         # return jsonify({'debug': True, 'message': 'Código actualizado OK - v2'}), 200
         try:
             nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
-            flash(f'Factura grabada exitosamente: {nro_comprobante}')
-            #return redirect(url_for('ventas.nueva_venta'))
+            # No usar flash aquí, ya que retornamos JSON y el mensaje se muestra con SweetAlert en el frontend
             return jsonify({
                 'success': True,
                 'message': f'Factura grabada exitosamente: {nro_comprobante}',
@@ -114,6 +113,100 @@ def nueva_venta():
         entidades = EntidadesCred.query.all()
         listas_precio = ListasPrecios.query.all()
         return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/nueva_nota_credito', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def nueva_nota_credito():
+    if request.method == 'POST':
+        # DEBUG: Retorno inmediato para verificar que el código nuevo se ejecuta
+        # return jsonify({'debug': True, 'message': 'Código actualizado OK - v2'}), 200
+        try:
+            nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
+            # No usar flash aquí, ya que retornamos JSON y el mensaje se muestra con SweetAlert en el frontend
+            return jsonify({
+                'success': True,
+                'message': f'Factura grabada exitosamente: {nro_comprobante}',
+                'nro_comprobante': nro_comprobante,
+                'id': id_factura 
+            })
+        except Exception as e:
+            import traceback
+            error_detalle = traceback.format_exc()
+            print(f'Error al procesar nota de crédito: {error_detalle}')  # Log para el servidor
+            return jsonify({
+                'success': False,
+                'message': f'Error al procesar la nota de crédito en servidor: {str(e)}',
+                'error_detalle': error_detalle
+            }), 500
+    if request.method == 'GET':
+        hoy = date.today()
+        entidades = EntidadesCred.query.all()
+        listas_precio = ListasPrecios.query.all()
+        return render_template('nueva_ncredito.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+
+@bp_ventas.route('/buscar_comprobantes_nc', methods=['POST'])
+@check_session
+def buscar_comprobantes_nc():
+    """
+    Endpoint para buscar comprobantes disponibles para generar nota de crédito.
+    Recibe: fecha (date), nro_comprobante (string, opcional)
+    Retorna: Lista de comprobantes encontrados
+    """
+    try:
+        data = request.get_json()
+        fecha = data.get('fecha')
+        nro_comprobante = data.get('nro_comprobante', '')
+        
+        if not fecha:
+            return jsonify({
+                'success': False,
+                'message': 'Debe proporcionar una fecha'
+            }), 400
+        
+        # Buscar comprobantes usando la fecha como desde y hasta
+        comprobantes = get_comprobantes_para_nc(fecha, fecha, nro_comprobante)
+        
+        return jsonify({
+            'success': True,
+            'comprobantes': comprobantes,
+            'cantidad': len(comprobantes)
+        })
+    except Exception as e:
+        import traceback
+        error_detalle = traceback.format_exc()
+        print(f'Error al buscar comprobantes para NC: {error_detalle}')
+        return jsonify({
+            'success': False,
+            'message': f'Error al buscar comprobantes: {str(e)}'
+        }), 500
+
+
+@bp_ventas.route('/get_items_comprobante/<int:idcomprobante>', methods=['GET'])
+@check_session
+def get_items_comprobante(idcomprobante):
+    """
+    Endpoint para obtener los items de un comprobante de venta.
+    Se usa para cargar los artículos cuando se selecciona un comprobante para nota de crédito.
+    """
+    try:
+        items = get_items_comprobante_venta(idcomprobante)
+        
+        return jsonify({
+            'success': True,
+            'items': items,
+            'cantidad': len(items)
+        })
+    except Exception as e:
+        import traceback
+        error_detalle = traceback.format_exc()
+        print(f'Error al obtener items del comprobante: {error_detalle}')
+        return jsonify({
+            'success': False,
+            'message': f'Error al obtener items: {str(e)}'
+        }), 500
+
     
 @bp_ventas.route('/ver_factura_vta/<id>') 
 @check_session
@@ -162,12 +255,10 @@ def facturar_venta(ptovta, idfactura):
             paso = 3
             cae = data.get('result', {}).get('cae')
             nro_cbte = data.get('result', {}).get('nro_cbte')
-            flash(f'Factura {nro_cbte} emitida correctamente. CAE: {cae}')
             paso = 4
-            # Generar PDF
+            # Retornar JSON - el mensaje se muestra con SweetAlert en el frontend
             return {'success': True, 'message': f'Factura {nro_cbte} emitida correctamente. CAE: {cae}', 'nro_comprobante': nro_cbte, 'cae': cae}
         else:
-            flash(f'Ocurrió un error al procesar la venta (1)-({paso}): {data.get("error")}. Status: {statuscode}', 'error')
             return {'success': False, 'message': f'Ocurrió un error al procesar la venta (1)-({paso}): {data.get("error")}. Status: {statuscode}'}
     except Exception as e:
         print(f'Error al generar factura electrónica: {e}')
@@ -194,7 +285,7 @@ def imprimir_factura_vta2(id):
 def obtener_factura(factura_id):
     try:
         # Obtener datos de la factura de tu base de datos
-        print(f'Obteniendo factura: {factura_id}')
+        
         factura, items, pagos = get_factura(factura_id)  
         empresa = getDatosSucEmpresa()  # Implementa esta función
         
@@ -209,6 +300,7 @@ def obtener_factura(factura_id):
                    'cliente_documento': cliente.documento if cliente else '',
                    'cliente_tipo_doc': cliente.id_tipo_doc if cliente else 99,
                    'tipo_comprobante': factura.tipo_comprobante,
+                   'letra_comprobante': factura.letra_comprobante,
                    'id_tipo_comprobante': factura.idtipocomprobante,
                    'total': factura.total,
                    'bonificacion': factura.bonificacion,
@@ -348,6 +440,25 @@ def ventasVendedores():
         ventas = db.session.execute(text("CALL venta_vendedores(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
     return render_template('ventas-vendedores.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_ventas.route('/ventasTipoPago', methods=['GET', 'POST'])
+@check_session
+@alertas_mensajes
+def ventasTipoPago():
+    if request.method == 'GET':
+        desde = date.today()
+        hasta = date.today()
+        porVentas = []
+        porListaPrecio = []
+    if request.method == 'POST':
+        desde = request.form['desde']
+        hasta = request.form['hasta']
+        porVentas = db.session.execute(text("CALL ventas_formas_pago(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+        porListaPrecio = db.session.execute(text("CALL ventas_listas_precios(:desde, :hasta)"),
+                         {'desde': desde, 'hasta': hasta}).fetchall()
+        
+    return render_template('ventas-tipo-pagos.html', porVentas=porVentas, porListaPrecio=porListaPrecio, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
 @bp_ventas.route('/ventasUnVendedor', methods=['GET', 'POST'])
 @check_session

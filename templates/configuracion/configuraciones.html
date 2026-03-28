@@ -2,105 +2,356 @@
 
 {% block body %}
 
+    {# Modal reutilizable para edición #}
+    {% include 'partials/_modal_config_editar.html' %}
+
     <div class="card m-3">
-        <h4 class="m-3">Configuracion general</h4>
+        <h4 class="m-3">Configuración general</h4>
         <div class="card-body">
-            {% include '/partials/_configuracion.html' %}
+            {% include 'partials/_configuracion.html' %}
         </div>    
     </div>
 
+    {# ==================== ALÍCUOTAS IVA ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Alícuotas de IVA</h4>
         <div class="card-body">
-            {% include '/partials/_alicuotas-iva.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de alícuotas</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_alc_iva') }}" 
+                                  hx-target="#tabla-alicuotas_iva" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="descripcion">Descripción</label>
+                                    <input class="form-control" type="text" name="descripcion" id="descripcion_iva" placeholder="Descripción de alícuota" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alicuota">Alícuota</label>
+                                    <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_iva" placeholder="Porcentaje alícuota" required>
+                                </div>    
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-alicuotas_iva">
+                        {% include 'partials/_tabla_alc_iva.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>    
     </div>
 
+    {# ==================== ALÍCUOTAS ING. BRUTOS ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Alícuotas de Ing. Brutos</h4>
         <div class="card-body">
-            {% include '/partials/_alicuotas-ib.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de alícuotas</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_alc_ib') }}" 
+                                  hx-target="#tabla-alicuotas_ib" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="descripcion">Descripción</label>
+                                    <input class="form-control" type="text" name="descripcion" id="descripcion_ib" placeholder="Descripción de alícuota" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alicuota">Alícuota</label>
+                                    <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_ib" placeholder="Porcentaje alícuota" required>
+                                </div>    
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-alicuotas_ib">
+                        {% include 'partials/_tabla_alc_ib.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>    
     </div>
 
+    {# ==================== LISTAS DE PRECIOS ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Listas de precios</h4>
         <div class="card-body">
-            {% include '/partials/_listas-precios.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de listas de precios</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_lista_precio') }}" 
+                                  hx-target="#tabla-listas_precios" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="nombre">Descripción</label>
+                                    <input class="form-control" type="text" name="nombre" id="lista_precio" placeholder="Lista de precio" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="markup">Markup de la lista</label>
+                                    <input class="form-control" type="number" step="0.01" name="markup" id="markup" placeholder="Markup de la lista" required>
+                                </div> 
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-listas_precios">
+                        {% include 'partials/_tabla_listas_precios.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== LISTAS DE TAREAS ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Listas de tareas</h4>
         <div class="card-body">
-            {% include '/partials/_listas-tareas.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de tareas</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_tarea') }}" 
+                                  hx-target="#tabla-tareas" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="tarea">Tarea</label>
+                                    <input class="form-control" type="text" name="tarea" id="tarea" placeholder="Tarea" required>
+                                </div>
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-tareas">
+                        {% include 'partials/_tabla_tareas.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== PLAN DE CUENTAS ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Plan de cuentas</h4>
         <div class="card-body">
-            {% include '/partials/_plan-ctas.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de plan de cuentas</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_planCta') }}" 
+                                  hx-target="#tabla-plan_ctas" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="nombre">Plan cuenta</label>
+                                    <input class="form-control" type="text" name="nombre" id="plan_cta" placeholder="Cuenta" required>
+                                </div>
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-plan_ctas">
+                        {% include 'partials/_tabla_plan_ctas.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== TIPO IVAS Y TIPO DOCUMENTOS ==================== #}
     <div class="card m-3">
         <div class="row">
-            <div class="col-5">
+            <div class="col-6">
                 <h4 class="m-3">Tipo IVAs</h4>
                 <div class="card-body">
-                    {% include '/partials/_lst-ivas.html' %}
+                    <div class="card" id="tabla-tipo_ivas">
+                        {% include 'partials/_tabla_tipo_ivas.html' %}
+                    </div>
                 </div>
             </div>
-            <div class="col-5">
+            <div class="col-6">
                 <h4 class="m-3">Tipo Documentos</h4>
                 <div class="card-body">
-                    {% include '/partials/_lst-documentos.html' %}    
+                    <div class="card" id="tabla-tipo_docs">
+                        {% include 'partials/_tabla_tipo_docs.html' %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    {# ==================== CATEGORÍAS DE CLIENTES ==================== #}
     <div class="card m-3">
-        <h4 class="m-3">Categorias de clientes</h4>
+        <h4 class="m-3">Categorías de clientes</h4>
         <div class="card-body">
-            {% include '/partials/_categorias.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de categorías de clientes</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_categoria') }}" 
+                                  hx-target="#tabla-categorias" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="nombre">Categoría</label>
+                                    <input class="form-control" type="text" name="nombre" id="categoria" placeholder="Nombre de la categoría" required>
+                                </div>
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-categorias">
+                        {% include 'partials/_tabla_categorias.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== MONEDAS Y BILLETES ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Monedas y billetes que se rinden</h4>
         <div class="card-body">
-            {% include '/partials/_monedas-billetes.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de monedas y billetes</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_monedabillete') }}" 
+                                  hx-target="#tabla-monedas_billetes" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="descripcion">Descripción</label>
+                                    <input class="form-control" type="text" name="descripcion" id="descripcion_mb" placeholder="Descripción de la moneda/billete" required>
+                                </div>
+                                <div class="mb-3"> 
+                                    <label for="valor">Valor</label>
+                                    <input class="form-control" type="number" name="valor" id="valor_mb" placeholder="Valor de la moneda/billete" required>
+                                </div>
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-monedas_billetes">
+                        {% include 'partials/_tabla_monedas_billetes.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== COLORES ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Colores</h4>
         <div class="card-body">
-            {% include '/partials/_colores.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de colores</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_color') }}" 
+                                  hx-target="#tabla-colores" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="nombre">Descripción</label>
+                                    <input class="form-control" type="text" name="nombre" id="nombreColor" placeholder="Nombre del color" required>
+                                </div>
+                                <div class="mb-3 col-4">
+                                    <label for="color">Color</label>
+                                    <input class="form-control" type="color" name="color" id="color" placeholder="Color">
+                                </div>    
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-colores">
+                        {% include 'partials/_tabla_colores.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
 
+    {# ==================== DETALLES DE ARTÍCULOS ==================== #}
     <div class="card m-3">
         <h4 class="m-3">Detalle</h4>
         <div class="card-body">
-            {% include '/partials/_detalles-articulos.html' %}
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Ingreso de detalles de artículos</h6>
+                            <form hx-post="{{ url_for('configuraciones.htmx_add_detalle_articulo') }}" 
+                                  hx-target="#tabla-detalles_articulos" 
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="if(event.detail.successful) this.reset()">
+                                <div class="mb-3"> 
+                                    <label for="nombre">Descripción</label>
+                                    <input class="form-control" type="text" name="nombre" id="nombreDetalleArticulo" placeholder="Nombre del detalle del artículo" required>
+                                </div>
+                                <button class="btn btn-exito" type="submit">Grabar</button>
+                            </form>
+                        </div>    
+                    </div>   
+                </div>    
+                <div class="col-md-7">
+                    <div class="card" id="tabla-detalles_articulos">
+                        {% include 'partials/_tabla_detalles_articulos.html' %}
+                    </div>
+                </div>     
+            </div>
         </div>
     </div>
-
 
     <script>
         var slider = document.getElementById("dias_vto_cc");
         var output = document.getElementById("valor");
         document.onload = function() {
-            
-            output.innerHTML = slider.value; // Display the default slider value
+            output.innerHTML = slider.value;
         }    
 
-        // Update the current slider value (each time you drag the slider handle)
         slider.oninput = function() {
             output.innerHTML = this.value;
         }
+        
+        // Cerrar modal después de una actualización exitosa
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.successful && evt.detail.elt.closest('#modal-config-body')) {
+                var modal = bootstrap.Modal.getInstance(document.getElementById('modalConfigEditar'));
+                if (modal) {
+                    modal.hide();
+                }
+            }
+        });
     </script>
 {% endblock %}

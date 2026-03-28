@@ -664,7 +664,7 @@ function generarCheque() {
     const importe = parseFloat(document.getElementById('importeCheques')?.value) || 0;
     
     if (!banco || cantidad <= 0 || !fechaVto || importe <= 0) {
-        alert('Por favor, complete todos los campos para generar cheques.');
+        mostrarAdvertencia('Por favor, complete todos los campos para generar cheques.');
         return;
     }
     
@@ -778,7 +778,7 @@ function agregarValor() {
     const importe = parseFloat(document.getElementById('importeValor')?.value) || 0;
     
     if (!numero || !fechaVto || importe <= 0) {
-        alert('Por favor, complete número, fecha de vencimiento e importe.');
+        mostrarAdvertencia('Por favor, complete número, fecha de vencimiento e importe.');
         return;
     }
     
@@ -874,14 +874,15 @@ function limpiarValores() {
 /**
  * Procesa la transacción (pago/cobro)
  */
-function procesarTransaccion() {
+async function procesarTransaccion() {
     if (!checkTotales()) {
         const diferencia = calcSaldo();
         const mensaje = diferencia > 0 ? 
             `Falta pagar $${diferencia.toFixed(2)}` : 
             `Sobra $${Math.abs(diferencia).toFixed(2)}`;
         
-        if (!confirm(`${mensaje}. ¿Desea continuar de todas formas?`)) {
+        const continuar = await confirmar(`${mensaje}. ¿Desea continuar de todas formas?`);
+        if (!continuar) {
             return false;
         }
     }

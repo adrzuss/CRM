@@ -1,0 +1,34 @@
+{# Tabla de Tipos de Documento - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col"># Doc.</th>
+                    <th scope="col">Documento</th>
+                    <th scope="col"># AFIP</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo_doc in tipo_docs %}
+                <tr class="table table-light">
+                    <td>{{ tipo_doc.id }}</td>
+                    <td>{{ tipo_doc.nombre }}</td>
+                    <td>{{ tipo_doc.id_afip }}</td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_tipo_doc', id=tipo_doc.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

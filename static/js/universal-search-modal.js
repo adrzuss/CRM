@@ -247,6 +247,44 @@ class UniversalSearchModal {
                             ${item.documento ? `<span class="detail-item"><i class="fas fa-id-card"></i>${item.documento}</span>` : ''}
                         </div>
                     </div>`
+            },
+            comprobantes: {
+                title: 'Seleccionar Comprobante',
+                typeName: 'Comprobantes',
+                icon: 'fas fa-file-invoice',
+                badgeClass: 'badge-comprobante',
+                searchFields: ['id', 'cliente', 'tipo_comp', 'total', 'nro_comprobante'],
+                displayTemplate: (item) => {
+                    const total = parseFloat(item.total || 0);
+                    return `
+                    <div class="result-card comprobante-card">
+                        <div class="result-header">
+                            <div class="result-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="result-info">
+                                <h6 class="result-title">${item.tipo_comp} ${item.nro_comprobante || ''}</h6>
+                                <p class="result-subtitle">
+                                    <i class="fas fa-user"></i>
+                                    ${item.cliente || 'Sin cliente'}
+                                </p>
+                            </div>
+                            <div class="result-price">
+                                <span class="price precio-normal">
+                                    $${total.toLocaleString('es-AR', { 
+                                        minimumFractionDigits: 2, 
+                                        maximumFractionDigits: 2 
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <span class="detail-item"><i class="fas fa-hashtag"></i>ID: ${item.id}</span>
+                            <span class="detail-item"><i class="fas fa-receipt"></i>N°: ${item.nro_comprobante || 'N/A'}</span>
+                            <span class="detail-item"><i class="fas fa-file-alt"></i>${item.tipo_comp}</span>
+                        </div>
+                    </div>`
+                }
             }
         };
 
@@ -540,6 +578,16 @@ window.mostrarModalSeleccionGarantes = function(garantes, input, callback) {
     }
     
     window.universalSearchModal.show('garantes', garantes, callback);
+};
+
+window.mostrarModalSeleccionComprobantes = function(comprobantes, callback) {
+    if (!callback) {
+        callback = function(comprobante) {
+            console.log('Comprobante seleccionado:', comprobante);
+        };
+    }
+    
+    window.universalSearchModal.show('comprobantes', comprobantes, callback);
 };
 
 console.log('✅ Sistema Universal de Modal de Búsqueda inicializado');

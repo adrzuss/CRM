@@ -723,35 +723,59 @@ def eliminarComp(idarticulo, idart_comp):
         db.session.commit()    
     return sigueCompuesto
     
-def actualizarStock(idstock, idarticulo, cantidad, idsucursal):
+def actualizarStock(idsucursal, idarticulo, cantidad, tipoMovimiento='Venta'):
     tipoActualizacion = 'Nada'
     try:
         articulo = Articulo.query.get(idarticulo)
-        stock = Stock.query.filter(Stock.idstock == idstock,
-                                   Stock.idsucursal == idsucursal, 
+        stock = Stock.query.filter(Stock.idsucursal == idsucursal, 
                                    Stock.idarticulo == idarticulo).first()
         if articulo.idtipoarticulo == 2: #servico
             cantidad = (cantidad * -1)
-        if stock != None:
-            tipoActualizacion = 'Actualizando'
-            db.session.execute(
-                update(Stock).
-                where(Stock.idstock == idstock, Stock.idsucursal == idsucursal, Stock.idarticulo == idarticulo).
-                values(actual= (stock.actual + cantidad))
-            )
-        else:    
-            tipoActualizacion = 'Insertando'
-            stock = Stock(idarticulo=idarticulo, idsucursal=idsucursal, actual=cantidad, maximo=0, deseable=0)
-            db.session.add(stock)
-        compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
-                                    ArticuloCompuesto.idart_comp,
-                                    ArticuloCompuesto.cantidad,
-                                    ).filter(ArticuloCompuesto.idarticulo == idarticulo).all()
-        for compuesto in compuestos:
-            if cantidad > 0:
-                actualizarStock(idstock, compuesto.idart_comp, compuesto.cantidad, idsucursal)
-            else:
-                actualizarStock(idstock, compuesto.idart_comp, -1*compuesto.cantidad, idsucursal)
+        match tipoMovimiento:
+            case 'Venta':
+                cantidad = cantidad
+            case 'Compra':   
+                cantidad = (cantidad * -1)
+            case 'Balance':
+                cantidad = cantidad
+            case 'NotaCredito':
+                cantidad = (cantidad * -1)
+            case _:
+                cantidad = cantidad
+        
+        if tipoMovimiento == 'Balance':
+            if stock != None:
+                tipoActualizacion = 'Actualizando'
+                db.session.execute(
+                    update(Stock).
+                    where(Stock.idsucursal == idsucursal, Stock.idarticulo == idarticulo).
+                    values(actual= cantidad)
+                )
+            else:    
+                tipoActualizacion = 'Insertando'
+                stock = Stock(idarticulo=idarticulo, idsucursal=idsucursal, actual=cantidad, maximo=0, deseable=0)
+                db.session.add(stock)
+        else:                         
+            if stock != None:
+                tipoActualizacion = 'Actualizando'
+                db.session.execute(
+                    update(Stock).
+                    where(Stock.idsucursal == idsucursal, Stock.idarticulo == idarticulo).
+                    values(actual= (stock.actual + cantidad))
+                )
+            else:    
+                tipoActualizacion = 'Insertando'
+                stock = Stock(idarticulo=idarticulo, idsucursal=idsucursal, actual=cantidad, maximo=0, deseable=0)
+                db.session.add(stock)
+            compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
+                                        ArticuloCompuesto.idart_comp,
+                                        ArticuloCompuesto.cantidad,
+                                        ).filter(ArticuloCompuesto.idarticulo == idarticulo).all()
+            for compuesto in compuestos:
+                if cantidad > 0:
+                    actualizarStock(idsucursal, compuesto.idart_comp, compuesto.cantidad)
+                else:
+                    actualizarStock(idsucursal, compuesto.idart_comp, -1*compuesto.cantidad)
     except Exception as e:
         print(f"Error procesando stock: {e}")
         raise Exception(f"Error al actualizar el stock ({tipoActualizacion}): {e}")
@@ -856,7 +880,7 @@ def procesar_items_balance(form, idbalance, id_sucursal):
                 )
                 db.session.add(nuevo_item)
                 # Actualizar el stock
-                actualizarStock(id_sucursal, articulo.id, cantidad, id_sucursal)
+                actualizarStock(id_sucursal, articulo.id, cantidad)
     
     return total
 
@@ -1213,3 +1237,54 @@ def remitos_mercaderia():
         return cantidad, {'titulo': 'Remitos', 'subtitulo': f'Hay {cantidad} remitos', 'tipo': 'peligro', 'entidad': 'sistema', 'url': '#'}
     else:
         return cantidad, {}
+    
+def get_detalle_articulo(idarticulo):
+    try:
+        result = db.session.execute(text("CALL recalculo_stock(:idarticulo, :sucursal)"),{'idarticulo': idarticulo, 'sucursal': session['id_sucursal']})
+        detalle_art = result.fetchone()
+        result.close()  # Cerrar el cursor para liberar todos los result sets
+        db.session.commit()
+        
+        if not detalle_art:
+            return None
+                
+        return {
+            'alta' : str(detalle_art[0]) if detalle_art[0] else None,
+            'balance' : float(detalle_art[1]) if detalle_art[1] else 0,
+            'remitos_compras' : float(detalle_art[2]) if detalle_art[2] else 0,
+            'compras' : float(detalle_art[3]) if detalle_art[3] else 0,
+            'remitos_ventas' : float(detalle_art[4]) if detalle_art[4] else 0,
+            'credito_ventas' : float(detalle_art[5]) if detalle_art[5] else 0,
+            'ventas' : float(detalle_art[6]) if detalle_art[6] else 0,
+            'salidas_a_sucursales' : float(detalle_art[7]) if detalle_art[7] else 0,
+            'entradas_de_sucursales' : float(detalle_art[8]) if detalle_art[8] else 0,
+            'stock_actual' : float(detalle_art[9]) if detalle_art[9] else 0}
+    except Exception as e:
+        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        return None   
+    
+def get_detalle_full_articulo(idarticulo):
+    try:
+        result = db.session.execute(text("CALL detalle_movimiento_art(:idarticulo, :sucursal)"),{'idarticulo': idarticulo, 'sucursal': session['id_sucursal']})
+        detalle_art = result.fetchall()
+        result.close()  # Cerrar el cursor para liberar todos los result sets
+        db.session.commit()
+        
+        if not detalle_art:
+            return None
+        
+                
+        return {
+            'movimientos': [{
+                'tipo_movimiento': mov[0],
+                'nro_comp': mov[1],
+                'fecha': str(mov[2]) if mov[0] else None,
+                'entradas': float(mov[3]) if mov[3] else 0,
+                'salidas': float(mov[4]) if mov[4] else 0
+            } for mov in detalle_art]
+        }
+        
+        
+    except Exception as e:
+        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        return None   

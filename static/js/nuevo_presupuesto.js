@@ -115,7 +115,7 @@ function saleccionarPtoVta(datos) {
     if (selectedPtoVta) {
       asignarPuntoVenta(selectedPtoVta);
     } else {
-      alert("Debe seleccionar un punto de venta.");
+      mostrarAdvertencia("Debe seleccionar un punto de venta.");
     }
   };
   modalContent.appendChild(confirmButton);
@@ -142,11 +142,11 @@ async function asignarPuntoVenta(idPuntoVenta) {
       ptoVtaElement.innerHTML = `<i class="fas fa-store me-1"></i>Punto de venta: ${idPuntoVenta}`;
       document.getElementById("idcliente").focus();
     } else {
-      alert('Error al asignar el punto de venta: ' + result.message);
+      mostrarError('Error al asignar el punto de venta: ' + result.message);
     }
   } catch (error) {
     console.error('Error al llamar a la API:', error);
-    alert('Ocurrió un error al asignar el punto de venta.');
+    mostrarError('Ocurrió un error al asignar el punto de venta.');
   }
 }
 
@@ -222,12 +222,12 @@ async function fetchCliente(input) {
         // Si se encuentra un cliente por ID, asignarlo directamente
         if (data.cliente.baja == true) {
           limpiarDatosCliente();
-          alert("Cliente dado de baja. No puedes presupuestar a este cliente.");
+          mostrarAdvertencia("Cliente dado de baja. No puedes presupuestar a este cliente.");
           return;
         }
         asignarCliente(data.cliente);
       } else {
-        alert("No se encontraron clientes con ese ID.");
+        mostrarInfo("No se encontraron clientes con ese ID.");
       }
     } else {
       if (data.length > 1) {
@@ -238,7 +238,7 @@ async function fetchCliente(input) {
         asignarCliente(data[0]);
       } else {
         limpiarDatosCliente
-        alert("No se encontraron clientes con ese nombre.");
+        mostrarInfo("No se encontraron clientes con ese nombre.");
       }
     }
   }  
@@ -279,7 +279,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
     const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
     nuevoInputCodigo.value = "";
     nuevoInputCodigo.focus();
-    alert("Error en la búsqueda de artículos");
+    mostrarError("Error en la búsqueda de artículos");
     return;
   }
   //const data = await response.json();
@@ -290,7 +290,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si se encuentra un cliente por ID, asignarlo directamente
       asignarArticulo(data.articulo, itemDiv);
     } else {
-      alert("No se encontraron articulos con ese ID.");
+      mostrarInfo("No se encontraron articulos con ese ID.");
     }
   } else {
     if (data.length > 1) {
@@ -300,7 +300,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
       // Si hay un solo resultado, asignar directamente
       asignarArticuloElegido(data[0], itemDiv);
     } else {
-      alert("No se encontraron articulos con ese detalle.");
+      mostrarInfo("No se encontraron articulos con ese detalle.");
     }
   }
 }
@@ -532,9 +532,10 @@ tablaItems.addEventListener(
 );
 
 // Eliminar fila
-tablaItems.addEventListener("click", (itemDiv) => {
+tablaItems.addEventListener("click", async (itemDiv) => {
   if (itemDiv.target.classList.contains("btn-eliminar") || itemDiv.target.closest('.btn-eliminar')) {
-    if (confirm('¿Está seguro de eliminar este artículo?')) {
+    const confirmado = await confirmar('¿Está seguro de eliminar este artículo?');
+    if (confirmado) {
       itemDiv.target.closest("tr").remove();
       updateTotalFactura();
       
@@ -548,12 +549,13 @@ tablaItems.addEventListener("click", (itemDiv) => {
   }
 });
 
-document.getElementById("invoice_form").addEventListener("submit", function (event) {
+document.getElementById("invoice_form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    
     const itemsRows = document.querySelectorAll("#tabla-items tbody tr");
     
     if (itemsRows.length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un artículo al presupuesto");
+      mostrarAdvertencia("Debe agregar al menos un artículo al presupuesto");
       document.getElementById("agregarArticulo").focus();
       return false;
     }
@@ -572,13 +574,13 @@ document.getElementById("invoice_form").addEventListener("submit", function (eve
     });
     
     if (hasInvalidItems) {
-      event.preventDefault();
-      alert("Hay artículos con datos incompletos. Por favor complete toda la información antes de guardar.");
+      mostrarAdvertencia("Hay artículos con datos incompletos. Por favor complete toda la información antes de guardar.");
       return false;
     }
     
     // Confirmar guardado
-    if (confirm("¿Confirma que desea guardar este presupuesto?")) {
+    const confirmado = await confirmar("¿Confirma que desea guardar este presupuesto?");
+    if (confirmado) {
       isFormSubmited = true;
       // Mostrar indicador de carga
       const submitBtn = document.getElementById("grabarPresupuesto");
@@ -593,8 +595,8 @@ document.getElementById("invoice_form").addEventListener("submit", function (eve
           submitBtn.disabled = false;
         }
       }, 5000);
-    } else {
-      event.preventDefault();
+      
+      this.submit();
     }
   });
 

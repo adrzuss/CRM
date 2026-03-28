@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nueva_venta.css') }}">
+{% endblock %}
+
+{% block body %}
+
+
+<div class="container-fluid">
+    
+    <!-- Header elegante con breadcrumbs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 text-gray-800 mb-1">🧾 Nueva Nota de Crédito</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('ventas.ventas') }}">Ventas</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Nueva Nota de Crédito</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="invoice-number">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-center">
+                            <small class="text-muted d-block">Punto de Venta</small>
+                            <div class="h5 mb-0" id="punto_vta">Cargando...</div>
+                            <input type="hidden" id="ptovta_seleccionado" name="ptovta_seleccionado" value="">
+                            <input type="hidden" id="fac_electronica" name="fac_electronica" value="false">
+                            <input type="hidden" id="pos_printer" name="pos_printer" value="">
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted d-block">Terminal POS</small>
+                            <div class="h6 mb-0" id="posPrinter">{{ session['posPrinter'] or 'N/A' }}</div>
+                            <div class="h6 text-center" id="facElectronica">{{ session['facElectronica'] or '' }}</div>
+                        </div>
+                        <button class="btn btn-action btn-sm" id="cambiar_pto_vta">
+                            <i class="fas fa-exchange-alt"></i>
+                            Cambiar Pto. Vta.
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modals -->
+    {% include 'partials/_modal-busqueda-universal.html' %}
+    {% include 'partials/_modal-seleccion-ptovta.html' %}
+    {% include 'partials/_modal-credito-disponible.html' %}
+    {% include 'partials/_modal-confirmacion-impresion.html' %}
+       
+    
+    <!-- Spinner mejorado -->
+    <div id="spinner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="spinner-overlay">
+            <div class="loader"></div>
+            <h5 class="mt-3 text-primary">Procesando nota de crédito</h5>
+            <p class="text-muted">Por favor espere...</p>
+        </div>
+    </div> 
+    <form id="invoice_form" method="post">
+        <!-- Campos ocultos para los pagos (NC usa idpago=20) -->
+        <input type="hidden" name="efectivo" id="efectivo" value="0">
+        <input type="hidden" name="tarjeta" id="tarjeta" value="0">
+        <input type="hidden" name="cuotas" id="cuotas" value="1">
+        <input type="hidden" name="coeficiente" id="coeficiente" value="1">
+        <input type="hidden" name="documento" id="documento" value="">
+        <input type="hidden" name="telefono" id="telefono" value="">
+        <input type="hidden" name="entidad" id="entidad" value="0">
+        <input type="hidden" name="ctacte" id="ctacte" value="0">
+        <input type="hidden" name="bonificacion" id="bonificacion" value="0">
+        <input type="hidden" name="idcredito" id="idcredito" value="">
+        <input type="hidden" name="credito" id="credito" value="0">
+        <input type="hidden" name="nota_credito" id="nota_credito" value="0">
+        
+        <!-- SECCIÓN 1: Información del Ccomprobante original -->
+        <div class="card modern-card mb-4 fade-in">
+            <div class="card-header2 modern-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-file-invoice fa-lg me-2"></i>
+                    <div>
+                        <h5 class="card-title mb-0">Información del Comprobante Original</h5>
+                        <small class="text-white-50">Datos de la nota de crédito</small>
+                    </div>
+                </div>
+                <div class="status-badge" id="tipo_comprobante_original">
+                    <i class="fas fa-file-invoice"></i>
+                    Tipo de comprobante original: Cargando...
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-lg-2 col-md-3">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="id_comprobante_original" id="id_comprobante_original" readonly placeholder="ID Comprobante Original">
+                            <label for="id_comprobante_original"><i class="fas fa-hashtag me-2"></i>ID Comprobante Original</label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="date" name="fecha_comprobante_original" value="{{ hoy }}" required placeholder="Fecha de Nota de Crédito">
+                            <label for="fecha_comprobante_original"><i class="fas fa-calendar-alt me-2"></i>Fecha del Comprobante Original <span class="text-danger">*</span></label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="nro_comp_original" id="nro_comp_original" required placeholder="Buscar Comp. Original">
+                            <label for="nro_comp_original"><i class="fas fa-search me-2"></i>Buscar Comp. Original <span class="text-danger">*</span></label>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-5">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="cliente_nombre" id="cliente_nombre" readonly placeholder="Nombre del Cliente">
+                            <label for="cliente_nombre"><i class="fas fa-user-tag me-2"></i>Nombre del Cliente</label>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-action btn-sm col-md-2" id="buscar_comprobante_original" onclick="buscarComprobantesParaNC()">
+                            <i class="fas fa-receipt"></i>
+                            Buscar
+                    </button>
+                    <div class="col-lg-4 col-md-5">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="total_comp_original" id="total_comp_original" readonly placeholder="Total del Comprobante Original">
+                            <label for="total_comp_original"><i class="fas fa-dollar-sign me-2" readonly ></i>Total del Comprobante Original</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campo oculto para tipo de comprobante -->
+                <input type="number" name="id_tipo_comprobante_original" id="id_tipo_comprobante_original" hidden>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: Información del Cliente -->
+        <div class="card modern-card mb-4 fade-in">
+            <div class="card-header2 modern-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-user fa-lg me-2"></i>
+                    <div>
+                        <h5 class="card-title mb-0">Información del Cliente</h5>
+                        <small class="text-white-50">Datos de la nota de crédito</small>
+                    </div>
+                </div>
+                <div class="status-badge" id="tipo_comprobante">
+                    <i class="fas fa-file-invoice"></i>
+                    Tipo de nota de crédito: Cargando...
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-lg-2 col-md-3">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="id" id="id" readonly placeholder="ID Cliente">
+                            <label for="id"><i class="fas fa-hashtag me-2"></i>ID Cliente</label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="idcliente" id="idcliente" required placeholder="Buscar Cliente">
+                            <label for="idcliente"><i class="fas fa-search me-2"></i>Buscar Cliente <span class="text-danger">*</span></label>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-5">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="text" name="cliente_nombre" id="cliente_nombre" readonly placeholder="Nombre del Cliente">
+                            <label for="cliente_nombre"><i class="fas fa-user-tag me-2"></i>Nombre del Cliente</label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-floating">
+                            <input class="form-control form-control-modern" type="date" name="fecha" value="{{ hoy }}" required placeholder="Fecha de Nota de Crédito">
+                            <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha de Nota de Crédito <span class="text-danger">*</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-4">
+                        <div class="form-floating">
+                            <select class="form-select form-control-modern" name="idlista" id="idlista">
+                                {% for lista in listas_precio %}
+                                    <option value="{{ lista.id }}" {{ 'selected' if lista.id == 1 else '' }}>
+                                        {{ lista.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <label for="idlista"><i class="fas fa-tags me-2"></i>Lista de Precios</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- Campo oculto para tipo de comprobante -->
+                <input type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: Artículos de la Nota de Crédito -->
+        <div class="card shadow mb-4 fade-in">
+            <div class="section-header2 d-flex justify-content-between align-items-center">
+                <h3>
+                    <i class="fas fa-shopping-cart"></i>
+                    Artículos de la Nota de Crédito
+                </h3>
+                <button class="btn btn-light" type="button" id="agregarArticulo">
+                    <i class="fas fa-plus"></i>
+                    Agregar Artículo (F4)
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabla-items">
+                        <thead>
+                            <tr>
+                                <th class="text-center">#ID</th>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th class="text-right">Precio Unit.</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-right">Total</th>
+                                <th hidden>Oferta</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            <tr id="no-items-row">
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="fas fa-shopping-basket fa-3x text-gray-300 mb-3"></i>
+                                    <h5 class="text-gray-500">No hay artículos agregados</h5>
+                                    <p class="text-muted">Presione "Agregar Artículo" o F4 para comenzar</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>    
+
+        <!-- SECCIÓN 4: Resumen y Acciones -->
+        <div class="row">
+            <!-- Total de la Nota de Crédito -->
+            <div class="col-lg-8">
+                <div class="card shadow mb-4 fade-in border-left-primary">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-3">
+                                        <i class="fas fa-calculator fa-3x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-weight-bold text-primary mb-1">Total de la Nota de Crédito</h4>
+                                        <p class="text-muted mb-0">Suma total de todos los artículos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 text-right">
+                                <div class="total-display" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); color: white; padding: 1.5rem; border-radius: 1rem; text-align: center;">
+                                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;">
+                                        $<span id="totalFacturaDisplay">0.00</span>
+                                    </h2>
+                                    <small>Importe Total</small>
+                                </div>
+                                <input type="number" name="totalFactura" id="totalFactura" step="0.01" value="0" readonly hidden>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botón de Grabar Nota de Crédito -->
+            <div class="col-lg-4">
+                <div class="card shadow mb-4 fade-in border-left-success">
+                    <div class="card-body text-center">
+                        <h5 class="text-success mb-3">
+                            <i class="fas fa-file-invoice"></i>
+                            Finalizar Nota de Crédito
+                        </h5>
+                        <button class="btn btn-success btn-lg btn-block" type="button" id="btnGrabarNC" name="btnGrabarNC" onclick="grabarNotaCredito()">
+                            <i class="fas fa-save"></i>
+                            Grabar Nota de Crédito
+                        </button>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-keyboard"></i>
+                            Atajo: F8
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </form>
+</div>        
+
+    <!-- Modal para selección de colores y detalles -->
+    {% include 'partials/modal-color-detalle.html' %}
+    
+    <!-- Script para sincronización del total -->
+    <script>
+        // Sincronizar el total visual con el input oculto
+        function sincronizarTotal() {
+            const totalInput = document.getElementById('totalFactura');
+            const totalDisplay = document.getElementById('totalFacturaDisplay');
+            const noItemsRow = document.getElementById('no-items-row');
+            const tablaItems = document.getElementById('tabla-items').querySelector('tbody');
+            
+            if (totalInput && totalDisplay) {
+                const valor = parseFloat(totalInput.value) || 0;
+                totalDisplay.textContent = valor.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                // Animación del total
+                totalDisplay.parentElement.classList.add('total-animate');
+                setTimeout(() => {
+                    totalDisplay.parentElement.classList.remove('total-animate');
+                }, 500);
+            }
+            
+            // Mostrar/ocultar fila de "no hay items"
+            if (noItemsRow && tablaItems) {
+                const filas = tablaItems.querySelectorAll('tr:not(#no-items-row)');
+                if (filas.length === 0 || (filas.length === 1 && filas[0].style.display === 'none')) {
+                    noItemsRow.style.display = 'table-row';
+                } else {
+                    noItemsRow.style.display = 'none';
+                }
+            }
+        }
+        
+        // Observer para cambios en el total
+        document.addEventListener('DOMContentLoaded', function() {
+            // Asegurar que el spinner esté oculto al cargar
+            const spinner = document.getElementById('spinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+                spinner.classList.add('hidden');
+            }
+            const totalInput = document.getElementById('totalFactura');
+            if (totalInput) {
+                // Sincronizar al cargar
+                sincronizarTotal();
+                
+                // Observar cambios
+                const observer = new MutationObserver(sincronizarTotal);
+                observer.observe(totalInput, { 
+                    attributes: true, 
+                    attributeFilter: ['value'],
+                    childList: false,
+                    subtree: false 
+                });
+                
+                // También escuchar eventos de input
+                totalInput.addEventListener('input', sincronizarTotal);
+                totalInput.addEventListener('change', sincronizarTotal);
+            }
+            
+            // Observar cambios en la tabla
+            const tablaItems = document.getElementById('tabla-items');
+            if (tablaItems) {
+                const observer = new MutationObserver(sincronizarTotal);
+                observer.observe(tablaItems.querySelector('tbody'), {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        });
+        
+        // Exponer función globalmente para uso en otros scripts
+        window.sincronizarTotal = sincronizarTotal;
+    </script>
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/modal-color-detalle.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/transaction-color-detail-helper.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/nueva_nota_credito.js')}}"></script>
+    
+{% endblock %}

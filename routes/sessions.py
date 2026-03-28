@@ -1,6 +1,7 @@
 from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g, jsonify
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 from models.sucursales import Sucursales
+from models.configs import Configuracion
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from services.configs import get_sucursales
@@ -21,7 +22,10 @@ def login():
             flash('Nombre de usuario y/o contraseña incorrecta')
             return redirect( url_for('sesion.login'))
     else:    
-        return render_template('login.html', sucursales=sucursales)
+        config = Configuracion.query.get(1)
+        empresa = config.nombre_fantasia if config else ''
+        logo = config.logo if config else None
+        return render_template('login.html', sucursales=sucursales, empresa=empresa, logo=logo)
 
 # Esta ruta es para API login, es para ser usada por aplicaciones mobiles o clientes que necesiten autenticarse
 @bp_sesiones.route('/api/login', methods=['POST'])
@@ -94,6 +98,8 @@ def add_user():
 def update_user(id):
     if request.method == 'GET':
         usuario, status_code = get_usuario(id)
+        print('------------------------------------------------------------------------------------------')
+        print(usuario)
         tareas = get_tareas()
         
         # Tareas asignadas a este usuario

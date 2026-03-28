@@ -123,7 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', async function() {
             const idRemito = this.dataset.id;
             
-            if (!confirm('¿Está seguro de enviar este remito? Se descontará del stock actual de esta sucursal.')) {
+            const confirmado = await confirmar('¿Está seguro de enviar este remito? Se descontará del stock actual de esta sucursal.', 'Enviar remito');
+            if (!confirmado) {
                 return;
             }
             
@@ -138,13 +139,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert(data.message);
+                    await mostrarExito(data.message, 'Remito enviado');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    mostrarError(data.message);
                 }
             } catch (error) {
-                alert('Error al enviar el remito');
+                mostrarError('Error al enviar el remito');
                 console.error('Error:', error);
             }
         });
@@ -155,7 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', async function() {
             const idRemito = this.dataset.id;
             
-            if (!confirm('¿Está seguro de controlar y recibir este remito? Los artículos se agregarán al stock actual.')) {
+            const confirmado = await confirmar('¿Está seguro de controlar y recibir este remito? Los artículos se agregarán al stock actual.', 'Recibir remito');
+            if (!confirmado) {
                 return;
             }
             
@@ -170,13 +172,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert(data.message);
+                    await mostrarExito(data.message, 'Remito recibido');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    mostrarError(data.message);
                 }
             } catch (error) {
-                alert('Error al controlar el remito');
+                mostrarError('Error al controlar el remito');
                 console.error('Error:', error);
             }
         });

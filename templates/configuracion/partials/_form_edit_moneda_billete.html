@@ -1,0 +1,18 @@
+{# Formulario de edición - Moneda/Billete #}
+<h5 class="mb-3">Editar Moneda/Billete</h5>
+<form hx-post="{{ url_for('configuraciones.update_monedabillete', id=item.id) }}" 
+      hx-target="#tabla-monedas_billetes" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" class="form-control" name="descripcion" id="descripcion" value="{{ item.descripcion }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="valor" class="form-label">Valor</label>
+        <input type="number" class="form-control" name="valor" id="valor" value="{{ item.valor }}" required>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

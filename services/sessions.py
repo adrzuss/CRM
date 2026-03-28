@@ -35,7 +35,7 @@ def get_usuarios():
 def get_usuario(id):
     try:
         usuario = Usuarios.query.get_or_404(id)
-        return {"usuario": usuario.id, "nombre": usuario.nombre}, 200
+        return {"id": usuario.id, "nombre": usuario.nombre, "usuario": usuario.usuario, "clave": usuario.clave, "documento": usuario.documento, "telefono": usuario.telefono, "mail": usuario.email, "direccion": usuario.direccion}, 200
     except Exception as e:
         print(f'error: {e}')
         return jsonify(success=False, error=str(e)), 404        

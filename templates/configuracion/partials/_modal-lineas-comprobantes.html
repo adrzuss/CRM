@@ -1,0 +1,87 @@
+<form id="formLineasComprobantes">
+    <!-- Sección Cabecera -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white py-2">
+            <h6 class="mb-0"><i class="fas fa-arrow-up me-2"></i>Líneas de Cabecera (1-5)</h6>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Estas líneas aparecerán en la parte superior del ticket, debajo de los datos de la empresa.</p>
+            {% for i in range(1, 6) %}
+            <div class="row mb-2 align-items-center">
+                <div class="col-1">
+                    <span class="badge bg-primary">{{ i }}</span>
+                </div>
+                <div class="col-8">
+                    <input type="text" 
+                           name="linea_{{ i }}" 
+                           class="form-control form-control-sm" 
+                           value="{{ lineas[i].texto }}"
+                           maxlength="50"
+                           placeholder="Línea {{ i }} de cabecera...">
+                </div>
+                <div class="col-3">
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               name="solo_ventas_{{ i }}" 
+                               id="solo_ventas_{{ i }}"
+                               {{ 'checked' if lineas[i].solo_en_ventas else '' }}>
+                        <label class="form-check-label small" for="solo_ventas_{{ i }}">Solo ventas</label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sección Pie -->
+    <div class="card mb-3">
+        <div class="card-header bg-secondary text-white py-2">
+            <h6 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Líneas de Pie (6-10)</h6>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Estas líneas aparecerán en la parte inferior del ticket, después de los totales.</p>
+            {% for i in range(6, 11) %}
+            <div class="row mb-2 align-items-center">
+                <div class="col-1">
+                    <span class="badge bg-secondary">{{ i }}</span>
+                </div>
+                <div class="col-8">
+                    <input type="text" 
+                           name="linea_{{ i }}" 
+                           class="form-control form-control-sm" 
+                           value="{{ lineas[i].texto }}"
+                           maxlength="50"
+                           placeholder="Línea {{ i }} de pie...">
+                </div>
+                <div class="col-3">
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               name="solo_ventas_{{ i }}" 
+                               id="solo_ventas_{{ i }}"
+                               {{ 'checked' if lineas[i].solo_en_ventas else '' }}>
+                        <label class="form-check-label small" for="solo_ventas_{{ i }}">Solo ventas</label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="d-flex justify-content-between">
+        <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Máximo 50 caracteres por línea. Las líneas vacías no se guardarán.
+        </small>
+        <div>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times me-1"></i>Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" onclick="guardarLineasComprobantes()">
+                <i class="fas fa-save me-1"></i>Guardar
+            </button>
+        </div>
+    </div>
+</form>

@@ -79,18 +79,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
  // Validar y guardar
- document.getElementById("form-cambio-precios").addEventListener("submit", function (event) {
-    if (document.querySelectorAll("#tabla-items tbody").length === 0) {
-      event.preventDefault();
-      alert("Debe agregar al menos un item a la factura");
-      event.preventDefault();
+ document.getElementById("form-cambio-precios").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    
+    if (document.querySelectorAll("#tabla-items tbody tr").length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin items',
+        text: 'Debe agregar al menos un item a la factura'
+      });
       return false;
     }
     
-    if (confirm("¿Grabar el cambio de precios?") === false) {
-      event.preventDefault();
-    } else {
+    const result = await Swal.fire({
+      icon: 'question',
+      title: '¿Grabar el cambio de precios?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, grabar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d'
+    });
+    
+    if (result.isConfirmed) {
       isFormSubmited = true;
+      this.submit();
     }
  });
 
@@ -109,12 +122,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const marca = document.getElementById('marca').value;
         const rubro = document.getElementById('rubro').value;
         const listaPrecio = document.getElementById('lista_precio').value;
-        const porcentaje = document.getElementById('porcentaje').value;
+        const porcentaje = parseFloat(document.getElementById('porcentaje').value).toFixed(2);
         if (!listaPrecio) {
-            alert('Seleccione una lista de precios');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Seleccione una lista de precios'
+            });
             return;
-        }else if (!marca && !rubro) {
-            alert('Seleccione una marca y un rubro');
+        } else if (!marca || !rubro) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Seleccione una marca y un rubro'
+            });
             return;
         }
     
@@ -125,13 +146,27 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
             if (data.success) {
                 cargarArticulosEnTabla(data.articulos);
-            }
-            else {
-                alert('Ocurrió un error al cargar los productos ' + data.error);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Artículos cargados',
+                    text: `Se cargaron ${data.articulos.length} artículos`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al cargar los productos: ' + data.error
+                });
             }
         } catch (error) {
             console.error(error);
-            alert('Ocurrió un error al cargar los productos');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al cargar los productos'
+            });
         }
     });
     
@@ -166,7 +201,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } 
         }    
         if (!response.ok) {
-            alert("No se encontraron articulos con ese código/descripción.");
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin resultados',
+                text: 'No se encontraron artículos con ese código/descripción'
+            });
             return;
         }
         //const data = await response.json();
@@ -177,7 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Si se encuentra un cliente por ID, asignarlo directamente
                 asignarArticulo(data.articulo, itemDiv);
             } else {
-                alert("No se encontraron articulos con ese ID.");
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin resultados',
+                    text: 'No se encontraron artículos con ese ID'
+                });
             }
         } else {
             if (data.length > 1) {
@@ -187,7 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Si hay un solo resultado, asignar directamente
                 asignarArticuloElegido(data[0], itemDiv);
             } else {
-                alert("No se encontraron articulos con ese detalle.");
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin resultados',
+                    text: 'No se encontraron artículos con ese detalle'
+                });
             }
         }
     }

@@ -29,7 +29,7 @@ function configurarMetodosPago(metodosPermitidos = [], razon = '') {
     console.log('🎯 [CONTROL] Configurando métodos de pago:', metodosPermitidos);
     if (razon) console.log('🎯 [CONTROL] Razón:', razon);
     
-    const todosLosMetodos = ['efectivo', 'tarjetas', 'ctacte', 'credito', 'bonificacion', 'cheques', 'valores'];
+    const todosLosMetodos = ['efectivo', 'tarjetas', 'ctacte', 'credito', 'bonificacion', 'vales', 'cheques', 'valores'];
     
     todosLosMetodos.forEach(metodo => {
         const tab = document.getElementById(`${metodo}-tab`);
@@ -124,6 +124,7 @@ function limpiarMetodoPago(metodo) {
         ctacte: ['ctacte'],
         credito: ['credito'],
         bonificacion: ['bonificacion'],
+        vales: ['nro_vale', 'cliente_vale', 'fecha_vale', 'vale', 'id_vale_comprobante'],
         cheques: ['cantCheques', 'fechaEmision', 'vtoCheque', 'diasCheques', 'importeCheques'],
         valores: ['tipoValor', 'numeroValor', 'bancoValor', 'fechaEmisionValor', 'fechaVtoValor', 'importeValor']
     };
@@ -147,6 +148,14 @@ function limpiarMetodoPago(metodo) {
         const tbody = document.getElementById('valores');
         if (tbody) tbody.innerHTML = '';
         actualizarTotalValores();
+    }
+    
+    // Limpiar mensajes de vales
+    if (metodo === 'vales') {
+        const infoDiv = document.getElementById('vale-info');
+        if (infoDiv) infoDiv.style.display = 'none';
+        const warningDiv = document.getElementById('vale-warning');
+        if (warningDiv) warningDiv.style.display = 'none';
     }
 }
 
@@ -329,15 +338,16 @@ function calcSaldo() {
     const ctacte = parseFloat(document.getElementById('ctacte')?.value) || 0;
     const credito = parseFloat(document.getElementById('credito')?.value) || 0;
     const bonificacion = parseFloat(document.getElementById('bonificacion')?.value) || 0;
+    const vale = parseFloat(document.getElementById('vale')?.value) || 0;
     
-    console.log('💰 Valores de pago:', {efectivo, tarjeta, ctacte, credito, bonificacion});
+    console.log('💰 Valores de pago:', {efectivo, tarjeta, ctacte, credito, bonificacion, vale});
     
     // Totales de cheques y valores (calculados dinámicamente)
     const totalCheques = parseFloat(document.getElementById('totalCheques')?.textContent.replace(/[^0-9.-]/g, '')) || 0;
     const totalValores = parseFloat(document.getElementById('totalValores')?.textContent.replace(/[^0-9.-]/g, '')) || 0;
     
-    // Calcular total pagado/cobrado
-    let totalPagado = efectivo + ctacte + credito + bonificacion + totalCheques + totalValores;
+    // Calcular total pagado/cobrado (incluye vales)
+    let totalPagado = efectivo + ctacte + credito + bonificacion + vale + totalCheques + totalValores;
     
     // CRÍTICO: Para el SALDO, debemos calcular cuánto se paga REALMENTE de la deuda
     // Si pagas $7,500 con tarjeta pero $2,500 son intereses, solo $5,000 van a la deuda
@@ -868,6 +878,150 @@ function limpiarValores() {
 }
 
 // ================================================================
+//                    VALES (NOTAS DE CRÉDITO)
+// ================================================================
+
+/**
+ * Busca un vale por número de comprobante
+ * El vale es una nota de crédito que se puede usar como medio de pago
+ */
+async function buscarVale() {
+    const nroVale = document.getElementById('nro_vale')?.value?.trim();
+    
+    if (!nroVale) {
+        mostrarAdvertenciaModal('Debe ingresar el número del vale');
+        document.getElementById('nro_vale')?.focus();
+        return;
+    }
+    
+    // Validar formato básico (0000-00000000)
+    if (nroVale.length < 5 || !nroVale.includes('-')) {
+        mostrarAdvertenciaModal('El formato del vale debe ser 0000-00000000');
+        document.getElementById('nro_vale')?.focus();
+        return;
+    }
+    
+    console.log('🎫 [VALES] Buscando vale:', nroVale);
+    
+    try {
+        const response = await fetch(`${BASE_URL}/ventas/buscar_vale`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nro_comprobante: nroVale })
+        });
+        
+        const data = await response.json();
+        
+        console.log('🎫 [VALES] Respuesta HTTP:', response.status, response.statusText);
+        console.log('🎫 [VALES] Respuesta del servidor:', data);
+
+        if (data.success && data.vale) {
+            const vale = data.vale;
+            console.log('✅ [VALES] Vale encontrado:', vale);
+            
+            // Llenar campos del vale
+            document.getElementById('cliente_vale').value = vale.cliente || '';
+            document.getElementById('fecha_vale').value = vale.fecha || '';
+            document.getElementById('vale').value = vale.total || 0;
+            document.getElementById('id_vale_comprobante').value = vale.id_comprobante || '';
+            
+            // Mostrar info
+            const infoDiv = document.getElementById('vale-info');
+            const infoText = document.getElementById('vale-info-text');
+            if (infoDiv && infoText) {
+                infoText.textContent = `Vale válido - Cliente: ${vale.cliente} - Importe: $${vale.total.toFixed(2)}`;
+                infoDiv.style.display = 'block';
+            }
+            
+            // Ocultar warning
+            const warningDiv = document.getElementById('vale-warning');
+            if (warningDiv) warningDiv.style.display = 'none';
+            
+            // Recalcular saldo
+            calcSaldo();
+            
+        } else {
+            console.warn('⚠️ [VALES] Vale no encontrado o no disponible');
+            
+            // Limpiar campos
+            limpiarVale();
+            
+            // Mostrar warning
+            const warningDiv = document.getElementById('vale-warning');
+            const warningText = document.getElementById('vale-warning-text');
+            if (warningDiv && warningText) {
+                warningText.textContent = data.message || 'Vale no encontrado o ya fue utilizado';
+                warningDiv.style.display = 'block';
+            }
+            
+            // Ocultar info
+            const infoDiv = document.getElementById('vale-info');
+            if (infoDiv) infoDiv.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('❌ [VALES] Error al buscar vale:', error);
+        mostrarErrorModal('Error al buscar el vale');
+    }
+}
+
+/**
+ * Limpia los campos del vale
+ */
+function limpiarVale() {
+    document.getElementById('nro_vale').value = '';
+    document.getElementById('cliente_vale').value = '';
+    document.getElementById('fecha_vale').value = '';
+    document.getElementById('vale').value = '0';
+    document.getElementById('id_vale_comprobante').value = '';
+    
+    const infoDiv = document.getElementById('vale-info');
+    if (infoDiv) infoDiv.style.display = 'none';
+    
+    const warningDiv = document.getElementById('vale-warning');
+    if (warningDiv) warningDiv.style.display = 'none';
+    
+    calcSaldo();
+}
+
+/**
+ * Muestra advertencia dentro del modal
+ */
+function mostrarAdvertenciaModal(mensaje) {
+    // Usar SweetAlert si está disponible
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: mensaje,
+            confirmButtonText: 'Entendido'
+        });
+    } else if (typeof mostrarAdvertencia !== 'undefined') {
+        mostrarAdvertencia(mensaje);
+    } else {
+        alert(mensaje);
+    }
+}
+
+/**
+ * Muestra error dentro del modal
+ */
+function mostrarErrorModal(mensaje) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: mensaje,
+            confirmButtonText: 'Cerrar'
+        });
+    } else if (typeof mostrarError !== 'undefined') {
+        mostrarError(mensaje);
+    } else {
+        alert(mensaje);
+    }
+}
+
+// ================================================================
 //                    PROCESAMIENTO DE TRANSACCIÓN
 // ================================================================
 
@@ -987,7 +1141,7 @@ function handlePaymentFieldChange(event) {
  * Función para depurar event listeners duplicados
  */
 function debugEventListeners() {
-    const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion'];
+    const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion', 'vale'];
     
     paymentFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
@@ -1062,7 +1216,7 @@ function cargarDatosModal(totalFactura = 0) {
     }
     
     // Configurar event listeners para calcular saldo automáticamente
-    const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion'];
+    const paymentFields = ['efectivo', 'tarjeta', 'ctacte', 'credito', 'bonificacion', 'vale'];
     
     // Esperar un momento para asegurar que el DOM esté listo
     setTimeout(() => {
@@ -1238,6 +1392,9 @@ document.addEventListener('keydown', function(event) {
             case 'b':
                 document.getElementById('bonificacion-tab')?.click();
                 break;
+            case 'l':
+                document.getElementById('vales-tab')?.click();
+                break;
             case 'q':
                 document.getElementById('cheques-tab')?.click();
                 break;
@@ -1262,6 +1419,8 @@ window.eliminarCheque = eliminarCheque;
 window.agregarValor = agregarValor;
 window.limpiarValores = limpiarValores;
 window.eliminarValor = eliminarValor;
+window.buscarVale = buscarVale;
+window.limpiarVale = limpiarVale;
 window.procesarTransaccion = procesarTransaccion;
 window.cargarDatosModal = cargarDatosModal;
 window.debugEventListeners = debugEventListeners;

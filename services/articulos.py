@@ -742,7 +742,6 @@ def actualizarStock(idsucursal, idarticulo, cantidad, tipoMovimiento='Venta'):
                 cantidad = (cantidad * -1)
             case _:
                 cantidad = cantidad
-        
         if tipoMovimiento == 'Balance':
             if stock != None:
                 tipoActualizacion = 'Actualizando'

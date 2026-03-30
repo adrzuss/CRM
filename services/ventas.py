@@ -323,6 +323,9 @@ def procesar_nueva_venta(form, id_sucursal):
         idRemito = form.get('idRemito', None)
         totalFactura = float(form.get('totalFactura', None))
         descuento = bonificacion * 100 / totalFactura
+        #Obtener datos del vale
+        idVale = form.get('id_vale_comprobante', None)
+        vale = form.get('vale', None)
         #Obtener nuemero de comprobante
         nro_comprobante = getNroComprobante(id_tipo_comprobante)
         discrimina = discrimina_iva(id_tipo_comprobante)
@@ -362,7 +365,7 @@ def procesar_nueva_venta(form, id_sucursal):
         nueva_factura.exento = total_exento 
         nueva_factura.impint = total_impint
         # Registrar los pagos
-        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito)
+        procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito, idVale, vale )
         #Grabo el comprobante original si es una nota de crédito
         if id_comprobante_original:
             procesar_nueva_nc(idfactura, id_comprobante_original)
@@ -502,7 +505,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento, id_tipo_
                     total_impint += impint
 
                     # Actualizar el stock
-                    if id_tipo_comprobante in [1, 2, 3, 10, 11, 12]: # Solo actualizamos stock para facturas A, B y C
+                    if int(id_tipo_comprobante) in [1, 2, 3, 10, 11, 12]: # Solo actualizamos stock para facturas A, B y C
                         tipoMovimiento = 'Venta'
                     else:
                         tipoMovimiento = 'NotaCredito'    
@@ -512,7 +515,7 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento, id_tipo_
     
     return total, total_neto, total_bonificacion, total_iva, total_exento, total_impint
 
-def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito):
+def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entidad, cuotas, coeficiente, documento, telefono, ctacte, bonificacion, idcredito, credito, nota_credito, id_vale, vale):
     #Calculamos el total de pagos para calcular si hay vuelto
     #El vuelto solo impacta en el total del efectivo
     
@@ -553,6 +556,8 @@ def procesar_pagos(idfactura, idcliente, fecha, total, efectivo, tarjeta, entida
                 credito.fecha_inicio = datetime.now()
         if nota_credito and Decimal(nota_credito) > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=20, tipo=20, entidad=0, total=-1*Decimal(nota_credito)))
+        if id_vale and Decimal(vale) > 0:
+            db.session.add(PagosFV(idfactura=idfactura, idpago=21, tipo=21, entidad=0, total=Decimal(vale)))    
         #Si hay vuelto lo registramos        
         if (totalPagos) > 0:
             db.session.add(PagosFV(idfactura=idfactura, idpago=99, tipo=1, entidad=0, total=Decimal(totalPagos)))
@@ -1425,5 +1430,42 @@ def get_items_comprobante_venta(idcomprobante):
     except Exception as e:
         print(f"Error al obtener items del comprobante: {e}")
         return []
+
+
+def get_vale_disponible(nro_comprobante):
+    """
+    Busca un vale (nota de crédito) disponible para usar como medio de pago.
+    Llama al procedimiento almacenado vales_disponibles.
+    
+    El número de comprobante tiene formato 0000-00000000
+    
+    Args:
+        nro_comprobante: Número del vale/nota de crédito a buscar
+    
+    Returns:
+        Diccionario con los datos del vale si está disponible, None si no existe o ya fue usado
+        Campos: id_comprobante, nro_comprobante, fecha, total, cliente
+    """
+    try:
+        resultado = db.session.execute(
+            text("CALL vales_disponibles(:nro_comprobante)"),
+            {'nro_comprobante': nro_comprobante}
+        ).fetchall()
+        db.session.commit()  # Asegurar que se liberen los locks del SP
+        if resultado:
+            print(f"Vale encontrado: {resultado[0].nro_comprobante} - Total: {resultado[0].total} - Cliente: {resultado[0].nombre}")
+            return {
+                'id_comprobante': resultado[0].id_comprobante,
+                'nro_comprobante': resultado[0].nro_comprobante,
+                'fecha': str(resultado[0].fecha) if resultado[0].fecha else '',
+                'total': float(resultado[0].total) if resultado[0].total else 0,
+                'cliente': resultado[0].nombre
+            }
+        print(f"No se encontró un vale disponible con número: {nro_comprobante}")
+        return None
+    except Exception as e:
+        print(f"Error al buscar vale disponible: {e}")
+        return None
+
 
 #----------------- fin notas de credito ------------------#

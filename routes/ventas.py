@@ -7,7 +7,7 @@ from models.sessions import Usuarios
 from models.sucursales import Sucursales
 from services.ventas import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
-                            generar_presupuesto, get_comprobantes_para_nc, get_items_comprobante_venta
+                            generar_presupuesto, get_comprobantes_para_nc, get_items_comprobante_venta, get_vale_disponible
 from services.configs import getDatosSucEmpresa, getPosPrinter
 from utils.db import db
 from utils.utils import check_session
@@ -205,6 +205,48 @@ def get_items_comprobante(idcomprobante):
         return jsonify({
             'success': False,
             'message': f'Error al obtener items: {str(e)}'
+        }), 500
+
+
+@bp_ventas.route('/buscar_vale', methods=['POST'])
+@check_session
+def buscar_vale():
+    """
+    Endpoint para buscar un vale (nota de crédito) disponible para usar como medio de pago.
+    Recibe: nro_comprobante (string, formato 0000-00000000)
+    Retorna: Datos del vale si está disponible
+    """
+    try:
+        data = request.get_json()
+        nro_comprobante = data.get('nro_comprobante', '')
+        
+        if not nro_comprobante:
+            return jsonify({
+                'success': False,
+                'message': 'Debe proporcionar el número de comprobante del vale'
+            }), 400
+        
+        vale = get_vale_disponible(nro_comprobante)
+        
+        print(f'Búsqueda de vale para nro_comprobante "{nro_comprobante}": {"Encontrado" if vale else "No encontrado"}')
+        
+        if vale:
+            return jsonify({
+                'success': True,
+                'vale': vale
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'No se encontró un vale disponible con ese número de comprobante'
+            })
+    except Exception as e:
+        import traceback
+        error_detalle = traceback.format_exc()
+        print(f'Error al buscar vale: {error_detalle}')
+        return jsonify({
+            'success': False,
+            'message': f'Error al buscar vale: {str(e)}'
         }), 500
 
     

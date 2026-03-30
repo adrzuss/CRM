@@ -68,7 +68,7 @@
 
 {% set context_config = {
     'venta': {
-        'methods': ['efectivo', 'tarjetas', 'ctacte', 'credito', 'bonificacion', 'valores'],
+        'methods': ['efectivo', 'tarjetas', 'ctacte', 'credito', 'bonificacion', 'vales', 'valores'],
         'color': 'primary',
         'icon': '💰'
     },
@@ -186,6 +186,19 @@
                                     <span class="payment-shortcut">B</span>onificación
                                 </div>
                                 <small class="payment-hint">Alt + B</small>
+                            </button>
+                        </li>
+                        {% endif %}
+
+                        <!-- Vales (notas de crédito como medio de pago) -->
+                        {% if 'vales' in available_methods %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link payment-tab" id="vales-tab" data-bs-toggle="tab" data-bs-target="#pago-vales" type="button" role="tab" aria-controls="pago-vales" aria-selected="false">
+                                <div class="payment-icon">🎫</div>
+                                <div class="payment-label">
+                                    Va<span class="payment-shortcut">l</span>es
+                                </div>
+                                <small class="payment-hint">Alt + L</small>
                             </button>
                         </li>
                         {% endif %}
@@ -421,6 +434,78 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- TAB VALES (notas de crédito como medio de pago) -->
+                        {% if 'vales' in available_methods %}
+                        <div class="tab-pane fade" id="pago-vales" role="tabpanel" aria-labelledby="vales-tab" tabindex="0">
+                            <div class="payment-card">
+                                <div class="payment-card-header">
+                                    <h5 class="payment-card-title">🎫 Vales (Notas de Crédito)</h5>
+                                    <p class="payment-card-subtitle">Utilice una nota de crédito como medio de pago</p>
+                                </div>
+                                <div class="payment-card-body">
+                                    <div class="row">
+                                        <div class="col-12 col-md-4">
+                                            <div class="form-group">
+                                                <label for="nro_vale" class="form-label">Nro. de Vale</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="nro_vale" id="nro_vale" 
+                                                           class="form-control" 
+                                                           placeholder="0000-00000000"
+                                                           maxlength="13"
+                                                           onfocus="this.select()">
+                                                    <button class="btn btn-primary" type="button" id="btnBuscarVale" onclick="buscarVale()">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="form-group">
+                                                <label for="cliente_vale" class="form-label">Cliente</label>
+                                                <input type="text" name="cliente_vale" id="cliente_vale" 
+                                                       class="form-control" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <div class="form-group">
+                                                <label for="fecha_vale" class="form-label">Fecha</label>
+                                                <input type="text" name="fecha_vale" id="fecha_vale" 
+                                                       class="form-control" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <div class="form-group">
+                                                <label for="vale" class="form-label">Importe Vale</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">$</span>
+                                                    </div>
+                                                    <input type="number" name="vale" id="vale" 
+                                                           class="form-control text-dos-bold text-success" 
+                                                           step="0.01" value="0" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <div class="alert alert-info mb-0" id="vale-info" style="display: none;">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <span id="vale-info-text"></span>
+                                            </div>
+                                            <div class="alert alert-warning mb-0" id="vale-warning" style="display: none;">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                <span id="vale-warning-text"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Campo oculto para guardar el id del comprobante de la NC -->
+                                    <input type="hidden" name="id_vale_comprobante" id="id_vale_comprobante" value="">
                                 </div>
                             </div>
                         </div>

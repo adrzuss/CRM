@@ -757,7 +757,7 @@ def ventas_desde_hasta(desde, hasta):
                                 TipoComprobantes.nombre.label('tipo_comprobante')
                                 ).join(Clientes, Factura.idcliente == Clientes.id 
                                 ).join(TipoComprobantes, Factura.idtipocomprobante == TipoComprobantes.id
-                                ).filter(Factura.fecha >= desde, Factura.fecha <= hasta).order_by(Factura.id.desc()).all()
+                                ).filter(Factura.fecha >= desde, Factura.fecha <= hasta, Factura.idsucursal == session['id_sucursal']).order_by(Factura.id.desc()).all()
         return ventas                        
     except Exception as e:
         print(f'error: {e}')

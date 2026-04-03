@@ -495,10 +495,10 @@ def ventasTipoPago():
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
-        porVentas = db.session.execute(text("CALL ventas_formas_pago(:desde, :hasta)"),
-                         {'desde': desde, 'hasta': hasta}).fetchall()
-        porListaPrecio = db.session.execute(text("CALL ventas_listas_precios(:desde, :hasta)"),
-                         {'desde': desde, 'hasta': hasta}).fetchall()
+        porVentas = db.session.execute(text("CALL ventas_formas_pago(:desde, :hasta, :id_sucursal)"),
+                         {'desde': desde, 'hasta': hasta, 'id_sucursal': session['id_sucursal']}).fetchall()
+        porListaPrecio = db.session.execute(text("CALL ventas_listas_precios(:desde, :hasta, :id_sucursal)"),
+                         {'desde': desde, 'hasta': hasta, 'id_sucursal': session['id_sucursal']}).fetchall()
         
     return render_template('ventas-tipo-pagos.html', porVentas=porVentas, porListaPrecio=porListaPrecio, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 

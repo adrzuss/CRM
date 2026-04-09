@@ -30,8 +30,8 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
     FE_FILES_FOLDER = 'cert_fe'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Tamaño máximo de archivo de 16MB
-    # Duración de la sesión (30 minutos)
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    # Duración de la sesión (120 minutos)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=int(os.getenv('SESSION_LIFETIME', 120)))
     SESSION_COOKIE_SECURE = os.getenv('FLASK_ENV') == 'production' # Para HTTPS
     SESSION_COOKIE_HTTPONLY = True  # Protege de ataques XSS
     SESSION_COOKIE_SAMESITE = 'Lax'  # Protege de ataques CSRF

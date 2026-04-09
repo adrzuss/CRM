@@ -2492,6 +2492,14 @@ Specificity: (0,1,0)
   color: #fff;
 }
 
+/* Badge danger pastel - para NC asociadas y estados negativos */
+.badge-danger {
+  background: linear-gradient(135deg, #ffebee 0%, #fff5f5 100%) !important;
+  color: #c62828 !important;
+  font-weight: 600;
+  border: 1px solid #ffcdd2;
+}
+
 /* Ajuste para el dropdown de alertas */
 .menu-alertas-pos {
   left: -180px !important;

@@ -259,6 +259,7 @@ class RendicionesCaja(db.Model):
     idtipo_rendicion = db.Column(db.Integer, db.ForeignKey('tipo_rendiciones.id'), nullable=False)
     total_ventas = db.Column(db.Numeric(20,6), nullable=False, default=0)
     total_efectivo = db.Column(db.Numeric(20,6), nullable=False, default=0)
+    total_otros_valores = db.Column(db.Numeric(20,6), nullable=False, default=0)
 
     def __init__(self, fecha, idusuario, idpunto_vta, idsucursal, idtipo_rendicion, total_ventas, total_efectivo):
         self.fecha = fecha

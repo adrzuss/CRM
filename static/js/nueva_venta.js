@@ -275,16 +275,20 @@ function abrirModalPagos(){
     return;
   }
   
+  // Verificar que el total sea mayor a cero
+  const totalElement = document.getElementById('totalFactura');
+  const totalFactura = parseFloat(totalElement?.value || totalElement?.textContent || 0);
+  if (totalFactura <= 0) {
+    mostrarAdvertencia("El total de la venta debe ser mayor a cero.");
+    return;
+  }
+  
   //Calcular ofertas de cierre
   calcularOfetasDeCierre();
   
-  // Configurar total antes de abrir modal
-  const totalElement = document.getElementById('totalFactura');
-  const totalFactura = totalElement ? (totalElement.value || totalElement.textContent) : '0';
-  
   // Usar la función universal cargarDatosModal
   if (window.cargarDatosModal) {
-    window.cargarDatosModal(parseFloat(totalFactura) || 0);
+    window.cargarDatosModal(totalFactura);
   } else {
     console.error('❌ cargarDatosModal no está disponible');
   }

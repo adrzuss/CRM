@@ -218,6 +218,7 @@
                                 <th class="text-center"><i class="fas fa-hashtag me-1"></i>Número</th>
                                 <th class="text-center"><i class="fas fa-dollar-sign me-1"></i>Total</th>
                                 <th class="text-center"><i class="fas fa-certificate me-1"></i>CAE</th>
+                                <th class="text-center"><i class="fas fa-stamp me-1"></i>NC</th>
                                 <th class="text-center"><i class="fas fa-cogs me-1"></i>Acciones</th>
                             </tr>
                         </thead>
@@ -271,6 +272,18 @@
                                                 <i class="fas fa-check me-1"></i>Válido
                                             </span>
                                         {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if factura.id_nc %}
+                                            <span class="badge badge-danger" title="Factura tiene Nota de Crédito asociada">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>NC Asociada
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Sin NC
+                                            </span>
+                                        {% endif %}
+
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">

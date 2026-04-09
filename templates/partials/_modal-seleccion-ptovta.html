@@ -1,12 +1,13 @@
 <!-- Modal de Selección de Punto de Venta -->
-<div class="modal fade" id="ptovtaModal" tabindex="-1" aria-labelledby="ptovtaModalLabel" aria-hidden="true">
+<!-- backdrop="static" y keyboard="false" evitan cerrar sin seleccionar -->
+<div class="modal fade" id="ptovtaModal" tabindex="-1" aria-labelledby="ptovtaModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="ptovtaModalLabel">
                     <i class="fas fa-store me-2"></i>Selección de Punto de Venta
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <!-- Sin botón de cerrar - el usuario debe seleccionar un punto de venta -->
             </div>
             <div class="modal-body" id="modalContentPtoVta">
                 <!-- Aquí se mostrarán las opciones de puntos de venta -->

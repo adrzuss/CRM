@@ -754,9 +754,11 @@ def ventas_desde_hasta(desde, hasta):
                                 Factura.nro_comprobante,
                                 Factura.cae,
                                 Clientes.nombre.label('cliente'),
-                                TipoComprobantes.nombre.label('tipo_comprobante')
+                                TipoComprobantes.nombre.label('tipo_comprobante'),
+                                ControlNc.id_comprobante.label('id_nc')
                                 ).join(Clientes, Factura.idcliente == Clientes.id 
                                 ).join(TipoComprobantes, Factura.idtipocomprobante == TipoComprobantes.id
+                                ).outerjoin(ControlNc, ControlNc.id_comprobante_org == Factura.id
                                 ).filter(Factura.fecha >= desde, Factura.fecha <= hasta, Factura.idsucursal == session['id_sucursal']).order_by(Factura.id.desc()).all()
         return ventas                        
     except Exception as e:

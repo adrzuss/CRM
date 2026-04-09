@@ -192,12 +192,14 @@ def getRendicion(idRendicion):
                                          RendicionesCaja.idtipo_rendicion,
                                          RendicionesCaja.total_ventas,
                                          RendicionesCaja.total_efectivo,
+                                         RendicionesCaja.total_otros_valores,
                                          Usuarios.nombre) \
                                          .join(Usuarios, RendicionesCaja.idusuario == Usuarios.id) \
                                          .filter(RendicionesCaja.id == idRendicion) \
                                          .first()
         else:
-            rendicion = []    
+            rendicion = {'id': None, 'fecha': date.today(), 'idusuario': None, 'idpunto_vta': None, 
+                         'idsucursal': None, 'idtipo_rendicion': None, 'total_ventas': 0, 'total_efectivo': 0, 'total_otros_valores': 0}
         valoresRendidos = db.session.execute(text("call get_items_rendidos(:idrendicion)"), {'idrendicion':idRendicion}).fetchall()
         return rendicion, valoresRendidos
     except Exception as e:

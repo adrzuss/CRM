@@ -1,0 +1,110 @@
+<!-- Partial que se carga via HTMX al seleccionar una tarea -->
+
+{% if id_tarea %}
+<form hx-post="{{ url_for('configuraciones.htmx_save_permisos_tarea') }}"
+      hx-target="#contenedor-permisos"
+      hx-swap="innerHTML">
+    
+    <input type="hidden" name="id_tarea" value="{{ id_tarea }}">
+    
+    <div class="tarea-card">
+        <div class="tarea-header">
+            <h5><i class="fas fa-shield-alt me-2"></i>Permisos para: {{ nombre_tarea }}</h5>
+            <div class="d-flex align-items-center gap-3">
+                <span class="contador-permisos" id="contador-permisos">
+                    {{ permisos_activos|length }} de {{ opciones_menu|length }} permisos
+                </span>
+                <div class="btn-group">
+                    <button type="button" class="btn-seleccionar-todos" onclick="seleccionarTodos()">
+                        <i class="fas fa-check-double me-1"></i>Todos
+                    </button>
+                    <button type="button" class="btn-seleccionar-todos" onclick="deseleccionarTodos()">
+                        <i class="fas fa-times me-1"></i>Ninguno
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tarea-body">
+            {# Definir iconos y colores por sección #}
+            {% set seccion_config = {
+                'Ventas': {'icono': 'fa-shopping-cart', 'color': '#d4edda'},
+                'Clientes': {'icono': 'fa-users', 'color': '#cce5ff'},
+                'Proveedores': {'icono': 'fa-truck', 'color': '#fff3cd'},
+                'Artículos': {'icono': 'fa-box', 'color': '#e2d5f7'},
+                'Créditos': {'icono': 'fa-credit-card', 'color': '#f5c6cb'},
+                'Fondos': {'icono': 'fa-cash-register', 'color': '#c3e6cb'},
+                'Informes': {'icono': 'fa-chart-bar', 'color': '#d1ecf1'},
+                'Configuración': {'icono': 'fa-cogs', 'color': '#e9ecef'}
+            } %}
+            
+            {# Mostrar primero las secciones del menú lateral (todo excepto Configuración) #}
+            <div class="categoria-header">
+                <i class="fas fa-bars"></i>
+                Menú Lateral (Sidebar)
+            </div>
+            
+            {% for nombre_seccion, opciones in secciones.items() if nombre_seccion != 'Configuración' %}
+                {% set config = seccion_config.get(nombre_seccion, {'icono': 'fa-folder', 'color': '#e9ecef'}) %}
+                <div class="categoria-header" style="background: {{ config.color }};">
+                    <i class="fas {{ config.icono }}"></i>
+                    {{ nombre_seccion }}
+                </div>
+                <div class="opciones-grid">
+                    {% for opcion in opciones %}
+                    <div class="permiso-item">
+                        <input class="form-check-input" type="checkbox" 
+                               name="permisos" value="{{ opcion.id }}" 
+                               id="permiso_{{ opcion.id }}"
+                               data-categoria="{{ nombre_seccion|lower|replace(' ', '_') }}"
+                               {% if opcion.id in permisos_activos %}checked{% endif %}>
+                        <label for="permiso_{{ opcion.id }}">{{ opcion.codigo }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+            {# Mostrar sección Configuración (Topbar) al final #}
+            {% if 'Configuración' in secciones %}
+            <div class="categoria-header mt-4">
+                <i class="fas fa-ellipsis-h"></i>
+                Barra Superior (Topbar)
+            </div>
+            <div class="opciones-grid">
+                {% for opcion in secciones['Configuración'] %}
+                <div class="permiso-item">
+                    <input class="form-check-input" type="checkbox" 
+                           name="permisos" value="{{ opcion.id }}" 
+                           id="permiso_{{ opcion.id }}"
+                           data-categoria="configuracion"
+                           {% if opcion.id in permisos_activos %}checked{% endif %}>
+                    <label for="permiso_{{ opcion.id }}">{{ opcion.codigo }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Botón guardar -->
+    <div class="text-center mt-4">
+        <button type="submit" class="btn btn-guardar-permisos">
+            <i class="fas fa-save me-2"></i>
+            Guardar Permisos
+        </button>
+    </div>
+</form>
+
+{% elif guardado %}
+    <!-- Mensaje de éxito después de guardar -->
+    <div class="alert alert-success text-center" role="alert">
+        <i class="fas fa-check-circle fa-2x mb-2"></i>
+        <h5>¡Permisos guardados correctamente!</h5>
+        <p class="mb-0">Seleccione otra tarea para continuar editando permisos.</p>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-hand-pointer fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Seleccione una tarea para ver y editar sus permisos</h5>
+    </div>
+{% endif %}

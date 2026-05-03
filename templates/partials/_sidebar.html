@@ -42,8 +42,12 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de clientes:</h6>
-                        <a class="collapse-item" href="{{ url_for('clientes.clientes', id=0) }}">ABM de clientes</a>
-                        <a class="collapse-item" href="{{ url_for('clientes.abc_clientes') }}">ABC de clientes</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('ABM de clientes') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('ABM de clientes') %}href="{{ url_for('clientes.clientes', id=0) }}"{% endif %}
+                           title="{{ '' if tiene_permiso('ABM de clientes') else 'Sin permiso para acceder' }}">ABM de clientes</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('ABC de clientes') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('ABC de clientes') %}href="{{ url_for('clientes.abc_clientes') }}"{% endif %}
+                           title="{{ '' if tiene_permiso('ABC de clientes') else 'Sin permiso para acceder' }}">ABC de clientes</a>
                     </div>
                 </div>
             </li>
@@ -58,9 +62,12 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Opciones de cta. cte.:</h6>
-                        <a class="collapse-item" href="{{ url_for('ctactecli.saldosctactecli') }}">Saldos Cta. cte.</a>
-                        <a class="collapse-item" href="{{ url_for('ctactecli.movsctactecli') }}">Movimientos Cta. cte.</a>
-                        <a class="collapse-item" href="{{ url_for('ctactecli.lst_cc_cli_vencidas') }}">Cta. cte. vencidas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Saldos Cta. cte.') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Saldos Cta. cte.') %}href="{{ url_for('ctactecli.saldosctactecli') }}"{% endif %}>Saldos Cta. cte.</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Movimientos Cta. cte.') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Movimientos Cta. cte.') %}href="{{ url_for('ctactecli.movsctactecli') }}"{% endif %}>Movimientos Cta. cte.</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Cta. cte. vencidas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Cta. cte. vencidas') %}href="{{ url_for('ctactecli.lst_cc_cli_vencidas') }}"{% endif %}>Cta. cte. vencidas</a>
                     </div>
                 </div>
             </li>
@@ -79,10 +86,14 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Ventas de artículos:</h6>
-                        <a class="collapse-item" href="{{ url_for('ventas.nueva_venta') }}">Nueva venta</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.nueva_nota_credito') }}">Nueva nota crédito</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.nuevo_remito') }}">Nuevo remito</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.nuevo_presupuesto') }}">Nuevo presupuesto</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nueva venta') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nueva venta') %}href="{{ url_for('ventas.nueva_venta') }}"{% endif %}>Nueva venta</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nueva nota crédito') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nueva nota crédito') %}href="{{ url_for('ventas.nueva_nota_credito') }}"{% endif %}>Nueva nota crédito</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nuevo remito') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nuevo remito') %}href="{{ url_for('ventas.nuevo_remito') }}"{% endif %}>Nuevo remito</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nuevo presupuesto') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nuevo presupuesto') %}href="{{ url_for('ventas.nuevo_presupuesto') }}"{% endif %}>Nuevo presupuesto</a>
                     </div>
                 </div>
             </li>
@@ -97,14 +108,22 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Listados varios:</h6>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventas') }}">Listado de ventas</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventasArticulos') }}">Artículos vendidos</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventasClientes') }}">Ventas a clientes</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventasVendedores') }}">Ventas por vendedor</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ventasTipoPago') }}">Ventas por tipo de pago</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.remitos_vta') }}">Listado de remitos</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.presupuestos') }}">Listado de presupuestos</a>
-                        <a class="collapse-item" href="{{ url_for('ventas.ivaVentas') }}">IVA Ventas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de ventas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de ventas') %}href="{{ url_for('ventas.ventas') }}"{% endif %}>Listado de ventas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Artículos vendidos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Artículos vendidos') %}href="{{ url_for('ventas.ventasArticulos') }}"{% endif %}>Artículos vendidos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ventas a clientes') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ventas a clientes') %}href="{{ url_for('ventas.ventasClientes') }}"{% endif %}>Ventas a clientes</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ventas por vendedor') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ventas por vendedor') %}href="{{ url_for('ventas.ventasVendedores') }}"{% endif %}>Ventas por vendedor</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ventas por tipo de pago') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ventas por tipo de pago') %}href="{{ url_for('ventas.ventasTipoPago') }}"{% endif %}>Ventas por tipo de pago</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de remitos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de remitos') %}href="{{ url_for('ventas.remitos_vta') }}"{% endif %}>Listado de remitos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de presupuestos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de presupuestos') %}href="{{ url_for('ventas.presupuestos') }}"{% endif %}>Listado de presupuestos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('IVA Ventas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('IVA Ventas') %}href="{{ url_for('ventas.ivaVentas') }}"{% endif %}>IVA Ventas</a>
                     </div>
                 </div>
             </li>
@@ -125,13 +144,20 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Artículos</h6>
-                        <a class="collapse-item" href="{{ url_for('articulos.update_articulo', id=0) }}">Alta de artículos</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.articulos') }}">Listado de artículos</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.rubros_marcas') }}">Rubros y Marcas</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.ing_balance') }}">Ingreso de balance</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.remitos_sucursales') }}">Remito a sucursales</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.cambio_precio') }}">Cambios de precio</a>
-                        <a class="collapse-item" href="{{ url_for('ofertas.nueva_oferta') }}">Nueva oferta</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Alta de artículos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Alta de artículos') %}href="{{ url_for('articulos.update_articulo', id=0) }}"{% endif %}>Alta de artículos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de artículos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de artículos') %}href="{{ url_for('articulos.articulos') }}"{% endif %}>Listado de artículos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Rubros y Marcas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Rubros y Marcas') %}href="{{ url_for('articulos.rubros_marcas') }}"{% endif %}>Rubros y Marcas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ingreso de balance') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ingreso de balance') %}href="{{ url_for('articulos.ing_balance') }}"{% endif %}>Ingreso de balance</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Remito a sucursales') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Remito a sucursales') %}href="{{ url_for('articulos.remitos_sucursales') }}"{% endif %}>Remito a sucursales</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Cambios de precio') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Cambios de precio') %}href="{{ url_for('articulos.cambio_precio') }}"{% endif %}>Cambios de precio</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nueva oferta') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nueva oferta') %}href="{{ url_for('ofertas.nueva_oferta') }}"{% endif %}>Nueva oferta</a>
                     </div>
                 </div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseArticulosListados"
@@ -143,13 +169,20 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Listado de artículos</h6>
-                        <a class="collapse-item" href="{{ url_for('articulos.stock_art') }}">Stock</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.stock_art_faltantes') }}">Faltantes</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.stock_sucursales') }}">Stock de sucursales</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.lst_precios') }}">Precios</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.lst_compuestos') }}">Compuestos</a>
-                        <a class="collapse-item" href="{{ url_for('articulos.listado_remitos_sucursales') }}">Remitos entre sucursales</a>
-                        <a class="collapse-item" href="{{ url_for('ofertas.ofertas') }}">Ofertas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Stock') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Stock') %}href="{{ url_for('articulos.stock_art') }}"{% endif %}>Stock</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Faltantes') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Faltantes') %}href="{{ url_for('articulos.stock_art_faltantes') }}"{% endif %}>Faltantes</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Stock de sucursales') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Stock de sucursales') %}href="{{ url_for('articulos.stock_sucursales') }}"{% endif %}>Stock de sucursales</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Precios') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Precios') %}href="{{ url_for('articulos.lst_precios') }}"{% endif %}>Precios</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Compuestos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Compuestos') %}href="{{ url_for('articulos.lst_compuestos') }}"{% endif %}>Compuestos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Remitos entre sucursales') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Remitos entre sucursales') %}href="{{ url_for('articulos.listado_remitos_sucursales') }}"{% endif %}>Remitos entre sucursales</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ofertas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ofertas') %}href="{{ url_for('ofertas.ofertas') }}"{% endif %}>Ofertas</a>
                     </div>
                 </div>
             </li>
@@ -168,8 +201,10 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Bancos</h6>
-                        <a class="collapse-item" href="{{ url_for('bancos.bancos') }}">ABM Bancos</a>
-                        <a class="collapse-item" href="{{ url_for('bancos.listado_movs_bancos') }}">Listado movimientos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('ABM Bancos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('ABM Bancos') %}href="{{ url_for('bancos.bancos') }}"{% endif %}>ABM Bancos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado movimientos bancos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado movimientos bancos') %}href="{{ url_for('bancos.listado_movs_bancos') }}"{% endif %}>Listado movimientos</a>
                     </div>
                     
                 </div>
@@ -191,8 +226,10 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Entidades</h6>
-                        <a class="collapse-item" href="{{ url_for('entidades.entidades') }}">ABM Entidades</a>
-                        <a class="collapse-item" href="{{ url_for('entidades.listado_movimientos') }}">Listado movimientos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('ABM Entidades') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('ABM Entidades') %}href="{{ url_for('entidades.entidades') }}"{% endif %}>ABM Entidades</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado movimientos entidades') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado movimientos entidades') %}href="{{ url_for('entidades.listado_movimientos') }}"{% endif %}>Listado movimientos</a>
                     </div>
                     
                 </div>
@@ -207,12 +244,18 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Entidades</h6>
-                        <a class="collapse-item" href="{{ url_for('creditos.simulador_cred') }}">Simulador</a>
-                        <a class="collapse-item" href="{{ url_for('creditos.otorgamiento') }}">Otorgamiento</a>
-                        <a class="collapse-item" href="{{ url_for('creditos.lst_creditos') }}">Listado de créditos</a>
-                        <a class="collapse-item" href="{{ url_for('creditos.lst_nuevos') }}">Nuevos/Pendientes</a>
-                        <a class="collapse-item" href="{{ url_for('creditos.seleccionar_cuota') }}">Cobrar cuota de crédito</a>
-                        <a class="collapse-item" href="{{ url_for('creditos.vencimientos_cuotas') }}">Vencimientos de cuotas</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Simulador') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Simulador') %}href="{{ url_for('creditos.simulador_cred') }}"{% endif %}>Simulador</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Otorgamiento') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Otorgamiento') %}href="{{ url_for('creditos.otorgamiento') }}"{% endif %}>Otorgamiento</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de créditos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de créditos') %}href="{{ url_for('creditos.lst_creditos') }}"{% endif %}>Listado de créditos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nuevos/Pendientes') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nuevos/Pendientes') %}href="{{ url_for('creditos.lst_nuevos') }}"{% endif %}>Nuevos/Pendientes</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Cobrar cuota de crédito') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Cobrar cuota de crédito') %}href="{{ url_for('creditos.seleccionar_cuota') }}"{% endif %}>Cobrar cuota de crédito</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Vencimientos de cuotas') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Vencimientos de cuotas') %}href="{{ url_for('creditos.vencimientos_cuotas') }}"{% endif %}>Vencimientos de cuotas</a>
                     </div>
                     
                 </div>
@@ -233,10 +276,14 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Proveedores</h6>
-                        <a class="collapse-item" href="{{ url_for('proveedores.proveedores', id=0) }}">ABM Proveedores</a>
-                        <a class="collapse-item" href="{{ url_for('ctacteprov.saldosprov') }}">Cta. cte. de proveedores</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.nueva_op') }}">Orden de pago</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.ordenes_pago') }}">Listado de orden de pago</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('ABM Proveedores') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('ABM Proveedores') %}href="{{ url_for('proveedores.proveedores', id=0) }}"{% endif %}>ABM Proveedores</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Cta. cte. de proveedores') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Cta. cte. de proveedores') %}href="{{ url_for('ctacteprov.saldosprov') }}"{% endif %}>Cta. cte. de proveedores</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Orden de pago') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Orden de pago') %}href="{{ url_for('proveedores.nueva_op') }}"{% endif %}>Orden de pago</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de orden de pago') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de orden de pago') %}href="{{ url_for('proveedores.ordenes_pago') }}"{% endif %}>Listado de orden de pago</a>
                     </div>
                     
                 </div>
@@ -251,11 +298,16 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Compras</h6>
-                        <a class="collapse-item" href="{{ url_for('proveedores.compras') }}">Listado de compras</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.nueva_compra') }}">Nueva compra</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.remitosComp') }}">Listado de remitos</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.nuevo_remitoComp') }}">Nuevo remito</a>
-                        <a class="collapse-item" href="{{ url_for('proveedores.ivaCompras') }}">IVA Compras</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de compras') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de compras') %}href="{{ url_for('proveedores.compras') }}"{% endif %}>Listado de compras</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nueva compra') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nueva compra') %}href="{{ url_for('proveedores.nueva_compra') }}"{% endif %}>Nueva compra</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de remitos compra') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de remitos compra') %}href="{{ url_for('proveedores.remitosComp') }}"{% endif %}>Listado de remitos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nuevo remito compra') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nuevo remito compra') %}href="{{ url_for('proveedores.nuevo_remitoComp') }}"{% endif %}>Nuevo remito</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('IVA Compras') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('IVA Compras') %}href="{{ url_for('proveedores.ivaCompras') }}"{% endif %}>IVA Compras</a>
                     </div>
                     
                 </div>
@@ -270,7 +322,8 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Gastos</h6>
-                        <a class="collapse-item" href="{{ url_for('proveedores.nuevo_gasto') }}">Nuevo gasto</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Nuevo gasto') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Nuevo gasto') %}href="{{ url_for('proveedores.nuevo_gasto') }}"{% endif %}>Nuevo gasto</a>
                     </div>
                     
                 </div>
@@ -289,10 +342,14 @@
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Caja:</h6>
-                        <a class="collapse-item" href="{{ url_for('fondos.caja') }}">Ver caja</a>
-                        <a class="collapse-item" href="{{ url_for('fondos.rendicionCaja', idRendicion=0) }}">Rendición de caja</a>
-                        <a class="collapse-item" href="{{ url_for('fondos.lst_rendiciones') }}">Listado de rendiciones</a>
-                        <a class="collapse-item" href="{{ url_for('fondos.flujo_fondos') }}">Flujo de fondos</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Ver caja') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Ver caja') %}href="{{ url_for('fondos.caja') }}"{% endif %}>Ver caja</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Rendición de caja') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Rendición de caja') %}href="{{ url_for('fondos.rendicionCaja', idRendicion=0) }}"{% endif %}>Rendición de caja</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Listado de rendiciones') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Listado de rendiciones') %}href="{{ url_for('fondos.lst_rendiciones') }}"{% endif %}>Listado de rendiciones</a>
+                        <a class="collapse-item {{ '' if tiene_permiso('Flujo de fondos') else 'menu-disabled' }}" 
+                           {% if tiene_permiso('Flujo de fondos') %}href="{{ url_for('fondos.flujo_fondos') }}"{% endif %}>Flujo de fondos</a>
                     </div>
                 </div>
             </li>

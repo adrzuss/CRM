@@ -16,6 +16,7 @@ def check_session(func):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('sesion.login'))  # Redirigir al login si no hay sesión activa
+        
         return func(*args, **kwargs)
     return wrapper
 

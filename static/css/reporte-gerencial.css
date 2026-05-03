@@ -1,0 +1,289 @@
+/* 
+ * Estilos para el Reporte Gerencial
+ * Sistema CRM - SoftTech
+ */
+
+/* Variables de colores */
+:root {
+    --primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    --success-gradient: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    --warning-gradient: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    --danger-gradient: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+    --info-gradient: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+}
+
+/* Títulos de sección */
+.section-title {
+    color: #5a5c69;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.section-title i {
+    color: #4e73df;
+}
+
+/* Cards de KPIs */
+.card-kpi {
+    border-left-width: 4px !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.border-start-primary {
+    border-left-color: #4e73df !important;
+}
+
+.border-start-success {
+    border-left-color: #1cc88a !important;
+}
+
+.border-start-warning {
+    border-left-color: #f6c23e !important;
+}
+
+.border-start-danger {
+    border-left-color: #e74a3b !important;
+}
+
+.border-start-info {
+    border-left-color: #36b9cc !important;
+}
+
+/* Estilo para texto pequeño */
+.text-xs {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+/* Cards con shadow */
+.card.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+    border: none;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Tablas responsivas */
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fc;
+    z-index: 10;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5a5c69;
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+.table-sm td, .table-sm th {
+    padding: 0.5rem;
+}
+
+/* Badges personalizados */
+.badge {
+    font-weight: 500;
+    font-size: 0.7rem;
+}
+
+/* Progress bars en tablas */
+.table .progress {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+}
+
+.table .progress-bar {
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+/* Área de gráficos */
+.chart-area {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-pie {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.chart-bubble {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+
+/* Leyenda de medios de pago */
+.medios-pago-legend {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Filtros del header */
+#filtros-form .input-group {
+    min-width: 300px;
+}
+
+#filtros-form .form-control {
+    font-size: 0.875rem;
+}
+
+/* Estilos para impresión */
+@media print {
+    /* Ocultar elementos no necesarios */
+    .sidebar,
+    #filtros-form,
+    .btn,
+    footer {
+        display: none !important;
+    }
+    
+    /* Ajustar layout */
+    #content-wrapper {
+        margin-left: 0 !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+    }
+    
+    /* Cards sin sombra */
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+        page-break-inside: avoid;
+    }
+    
+    /* Tamaño de fuente para impresión */
+    body {
+        font-size: 10pt;
+    }
+    
+    .h3 {
+        font-size: 14pt;
+    }
+    
+    .h4, .h5 {
+        font-size: 12pt;
+    }
+    
+    .table th, .table td {
+        font-size: 9pt;
+    }
+    
+    /* Gráficos a tamaño fijo */
+    .chart-area,
+    .chart-pie,
+    .chart-bubble {
+        height: 200px !important;
+    }
+    
+    /* Colores de impresión */
+    .text-primary { color: #4e73df !important; }
+    .text-success { color: #1cc88a !important; }
+    .text-warning { color: #f6c23e !important; }
+    .text-danger { color: #e74a3b !important; }
+    .text-info { color: #36b9cc !important; }
+    
+    /* Márgenes de página */
+    @page {
+        margin: 1cm;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #filtros-form {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    #filtros-form .input-group {
+        min-width: 100%;
+    }
+    
+    .chart-area {
+        height: 250px;
+    }
+
+    .chart-bubble {
+        height: 260px;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+    }
+    
+    .card-kpi .h4 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Animaciones sutiles */
+.card {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Scroll suave en tablas */
+.table-responsive {
+    scroll-behavior: smooth;
+}
+
+/* Indicador de scroll en tablas */
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Gap para flexbox (soporte navegadores antiguos) */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+/* Texto truncado */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

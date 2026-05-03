@@ -1,9 +1,9 @@
 from flask import render_template, request, Blueprint
 from flask import g
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from services.ventas import get_vta_hoy, get_vta_semana, ventas_por_mes, pagos_hoy, get_operaciones_hoy, get_operaciones_semana, get_ultimas_operaciones, get_10_mas_vendidos, \
                             get_op_este_mes, get_op_este_mes_anterior, get_vta_sucursales_data, get_vta_vendedores_data, get_vta_rubros
-
+from services.reportes import get_datos_reporte_gerencial
 from services.articulos import get_stocks_negativos, get_stocks_faltantes
 from services.ctactecli import get_saldo_clientes
 from services.ctacteprov import get_saldo_proveedores
@@ -53,12 +53,48 @@ def tablero_inicial():
                            ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, datos_creditos=datos_creditos, \
                            alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
 
-@bp_tableros.route('/tablero-gerencial')    
+@bp_tableros.route('/tablero-gerencial')
+@check_session
+@alertas_mensajes
+def tablero_gerencial():
+    # Obtener parámetros de fecha del request
+    desde_str = request.args.get('desde')
+    hasta_str = request.args.get('hasta')
+    
+    # Si no hay fechas, usar último mes como default
+    if desde_str:
+        try:
+            desde = datetime.strptime(desde_str, '%Y-%m-%d').date()
+        except ValueError:
+            desde = date.today() - timedelta(days=30)
+    else:
+        desde = date.today() - timedelta(days=30)
+    
+    if hasta_str:
+        try:
+            hasta = datetime.strptime(hasta_str, '%Y-%m-%d').date()
+        except ValueError:
+            hasta = date.today()
+    else:
+        hasta = date.today()
+    
+    # Obtener datos del reporte
+    data = get_datos_reporte_gerencial(desde, hasta)
+    
+    return render_template('reportes/reporte-gerencial.html',
+                           desde=desde.strftime('%Y-%m-%d'),
+                           hasta=hasta.strftime('%Y-%m-%d'),
+                           data=data,
+                           alertas=g.alertas,
+                           cantidadAlertas=g.cantidadAlertas,
+                           mensajes=g.mensajes,
+                           cantidadMensajes=g.cantidadMensajes)    
 
 @bp_tableros.route('/tablero-administrativo')
 @check_session
 @alertas_mensajes
 def tablero_administrativo():
+    desde = request.args.get('desde_sucs')
     if desde == None:
         desde = date.today()
     hasta = request.args.get('hasta_sucs')
@@ -86,3 +122,9 @@ def tablero_basico():
     stock_negativos = get_stocks_negativos()
     stock_faltantes = get_stocks_faltantes()
     return render_template('tablero-basico.html', tituloTablero='Básico', op_hoy=op_hoy, op_semana=op_semana, op_este_mes=op_este_mes, detalles=los_10_mas_vendidos['det_arts'], cantidades=los_10_mas_vendidos['vta_arts'], ultimas_op=ultimas_op, stock_negativos=stock_negativos, stock_faltantes=stock_faltantes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+
+@bp_tableros.route('/plan-vencido')
+@check_session
+@alertas_mensajes
+def plan_vencido():
+    return render_template('plan-vencido.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)

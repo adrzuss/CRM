@@ -1,6 +1,7 @@
 from flask import session, current_app, flash
 from sqlalchemy import text, func
-from models.configs import Configuracion, TipoComprobantes, PuntosVenta, LineasComprobantes
+from datetime import date
+from models.configs import Configuracion, TipoComprobantes, PuntosVenta, LineasComprobantes, PlanesSistema
 from models.articulos import ListasPrecios
 from utils.db import db
 from models.sessions import TareasUsuarios
@@ -13,6 +14,8 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
             session['owner'] = nombre_propietario
         if 'company' in session:
             session['company'] = nombre_fantasia   
+        session['plan'] = idplan_sistema
+        session['plan_vencimiento'] = configuracion.fecha_vencimiento_plan.strftime('%d/%m/%Y') if configuracion.fecha_vencimiento_plan else 'N/A'
         configuracion.nombre_propietario = nombre_propietario
         configuracion.nombre_fantasia = nombre_fantasia
         configuracion.tipo_iva = tipo_iva
@@ -32,7 +35,10 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
 
 def getOwner():
     configuracion = Configuracion.query.get(session['id_empresa'])
-    return configuracion
+    planes = PlanesSistema.query.get(configuracion.idplan_sistema) if configuracion else None
+    plan_sistema = planes.nombre if planes else 'N/A'
+    dias_vencimiento = (configuracion.vencimiento - date.today()).days if configuracion and configuracion.vencimiento else None
+    return configuracion, plan_sistema, dias_vencimiento
 
 def getTareaUsuario():
     min_id_tarea = db.session.query(func.min(TareasUsuarios.idtarea)) \

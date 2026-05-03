@@ -200,3 +200,37 @@ def alerta_mensajes_creditos_aprobados():
         return cantidad, {'titulo': 'Mensajes de créditos aprobados', 'subtitulo': mensaje, 'tipo': 'exito', 'entidad': 'credito', 'url': 'creditos.lst_aprobados'}
     else:
         return cantidad, {}
+
+#-------------- Permisos de Menú ------------------
+
+def get_permisos_usuario(user_id):
+    """
+    Obtiene los códigos de menú permitidos para un usuario basándose en sus tareas.
+    Retorna un set de códigos de opciones_menu que el usuario puede acceder.
+    """
+    from models.sessions import OpcionesMenu, PermisosMenu, TareasUsuarios
+    
+    # Obtener las tareas del usuario
+    tareas_usuario = db.session.query(TareasUsuarios.idtarea).filter(
+        TareasUsuarios.idusuario == user_id
+    ).subquery()
+    
+    # Obtener los códigos de menú permitidos para esas tareas
+    permisos = db.session.query(OpcionesMenu.codigo).join(
+        PermisosMenu, PermisosMenu.id_opcion_menu == OpcionesMenu.id
+    ).filter(
+        PermisosMenu.id_tarea.in_(tareas_usuario),
+        PermisosMenu.activo == True,
+        OpcionesMenu.activo == True
+    ).distinct().all()
+    
+    return {p.codigo for p in permisos}
+
+def tiene_permiso(codigo_menu, permisos_usuario):
+    """
+    Verifica si un código de menú está en los permisos del usuario.
+    Si permisos_usuario está vacío, se permite todo (para compatibilidad inicial).
+    """
+    if not permisos_usuario:
+        return True  # Si no hay permisos configurados, permitir todo
+    return codigo_menu in permisos_usuario

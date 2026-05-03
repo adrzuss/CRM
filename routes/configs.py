@@ -683,3 +683,109 @@ def api_lineas_comprobantes(id_punto_vta):
                 'solo_en_ventas': lineas[i]['solo_en_ventas']
             })
     return jsonify(success=True, cabecera=cabecera, pie=pie)
+
+# =============================================================================
+# PERMISOS DE MENÚ
+# =============================================================================
+
+@bp_configuraciones.route('/permisos_menu')
+@check_session
+@alertas_mensajes
+def permisos_menu():
+    """Muestra la pantalla de configuración de permisos de menú"""
+    from models.sessions import OpcionesMenu
+    tareas = Tareas.query.all()
+    return render_template('permisos-menu.html', 
+                          tareas=tareas,
+                          alertas=g.alertas, 
+                          cantidadAlertas=g.cantidadAlertas, 
+                          mensajes=g.mensajes, 
+                          cantidadMensajes=g.cantidadMensajes)
+
+@bp_configuraciones.route('/htmx/permisos_tarea', methods=['GET'])
+@check_session
+def htmx_get_permisos_tarea():
+    """Obtiene los permisos de una tarea específica (HTMX)"""
+    from models.sessions import OpcionesMenu, PermisosMenu
+    from collections import OrderedDict
+    
+    id_tarea = request.args.get('id_tarea', type=int)
+    
+    if not id_tarea:
+        return render_template('configuracion/partials/_permisos_tarea.html', id_tarea=None)
+    
+    tarea = Tareas.query.get(id_tarea)
+    if not tarea:
+        return render_template('configuracion/partials/_permisos_tarea.html', id_tarea=None)
+    
+    # Obtener todas las opciones de menú activas ordenadas por sección y código
+    opciones_menu = OpcionesMenu.query.filter_by(activo=True).order_by(OpcionesMenu.nombre_seccion, OpcionesMenu.codigo).all()
+    
+    # Agrupar opciones por sección
+    secciones = OrderedDict()
+    for opcion in opciones_menu:
+        seccion = opcion.nombre_seccion
+        if seccion not in secciones:
+            secciones[seccion] = []
+        secciones[seccion].append(opcion)
+    
+    # Obtener los permisos activos de esta tarea
+    permisos = PermisosMenu.query.filter_by(id_tarea=id_tarea, activo=True).all()
+    permisos_activos = {p.id_opcion_menu for p in permisos}
+    
+    return render_template('configuracion/partials/_permisos_tarea.html',
+                          id_tarea=id_tarea,
+                          nombre_tarea=tarea.tarea,
+                          secciones=secciones,
+                          opciones_menu=opciones_menu,
+                          permisos_activos=permisos_activos)
+
+@bp_configuraciones.route('/htmx/permisos_tarea', methods=['POST'])
+@check_session
+def htmx_save_permisos_tarea():
+    """Guarda los permisos de una tarea (HTMX)"""
+    from models.sessions import OpcionesMenu, PermisosMenu
+    from sqlalchemy.exc import SQLAlchemyError
+    
+    id_tarea = request.form.get('id_tarea', type=int)
+    permisos_seleccionados = request.form.getlist('permisos')
+    permisos_seleccionados = [int(p) for p in permisos_seleccionados]
+    
+    if not id_tarea:
+        return render_template('configuracion/partials/_permisos_tarea.html', id_tarea=None)
+    
+    try:
+        # Obtener todas las opciones de menú
+        todas_opciones = OpcionesMenu.query.all()
+        
+        for opcion in todas_opciones:
+            # Buscar si ya existe el permiso
+            permiso_existente = PermisosMenu.query.filter_by(
+                id_tarea=id_tarea, 
+                id_opcion_menu=opcion.id
+            ).first()
+            
+            if opcion.id in permisos_seleccionados:
+                # Debe estar activo
+                if permiso_existente:
+                    permiso_existente.activo = True
+                else:
+                    nuevo_permiso = PermisosMenu(
+                        id_opcion_menu=opcion.id,
+                        id_tarea=id_tarea,
+                        activo=True
+                    )
+                    db.session.add(nuevo_permiso)
+            else:
+                # Debe estar inactivo
+                if permiso_existente:
+                    permiso_existente.activo = False
+        
+        db.session.commit()
+        
+        return render_template('configuracion/partials/_permisos_tarea.html', guardado=True)
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error SQL guardando permisos: {e}")
+        return f"<div class='alert alert-danger'>Error guardando permisos: {e}</div>", 500

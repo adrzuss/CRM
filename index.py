@@ -1,7 +1,8 @@
 import logging
-from flask import Flask, session, redirect, url_for, render_template
+from flask import Flask, session, redirect, url_for, render_template, flash
 from sqlalchemy.exc import OperationalError
 from services.configs import getOwner, getTareaUsuario
+from services.sessions import get_permisos_usuario, tiene_permiso
 from utils.db import db
 from utils.utils import check_session
 from utils.config import Config
@@ -20,6 +21,7 @@ from routes.fondos import bp_fondos
 from routes.creditos import bp_creditos
 from routes.bancos import bp_bancos
 from routes.ofertas import bp_ofertas
+from routes.reportes import bp_reportes
 
 def create_app():
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, template_folder=Config.TEMPLATES_FOLDER)
@@ -46,12 +48,43 @@ def create_app():
     app.register_blueprint(bp_creditos, url_prefix='/creditos')
     app.register_blueprint(bp_bancos, url_prefix='/bancos')
     app.register_blueprint(bp_ofertas, url_prefix='/ofertas')
+    app.register_blueprint(bp_reportes, url_prefix='/reportes')
     
     @app.before_request
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
         if not ('id_empresa' in session):
             session['id_empresa'] = 1
+    
+    @app.context_processor
+    def inject_permisos_menu():
+        """Inyecta los permisos de menú en todas las plantillas."""
+        permisos_menu = set()
+        plan_vencido = False
+        
+        if 'user_id' in session:
+            # Verificar si el plan está vencido
+            if 'dias_vencimiento' in session and session['dias_vencimiento'] is not None:
+                plan_vencido = session['dias_vencimiento'] <= -30
+            
+            # Obtener permisos solo si el plan no está vencido
+            if not plan_vencido:
+                if 'permisos_menu' not in session:
+                    session['permisos_menu'] = list(get_permisos_usuario(session['user_id']))
+                permisos_menu = set(session.get('permisos_menu', []))
+        
+        def tiene_permiso_menu(codigo):
+            """Función helper para verificar permisos en las plantillas."""
+            if plan_vencido:
+                return False
+            return tiene_permiso(codigo, permisos_menu)
+        
+        return {
+            'permisos_menu': permisos_menu,
+            'tiene_permiso': tiene_permiso_menu,
+            'plan_vencido': plan_vencido
+        }
+            
     return app
 
 try:
@@ -76,16 +109,26 @@ else:
     @app.route('/')
     @check_session
     def index():
-        configuracion = getOwner()
+        configuracion, plan_sistema, dias_vencimiento = getOwner()
         session['owner'] = configuracion.nombre_propietario
         session['company'] = configuracion.nombre_fantasia
         session['tipo_iva'] = configuracion.tipo_iva
-        tareaUsuario = getTareaUsuario()
+        session['plan'] = plan_sistema
+        session['plan_vencimiento'] = configuracion.vencimiento.strftime('%d/%m/%Y') if configuracion.vencimiento else 'N/A'
+        session['dias_vencimiento'] = dias_vencimiento
+        if dias_vencimiento <= -30:
+            tareaUsuario = 99
+            flash("Tu plan ha vencido hace más de 30 días. Por favor, contacta al soporte para renovar tu suscripción.", "danger")
+        else:    
+            tareaUsuario = getTareaUsuario()
         match tareaUsuario:
             case 1:
                 return redirect(url_for('tableros.tablero_inicial'))
             case 2:
-                return redirect(url_for('tableros.tablero_administrativo'))
+                #return redirect(url_for('tableros.tablero_administrativo'))
+                return redirect(url_for('tableros.tablero_inicial'))
+            case 99:
+                return redirect(url_for('tableros.plan_vencido'))
             case _:
                 return redirect(url_for('tableros.tablero_basico'))
                 

@@ -1,5 +1,5 @@
 <!-- begin of Topbar -->
-<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-3 static-top shadow">
             
     <!-- Sidebar Toggle (Topbar) -->
     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
@@ -9,9 +9,10 @@
     <!-- Topbar Search -->
     <div class="row">
         <h4 style = "color:#10246a" class="col-12 ml-3">Empresa: {{ session['company'] }} <span class="owner_span">( {{session['owner']}} )</span> Usuario: {{ session['user_name']}} - <span class="sucursal_span">Sucursal: {{session['nombre_sucursal']}}</span></h4> 
+
     </div>
     
-
+    
     <!--
     <form
         class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
@@ -291,40 +292,53 @@
             <!-- Dropdown - User Information -->
             <ul class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
                 aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="{{ url_for('sesion.update_user', id=session['user_id']) }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Perfil') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Perfil') %}href="{{ url_for('sesion.update_user', id=session['user_id']) }}"{% endif %}>
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Perfil
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('sesion.centro_mensajes') }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Mensajes') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Mensajes') %}href="{{ url_for('sesion.centro_mensajes') }}"{% endif %}>
                     <i class="fas fa-envelope fa-sm fa-fw mr-2 text-gray-400"></i>
                     Mensajes
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('configuraciones.abm_sucursales') }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Sucursales') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Sucursales') %}href="{{ url_for('configuraciones.abm_sucursales') }}"{% endif %}>
                     <i class="fas fa-store fa-sm fa-fw mr-2 text-gray-400"></i>
                     Sucursales
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('configuraciones.configuraciones') }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Opciones') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Opciones') %}href="{{ url_for('configuraciones.configuraciones') }}"{% endif %}>
                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                     Opciones
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('sesion.usuarios') }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Usuarios') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Usuarios') %}href="{{ url_for('sesion.usuarios') }}"{% endif %}>
                     <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
                     Usuarios
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('configuraciones.puntos_venta', id=0) }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Configuración puntos de venta') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Configuración puntos de venta') %}href="{{ url_for('configuraciones.puntos_venta', id=0) }}"{% endif %}>
                     <i class="fa-solid fa-cash-register fa-sm fa-fw mr-2 text-gray-400"></i>
                     Configuración puntos de venta
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('creditos.config_cred') }}">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Configuración de créditos') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Configuración de créditos') %}href="{{ url_for('creditos.config_cred') }}"{% endif %}>
                     <i class="fa-solid fa-brands fa-leanpub fa-sm fa-fw mr-2 text-gray-400"></i>
                     Configuración de créditos
                 </a></li>
-                <li><a class="dropdown-item" href="#">
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Configuración de informes') else 'menu-disabled' }}" href="#">
                     <i class="fas fa-bars fa-sm fa-fw mr-2 text-gray-400"></i>
                     Configuración de informes
                 </a></li>
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Permisos de menú') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Permisos de menú') %}href="{{ url_for('configuraciones.permisos_menu') }}"{% endif %}>
+                    <i class="fas fa-user-shield fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Permisos de menú
+                </a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('configuraciones.planes_opciones') }}" >
+                <li><a class="dropdown-item {{ '' if tiene_permiso('Ver planes y opciones') else 'menu-disabled' }}" 
+                       {% if tiene_permiso('Ver planes y opciones') %}href="{{ url_for('configuraciones.planes_opciones') }}"{% endif %}>
                     <i class="fas fa-pen-to-square fa-sm fa-fw mr-2 text-gray-400"></i>
                     Ver planes y sus opciones
                 </a></li>
@@ -336,6 +350,15 @@
         </li>
 
     </ul>
-
 </nav>
 <!-- End of Topbar -->
+
+<div>
+    {% if session.get('dias_vencimiento', 0) | int <= 5 and session.get('dias_vencimiento', 0) | int > 0 %}
+        <h6 class="col-5 ml-3 badge-plan-vencimiento-proximo" id="vencimiento-plan" data-dias="{{ session.get('dias_vencimiento', 0) | int }}">Plan: {{ session['plan'] }} - Vence el: {{ session['plan_vencimiento'] }} / {{ session['dias_vencimiento'] }} días restantes</h6>
+    {% elif session.get('dias_vencimiento', 0) | int <= 0 %}
+        <h6 class="col-5 ml-3 badge-plan-vencimiento-vencido" id="vencimiento-plan" data-dias="{{ session.get('dias_vencimiento', 0) | int }}">Plan: {{ session['plan'] }} - Vencido el: {{ session['plan_vencimiento'] }} / Plan vencido {{ 30 + session['dias_vencimiento'] }} días restantes</h6>
+    {% else %}
+        <h6 class="col-5 ml-3 badge-plan-vencimiento-ok" id="vencimiento-plan" data-dias="{{ session.get('dias_vencimiento', 0) | int }}">Plan: {{ session['plan'] }} - Vence el: {{ session['plan_vencimiento'] }} / {{ session['dias_vencimiento'] }} días restantes</h6>
+    {% endif %}
+</div>

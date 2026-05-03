@@ -69,3 +69,32 @@ class Mensajes(db.Model):
         self.idusr_destino = idusr_destino
         self.idsuc_destino = idsuc_destino
         self.leido = leido
+
+class OpcionesMenu(db.Model):
+    __tablename__ = 'opciones_menu'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    codigo = db.Column(db.String(50), unique=True, nullable=False)
+    nombre_seccion = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.String(200), nullable=True)
+    activo = db.Column(db.Boolean, default=True)
+    
+    def __init__(self, codigo, nombre, descripcion=None, activo=True):
+        self.codigo = codigo
+        self.nombre_seccion = nombre
+        self.descripcion = descripcion
+        self.activo = activo
+
+class PermisosMenu(db.Model):
+    __tablename__ = 'permisos_menu'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_opcion_menu = db.Column(db.Integer, db.ForeignKey('opciones_menu.id'), nullable=False)
+    id_tarea = db.Column(db.Integer, db.ForeignKey('tareas.id'), nullable=False)
+    activo = db.Column(db.Boolean, default=True)
+    
+    opcion_menu = db.relationship('OpcionesMenu', backref='permisos')
+    tarea = db.relationship('Tareas', backref='permisos_menu')
+    
+    def __init__(self, id_opcion_menu, id_tarea, activo=True):
+        self.id_opcion_menu = id_opcion_menu
+        self.id_tarea = id_tarea
+        self.activo = activo

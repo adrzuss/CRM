@@ -1,0 +1,156 @@
+.plan-vencido-container {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 20px;
+    margin: 20px;
+}
+
+/* Cinta diagonal */
+.ribbon-vencido {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    background: linear-gradient(90deg, #dc3545, #c82333, #bd2130, #c82333, #dc3545);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    padding: 25px 120px;
+    box-shadow: 
+        0 5px 30px rgba(220, 53, 69, 0.5),
+        0 0 60px rgba(220, 53, 69, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    min-width: 800px;
+    text-align: center;
+}
+
+.ribbon-vencido::before,
+.ribbon-vencido::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    border-style: solid;
+    border-color: #8b1a1a transparent transparent transparent;
+}
+
+.ribbon-vencido::before {
+    left: 0;
+    border-width: 15px 0 0 15px;
+}
+
+.ribbon-vencido::after {
+    right: 0;
+    border-width: 15px 15px 0 0;
+}
+
+.ribbon-text {
+    color: #ffffff;
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.2);
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.ribbon-subtext {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 3px;
+    margin-top: 8px;
+    text-transform: uppercase;
+}
+
+/* Icono decorativo */
+.warning-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15rem;
+    color: rgba(255, 255, 255, 0.03);
+    z-index: 1;
+}
+
+/* Contenido inferior */
+.info-card {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+}
+
+.info-card h4 {
+    color: #1a1a2e;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.info-card p {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.btn-renovar {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: 50px;
+    color: white;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-renovar:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(40, 167, 69, 0.6);
+    color: white;
+}
+
+/* Animación de brillo */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Partículas decorativas */
+.particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+.particle:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 2s; }
+.particle:nth-child(4) { top: 40%; right: 25%; animation-delay: 3s; }
+.particle:nth-child(5) { bottom: 20%; right: 10%; animation-delay: 4s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+}

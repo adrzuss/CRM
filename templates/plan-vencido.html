@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/plan-vencido.css') }}">
+{% endblock %}
+
+{% block body %}
+
+    <!-- Begin Page Content -->
+    <meta http-equiv="refresh" content="300">
+
+    <div class="container-fluid p-0">
+        <div class="plan-vencido-container">
+            <!-- Partículas decorativas -->
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            
+            <!-- Icono de fondo -->
+            <i class="fas fa-exclamation-triangle warning-icon"></i>
+            
+            <!-- Cinta diagonal -->
+            <div class="ribbon-vencido">
+                <p class="ribbon-text">Plan Vencido</p>
+                <p class="ribbon-subtext">Licencia expirada</p>
+            </div>
+            
+            <!-- Tarjeta de información -->
+            <div class="info-card">
+                <h4><i class="fas fa-clock text-warning me-2"></i>Su suscripción ha expirado</h4>
+                <p>Para continuar utilizando todas las funciones del sistema,<br>por favor renueve su plan.</p>
+                <a href="#" class="btn btn-renovar">
+                    <i class="fas fa-sync-alt me-2"></i>Renovar Plan
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+                   
+{% endblock %}
+
+{% block js_script %}
+    
+{% endblock %}
+

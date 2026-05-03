@@ -1,0 +1,152 @@
+/* =============================================================================
+   PERMISOS DE MENÚ - Estilos
+   ============================================================================= */
+
+.permisos-container {
+    background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%);
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.tarea-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.tarea-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.tarea-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tarea-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.tarea-body {
+    padding: 20px;
+}
+
+.permiso-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 5px 0;
+    background: #f8f9fc;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.permiso-item:hover {
+    background: #e3e6f0;
+}
+
+.permiso-item label {
+    margin-left: 10px;
+    flex-grow: 1;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.permiso-item .form-check-input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.permiso-item .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.categoria-header {
+    background: #e9ecef;
+    padding: 8px 15px;
+    margin: 15px 0 10px 0;
+    border-radius: 5px;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.categoria-header i {
+    margin-right: 10px;
+    color: #667eea;
+}
+
+.btn-guardar-permisos {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    padding: 10px 30px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-guardar-permisos:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.btn-seleccionar-todos {
+    background: #6c757d;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 15px;
+    color: white;
+    font-size: 0.85rem;
+}
+
+.btn-seleccionar-todos:hover {
+    background: #5a6268;
+    color: white;
+}
+
+.opciones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.contador-permisos {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+}
+
+/* Selector de tarea */
+.selector-tarea {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+.selector-tarea select {
+    border-radius: 10px;
+    padding: 10px 15px;
+    border: 2px solid #e3e6f0;
+    font-size: 1rem;
+}
+
+.selector-tarea select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}

@@ -1,10 +1,6 @@
 isFormSubmited = false; // Variable para controlar si el formulario ha sido enviado
 
-window.onbeforeunload = function () {
-  if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
-  }
-};
+window.onbeforeunload = confirmarSalida;
 
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("invoice_form");
@@ -187,7 +183,8 @@ document.getElementById('invoice_form').addEventListener('submit', async functio
         return;
     }
     
-    isFormSubmited = true;
+    sinGuardar = false;
+        isFormSubmited = true;
     this.submit();
 });
  

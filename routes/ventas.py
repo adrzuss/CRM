@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
 from models.articulos import ListasPrecios, PedirEnVentas
 from models.clientes import Clientes
 from models.entidades_cred import EntidadesCred
@@ -15,6 +15,7 @@ from utils.msg_alertas import alertas_mensajes
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
 from sqlalchemy import text
+import traceback
 
 from services.printer_service import get_printer_service, WindowsPrinterService, LinuxPrinterService
 
@@ -29,7 +30,7 @@ def ventas():
         desde = request.args.get('desde', date.today())
         hasta = request.args.get('hasta', date.today())
         facturas = ventas_desde_hasta(desde, hasta)
-        return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ventas.html', facturas=facturas, desde=desde, hasta=hasta)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
@@ -76,7 +77,7 @@ def set_punto_vta():
 
         # Asignar el valor a la sesión
         session['idPuntoVenta'] = punto_vta_id
-        puntoVta = PuntosVenta.query.get(punto_vta_id)
+        puntoVta = db.session.get(PuntosVenta, punto_vta_id)
         session['posPrinter'] = puntoVta.pos_printer
         
         return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica})
@@ -100,19 +101,16 @@ def nueva_venta():
                 'id': id_factura 
             })
         except Exception as e:
-            import traceback
-            error_detalle = traceback.format_exc()
-            print(f'Error al procesar venta: {error_detalle}')  # Log para el servidor
+            print(f'Error al procesar venta: {traceback.format_exc()}')  # Log para el servidor
             return jsonify({
                 'success': False,
-                'message': f'Error al procesar la venta en servidor: {str(e)}',
-                'error_detalle': error_detalle
+                'message': f'Error al procesar la venta en servidor: {str(e)}'
             }), 500
     if request.method == 'GET':
         hoy = date.today()
         entidades = EntidadesCred.query.all()
         listas_precio = ListasPrecios.query.all()
-        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
 
 @bp_ventas.route('/nueva_nota_credito', methods=['GET', 'POST'])
 @check_session
@@ -131,19 +129,16 @@ def nueva_nota_credito():
                 'id': id_factura 
             })
         except Exception as e:
-            import traceback
-            error_detalle = traceback.format_exc()
-            print(f'Error al procesar nota de crédito: {error_detalle}')  # Log para el servidor
+            print(f'Error al procesar nota de crédito: {traceback.format_exc()}')  # Log para el servidor
             return jsonify({
                 'success': False,
-                'message': f'Error al procesar la nota de crédito en servidor: {str(e)}',
-                'error_detalle': error_detalle
+                'message': f'Error al procesar la nota de crédito en servidor: {str(e)}'
             }), 500
     if request.method == 'GET':
         hoy = date.today()
         entidades = EntidadesCred.query.all()
         listas_precio = ListasPrecios.query.all()
-        return render_template('nueva_ncredito.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('nueva_ncredito.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
 
 
 @bp_ventas.route('/buscar_comprobantes_nc', methods=['POST'])
@@ -174,9 +169,7 @@ def buscar_comprobantes_nc():
             'cantidad': len(comprobantes)
         })
     except Exception as e:
-        import traceback
-        error_detalle = traceback.format_exc()
-        print(f'Error al buscar comprobantes para NC: {error_detalle}')
+        print(f'Error al buscar comprobantes para NC: {traceback.format_exc()}')
         return jsonify({
             'success': False,
             'message': f'Error al buscar comprobantes: {str(e)}'
@@ -199,9 +192,7 @@ def get_items_comprobante(idcomprobante):
             'cantidad': len(items)
         })
     except Exception as e:
-        import traceback
-        error_detalle = traceback.format_exc()
-        print(f'Error al obtener items del comprobante: {error_detalle}')
+        print(f'Error al obtener items del comprobante: {traceback.format_exc()}')
         return jsonify({
             'success': False,
             'message': f'Error al obtener items: {str(e)}'
@@ -241,9 +232,7 @@ def buscar_vale():
                 'message': 'No se encontró un vale disponible con ese número de comprobante'
             })
     except Exception as e:
-        import traceback
-        error_detalle = traceback.format_exc()
-        print(f'Error al buscar vale: {error_detalle}')
+        print(f'Error al buscar vale: {traceback.format_exc()}')
         return jsonify({
             'success': False,
             'message': f'Error al buscar vale: {str(e)}'
@@ -255,11 +244,12 @@ def buscar_vale():
 @alertas_mensajes
 def ver_factura_vta(id):
     factura, items, pagos = get_factura(id)
-    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos)
 
 #----------------- factura electronica ------------------#
 #----------------- factura desde la ventana donde se ve el comprobante realizado -------------------------#
 @bp_ventas.route('/facturar/<ptovta>/<idfactura>', methods=['GET', 'POST'])
+@check_session
 def facturar(ptovta, idfactura):
     try:
         paso = 1
@@ -285,6 +275,7 @@ def facturar(ptovta, idfactura):
 
 #----------------- factura desde la ventana de venta -------------------------#
 @bp_ventas.route('/facturar_venta/<ptovta>/<idfactura>', methods=['GET', 'POST'])
+@check_session
 def facturar_venta(ptovta, idfactura):
     try:
         paso = 1
@@ -320,10 +311,11 @@ def imprimir_factura_vta(id):
 @check_session
 @alertas_mensajes
 def imprimir_factura_vta2(id):
-    return render_template('factura-print.html', factura_id=id, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('factura-print.html', factura_id=id)
 
 
 @bp_ventas.route('/api/facturas/<int:factura_id>', methods=['GET'])
+@check_session
 def obtener_factura(factura_id):
     try:
         # Obtener datos de la factura de tu base de datos
@@ -332,7 +324,7 @@ def obtener_factura(factura_id):
         empresa = getDatosSucEmpresa()  # Implementa esta función
         
         # Obtener datos del cliente para el QR
-        cliente = Clientes.query.get(factura.idcliente)
+        cliente = db.session.get(Clientes, factura.idcliente)
         
         laFactura = {'id': factura.id,
                    'nro_comprobante': factura.nro_comprobante,
@@ -387,7 +379,7 @@ def obtener_factura(factura_id):
 @check_session
 def enivar_factura_vta_mail(id, idcliente):
     generar_factura_pdf(id, footer_text="")
-    cliente = Clientes.query.get(idcliente)
+    cliente = db.session.get(Clientes, idcliente)
     if cliente.email != None:
         pdf_path = f"factura-{id}.pdf"
         enviar_factura_por_email(cliente.email, pdf_path)
@@ -417,7 +409,7 @@ def ventasArticulos():
         
         articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta, :con_detalles, :con_colores)"),
                          {'desde': desde, 'hasta': hasta, 'con_detalles': con_detalles, 'con_colores': con_colores}).fetchall()
-        return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
@@ -438,7 +430,7 @@ def ventasClientes():
         hasta = request.form['hasta']
         ventas = db.session.execute(text("CALL venta_clientes(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-clientes.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ventas-clientes.html', ventas=ventas, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/ventasUnCliente', methods=['GET', 'POST'])
 @check_session
@@ -450,7 +442,7 @@ def ventasUnCliente():
         id = request.args.get('idcliente', None)
         if id:
             
-            cliente = Clientes.query.get(id)
+            cliente = db.session.get(Clientes, id)
             ventas = db.session.execute(text("CALL ventas_un_cliente(:idcliente, :desde, :hasta)"),
                             {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
             articulos = db.session.execute(text("CALL ventas_art_un_cliente(:idcliente, :desde, :hasta)"),
@@ -459,7 +451,7 @@ def ventasUnCliente():
             cliente = []
             ventas = []
             articulos = []    
-        return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta)
     else:
         id = request.form['idcliente']
         desde = request.form['desde']
@@ -481,7 +473,7 @@ def ventasVendedores():
         hasta = request.form['hasta']
         ventas = db.session.execute(text("CALL venta_vendedores(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-vendedores.html', ventas=ventas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ventas-vendedores.html', ventas=ventas, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/ventasTipoPago', methods=['GET', 'POST'])
 @check_session
@@ -500,7 +492,7 @@ def ventasTipoPago():
         porListaPrecio = db.session.execute(text("CALL ventas_listas_precios(:desde, :hasta, :id_sucursal)"),
                          {'desde': desde, 'hasta': hasta, 'id_sucursal': session['id_sucursal']}).fetchall()
         
-    return render_template('ventas-tipo-pagos.html', porVentas=porVentas, porListaPrecio=porListaPrecio, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ventas-tipo-pagos.html', porVentas=porVentas, porListaPrecio=porListaPrecio, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/ventasUnVendedor', methods=['GET', 'POST'])
 @check_session
@@ -517,12 +509,12 @@ def ventasUnVendedor():
         desde = request.form['fechaDesde']
         hasta = request.form['fechaHasta']
         
-        vendedor = Usuarios.query.get(id)
+        vendedor = db.session.get(Usuarios, id)
         ventas = db.session.execute(text("CALL ventas_un_vendedor(:idvendedor, :desde, :hasta)"),
                          {'idvendedor': id, 'desde': desde, 'hasta': hasta}).fetchall()
         articulos = db.session.execute(text("CALL ventas_art_un_vendedor(:idvendedor, :desde, :hasta)"),
                          {'idvendedor': id, 'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('ventas-un-vendedor.html', vendedor=vendedor, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ventas-un-vendedor.html', vendedor=vendedor, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta)
 
 
 @bp_ventas.route('/get_vta_sucursales/<desde>/<hasta>')
@@ -554,7 +546,7 @@ def nuevo_remito():
             return redirect(url_for('ventas.nuevo_remito'))
     hoy = date.today()
     listas_precio = ListasPrecios.query.all()
-    return render_template('nuevo_remito.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('nuevo_remito.html', hoy=hoy, listas_precio=listas_precio)
 
 @bp_ventas.route('/remitos_vta', methods=['GET', 'POST'])
 @check_session
@@ -566,7 +558,7 @@ def remitos_vta():
         remitos = []
         remitos = db.session.execute(text("CALL get_remitos(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-        return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('remitos.html', remitos=remitos, desde=desde, hasta=hasta)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
@@ -580,7 +572,7 @@ def ver_remito(id):
     if not remito:
         flash('Remito no encontrado', 'error')
         return redirect(url_for('ventas.remitos_vta'))
-    return render_template('remito-vta.html', remito=remito, items=items, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('remito-vta.html', remito=remito, items=items)
 
 @bp_ventas.route('/facturar_remito/<id>', methods=['GET', 'POST'])
 @check_session
@@ -603,7 +595,7 @@ def facturar_remito(id):
         hoy = date.today()
         entidades = EntidadesCred.query.all()
         listas_precio = ListasPrecios.query.all()   
-        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, remito=remito, articulos_remito=articulos_remito, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, remito=remito, articulos_remito=articulos_remito)
 #----------------------- Fin Remitos ------------------------#
 
 #----------------------- Presupuestos -----------------------#
@@ -621,7 +613,7 @@ def nuevo_presupuesto():
             return redirect(url_for('ventas.nuevo_presupuesto'))
     hoy = date.today()
     listas_precio = ListasPrecios.query.all()
-    return render_template('nuevo_presupuesto.html', hoy=hoy, listas_precio=listas_precio, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('nuevo_presupuesto.html', hoy=hoy, listas_precio=listas_precio)
 
 
 @bp_ventas.route('/presupuestos', methods=['GET', 'POST'])
@@ -634,7 +626,7 @@ def presupuestos():
         presupuestos = []
         presupuestos = db.session.execute(text("CALL get_presupuestos(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-        return render_template('presupuestos.html', presupuestos=presupuestos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('presupuestos.html', presupuestos=presupuestos, desde=desde, hasta=hasta)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
@@ -649,7 +641,7 @@ def ver_presupuesto(id):
     if not presupuesto:
         flash('Presupuesto no encontrado', 'error')
         return redirect(url_for('ventas.presupuestos'))
-    return render_template('presupuesto.html', presupuesto=presupuesto, itemsP=itemsP, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('presupuesto.html', presupuesto=presupuesto, itemsP=itemsP)
 
 @bp_ventas.route('/facturar_presupuesto/<id>', methods=['GET', 'POST'])
 @check_session
@@ -672,7 +664,7 @@ def facturar_presupuesto(id):
         hoy = date.today()
         entidades = EntidadesCred.query.all()
         listas_precio = ListasPrecios.query.all()   
-        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, presupuesto=presupuesto, articulos_presupuesto=articulos_presupuesto, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, presupuesto=presupuesto, articulos_presupuesto=articulos_presupuesto)
 
 @bp_ventas.route('/imprimir_presupuesto/<id>') 
 @check_session
@@ -740,4 +732,4 @@ def ivaVentas():
         hasta = request.form['hasta']
         iva_ventas = db.session.execute(text("CALL iva_ventas(:desde, :hasta, :sucursal)"),
                          {'desde': desde, 'hasta': hasta, 'sucursal': session['id_sucursal']}).fetchall()
-    return render_template('iva-ventas.html', iva_ventas=iva_ventas, desde=desde, hasta=hasta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('iva-ventas.html', iva_ventas=iva_ventas, desde=desde, hasta=hasta, sucursales=sucursales)

@@ -1,4 +1,4 @@
-from flask import session, current_app, flash, jsonify
+﻿from flask import session, current_app, flash, jsonify
 import math
 from sqlalchemy import text, func, and_, or_
 from utils.db import db
@@ -212,7 +212,7 @@ def generar_cronograma_frances(monto, tasa_mensual, plazo_meses):
 
 def grabar_cuotas(idcredito, idplan, cronograma):
     try:
-        plan = PlanesCreditos.query.get(idplan)
+        plan = db.session.get(PlanesCreditos, idplan)
         if not plan:
             raise Exception(f'Plan de crédito no encontrado: {idplan}')
         if plan.anticipo:
@@ -244,7 +244,7 @@ def grabar_cuotas(idcredito, idplan, cronograma):
         
 def actualizar_credito(idcredito, estado, monto_total, tasa_interes, cuotas, observaciones):
     try:
-        credito = Creditos.query.get(idcredito)
+        credito = db.session.get(Creditos, idcredito)
         credito.estado = estado
         credito.monto_total = monto_total
         credito.tasa_interes = tasa_interes
@@ -597,6 +597,7 @@ def generarRecibo(idCliente, cuotas, totalCuotas, efectivo, tarjeta, entidad):
         
         return {'success':True, 'mensaje': 'Cuotas cobradas exitosamente.'}
     except Exception as e:
+        db.session.rollback()
         print(f"Error al generar recibo: {e}")
         return {'success':False, 'mensaje': f'Error al generar recibo: {e}'}
 

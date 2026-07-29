@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
 from flask import g
 from datetime import datetime, date
 from models.clientes import Clientes
@@ -11,6 +11,7 @@ from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from sqlalchemy import and_
+from sqlalchemy.orm import joinedload
 
 bp_clientes = Blueprint('clientes', __name__, template_folder='../templates/clientes')
 
@@ -21,7 +22,7 @@ def clientes(id):
     if request.method == 'POST':
         cliente = []
     else:
-        cliente = Clientes.query.get(id)
+        cliente = db.session.get(Clientes, id)
     clientes = Clientes.query.all()
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
@@ -31,42 +32,47 @@ def clientes(id):
         localidades = Localidades.query.filter_by(id_provincia=cliente.idprovincia).all()
     else:
         localidades = []
-    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, categorias=categorias, provincias=provincias, localidades=localidades, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('clientes.html', clientes=clientes, cliente=cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, categorias=categorias, provincias=provincias, localidades=localidades)
 
 @bp_clientes.route('/new_cliente', methods=['POST'])
 @check_session
 def add_cliente():
     id_cliente = request.form['idcliente']
-    if id_cliente:
-        cliente = Clientes.query.get(id_cliente)
-        ctacte = request.form.get("ctacte") != None
-        cliente.nombre = request.form['nombre']
-        cliente.documento = request.form['documento']
-        cliente.email = request.form['mail']
-        cliente.idcategoria = request.form['categoria']
-        cliente.telefono = request.form['telefono']
-        cliente.direccion = request.form['direccion']
-        cliente.idlocalidad = request.form['localidad']
-        cliente.idprovincia = request.form['provincia']
-        cliente.id_tipo_doc = request.form['tipo_doc']
-        cliente.id_tipo_iva = request.form['tipo_iva']
-        cliente.ctacte = ctacte
-        db.session.commit()
-        flash(f'Cliente actualizado: {id_cliente}: {cliente.nombre}')
-    else:     
-        nombre = request.form['nombre']
-        documento = request.form['documento']
-        mail = request.form['mail']
-        categoria = request.form['categoria']
-        telefono = request.form['telefono']
-        direccion = request.form['direccion']
-        localidad = request.form['localidad']
-        provincia = request.form['provincia']
-        ctacte = request.form.get("ctacte") != None
-        id_tipo_doc = request.form['tipo_doc']
-        id_tipo_iva = request.form['tipo_iva']
-        id_cliente = save_cliente(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva)
-        flash(f'Cliente agregado: {id_cliente}: {nombre}')
+    try:
+        if id_cliente:
+            cliente = db.session.get(Clientes, id_cliente)
+            ctacte = request.form.get("ctacte") != None
+            cliente.nombre = request.form['nombre']
+            cliente.documento = request.form['documento']
+            cliente.email = request.form['mail']
+            cliente.idcategoria = request.form['categoria']
+            cliente.telefono = request.form['telefono']
+            cliente.direccion = request.form['direccion']
+            cliente.idlocalidad = request.form['localidad']
+            cliente.idprovincia = request.form['provincia']
+            cliente.id_tipo_doc = request.form['tipo_doc']
+            cliente.id_tipo_iva = request.form['tipo_iva']
+            cliente.ctacte = ctacte
+            db.session.commit()
+            flash(f'Cliente actualizado: {id_cliente}: {cliente.nombre}')
+        else:     
+            nombre = request.form['nombre']
+            documento = request.form['documento']
+            mail = request.form['mail']
+            categoria = request.form['categoria']
+            telefono = request.form['telefono']
+            direccion = request.form['direccion']
+            localidad = request.form['localidad']
+            provincia = request.form['provincia']
+            ctacte = request.form.get("ctacte") != None
+            id_tipo_doc = request.form['tipo_doc']
+            id_tipo_iva = request.form['tipo_iva']
+            id_cliente = save_cliente(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva)
+            flash(f'Cliente agregado: {id_cliente}: {nombre}')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al guardar cliente: {str(e)}', 'error')
+        print(f'Error al guardar cliente: {str(e)}')
     return redirect('/')
 
 @bp_clientes.route('/localidades/<idprovincia>', methods=['GET'])
@@ -146,46 +152,57 @@ def get_clientes():
 @check_session
 @alertas_mensajes
 def update_cliente(id):
-    cliente = Clientes.query.get(id)
+    cliente = db.session.get(Clientes, id)
     tipo_docs = TipoDocumento.query.all()
     tipo_ivas = TipoIva.query.all()
     if request.method == 'GET':
-        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('upd-cliente.html', cliente = cliente, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas)
     if request.method == 'POST':
-        ctacte = request.form.get("ctacte") != None
-        cliente.nombre = request.form['nombre']
-        cliente.documento = request.form['documento']
-        cliente.email = request.form['mail']
-        cliente.telefono = request.form['telefono']
-        cliente.direccion = request.form['direccion']
-        cliente.id_tipo_doc = request.form['tipo_doc']
-        cliente.id_tipo_iva = request.form['tipo_iva']
-        cliente.ctacte = ctacte
-        db.session.commit()
-        
-        flash('Cliente grabado')
-        return redirect(url_for('clientes.clientes'))
+        try:
+            ctacte = request.form.get("ctacte") != None
+            cliente.nombre = request.form['nombre']
+            cliente.documento = request.form['documento']
+            cliente.email = request.form['mail']
+            cliente.telefono = request.form['telefono']
+            cliente.direccion = request.form['direccion']
+            cliente.id_tipo_doc = request.form['tipo_doc']
+            cliente.id_tipo_iva = request.form['tipo_iva']
+            cliente.ctacte = ctacte
+            db.session.commit()
+            
+            flash('Cliente grabado')
+            return redirect(url_for('clientes.clientes'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar cliente: {str(e)}', 'error')
+            print(f'Error al actualizar cliente: {str(e)}')
+            return redirect(url_for('clientes.clientes'))
 
 @bp_clientes.route('/delete_cliente/<id>')
 @check_session
 def delete_cliente(id):
-    cliente = Clientes.query.get(id)
+    cliente = db.session.get(Clientes, id)
     if cliente.ctacte == True:
         saldo = saldo_ctacte(id)
         if saldo['total_debe'] > 0 or saldo['total_haber'] > 0:
             flash('No se puede eliminar un cliente con saldo en cta. cte.')
         return redirect(url_for('clientes.clientes'))
     
-    cliente.baja = date.today()
-    db.session.commit()
-    flash('Cliente dado de baja')
+    try:
+        cliente.baja = date.today()
+        db.session.commit()
+        flash('Cliente dado de baja')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al dar de baja cliente: {str(e)}', 'error')
+        print(f'Error al dar de baja cliente: {str(e)}')
     return redirect(url_for('clientes.clientes'))
 
 @bp_clientes.route('/facturas_cliente/<id>', methods=['GET', 'POST'])
 @check_session
 @alertas_mensajes
 def facturas_cliente(id):
-    cliente = Clientes.query.get(id)
+    cliente = db.session.get(Clientes, id)
     if request.method == 'POST':
         # Obtener las fechas del formulario
         desde_str = request.form['desde']
@@ -195,23 +212,29 @@ def facturas_cliente(id):
         desde = datetime.strptime(desde_str, '%Y-%m-%d')
         hasta = datetime.strptime(hasta_str, '%Y-%m-%d')
         
-        # Realizar la consulta con join y filtro por fechas
-        facturas = db.session.query(Factura).join(Clientes).filter(
+        # Realizar la consulta con eager loading para evitar N+1 en el template
+        facturas = db.session.query(Factura).options(
+            joinedload(Factura.cliente),
+            joinedload(Factura.sucursal)
+        ).filter(
             Factura.idcliente == cliente.id,
             Factura.fecha >= desde,
             Factura.fecha <= hasta
         ).all()
         
         # Pasar los resultados a la plantilla
-        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde_str, hasta=hasta_str)
     desde = date.today()
     hasta = date.today()
-    facturas = db.session.query(Factura).join(Clientes).filter(
+    facturas = db.session.query(Factura).options(
+            joinedload(Factura.cliente),
+            joinedload(Factura.sucursal)
+        ).filter(
             Factura.idcliente == cliente.id,
             Factura.fecha >= desde,
             Factura.fecha <= hasta
         ).all()
-    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)   
+    return render_template('facturas-cli.html', facturas=facturas, cliente=cliente, desde=desde, hasta=hasta)   
 
 @bp_clientes.route('/abc_clientes', methods=['GET', 'POST'])
 @check_session
@@ -233,4 +256,4 @@ def abc_clientes():
         abc_montos = get_abc_montos(desde, hasta)   
         abc_productos = get_abc_productos(desde, hasta)
         
-        return render_template('abc-clientes.html', desde=desde, hasta=hasta, abc_operaciones=abc_operaciones, abc_montos=abc_montos, abc_productos=abc_productos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('abc-clientes.html', desde=desde, hasta=hasta, abc_operaciones=abc_operaciones, abc_montos=abc_montos, abc_productos=abc_productos)

@@ -1,41 +1,9 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
-// Función para asegurar que existan campos hidden de color/detalle
-function ensureColorDetalleFields() {
-  const rows = document.querySelectorAll("#tabla-items tbody tr");
-  
-  rows.forEach((row, index) => {
-    const firstCell = row.querySelector("td.id-articulo");
-    if (firstCell) {
-      // Verificar si ya tiene los campos
-      let colorInput = row.querySelector('[name*="id_color"]');
-      let detalleInput = row.querySelector('[name*="id_detalle"]');
-      
-      if (!colorInput) {
-        colorInput = document.createElement('input');
-        colorInput.type = 'hidden';
-        colorInput.name = `items[${index}][id_color]`;
-        colorInput.value = '0';
-        firstCell.appendChild(colorInput);
-      }
-      
-      if (!detalleInput) {
-        detalleInput = document.createElement('input');
-        detalleInput.type = 'hidden';
-        detalleInput.name = `items[${index}][id_detalle]`;
-        detalleInput.value = '0';
-        firstCell.appendChild(detalleInput);
-      }
-    }
-  });
-}
+// ensureColorDetalleFields() → movida a invoice-utils.js
 
-window.onbeforeunload = function () {
-  if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la compra sin guardar los cambios?";
-  }
-};
+window.onbeforeunload = confirmarSalida;
 
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("invoice_form");
@@ -199,11 +167,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
   }
 }
 
-function asignarArticuloElegido(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
-  asignarArticulo(articulo, itemDiv);
-  
-}
+// asignarArticuloElegido() → movida a invoice-utils.js
 
 function asignarArticulo(articulo, itemDiv) {
   const row = itemDiv.target.closest("tr");
@@ -291,19 +255,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
   window.universalSearchModal.show('articulos', articulos, callback);
 }
 
-function updateItemTotal(itemDiv) {
-  const precioUnitario = parseFloat(
-    itemDiv.target.closest("tr").querySelector(".precio-unitario").value
-  );
-  const cantidad = parseFloat(
-    itemDiv.target.closest("tr").querySelector(".cantidad").value
-  );
-  const precioTotal = (precioUnitario * cantidad).toFixed(2);
-  if (isNaN(precioTotal)) {
-    precioTotal = 0;
-  }
-  itemDiv.target.closest("tr").querySelector(".precio-total").value = precioTotal;
-}
+// updateItemTotal() → movida a invoice-utils.js
 
 function updateTotalFactura() {
   const filas = document.querySelectorAll("#tabla-items tbody tr");
@@ -330,20 +282,7 @@ function removeItem(itemDiv) {
   renumberItems();
 }
 
-function renumberItems() {
-  const itemDivs = document.querySelectorAll("#items .item");
-  itemDivs.forEach((itemDiv, index) => {
-    itemDiv
-      .querySelector(".idarticulo")
-      .setAttribute("name", `items[${index}][idarticulo]`);
-    itemDiv
-      .querySelector(".cantidad")
-      .setAttribute("name", `items[${index}][cantidad]`);
-    itemDiv
-      .querySelector(".precio_articulo")
-      .setAttribute("name", `items[${index}][cantidad]`);
-  });
-}
+// renumberItems() → movida a invoice-utils.js
 
 // Funciones calcSaldo() y checkTotales() movidas a modal-transacciones-universal.js
 // para usar la implementación universal que funciona correctamente
@@ -375,12 +314,19 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
             <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">-</td>
             <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
             <td class="descripcion-articulo">-</td>
-            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00" step="0.01" min="0.01" onfocus="this.select()" required></td>
-            <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" onfocus="this.select()" required></td> 
+            <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" value="0.00" step="0.01" min="0.01" required></td>
+            <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
             <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
             <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
         </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+
+  // Agregar event listeners focus (CSP-compatible)
+  const nuevaTr = tablaItems.querySelector(`tr:last-child`);
+  nuevaTr.querySelectorAll('.precio-unitario, .cantidad').forEach(input => {
+    input.addEventListener('focus', function() { this.select(); });
+  });
+
   contadorFilas++;
   // Enfocar el nuevo input de código
   const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
@@ -427,7 +373,8 @@ document
     
     const confirmado = await confirmar('¿Grabar la factura?');
     if (confirmado) {
-      isFormSubmited = true;
+      sinGuardar = false;
+        isFormSubmited = true;
       this.submit();
     }
   });
@@ -569,7 +516,8 @@ async function procesarTransaccion() {
     }
     
     // Marcar que el formulario está siendo enviado para evitar el warning de beforeunload
-    isFormSubmited = true;
+    sinGuardar = false;
+        isFormSubmited = true;
     
     // Enviar formulario de la manera tradicional (sin AJAX)
     form.submit();

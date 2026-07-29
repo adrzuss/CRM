@@ -1,4 +1,4 @@
-from flask import session, jsonify
+﻿from flask import session, jsonify
 from datetime import date, datetime
 from sqlalchemy import func, and_, text
 from utils.db import db
@@ -9,7 +9,7 @@ def autenticar_usuario(usuario, clave, sucursal_id):
     usuario_ok = check_user(usuario, clave)
     if usuario_ok:
         session['id_sucursal'] = int(sucursal_id)
-        sucursal = Sucursales.query.get(session['id_sucursal'])
+        sucursal = db.session.get(Sucursales, session['id_sucursal'])
         session['nombre_sucursal'] = sucursal.nombre
         return True
     else:
@@ -34,7 +34,7 @@ def get_usuarios():
 
 def get_usuario(id):
     try:
-        usuario = Usuarios.query.get_or_404(id)
+        usuario = db.get_or_404(Usuarios, id)
         return {"id": usuario.id, "nombre": usuario.nombre, "usuario": usuario.usuario, "clave": usuario.clave, "documento": usuario.documento, "telefono": usuario.telefono, "mail": usuario.email, "direccion": usuario.direccion}, 200
     except Exception as e:
         print(f'error: {e}')
@@ -51,7 +51,7 @@ def new_user(nombre, documento, telefono, mail, direccion, usuario, clave):
         return jsonify(success=False, error=str(e)), 404    
    
 def update_usuario(id, nombre, documento, telefono, mail, direccion, usuario, clave):
-    user = Usuarios.query.get(id)
+    user = db.session.get(Usuarios, id)
     user.nombre = nombre
     user.documento = documento
     user.telefono = telefono
@@ -81,7 +81,7 @@ def update_tareas_usuario(id_tarea, id_usuario):
 def get_mensaje(id):
     try:
         from models.sessions import Mensajes
-        mensajes = Mensajes.query.get(id)
+        mensajes = db.session.get(Mensajes, id)
         if not mensajes:
             return jsonify(success=False, error='Mensaje no encontrado'), 404
         else:

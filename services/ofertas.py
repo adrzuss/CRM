@@ -1,4 +1,4 @@
-from flask import current_app, jsonify
+﻿from flask import current_app, jsonify
 from models.ofertas import Oferta, OfertasCondiciones, TipoDescuento, TipoCondiciones, OfertasVinculadas, ReglaSeleccion
 from utils.db import db
 from datetime import datetime
@@ -8,7 +8,7 @@ class OfertaService:
     def obtener_oferta_por_id(self, id):
         """Obtiene una oferta con todas sus condiciones"""
         try:
-            oferta = Oferta.query.get(id)
+            oferta = db.session.get(Oferta, id)
             if not oferta:
                 return None
             
@@ -99,7 +99,7 @@ class OfertaService:
     def actualizar_oferta(self, id, datos_oferta, condiciones):
         """Actualiza una oferta existente con sus condiciones"""
         try:
-            oferta = Oferta.query.get(id)
+            oferta = db.session.get(Oferta, id)
             if not oferta:
                 raise ValueError("Oferta no encontrada")
                 
@@ -134,7 +134,7 @@ class OfertaService:
         
     def actualizar_oferta_vinculada(self, id, datos_oferta, articulo_origen, articulo_destino):
         try:
-            oferta = Oferta.query.get(id)
+            oferta = db.session.get(Oferta, id)
             if not oferta:
                 raise ValueError("Oferta no encontrada")
 
@@ -163,7 +163,7 @@ class OfertaService:
         
     def actualizar_oferta_regla_seleccion(self, id, datos_oferta, condiciones, regla):
         try:
-            oferta = Oferta.query.get(id)
+            oferta = db.session.get(Oferta, id)
             if not oferta:
                 raise ValueError("Oferta no encontrada")
 
@@ -243,7 +243,7 @@ class OfertaService:
     def obtener_referencias_por_tipo(self, tipo_condicion_id):
         """Obtiene las referencias según el tipo de condición"""
         try:
-            tipo = TipoCondiciones.query.get(tipo_condicion_id)
+            tipo = db.session.get(TipoCondiciones, tipo_condicion_id)
             if not tipo:
                 return []
                 
@@ -286,7 +286,7 @@ class OfertaService:
         Por ejemplo, si es tipo marca, devuelve todas las marcas
         ""
         try:
-            tipo = TipoCondiciones.query.get(tipo_condicion_id)
+            tipo = db.session.get(TipoCondiciones, tipo_condicion_id)
             if not tipo:
                 return []
                 

@@ -1,10 +1,6 @@
 isFormSubmited = false; // Variable para controlar si el formulario ha sido enviado
 
-window.onbeforeunload = function () {
-  if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la Orden de pago sin guardar los cambios?";
-  }
-};
+window.onbeforeunload = confirmarSalida;
 
 document.getElementById('idproveedor').focus();
 
@@ -217,7 +213,8 @@ document.getElementById('invoice_form').addEventListener('submit', async functio
         return;
     }
     
-    isFormSubmited = true;
+    sinGuardar = false;
+        isFormSubmited = true;
     this.submit();
 });
  

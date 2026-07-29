@@ -1,41 +1,9 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
-window.onbeforeunload = function () {
-  if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
-  }
-};
+window.onbeforeunload = confirmarSalida;
 
-// Función para asegurar que existan campos hidden de color/detalle
-function ensureColorDetalleFields() {
-  const rows = document.querySelectorAll("#tabla-items tbody tr");
-  
-  rows.forEach((row, index) => {
-    const firstCell = row.querySelector("td.id-articulo");
-    if (firstCell) {
-      // Verificar si ya tiene los campos
-      let colorInput = row.querySelector('[name*="id_color"]');
-      let detalleInput = row.querySelector('[name*="id_detalle"]');
-      
-      if (!colorInput) {
-        colorInput = document.createElement('input');
-        colorInput.type = 'hidden';
-        colorInput.name = `items[${index}][id_color]`;
-        colorInput.value = '0';
-        firstCell.appendChild(colorInput);
-      }
-      
-      if (!detalleInput) {
-        detalleInput = document.createElement('input');
-        detalleInput.type = 'hidden';
-        detalleInput.name = `items[${index}][id_detalle]`;
-        detalleInput.value = '0';
-        firstCell.appendChild(detalleInput);
-      }
-    }
-  });
-}
+// ensureColorDetalleFields() → movida a invoice-utils.js
 
 document.addEventListener("DOMContentLoaded", async function () {
   // Configurar atajos de teclado
@@ -185,11 +153,7 @@ function setupKeyboardShortcuts() {
   });
 }
 
-function limpiarDatosCliente() {
-  inputIdCliente = document.getElementById("idcliente");
-  inputIdCliente.value = "";
-  inputIdCliente.focus();
-}
+// limpiarDatosCliente() → movida a invoice-utils.js
 
 async function fetchCliente(input) {
   let response;
@@ -236,17 +200,7 @@ async function fetchCliente(input) {
   }  
 }
 
-function mostrarModalSeleccionClientes(clientes) {
-  const callback = (cliente) => {
-    asignarCliente(cliente);
-    // Enfocar el nuevo input de código
-    const clienteInput = document.getElementById("idcliente");
-    if (clienteInput) clienteInput.focus();
-  };
-  
-  // Mostrar modal con los datos
-  window.universalSearchModal.show('clientes', clientes || [], callback);
-}
+// mostrarModalSeleccionClientes() → movida a invoice-utils.js
 
 function asignarCliente(cliente) {
   document.getElementById("idcliente").value = cliente.id;
@@ -291,11 +245,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
   }
 }
 
-function asignarArticuloElegido(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value =
-    articulo.codigo;
-  asignarArticulo(articulo, itemDiv);
-}
+// asignarArticuloElegido() → movida a invoice-utils.js
 
 function asignarArticulo(articulo, itemDiv) {
   const row = itemDiv.target.closest("tr");
@@ -384,16 +334,7 @@ function mostrarModalSeleccionArticulos(articulos, itemDiv) {
   window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 
-function updateItemTotal(itemDiv) {
-  const precioUnitario = parseFloat(itemDiv.target.closest("tr").querySelector(".precio-unitario").value);
-  const cantidad = parseFloat(itemDiv.target.closest("tr").querySelector(".cantidad").value);
-  const precioTotal = (precioUnitario * cantidad).toFixed(2);
-  if (isNaN(precioTotal)) {
-    precioTotal = 0;
-  }
-  itemDiv.target.closest("tr").querySelector(".precio-total").value =
-    precioTotal;
-}
+// updateItemTotal() → movida a invoice-utils.js
 
 function updateTotalFactura() {
   const filas = document.querySelectorAll("#tabla-items tbody tr");
@@ -415,20 +356,7 @@ function removeItem(itemDiv) {
   renumberItems();
 }
 
-function renumberItems() {
-  const itemDivs = document.querySelectorAll("#items .item");
-  itemDivs.forEach((itemDiv, index) => {
-    itemDiv
-      .querySelector(".idarticulo")
-      .setAttribute("name", `items[${index}][idarticulo]`);
-    itemDiv
-      .querySelector(".cantidad")
-      .setAttribute("name", `items[${index}][cantidad]`);
-    itemDiv
-      .querySelector(".precio_articulo")
-      .setAttribute("name", `items[${index}][cantidad]`);
-  });
-}
+// renumberItems() → movida a invoice-utils.js
 
 document.getElementById("idcliente").addEventListener("blur", function () {
   const idcliente = this.value;
@@ -525,6 +453,7 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
     
     // Asegurar que los campos color/detalle estén presentes antes del envío
     ensureColorDetalleFields();
-    isFormSubmited = true;
+    sinGuardar = false;
+        isFormSubmited = true;
     this.submit();
   });

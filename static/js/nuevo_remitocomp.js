@@ -31,11 +31,7 @@ function ensureColorDetalleFields() {
   });
 }
 
-window.onbeforeunload = function () {
-  if (!isFormSubmited) {
-    return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
-  }
-};
+window.onbeforeunload = confirmarSalida;
 
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("invoice_form");
@@ -336,7 +332,8 @@ document
 
     const confirmado = await confirmar('¿Grabar el remito?');
     if (confirmado) {
-      isFormSubmited = true;
+      sinGuardar = false;
+        isFormSubmited = true;
       this.submit();
     }
   });

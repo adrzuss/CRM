@@ -1,9 +1,12 @@
 import logging
-from flask import Flask, session, redirect, url_for, render_template, flash
+import secrets
+from flask import Flask, session, redirect, url_for, render_template, flash, g
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.exc import OperationalError
 from services.configs import getOwner, getTareaUsuario
 from services.sessions import get_permisos_usuario, tiene_permiso
 from utils.db import db
+from flask_migrate import Migrate, upgrade
 from utils.utils import check_session
 from utils.config import Config
 from models.articulos import PedirEnVentas
@@ -23,6 +26,8 @@ from routes.bancos import bp_bancos
 from routes.ofertas import bp_ofertas
 from routes.reportes import bp_reportes
 
+migrate = Migrate()
+
 def create_app():
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, template_folder=Config.TEMPLATES_FOLDER)
     
@@ -34,6 +39,9 @@ def create_app():
                     ])
     
     app.config.from_object(Config)
+    CSRFProtect(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
     app.register_blueprint(bp_sesiones, url_prefix= '/sesiones')
     app.register_blueprint(bp_tableros, url_prefix='/')
     app.register_blueprint(bp_clientes, url_prefix='/clientes')
@@ -55,6 +63,7 @@ def create_app():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)
         if not ('id_empresa' in session):
             session['id_empresa'] = 1
+        g.nonce = secrets.token_hex(16)  # Nonce para CSP en scripts inline
     
     @app.context_processor
     def inject_permisos_menu():
@@ -84,6 +93,51 @@ def create_app():
             'tiene_permiso': tiene_permiso_menu,
             'plan_vencido': plan_vencido
         }
+
+    @app.context_processor
+    def inject_alertas():
+        """Inyecta alertas y mensajes en todas las plantillas.
+        
+        Usa getattr con defaults para rutas que no usan @alertas_mensajes
+        (login, logout, etc.) donde g.alertas no está definido.
+        """
+        return dict(
+            alertas=getattr(g, 'alertas', []),
+            cantidadAlertas=getattr(g, 'cantidadAlertas', 0),
+            mensajes=getattr(g, 'mensajes', []),
+            cantidadMensajes=getattr(g, 'cantidadMensajes', 0)
+        )
+    
+    @app.after_request
+    def add_security_headers(response):
+        """Agrega headers de seguridad HTTP a todas las respuestas."""
+        nonce = getattr(g, 'nonce', '')
+        
+        # Headers básicos de seguridad
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '0'  # Deprecated, pero BACA
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        
+        # HSTS solo si la cookie de sesión usa Secure (producción con HTTPS)
+        if Config.SESSION_COOKIE_SECURE:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        
+        # Content-Security-Policy
+        csp = (
+            f"default-src 'self'; "
+            f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://unpkg.com; "
+            f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            f"font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            f"img-src 'self' data:; "
+            f"connect-src 'self'; "
+            f"frame-ancestors 'none'; "
+            f"form-action 'self'"
+        )
+        response.headers['Content-Security-Policy'] = csp
+        
+        return response
             
     return app
 
@@ -95,8 +149,7 @@ except Exception as e:
 
 try:
     with app.app_context():
-        db.init_app(app)
-        db.create_all()   
+        upgrade()   
 except OperationalError:
     @app.route('/')
     def error_db():

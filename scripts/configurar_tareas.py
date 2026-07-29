@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Script para configurar las tareas básicas del sistema de permisos.
 Este script debe ejecutarse una sola vez para inicializar las tareas en la base de datos.
@@ -42,7 +42,7 @@ def configurar_tareas():
         # Crear las tareas
         for tarea_data in tareas_basicas:
             # Verificar si la tarea ya existe
-            tarea_existente = Tareas.query.get(tarea_data["id"])
+            tarea_existente = db.session.get(Tareas, tarea_data["id"])
             
             if tarea_existente:
                 print(f"Tarea '{tarea_data['tarea']}' ya existe (ID: {tarea_data['id']})")
@@ -129,7 +129,7 @@ def mostrar_usuarios_tareas():
             if tareas_asignadas:
                 print("   Tareas asignadas:")
                 for ta in tareas_asignadas:
-                    tarea = Tareas.query.get(ta.idtarea)
+                    tarea = db.session.get(Tareas, ta.idtarea)
                     if tarea:
                         print(f"   - {tarea.tarea} (ID: {tarea.id})")
             else:

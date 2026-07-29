@@ -1,0 +1,59 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Tech stack: Python 3.x / Flask 3.0 / SQLAlchemy 2.0 / MySQL (mysqlclient) / Jinja2 / Bootstrap 5 / jQuery / HTMX / WeasyPrint (PDF) / AFIP electronic invoicing
+  Architecture: Flask blueprints (14 modules) with layered models/routes/services/utils; stored procedures via text(); Jinja2 templates with partials/container-presentational patterns
+  Testing: No test runner detected (pytest not installed, no test files, no test config). Strict TDD mode disabled.
+  Style: PEP 8 conventions, Spanish for all identifiers/comments/UI, snake_case, Decimal for monetary values, @check_session decorator for auth, db.session pattern with try-except-rollback
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Max 400 lines per PR; ask before exceeding
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Specs in Spanish (project convention)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    - Follow existing code patterns (Spanish snake_case, Decimal for money, try-except-rollback)
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "python index.py"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+testing:
+  strict_tdd: false
+  reason: "No test runner detected (pytest not installed, no tests/ directory, no test files)."
+  runner: null
+  framework: null
+  layers:
+    unit: null
+    integration: null
+    e2e: null
+  coverage: false
+  coverage_command: null
+  quality:
+    linter: null
+    type_checker: null
+    formatter: null
+
+init:
+  date: 2026-06-30
+  mode: openspec
+  project: crm
+  agent: opencode
+  preflight:
+    rhythm: interactive
+    pr_threshold: 400
+    ask_before_large_pr: true

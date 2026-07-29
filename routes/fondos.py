@@ -36,7 +36,7 @@ def caja():
         for registro in  resultadosCompras:
             totalCompra = totalCompra + registro[1]
     usuarios = Usuarios.query.all()        
-    return render_template('caja.html', fecha=fecha, resultadosVentas=resultadosVentas, resultadosCompras=resultadosCompras, totalVenta=totalVenta, totalCompra=totalCompra, usuarios=usuarios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('caja.html', fecha=fecha, resultadosVentas=resultadosVentas, resultadosCompras=resultadosCompras, totalVenta=totalVenta, totalCompra=totalCompra, usuarios=usuarios)
 
 @bp_fondos.route('/flujoFondos', methods=['GET', 'POST'])
 @check_session
@@ -94,7 +94,7 @@ def flujo_fondos():
         for compras in detalleCompras:
             estadoResultado.append([compras[1], format_currency(compras[0]), 'Compra/Gasto'])
         
-    return render_template('flujo-fondos.html', desde=desde, hasta=hasta, detalles=detalles, montos=montos, valoresVtasCompras=ventasCompras['valores'], detalleVtasCompras=ventasCompras['detalle'], detalleGastosLeyendas=detalleGastos['detalle'], detalleGastosValores=detalleGastos['valores'], detallesCtasCtes=detallesCtasCtes, valoresCtasCtes=valoresCtasCtes, estadoResultado=estadoResultado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('flujo-fondos.html', desde=desde, hasta=hasta, detalles=detalles, montos=montos, valoresVtasCompras=ventasCompras['valores'], detalleVtasCompras=ventasCompras['detalle'], detalleGastosLeyendas=detalleGastos['detalle'], detalleGastosValores=detalleGastos['valores'], detallesCtasCtes=detallesCtasCtes, valoresCtasCtes=valoresCtasCtes, estadoResultado=estadoResultado)
 
 
 @bp_fondos.route('/rendicionCaja/<idRendicion>', methods=['GET', 'POST'])
@@ -123,8 +123,7 @@ def rendicionCaja(idRendicion):
     totalRendido = 0
     return render_template('rend-cajas.html', totalRendido=totalRendido, tipos_rendicion=tipos_rendicion, puntosVta=puntosVta, \
                            usuarios=usuarios, rendicion=rendicion, valoresRendidos=valoresRendidos, monedas_billetes=monedas_billetes, \
-                           sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, \
-                           cantidadMensajes=g.cantidadMensajes)
+                           sucursales=sucursales)
 
 
 @bp_fondos.route('/lst_rendiciones', methods=['GET', 'POST'])
@@ -137,4 +136,4 @@ def lst_rendiciones():
         rendiciones = getRendiciones(desde, hasta)
     else:
         return redirect(url_for('fondos.lst_rendiciones'))
-    return render_template('lst-rendiciones.html', rendiciones=rendiciones, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('lst-rendiciones.html', rendiciones=rendiciones, desde=desde, hasta=hasta)

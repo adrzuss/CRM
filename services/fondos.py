@@ -1,4 +1,4 @@
-from sqlalchemy import func, and_, text
+﻿from sqlalchemy import func, and_, text
 from models.ventas import Factura, PagosFV
 from models.proveedores import FacturaC, PagosFC
 from models.configs import PagosCobros, MonedasBilletes, TipoRendiciones, RendicionesCaja, ItemsRendicionesCaja
@@ -216,7 +216,7 @@ def procesarRendicion(form):
     try:
         rendicion = []
         if id > 0:
-            rendicion = RendicionesCaja.query.get(id)
+            rendicion = db.session.get(RendicionesCaja, id)
         if rendicion:
             rendicion.fecha = fecha
             rendicion.usuario = usuario
@@ -256,6 +256,7 @@ def procesarItemsRendicon(idrendicion, form):
         return True, 'ok'    
             
     except Exception as e:
+        db.session.rollback()
         print(f"Error procesando items: {e}")            
         return False, e
     

@@ -696,7 +696,7 @@ function generarCheque() {
             <td>$${importe.toFixed(2)}</td>
             <td>${document.getElementById('banco').options[document.getElementById('banco').selectedIndex].text}</td>
             <td>
-                <button class="btn btn-sm btn-danger" onclick="eliminarCheque(this)">
+                <button class="btn btn-sm btn-danger btn-eliminar-cheque">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -806,7 +806,7 @@ function agregarValor() {
         <td>${fechaVto}</td>
         <td>$${importe.toFixed(2)}</td>
         <td>
-            <button class="btn btn-sm btn-danger" onclick="eliminarValor(this)">
+            <button class="btn btn-sm btn-danger btn-eliminar-valor">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
@@ -1068,6 +1068,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validación al cerrar
     $('#transaccionesModal').on('hide.bs.modal', function(e) {
         // Aquí puedes agregar validaciones antes de cerrar si es necesario
+    });
+    
+    // Delegación de eventos CSP-compatible para eliminar cheques
+    document.getElementById('cheques')?.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-eliminar-cheque');
+        if (btn) eliminarCheque(btn);
+    });
+    
+    // Delegación de eventos CSP-compatible para eliminar valores
+    document.getElementById('valores')?.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-eliminar-valor');
+        if (btn) eliminarValor(btn);
+    });
+
+    // Event listener CSP-compatible para el botón procesar transacción (F9)
+    // Usa window.procesarTransaccion para respetar el override de cada página (ventas, compras, etc.)
+    document.getElementById('btnProcesarTransaccion')?.addEventListener('click', function() {
+        if (typeof window.procesarTransaccion === 'function') {
+            window.procesarTransaccion();
+        }
     });
 });
 

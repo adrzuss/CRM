@@ -71,6 +71,26 @@ class UniversalSearchModal {
         $(modal).on('shown.bs.modal', () => {
             searchInput?.focus();
         });
+
+        // Delegación de eventos CSP-compatible para resultados
+        const resultsContainer = document.getElementById('searchResults');
+        if (resultsContainer) {
+            resultsContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.result-item');
+                if (item) {
+                    const index = parseInt(item.dataset.index);
+                    if (!isNaN(index)) this.selectItem(index);
+                }
+            });
+
+            resultsContainer.addEventListener('mouseover', (e) => {
+                const item = e.target.closest('.result-item');
+                if (item) {
+                    const index = parseInt(item.dataset.index);
+                    if (!isNaN(index)) this.hoverItem(index);
+                }
+            });
+        }
     }
 
     /**
@@ -373,9 +393,7 @@ class UniversalSearchModal {
             
             return `
                 <div class="result-item ${selectedClass}" 
-                     data-index="${index}" 
-                     onclick="window.universalSearchModal.selectItem(${index})"
-                     onmouseover="window.universalSearchModal.hoverItem(${index})">
+                     data-index="${index}">
                     ${config.displayTemplate(item)}
                 </div>
             `;
@@ -429,7 +447,7 @@ class UniversalSearchModal {
             this.callback(selectedItem);
         }
         
-        // Cerrar modal
+        // Cerrar modal — el foco post-cierre lo maneja hidden.bs.modal en cada página
         $('#universalSearchModal').modal('hide');
     }
 
@@ -543,9 +561,12 @@ window.mostrarModalSeleccionArticulos = function(articulos, idlista, itemDiv, ca
                 asignarArticulo(articulo, itemDiv);
             }
             
-            // Enfocar próximo input si existe
-            const nuevoInputCodigo = document.querySelector(`#tabla-items tr:last-child .codigo-articulo`);
-            if (nuevoInputCodigo) nuevoInputCodigo.focus();
+            // Foco después de que Bootstrap termine de cerrar el modal
+            $('#universalSearchModal').one('hidden.bs.modal', function() {
+                const inputCodigo = itemDiv?.target?.closest('tr')?.querySelector('.codigo-articulo')
+                    ?? document.querySelector('#tabla-items tr:last-child .codigo-articulo');
+                if (inputCodigo) inputCodigo.focus();
+            });
         };
     }
     

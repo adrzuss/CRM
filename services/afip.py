@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from flask import session, current_app
 from datetime import datetime
 from zeep import Client, Transport
@@ -24,7 +24,7 @@ class AFIP:
     def save_auth_data(self):
         """Guarda los datos de autenticación en archivo"""
         print('Vamos a guardar los datos del TA')
-        puntos_vta = PuntosVenta.query.get(self.punto_venta)
+        puntos_vta = db.session.get(PuntosVenta, self.punto_venta)
         if puntos_vta:
             try:
                 puntos_vta.token = self.auth['Token'],
@@ -43,7 +43,7 @@ class AFIP:
     def authenticate(self):
         #Si el token ya existe y no ha expirado, no es necesario volver a autenticar
         self.verbose = True
-        puntoVta = PuntosVenta.query.get(self.punto_venta)
+        puntoVta = db.session.get(PuntosVenta, self.punto_venta)
         if puntoVta:
             ahora = datetime.now()
             if puntoVta.expiration and puntoVta.expiration > ahora:
@@ -116,7 +116,7 @@ class AFIP:
         # Implementación para extraer CUIT del certificado
         # Esto depende de cómo esté estructurado tu certificado
         # Lo voy a extraer desde la configuración de la aplicación
-        config = Configuracion.query.get(session['id_empresa'])
+        config = db.session.get(Configuracion, session['id_empresa'])
         return config.documento
         
     

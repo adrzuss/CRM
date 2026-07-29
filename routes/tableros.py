@@ -50,8 +50,8 @@ def tablero_inicial():
                            saldo_clientes_vencido=format_currency(saldo_clientes_vencido), saldo_proveedores=saldo_proveedores, \
                            meses=vta_6_meses['meses'], operaciones=vta_6_meses['operaciones'], tipoPagoss=pagosHoy['tipo_pago'], \
                            cantPagoss=pagosHoy['total_pago'], rubros=vta_rubros['rubros'], vtaRubros=vta_rubros['vtaRubros'], cantRubros=vta_rubros['cantRubros'], \
-                           ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, datos_creditos=datos_creditos, \
-                           alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+                            ventasSucursales=ventasSucursales, ventasVendedores=ventasVendedores, datos_creditos=datos_creditos)
+
 
 @bp_tableros.route('/tablero-gerencial')
 @check_session
@@ -84,11 +84,7 @@ def tablero_gerencial():
     return render_template('reportes/reporte-gerencial.html',
                            desde=desde.strftime('%Y-%m-%d'),
                            hasta=hasta.strftime('%Y-%m-%d'),
-                           data=data,
-                           alertas=g.alertas,
-                           cantidadAlertas=g.cantidadAlertas,
-                           mensajes=g.mensajes,
-                           cantidadMensajes=g.cantidadMensajes)    
+                           data=data)    
 
 @bp_tableros.route('/tablero-administrativo')
 @check_session
@@ -121,10 +117,10 @@ def tablero_basico():
     ultimas_op = get_ultimas_operaciones()
     stock_negativos = get_stocks_negativos()
     stock_faltantes = get_stocks_faltantes()
-    return render_template('tablero-basico.html', tituloTablero='Básico', op_hoy=op_hoy, op_semana=op_semana, op_este_mes=op_este_mes, detalles=los_10_mas_vendidos['det_arts'], cantidades=los_10_mas_vendidos['vta_arts'], ultimas_op=ultimas_op, stock_negativos=stock_negativos, stock_faltantes=stock_faltantes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('tablero-basico.html', tituloTablero='Básico', op_hoy=op_hoy, op_semana=op_semana, op_este_mes=op_este_mes, detalles=los_10_mas_vendidos['det_arts'], cantidades=los_10_mas_vendidos['vta_arts'], ultimas_op=ultimas_op, stock_negativos=stock_negativos, stock_faltantes=stock_faltantes)
 
 @bp_tableros.route('/plan-vencido')
 @check_session
 @alertas_mensajes
 def plan_vencido():
-    return render_template('plan-vencido.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('plan-vencido.html')

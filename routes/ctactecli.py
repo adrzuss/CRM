@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, g, session
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, g, session
 from datetime import datetime
 from sqlalchemy import func
 from models.clientes import Clientes
@@ -25,18 +25,18 @@ def add_cta_cte_cli():
             return redirect(url_for('ctactecli.lst_cta_cte_cli', id=ctacte_cli.idcliente))
     
     if request.method == 'GET':
-        return render_template('ctacte-cli.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ctacte-cli.html')
 
 @bp_ctactecli.route('/lstctactecli/<id>')
 @check_session
 @alertas_mensajes
 def lst_cta_cte_cli(id):
-    cliente = Clientes.query.get_or_404(id)
+    cliente = db.get_or_404(Clientes, id)
     entidades = EntidadesCred.query.all()
     movimientos = CtaCteCli.query.filter_by(idcliente=cliente.id).order_by(CtaCteCli.fecha.desc()).all()
     saldo_total = saldo_ctacte(cliente.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    return render_template('lst-ctactecli.html', movimientos=movimientos, idCliente=cliente.id, nomCliente=cliente.nombre, entidades=entidades, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('lst-ctactecli.html', movimientos=movimientos, idCliente=cliente.id, nomCliente=cliente.nombre, entidades=entidades, saldoTotal=saldoTotal)
 
 @bp_ctactecli.route('/saldosctactecli', methods=['GET'])
 @check_session
@@ -58,7 +58,7 @@ def saldosctactecli():
     ).all()
     print(saldos)
     # Pasar los resultados a la plantilla
-    return render_template('saldos-ctactecli.html', saldos=saldos,  alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('saldos-ctactecli.html', saldos=saldos)
 
 
 
@@ -92,9 +92,9 @@ def movsctactecli():
         ).all()
 
         # Pasar los resultados a la plantilla
-        return render_template('movs-ctactecli.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('movs-ctactecli.html', saldos=saldos, desde=fecha_str)
     
-    #return render_template('movs-ctactecli.html', desde=desde, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    #return render_template('movs-ctactecli.html', desde=desde)
 
 # Obtiene el detalle de los saldos de lac cta cte de los clientes
 @bp_ctactecli.route('/lst_cc_cli_vencidas', methods=['GET'])
@@ -102,5 +102,5 @@ def movsctactecli():
 @alertas_mensajes
 def lst_cc_cli_vencidas():
     vencidas = get_lst_vencidas()
-    return render_template('lst-ctacte-vencidas.html', vencidas=vencidas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('lst-ctacte-vencidas.html', vencidas=vencidas)
    

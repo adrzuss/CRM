@@ -29,10 +29,10 @@ def bancos(id=0):
     bancosAll = BancoService.obtener_todos()
     if id != 0:
         banco =  BancoService.obtener_por_id(id)
-        return render_template('bancos.html', banco=banco, bancos=bancosAll, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('bancos.html', banco=banco, bancos=bancosAll)
     else:
         banco = []
-        return render_template('bancos.html', banco=banco, bancos=bancosAll, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('bancos.html', banco=banco, bancos=bancosAll)
    
 @bp_bancos.route('/delete_banco/<id>')
 def delete_banco(id):
@@ -62,4 +62,4 @@ def listado_movs_bancos():
     else:
         movimientos = []    
     print(movimientos)    
-    return render_template('listado_movs_bancos.html', desde=desde, hasta=hasta, entidad=entidad, bancos=bancos, movimientos=movimientos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('listado_movs_bancos.html', desde=desde, hasta=hasta, entidad=entidad, bancos=bancos, movimientos=movimientos)

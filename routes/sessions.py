@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g, jsonify
+﻿from flask import Flask, Blueprint, render_template, session, request, url_for, flash, redirect, g, jsonify
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 from models.sucursales import Sucursales
 from models.configs import Configuracion
@@ -22,7 +22,7 @@ def login():
             flash('Nombre de usuario y/o contraseña incorrecta')
             return redirect( url_for('sesion.login'))
     else:    
-        config = Configuracion.query.get(1)
+        config = db.session.get(Configuracion, 1)
         empresa = config.nombre_fantasia if config else ''
         logo = config.logo if config else None
         return render_template('login.html', sucursales=sucursales, empresa=empresa, logo=logo)
@@ -54,10 +54,10 @@ def logout():
 def usuarios():
     datos, status_code = get_usuarios()
     if status_code == 200:
-        return render_template('usuarios.html', usuarios=datos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('usuarios.html', usuarios=datos)
     else:
         usuarios = []
-        return render_template('usuarios.html', usuarios=usuarios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('usuarios.html', usuarios=usuarios)
 
 @bp_sesiones.route('/getUsuario/<id>')
 @check_session
@@ -127,7 +127,7 @@ def update_user(id):
         
         flash('Usuario y tareas asignadas correctamente.')
         return redirect(url_for('index'))    
-    return render_template('upd-usuario.html', usuario=usuario, tareas=tareas, tareas_asignadas=tareas_asignadas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('upd-usuario.html', usuario=usuario, tareas=tareas, tareas_asignadas=tareas_asignadas)
 
 @bp_sesiones.route('/centro_mensajes')
 @check_session
@@ -139,7 +139,7 @@ def centro_mensajes():
     mensajesMios = get_mensajes_mios(session['user_id'])[0]
     mensajesParaMi = []
     mensajesParaMi = get_mensajes_para_mi(session['user_id'], session['id_sucursal'])[0]
-    return render_template('centro_mensajes.html', mensajesMios=mensajesMios, mensajesParaMi=mensajesParaMi, usuarios=usuarios[0], sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('centro_mensajes.html', mensajesMios=mensajesMios, mensajesParaMi=mensajesParaMi, usuarios=usuarios[0], sucursales=sucursales)
 
 @bp_sesiones.route('/grabar_mensaje_usuario', methods=['POST'])
 @check_session
@@ -181,7 +181,7 @@ def grabar_mensaje_sucursal():
 def view_mensaje(id):
     mensaje, status_code = get_mensaje(id)
     if status_code == 200:
-        return render_template('view_msg.html', mensaje=mensaje, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('view_msg.html', mensaje=mensaje)
     else:
         flash(f'Error al obtener el mensaje: {mensaje}', 'error')
         return redirect(url_for('sesion.centro_mensajes'))

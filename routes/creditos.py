@@ -24,7 +24,7 @@ def config_cred():
     documentos_de_creditos = get_documentos_creditos()
     estados = get_estados_creditos()
     documentos_por_plan = get_docs_por_plan()
-    return render_template('config-cred.html', planes_creditos=planes_creditos, documentos_de_creditos=documentos_de_creditos, estados=estados, documentos_por_plan=documentos_por_plan, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('config-cred.html', planes_creditos=planes_creditos, documentos_de_creditos=documentos_de_creditos, estados=estados, documentos_por_plan=documentos_por_plan)
 
 @bp_creditos.route('/get_documentos_por_plan/<id>')
 @check_session
@@ -132,8 +132,8 @@ def simulador_cred():
             anticipo = anticipo == "True"
             cronograma, cuota = generar_cronograma_frances(monto_total, tasa_interes, cuotas)
             requisitos = get_requisitos(idPlanSeleccionado)
-            return render_template('simulador-creditos.html', datos_planes=datos_planes, cronograma=cronograma, cuota=cuota, requisitos=requisitos, monto_total=monto_total, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
-    return render_template('simulador-creditos.html', datos_planes=datos_planes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+            return render_template('simulador-creditos.html', datos_planes=datos_planes, cronograma=cronograma, cuota=cuota, requisitos=requisitos, monto_total=monto_total)
+    return render_template('simulador-creditos.html', datos_planes=datos_planes)
 
 @bp_creditos.route('/generar_cuotas')
 @check_session
@@ -156,7 +156,7 @@ def otorgamiento():
     cliente = []
     credito = []
     fecha_solicitud = date.today()
-    return render_template('otorgamiento.html', cliente=cliente, credito=credito, fecha_solicitud=fecha_solicitud, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('otorgamiento.html', cliente=cliente, credito=credito, fecha_solicitud=fecha_solicitud)
 
 @bp_creditos.route('/ver_credito/<id_credito>')
 @check_session
@@ -169,7 +169,7 @@ def ver_credito(id_credito):
         return redirect(url_for('creditos.otorgamiento'))
     planesCategorias = get_planes_creditos_categoria(credito.idcategoria)
     print(f"los documentos del crédito son: {documentos}")
-    return render_template('ver-credito.html', credito=credito, garantes=garantes, documentos=documentos, cuotas_generadas=cuotas_generadas, planesCategorias=planesCategorias, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ver-credito.html', credito=credito, garantes=garantes, documentos=documentos, cuotas_generadas=cuotas_generadas, planesCategorias=planesCategorias)
 
 @bp_creditos.route('/generar_credito', methods=['POST'])
 @check_session
@@ -224,7 +224,7 @@ def lst_creditos():
         nuevos = get_creditos_by_estado(desde, hasta, 1,2,3,4,5,6,7)
         # Pasar los resultados a la plantilla
         titulo = 'Créditos registrados'
-        return render_template('lst-estados-creditos.html', accion='creditos.lst_creditos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-estados-creditos.html', accion='creditos.lst_creditos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -240,7 +240,7 @@ def lst_nuevos():
         nuevos = get_creditos_by_estado(desde, hasta, 1)
         # Pasar los resultados a la plantilla
         titulo = 'Créditos Nuevos'
-        return render_template('lst-estados-creditos.html', accion='creditos.lst_nuevos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-estados-creditos.html', accion='creditos.lst_nuevos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -257,7 +257,7 @@ def lst_pendientes():
         nuevos = get_creditos_by_estado(desde, hasta, 2, 7)
         # Pasar los resultados a la plantilla
         titulo = 'Créditos Pendientes de Aprobación o con pedido de actualización de datos'
-        return render_template('lst-estados-creditos.html', accion='creditos.lst_pendientes', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-estados-creditos.html', accion='creditos.lst_pendientes', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -273,7 +273,7 @@ def lst_rechazados():
         nuevos = get_creditos_by_estado(desde, hasta, 4)
         # Pasar los resultados a la plantilla
         titulo = 'Créditos Rechazados'
-        return render_template('lst-estados-creditos.html', accion='creditos.lst_rechazados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-estados-creditos.html', accion='creditos.lst_rechazados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -289,7 +289,7 @@ def lst_aprobados():
         nuevos = get_creditos_by_estado(desde, hasta, 3)
         # Pasar los resultados a la plantilla
         titulo = 'Créditos Aprobados'
-        return render_template('lst-estados-creditos.html', accion='creditos.lst_aprobados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-estados-creditos.html', accion='creditos.lst_aprobados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -347,7 +347,7 @@ def vencimientos_cuotas():
         desde = request.args.get('desde', hoy.replace(day=1))  # Por defecto, desde el primer día del mes actual
         hasta = request.args.get('hasta', hoy)
         cuotas = vencimientos_cuotas_creditos(desde, hasta)
-        return render_template('lst-vencimiento-cuotas.html', cuotas=cuotas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-vencimiento-cuotas.html', cuotas=cuotas, desde=desde, hasta=hasta)
     if request.method == 'POST':
         desde = request.form['desde']
         hasta = request.form['hasta']
@@ -359,7 +359,7 @@ def vencimientos_cuotas():
 def ver_cuotas_atrasadas():
     if request.method == 'GET':
         cuotas = ver_cuotas_creditos_vencidas()
-        return render_template('lst-cuotas-vencidas.html', cuotas=cuotas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('lst-cuotas-vencidas.html', cuotas=cuotas)
     
 
     
@@ -371,7 +371,7 @@ def seleccionar_cuota():
         # Lógica para mostrar el formulario de cobranza
         idcliente = request.args.get('idcliente', None)
         nom_cliente = request.args.get('nom_cliente', None)
-        return render_template('seleccion-cuotas-pago.html', idcliente=idcliente, nom_cliente=nom_cliente, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('seleccion-cuotas-pago.html', idcliente=idcliente, nom_cliente=nom_cliente)
         
     if request.method == 'POST':
         # Lógica para procesar el formulario de cobranza    

@@ -1,10 +1,6 @@
 let isFormSubmited = false;
 
-window.onbeforeunload = function () {
-    if (!isFormSubmited) {
-      return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
-    }
-  };
+window.onbeforeunload = confirmarSalida;
   
 // JavaScript para manejar la interacción
 document.addEventListener('DOMContentLoaded', function() {
@@ -102,19 +98,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     if (result.isConfirmed) {
-      isFormSubmited = true;
+      sinGuardar = false;
+        isFormSubmited = true;
       this.submit();
     }
  });
 
 
     // Validar salida sin guardar
-    
-    window.addEventListener("beforeunload", (e) => {
-        if (!isFormSubmited) {
-            return "¿Estás seguro de cerrar la venta sin guardar los cambios?";
-        }
-    });
+    window.addEventListener("beforeunload", confirmarSalida);
     
     // Cargar artículos en tabla de acuerdo a los filtros
     document.querySelector('#cargarRubroMarca').addEventListener('click', async (e) => {

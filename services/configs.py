@@ -1,4 +1,4 @@
-from flask import session, current_app, flash
+﻿from flask import session, current_app, flash
 from sqlalchemy import text, func
 from datetime import date
 from models.configs import Configuracion, TipoComprobantes, PuntosVenta, LineasComprobantes, PlanesSistema
@@ -8,7 +8,7 @@ from models.sessions import TareasUsuarios
 from models.sucursales import Sucursales
 
 def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc, docuemnto, telefono, mail, dias_vto_cta_cte, idplan_sistema, interes_mora_creditos, logo=None):
-    configuracion = Configuracion.query.get(session['id_empresa'])
+    configuracion = db.session.get(Configuracion, session['id_empresa'])
     if configuracion:
         if 'owner' in session:
             session['owner'] = nombre_propietario
@@ -34,8 +34,8 @@ def grabar_configuracion(nombre_propietario, nombre_fantasia, tipo_iva, tipo_doc
         db.session.commit()
 
 def getOwner():
-    configuracion = Configuracion.query.get(session['id_empresa'])
-    planes = PlanesSistema.query.get(configuracion.idplan_sistema) if configuracion else None
+    configuracion = db.session.get(Configuracion, session['id_empresa'])
+    planes = db.session.get(PlanesSistema, configuracion.idplan_sistema) if configuracion else None
     plan_sistema = planes.nombre if planes else 'N/A'
     dias_vencimiento = (configuracion.vencimiento - date.today()).days if configuracion and configuracion.vencimiento else None
     return configuracion, plan_sistema, dias_vencimiento
@@ -112,7 +112,7 @@ def grabarDatosPtoVta(form):
     
     try:    
         if idPuntoVenta:
-            puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+            puntoVenta = db.session.get(PuntosVenta, idPuntoVenta)
             puntoVenta.punto_vta = punto_venta
             puntoVenta.idsucursal = idsucursal
             puntoVenta.ultima_fac_a = ultima_fac_a
@@ -149,7 +149,7 @@ def grabarDatosPtoVta(form):
         return None
 
 def discrimina_iva(id_tipo_comprobante):
-    tipo_comprobante = TipoComprobantes.query.get(id_tipo_comprobante)
+    tipo_comprobante = db.session.get(TipoComprobantes, id_tipo_comprobante)
     return tipo_comprobante.discrimina_iva
 
 def discrimina_iva_afip(id_tipo_comprobante):
@@ -185,8 +185,8 @@ def get_sucursales():
     return sucursales
 
 def getDatosSucEmpresa():
-    empresa = Configuracion.query.get(session['id_empresa'])
-    sucursal = Sucursales.query.get(session['id_sucursal'])
+    empresa = db.session.get(Configuracion, session['id_empresa'])
+    sucursal = db.session.get(Sucursales, session['id_sucursal'])
     return {
         'nombre': empresa.nombre_fantasia + ' - ' + sucursal.nombre,
         'direccion': sucursal.direccion,
@@ -195,7 +195,7 @@ def getDatosSucEmpresa():
     }
     
 def getPosPrinter(idPuntoVenta):
-    puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+    puntoVenta = db.session.get(PuntosVenta, idPuntoVenta)
     posPrinter = puntoVenta.pos_printer if puntoVenta else None
     facElectronica = puntoVenta.fac_electronica if puntoVenta else None
     return posPrinter, facElectronica

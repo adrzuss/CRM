@@ -28,4 +28,4 @@ bp_reportes = Blueprint('reportes', __name__, template_folder='../templates/repo
 @check_session
 @alertas_mensajes
 def reporte_gerencial():
-    return render_template('reporte-gerencial.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('reporte-gerencial.html')

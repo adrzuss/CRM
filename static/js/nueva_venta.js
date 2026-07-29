@@ -14,70 +14,7 @@ window.onbeforeunload = function () {
   }
 };
 
-// Función para asegurar que todas las filas tengan campos de color y detalle
-function ensureColorDetalleFields() {
-  const rows = document.querySelectorAll("#tabla-items tbody tr");
-  console.log('🔍 [ensureColorDetalleFields] Verificando campos en', rows.length, 'filas');
-  
-  rows.forEach((row, index) => {
-    const firstCell = row.querySelector("td.id-articulo");
-    if (firstCell) {
-      // Verificar si ya tiene los campos
-      let colorInput = row.querySelector('[name*="id_color"]');
-      let detalleInput = row.querySelector('[name*="id_detalle"]');
-      
-      console.log(`📋 Fila ${index} - Color input existe:`, !!colorInput, 'Detalle input existe:', !!detalleInput);
-      
-      if (!colorInput) {
-        colorInput = document.createElement('input');
-        colorInput.type = 'hidden';
-        colorInput.name = `items[${index}][id_color]`;
-        colorInput.value = '0';
-        colorInput.setAttribute('data-debug', 'auto-created-color');
-        colorInput.setAttribute('data-row', index.toString());
-        firstCell.appendChild(colorInput);
-        console.log('✅ Campo id_color agregado a fila', index, 'con nombre:', colorInput.name);
-        
-        // Verificar que realmente se agregó
-        const verificacion = row.querySelector('[name*="id_color"]');
-        console.log('🔬 Verificación inmediata - Campo agregado:', !!verificacion);
-      } else {
-        console.log('✨ Campo color existe con nombre:', colorInput.name, 'y valor:', colorInput.value);
-      }
-      
-      if (!detalleInput) {
-        detalleInput = document.createElement('input');
-        detalleInput.type = 'hidden';
-        detalleInput.name = `items[${index}][id_detalle]`;
-        detalleInput.value = '0';
-        detalleInput.setAttribute('data-debug', 'auto-created-detalle');
-        detalleInput.setAttribute('data-row', index.toString());
-        firstCell.appendChild(detalleInput);
-        console.log('✅ Campo id_detalle agregado a fila', index, 'con nombre:', detalleInput.name);
-        
-        // Verificar que realmente se agregó
-        const verificacion = row.querySelector('[name*="id_detalle"]');
-        console.log('🔬 Verificación inmediata - Campo agregado:', !!verificacion);
-      } else {
-        console.log('✨ Campo detalle existe con nombre:', detalleInput.name, 'y valor:', detalleInput.value);
-      }
-    }
-  });
-  
-  // Verificación final con más detalle
-  const allColorInputs = document.querySelectorAll('[name*="id_color"]');
-  const allDetalleInputs = document.querySelectorAll('[name*="id_detalle"]');
-  console.log('📊 Total campos color encontrados:', allColorInputs.length);
-  console.log('📊 Total campos detalle encontrados:', allDetalleInputs.length);
-  
-  // Debug adicional: mostrar todos los campos encontrados
-  allColorInputs.forEach((input, i) => {
-    console.log(`  🎨 Color ${i}: name="${input.name}" value="${input.value}" data-debug="${input.getAttribute('data-debug')}"`);
-  });
-  allDetalleInputs.forEach((input, i) => {
-    console.log(`  📝 Detalle ${i}: name="${input.name}" value="${input.value}" data-debug="${input.getAttribute('data-debug')}"`);
-  });
-}
+// ensureColorDetalleFields() → movida a invoice-utils.js
 
 document.addEventListener("DOMContentLoaded", async function () {
   document.getElementById('idcliente').focus();
@@ -328,6 +265,9 @@ function abrirModalPagos(){
 // Hacer funciones disponibles globalmente
 window.abrirModalPagos = abrirModalPagos;
 window.procesarTransaccion = procesarTransaccion;
+
+// Event listener CSP-compatible para el botón de pagos
+document.getElementById('btnPagos')?.addEventListener('click', abrirModalPagos);
 
 // Función personalizada para procesar transacción en nueva venta
 async function procesarTransaccion() {
@@ -757,11 +697,7 @@ function activarDatosTab(tabClass){
   document.getElementById(tabClass).classList.add('active');
 }
 
-function limpiarDatosCliente() {
-  inputIdCliente = document.getElementById("idcliente");
-  inputIdCliente.value = "";
-  inputIdCliente.focus();
-}
+// limpiarDatosCliente() → movida a invoice-utils.js
 
 async function fetchCliente(input) {
   let response;
@@ -809,18 +745,7 @@ async function fetchCliente(input) {
   }  
 }
 
-function mostrarModalSeleccionClientes(clientes) {
-  // Usar el sistema universal de modal de búsqueda
-  const callback = (cliente) => {
-    asignarCliente(cliente);
-    // Enfocar el nuevo input de código
-    const clienteInput = document.getElementById("idcliente");
-    if (clienteInput) clienteInput.focus();
-  };
-  
-  // Mostrar modal con los datos
-  window.universalSearchModal.show('clientes', clientes || [], callback);
-}
+// mostrarModalSeleccionClientes() → movida a invoice-utils.js
 
 function asignarCliente(cliente) {
   console.log("🎯 Asignando cliente:", cliente);
@@ -930,10 +855,7 @@ async function fetchArticulo(id, idlista, itemDiv) {
   }
 }
 
-function asignarArticuloElegido(articulo, itemDiv) {
-  itemDiv.target.closest("tr").querySelector(".codigo-articulo").value = articulo.codigo;
-  asignarArticulo(articulo, itemDiv);
-}
+// asignarArticuloElegido() → movida a invoice-utils.js
 
 function asignarArticulo(articulo, itemDiv) {
   const row = itemDiv.target.closest("tr");
@@ -1051,7 +973,6 @@ function asignarArticulo(articulo, itemDiv) {
 }
 
 function mostrarModalSeleccionArticulos(articulos, idlista, itemDiv) {
-  // Usar el sistema universal de modal de búsqueda
   const callback = async (articulo) => {
     try {
       const response = await fetch(`${BASE_URL}/articulos/articulo/${articulo.codigo}/${idlista}`);
@@ -1061,28 +982,19 @@ function mostrarModalSeleccionArticulos(articulos, idlista, itemDiv) {
       }
     } catch (error) {
       console.error('Error al obtener artículo:', error);
-      // Fallback: usar el artículo directamente
       asignarArticuloElegido(articulo, itemDiv);
     }
-    
-    // Enfocar el nuevo input de código
-    const nuevoInputCodigo = tablaItems.querySelector(`tr:last-child .codigo-articulo`);
-    if (nuevoInputCodigo) nuevoInputCodigo.focus();
+
+    // Esperar a que Bootstrap termine de cerrar el modal
+    setTimeout(function() {
+      itemDiv?.target?.focus();
+    }, 200);
   };
   
-  // Mostrar modal con los datos
   window.universalSearchModal.show('articulos', articulos || [], callback);
 }
 
-function updateItemTotal(itemDiv) {
-  const precioUnitario = parseFloat(itemDiv.target.closest("tr").querySelector(".precio-unitario").value);
-  const cantidad = parseFloat(itemDiv.target.closest("tr").querySelector(".cantidad").value);
-  const precioTotal = (precioUnitario * cantidad).toFixed(2);
-  if (isNaN(precioTotal)) {
-    precioTotal = 0;
-  }
-  itemDiv.target.closest("tr").querySelector(".precio-total").value = precioTotal;
-}
+// updateItemTotal() → movida a invoice-utils.js
 
 function updateTotalFactura() {
   const filas = document.querySelectorAll("#tabla-items tbody tr");
@@ -1109,20 +1021,7 @@ function removeItem(itemDiv) {
   renumberItems();
 }
 
-function renumberItems() {
-  const itemDivs = document.querySelectorAll("#items .item");
-  itemDivs.forEach((itemDiv, index) => {
-    itemDiv
-      .querySelector(".idarticulo")
-      .setAttribute("name", `items[${index}][idarticulo]`);
-    itemDiv
-      .querySelector(".cantidad")
-      .setAttribute("name", `items[${index}][cantidad]`);
-    itemDiv
-      .querySelector(".precio_articulo")
-      .setAttribute("name", `items[${index}][cantidad]`);
-  });
-}
+// renumberItems() → movida a invoice-utils.js
 
 function checkDatosTarjeta() {
   const totTarjeta = parseFloat(document.getElementById("tarjeta").value);
@@ -1279,15 +1178,22 @@ document.getElementById("agregarArticulo").addEventListener("click", () => {
                     </td>                    <td class="id-marca" name="items[${contadorFilas}][idmarca]" hidden> </td>
                     <td class="id-rubro" name="items[${contadorFilas}][idrubro]" hidden> </td>
 
-                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required onfocus="this.select()"></td>
+                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
                     <td class="descripcion-articulo">-</td>
-                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly onfocus="this.select()"></td>
-                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required onfocus="this.select()"></td> 
+                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
+                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
                     <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
                     <td hidden><input type="number" class="idoferta" name="items[${contadorFilas}][idoferta]" value="0"></td> 
                     <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
                 </tr>`;
   tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+
+  // Agregar event listeners focus (CSP-compatible) a los inputs de la nueva fila
+  const nuevaTr = tablaItems.querySelector(`tr:last-child`);
+  nuevaTr.querySelectorAll('.codigo-articulo, .precio-unitario, .cantidad').forEach(input => {
+    input.addEventListener('focus', function() { this.select(); });
+  });
+
   contadorFilas++;
   
   // Asegurar que la nueva fila tenga los campos necesarios

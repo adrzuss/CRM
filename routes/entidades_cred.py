@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, g, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, g, jsonify
 from models.entidades_cred import EntidadesCred
 from models.ventas import Factura, PagosFV
 from models.clientes import Clientes
@@ -18,7 +18,7 @@ bp_entidades = Blueprint('entidades', __name__, template_folder='../templates/en
 def entidades(id=0):
     entidades = EntidadesCred.query.all()
     if id != 0:
-        entidad = EntidadesCred.query.get(id)
+        entidad = db.session.get(EntidadesCred, id)
         if entidad:
             if request.method == 'POST':
                 entidad.entidad = request.form['entidad']
@@ -33,7 +33,7 @@ def entidades(id=0):
                     return redirect(url_for('entidades.entidades'))
     else:    
         entidad = []
-    return render_template('entidades-cred.html', entidades=entidades, entidad=entidad, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('entidades-cred.html', entidades=entidades, entidad=entidad)
 
 @bp_entidades.route('/add_entidad', methods = ['POST','GET'])
 @check_session
@@ -45,7 +45,7 @@ def add_entidad():
         telefono = request.form['telefono']
         try:
             if id != 0:
-                entidad = EntidadesCred.query.get(id)
+                entidad = db.session.get(EntidadesCred, id)
                 entidad.entidad = request.form['entidad']
                 entidad.telefono = request.form['telefono']
             else:
@@ -60,7 +60,7 @@ def add_entidad():
             return redirect(url_for('entidades.entidades'))
     
     if request.method == 'GET':
-        return render_template('entidades-cred.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('entidades-cred.html')
     
 @bp_entidades.route('/listado_movimientos', methods=['GET', 'POST'])
 @check_session
@@ -96,7 +96,7 @@ def listado_movimientos():
         else:
             print(f'Sin Entidades Cred')
             movimientos = []
-        return render_template('listado-movimientos.html', desde=desde, hasta=hasta, entidades=entidades, movimientos=movimientos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('listado-movimientos.html', desde=desde, hasta=hasta, entidades=entidades, movimientos=movimientos)
     else:
         movimientos = []
         desde = request.form.get('desde', '')
@@ -115,7 +115,7 @@ def alicuotas(id):
         return redirect(url_for('entidades.alicuotas', id=id))
     else:
         entidad, financiamiento = getFinanciamiento(id)
-        return render_template('fin-ent-cred.html', entidad=entidad, financiamiento=financiamiento, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('fin-ent-cred.html', entidad=entidad, financiamiento=financiamiento)
         
 @bp_entidades.route('/coeficiente_cuotas/<int:tarjeta>/<int:cuotas>', methods=['GET'])
 def coeficiente_cuotas(tarjeta, cuotas):

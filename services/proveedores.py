@@ -1,4 +1,4 @@
-from flask import request, session
+﻿from flask import request, session
 from datetime import date, datetime
 from models.proveedores import Proveedores, FacturaC, ItemC, ItemsOP, PagosFC, RemitoFacturas
 from models.articulos import Articulo, Stock, Colores, DetallesArticulos
@@ -7,6 +7,7 @@ from models.configs import AlcIva
 from services.articulos import actualizarStock, get_articulo_by_codigo, actulizarProvByArt
 from services.bancos import BancoPropioService, BancoPropioProveedorService
 from utils.db import db
+from utils.utils import convertir_decimal
 from decimal import Decimal
 from models.configs import PagosCobros
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,8 +26,8 @@ def procesar_nueva_compra(form, id_sucursal):
         #exento = Decimal(request.form['exento'])
         #impint = Decimal(request.form['impint'])
         
-        efectivo = float(request.form['efectivo'])
-        ctacte = float(request.form['ctacte'])
+        efectivo = convertir_decimal(request.form['efectivo'])
+        ctacte = convertir_decimal(request.form['ctacte'])
         periodoFormateado = datetime.strptime(periodo, "%Y-%m").replace(day=1)
         # Crear la factura
         nueva_factura = FacturaC(
@@ -79,7 +80,7 @@ def procesar_items(form, idfactura, id_sucursal, idproveedor, actualizoCostos=Fa
                     precio_unitario = Decimal(form[f'items[{index}][precio_unitario]'])
                     articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
                     precio_total = precio_unitario * cantidad
-                    alcIva = AlcIva.query.get(articulo.idiva)
+                    alcIva = db.session.get(AlcIva, articulo.idiva)
                     iva += Decimal(Decimal(alcIva.alicuota) * precio_total / Decimal(100))
                     impint += Decimal(Decimal(articulo.impint) * precio_total / Decimal(100))
                     exento += Decimal(Decimal(articulo.exento) * precio_total / Decimal(100))
@@ -155,9 +156,9 @@ def procesar_nuevo_gasto(form, idsucursal):
         id_tipo_comprobante = form['id_tipo_comprobante']
         id_plan_cuenta = form['id_plan_cuenta']
         nro_comprobante = form['nro_factura']
-        gasto = float(form['total'])
-        efectivo = float(form['efectivo'])
-        ctacte = float(form['ctacte'])
+        gasto = convertir_decimal(form['total'])
+        efectivo = convertir_decimal(form['efectivo'])
+        ctacte = convertir_decimal(form['ctacte'])
         # Crear la factura
         nueva_gasto = FacturaC(idproveedor=idproveedor, 
                                fecha=fecha,
@@ -321,8 +322,8 @@ def get_movs_pendientes_ctacte(idproveedor):
 def procesar_nueva_op(form, id_sucursal):
     try:
         idproveedor = form['idproveedor']
-        total = float(form['total'])
-        efectivo = float(form['efectivo'])
+        total = convertir_decimal(form['total'])
+        efectivo = convertir_decimal(form['efectivo'])
         fecha = form['fecha']
         
         # items = form['items']

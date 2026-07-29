@@ -32,13 +32,15 @@
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Base URL para la aplicación
         // Esto permite que las rutas relativas funcionen correctamente en el frontend
         // Por ejemplo, si tienes un enlace a una imagen o un recurso estático
         // se carga al principio para que este accesible en demás scripts
         window.BASE_URL = "{{ request.script_root }}";
+        window.CSRF_TOKEN = "{{ csrf_token() }}";
     </script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
  
 
@@ -126,6 +128,78 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
+
+    <script nonce="{{ g.nonce }}">
+        // CSRF Protection - inyecta token en todos los forms POST automáticamente
+        (function() {
+            var token = window.CSRF_TOKEN;
+            if (!token) return;
+
+            // 1. Inyectar hidden input en forms POST existentes
+            document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(form) {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.insertBefore(input, form.firstChild);
+                }
+            });
+
+            // 2. Inyectar en forms creados dinámicamente (MutationObserver)
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && node.tagName === 'FORM') {
+                            var method = (node.getAttribute('method') || 'GET').toUpperCase();
+                            if (method === 'POST' && !node.querySelector('input[name="csrf_token"]')) {
+                                var input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'csrf_token';
+                                input.value = token;
+                                node.insertBefore(input, node.firstChild);
+                            }
+                        }
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // 3. Headers CSRF para jQuery AJAX
+            if (typeof $ !== 'undefined') {
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                            xhr.setRequestHeader('X-CSRFToken', token);
+                        }
+                    }
+                });
+            }
+
+            // 4. Headers CSRF para fetch()
+            var originalFetch = window.fetch;
+            window.fetch = function(url, options) {
+                options = options || {};
+                var method = (options.method || 'GET').toUpperCase();
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+                    options.headers = options.headers || {};
+                    if (options.headers instanceof Headers) {
+                        if (!options.headers.has('X-CSRFToken')) {
+                            options.headers.set('X-CSRFToken', token);
+                        }
+                    } else {
+                        options.headers['X-CSRFToken'] = token;
+                    }
+                }
+                return originalFetch.call(this, url, options);
+            };
+
+            // 5. Headers CSRF para HTMX
+            document.addEventListener('htmx:configRequest', function(evt) {
+                evt.detail.headers['X-CSRFToken'] = token;
+            });
+        })();
+    </script>
 
     {% block js_script %}
         

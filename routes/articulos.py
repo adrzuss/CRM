@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, current_app, session
 from flask import g
 from werkzeug.utils import secure_filename
 import os
@@ -96,7 +96,7 @@ def get_articulo_colores_detalles(articulo_id):
 def articulos():
     marcas = Marca.query.order_by(Marca.nombre).all()
     rubros = Rubro.query.order_by(Rubro.nombre).all()
-    return render_template('articulos.html', rubros=rubros, marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('articulos.html', rubros=rubros, marcas=marcas)
 
 #Esta funcion devulve los datos de los articulos paginados
 #para asi poder manejar grandes cantidades de datos
@@ -152,7 +152,7 @@ def update_articulo(id):
             stocks = []
             provByArt = []
         else:    
-            articulo = Articulo.query.get(id)
+            articulo = db.session.get(Articulo, id)
             listas_precios = db.session.query(
                         ListasPrecios.id.label('id'),
                         ListasPrecios.nombre.label('nombre'),
@@ -208,7 +208,7 @@ def update_articulo(id):
             detalles_articulo_query = db.session.query(ArticulosDetalles.id_detalle).filter_by(id_articulo=articulo.id).all()
             detalles_articulo = [detalle.id_detalle for detalle in detalles_articulo_query]
         
-        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo)
 
     if request.method == 'POST':
         resultado = guardar_articulo(id, request.form, request.files)
@@ -222,7 +222,7 @@ def update_articulo(id):
 @check_session
 def api_eliminar(id):
     try:
-        articulo = Articulo.query.get(id)
+        articulo = db.session.get(Articulo, id)
         stock = db.session.query(func.coalesce(func.sum(Stock.actual), 0)).filter(Stock.idarticulo == articulo.id).scalar()
         if stock <= 0:
             articulo.baja = datetime.now().date()  # Marcar como dado de baja
@@ -249,7 +249,7 @@ def update_composicion(id):
 @check_session
 @alertas_mensajes
 def componer_art(id):
-    articulo = Articulo.query.get(id)
+    articulo = db.session.get(Articulo, id)
     compuestos = db.session.query(ArticuloCompuesto.idarticulo, 
                                  ArticuloCompuesto.idart_comp,
                                  ArticuloCompuesto.cantidad,
@@ -261,7 +261,7 @@ def componer_art(id):
                                 ).join(Marca, Articulo.idmarca == Marca.id
                                 ).join(Rubro, Articulo.idrubro == Rubro.id
                                 ).filter(ArticuloCompuesto.idarticulo == articulo.id).all()
-    return render_template('componer-art.html', articulo=articulo, compuestos=compuestos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('componer-art.html', articulo=articulo, compuestos=compuestos)
 
 @bp_articulos.route('/eliminarCompuesto/<int:idarticulo>/<int:idart_comp>')
 @check_session
@@ -287,7 +287,7 @@ def cambio_precio():
         listas_precios = ListasPrecios.query.all()
         rubros = Rubro.query.all()
         marcas = Marca.query.all()
-        return render_template('cambio-precio.html', listaRubros = rubros, listaMarcas = marcas, listas_precios=listas_precios, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('cambio-precio.html', listaRubros = rubros, listaMarcas = marcas, listas_precios=listas_precios)
 
 
 """
@@ -418,7 +418,7 @@ def lst_precios():
     listas_precios = ListasPrecios.query.all()
     lista_marcas = Marca.query.all()
     lista_rubros = Rubro.query.all()
-    return render_template('precios-articulos.html', listas_precios=listas_precios, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('precios-articulos.html', listas_precios=listas_precios, lista_marcas=lista_marcas, lista_rubros=lista_rubros)
 
 @bp_articulos.route('/api/lst_precios', methods=['GET']) 
 @check_session
@@ -468,7 +468,7 @@ def lst_compuestos():
         resultado.close()
         
         # Retornar los datos procesados
-        return render_template('compuestos-articulos.html', listado=listado, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('compuestos-articulos.html', listado=listado)
     except Exception as e:
         print(f"Error al ejecutar el procedimiento almacenado: {e}")
         return None
@@ -480,7 +480,7 @@ def lst_compuestos():
 def stock_art():
     lista_marcas = Marca.query.all()
     lista_rubros = Rubro.query.all()
-    return render_template('stock-articulos.html', nombre_sucursal=session['nombre_sucursal'], lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('stock-articulos.html', nombre_sucursal=session['nombre_sucursal'], lista_marcas=lista_marcas, lista_rubros=lista_rubros)
 
 @bp_articulos.route('/api/lst_stock', methods=['GET']) 
 @check_session
@@ -569,7 +569,7 @@ def stock_art_faltantes():
     ).all()  
     """
     listado = []
-    return render_template('stock-articulos-faltantes.html', listado=listado, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('stock-articulos-faltantes.html', listado=listado, lista_marcas=lista_marcas, lista_rubros=lista_rubros)
 
 @bp_articulos.route('/stock_sucursales') 
 @check_session
@@ -581,7 +581,7 @@ def stock_sucursales():
     columnas = ['codigo', 'marca', 'rubro', 'detalle']
     for sucursal in sucursales:
         columnas.append(sucursal.nombre)
-    return render_template('stock-sucursales.html', columnas=columnas, lista_marcas=lista_marcas, lista_rubros=lista_rubros, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('stock-sucursales.html', columnas=columnas, lista_marcas=lista_marcas, lista_rubros=lista_rubros)
 
                           
 @bp_articulos.route('/api/lst_stock_sucursales', methods=['GET']) 
@@ -649,14 +649,14 @@ def rubros_marcas(id=None, tipo=None):
         if tipo == 'marca':
             idrubro = None
             nombre_rubro = None            
-            marca = Marca.query.get(id)
+            marca = db.session.get(Marca, id)
             if marca:
                 idmarca = marca.id
                 nombre_marca = marca.nombre
         elif tipo == 'rubro':
             idmarca = None
             nombre_marca = None
-            rubro = Rubro.query.get(id)
+            rubro = db.session.get(Rubro, id)
             if rubro:
                 idrubro = rubro.id
                 nombre_rubro = rubro.nombre
@@ -665,7 +665,7 @@ def rubros_marcas(id=None, tipo=None):
         nombre_marca = None
         idrubro = None
         nombre_rubro = None            
-    return render_template('rubros-marcas.html', rubros=rubros, idrubro=idrubro, nombre_rubro=nombre_rubro, marcas=marcas, idmarca=idmarca, nombre_marca=nombre_marca, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('rubros-marcas.html', rubros=rubros, idrubro=idrubro, nombre_rubro=nombre_rubro, marcas=marcas, idmarca=idmarca, nombre_marca=nombre_marca)
     
 #------------- Marcas ---------------------    
 @bp_articulos.route('/marcas')    
@@ -673,7 +673,7 @@ def rubros_marcas(id=None, tipo=None):
 @alertas_mensajes
 def marcas():
     marcas = Marca.query.all()
-    return render_template('marcas.html', marcas=marcas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('marcas.html', marcas=marcas)
 
 @bp_articulos.route('/add_marca', methods=['POST'])
 @check_session
@@ -682,7 +682,7 @@ def add_marca():
     det_marca = request.form["marca"]
     try:
         if idmarca != '':
-            marca = Marca.query.get(idmarca)
+            marca = db.session.get(Marca, idmarca)
             if marca:
                 marca.nombre = det_marca
                 db.session.commit()
@@ -701,7 +701,7 @@ def add_marca():
 @check_session
 def rubros():
     rubro = Rubro.query.all()
-    return render_template('rubros.html', rubro=rubro, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('rubros.html', rubro=rubro)
 
 @bp_articulos.route('/add_rubro', methods=['POST'])
 @check_session
@@ -710,7 +710,7 @@ def add_rubro():
     det_rubro = request.form["rubro"]
     try:
         if idrubro != '':
-            rubro = Rubro.query.get(idrubro)
+            rubro = db.session.get(Rubro, idrubro)
             if rubro:
                 rubro.nombre = det_rubro
                 db.session.commit()
@@ -736,7 +736,7 @@ def ing_balance():
         return redirect(url_for('index'))
     else:
         tipoBalances = TipoBalances.query.all()
-        return render_template('ing-balance.html', tipoBalances=tipoBalances, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ing-balance.html', tipoBalances=tipoBalances)
 
 # -------------------- Remitos a sucursales --------------------
 
@@ -752,7 +752,7 @@ def remitos_sucursales():
         return redirect(url_for('index'))
     else:
         sucursales = Sucursales.query.all()
-        return render_template('ing-remitos-sucursales.html', sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ing-remitos-sucursales.html', sucursales=sucursales)
 @bp_articulos.route('/enviar_remito_sucursal/<int:idremito>', methods=['POST'])
 @check_session
 def enviar_remito_api(idremito):
@@ -774,9 +774,7 @@ def listado_remitos_sucursales():
     '''Vista para listar todos los remitos'''
     filtro = request.args.get('filtro', 'todos')
     remitos = get_remitos_sucursales(filtro)
-    return render_template('listado-remitos-sucursales.html', remitos=remitos, filtro=filtro, 
-                         alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, 
-                         mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('listado-remitos-sucursales.html', remitos=remitos, filtro=filtro)
 
 @bp_articulos.route('/detalle_remito_sucursal/<int:idremito>')
 @check_session

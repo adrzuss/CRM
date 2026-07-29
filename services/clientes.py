@@ -1,12 +1,22 @@
 from models.clientes import Clientes
 from utils.db import db
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 def save_cliente(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva):
-    clientes = Clientes(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva)
-    db.session.add(clientes)
-    db.session.commit()
-    return clientes.id
+    try:
+        clientes = Clientes(nombre, documento, mail, categoria, telefono, direccion, localidad, provincia, ctacte, id_tipo_doc, id_tipo_iva)
+        db.session.add(clientes)
+        db.session.commit()
+        return clientes.id
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error SQL: {e}")
+        raise Exception(f"Error SQL: {e}")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        raise
 
 def get_abc_operaciones(desde, hasta):
     abc_operaciones = db.session.execute(text("CALL abc_cliente_operaciones(:desde, :hasta)"),

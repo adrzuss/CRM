@@ -32,11 +32,7 @@ function ensureColorDetalleFields() {
   });
 }
 
-window.onbeforeunload = function() {
-    if (!isFormSubmited) {
-        return '¿Estás seguro de cerrar la venta sin guardar los cambios?';
-    }
-};
+window.onbeforeunload = confirmarSalida;
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('invoice_form');
@@ -281,6 +277,7 @@ document.getElementById('invoice_form').addEventListener('submit', async functio
 
     const confirmado = await confirmar('¿Grabar el remito a sucursal?', 'Confirmar');
     if (confirmado) {
+        sinGuardar = false;
         isFormSubmited = true;
         this.submit();
     }

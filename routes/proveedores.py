@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g
 from datetime import date
 from models.proveedores import Proveedores, FacturaC, RemitoFacturas
 from models.configs import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica
@@ -24,9 +24,9 @@ def proveedores(id):
     tipo_ivas = TipoIva.query.all()
     proveedores = Proveedores.query.all()
     proveedor = []  
-    if id != 0:
-        proveedor = Proveedores.query.get(id)
-    return render_template('proveedores.html', proveedor=proveedor, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    if int(id) != 0:
+        proveedor = db.session.get(Proveedores, id)
+    return render_template('proveedores.html', proveedor=proveedor, tipo_docs=tipo_docs, tipo_ivas=tipo_ivas, proveedores=proveedores)
 
 @bp_proveedores.route('/add_proveedor', methods=['GET', 'POST'])
 @check_session
@@ -34,7 +34,7 @@ def proveedores(id):
 def add_proveedor():
     id = request.form['id']
     if id:
-        proveedor = Proveedores.query.get(id)
+        proveedor = db.session.get(Proveedores, id)
         proveedor.nombre = request.form['nombre']
         proveedor.fantasia = request.form['fantasia']
         proveedor.direccion = request.form['direccion']
@@ -63,7 +63,7 @@ def add_proveedor():
 @bp_proveedores.route('/proveedor/<id>')
 @check_session
 def proveedor(id):
-    proveedor = Proveedores.query.get(id)
+    proveedor = db.session.get(Proveedores, id)
     if proveedor:
         return jsonify(success=True, proveedor={"id": proveedor.id, "nombre": proveedor.nombre})
     else:
@@ -108,7 +108,7 @@ def get_proveedores():
 @bp_proveedores.route('/delete_proveedor/<id>')
 @check_session
 def delete_proveedor(id):
-    proveedor = Proveedores.query.get(id)
+    proveedor = db.session.get(Proveedores, id)
     db.session.delete(proveedor)
     db.session.commit()
     flash('Proveedor eliminado')
@@ -140,7 +140,7 @@ def compras():
                                     .join(TipoComprobantes, FacturaC.idtipocomprobante == TipoComprobantes.id) \
                                     .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante != 11) \
                                     .order_by(FacturaC.fecha.desc()).all()
-        return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('compras.html', facturas=facturas, desde=desde, hasta=hasta)
     
 @bp_proveedores.route('/nueva_compra', methods=['GET', 'POST'])
 @check_session
@@ -161,7 +161,7 @@ def nueva_compra():
                                 TipoComprobantes.nombre) \
                                 .join(TipoCompAplica, and_(TipoComprobantes.id == TipoCompAplica.id_tipo_comp,  TipoCompAplica.id_tipo_oper == 2)).all()  
     hoy = date.today()
-    return render_template('nueva_compra.html', hoy=hoy, planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('nueva_compra.html', hoy=hoy, planesCtas=planesCtas, tiposComp=tiposComp)
 
 @bp_proveedores.route('/nuevo_gasto', methods=['GET', 'POST'])
 @check_session
@@ -176,14 +176,14 @@ def nuevo_gasto():
         tiposComp = db.session.query(TipoComprobantes.id,
                                 TipoComprobantes.nombre) \
                                 .join(TipoCompAplica, and_(TipoComprobantes.id == TipoCompAplica.id_tipo_comp,  TipoCompAplica.id_tipo_oper == 2)).all()
-        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp)
     
 @bp_proveedores.route('/ver_factura_comp/<id>') 
 @check_session
 @alertas_mensajes
 def ver_factura_comp(id):
     factura, items, pagos = get_factura(id)
-    return render_template('factura-comp.html', factura=factura, items=items, pagos=pagos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('factura-comp.html', factura=factura, items=items, pagos=pagos)
         
 @bp_proveedores.route('/actualizar_precios_porcompras/<id>') 
 @check_session
@@ -249,7 +249,7 @@ def remitosComp():
                                 .filter(FacturaC.fecha >= desde, FacturaC.fecha <= hasta, FacturaC.idtipocomprobante == 11) \
                                 .order_by(FacturaC.fecha.desc()).all()
         
-        return render_template('proveedores/remitos.html', remitos=remitos, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('proveedores/remitos.html', remitos=remitos, desde=desde, hasta=hasta)
 
 @bp_proveedores.route('/nuevo_remitoComp', methods=['GET', 'POST'])
 @check_session
@@ -264,14 +264,14 @@ def nuevo_remitoComp():
             flash(f'Ocurrió un error al procesar el remito: {e}')
             return redirect(url_for('proveedores.nuevo_remitoComp'))
     hoy = date.today()
-    return render_template('nuevo_remitocomp.html', hoy=hoy, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('nuevo_remitocomp.html', hoy=hoy)
                        
 @bp_proveedores.route('/ver_remito_comp/<id>') 
 @check_session
 @alertas_mensajes
 def ver_remito_comp(id):
     remito, items = get_remito(id)
-    return render_template('remito-compras.html', remito=remito, items=items, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('remito-compras.html', remito=remito, items=items)
 
 #--------- ordenes de pago --------------
                        
@@ -291,7 +291,7 @@ def nueva_op():
         idproveedor = request.args.get('id', None)
     hoy = date.today()
     bancos = BancoService.obtener_todos()
-    return render_template('nueva_op.html', hoy=hoy, idproveedor=idproveedor, bancos=bancos, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('nueva_op.html', hoy=hoy, idproveedor=idproveedor, bancos=bancos)
 
 @bp_proveedores.route('/ordenes_pago')
 @check_session
@@ -304,7 +304,7 @@ def ordenes_pago():
     if hasta == None:    
         hasta = date.today()
     ordenesPago = get_ordenes_pago(desde, hasta)
-    return render_template('ordenes_pago.html', ordenesPago=ordenesPago, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('ordenes_pago.html', ordenesPago=ordenesPago, desde=desde, hasta=hasta)
 
 @bp_proveedores.route('/ver_op/<int:id>')
 @check_session
@@ -343,4 +343,4 @@ def ivaCompras():
         hasta = request.form['hasta']
         iva_compras = db.session.execute(text("CALL iva_compras(:desde, :hasta)"),
                          {'desde': desde, 'hasta': hasta}).fetchall()
-    return render_template('iva-compras.html', iva_compras=iva_compras, desde=desde, hasta=hasta, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('iva-compras.html', iva_compras=iva_compras, desde=desde, hasta=hasta)

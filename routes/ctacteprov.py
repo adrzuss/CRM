@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, g
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, g
 from sqlalchemy import func
 from datetime import datetime
 from utils.utils import format_currency
@@ -37,17 +37,17 @@ def add_cta_cte_prov():
             return redirect(url_for('ctacteprov.lst_cta_cte_prov', id=idproveedor))
     
     if request.method == 'GET':
-        return render_template('ctacte-prov.html', alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('ctacte-prov.html')
 
 @bp_ctacteprov.route('/lstctacteprov/<id>)')
 @check_session
 @alertas_mensajes
 def lst_cta_cte_prov(id):
-    proveedor = Proveedores.query.get_or_404(id)
+    proveedor = db.get_or_404(Proveedores, id)
     movimientos = CtaCteProv.query.filter_by(idproveedor=proveedor.id).all()
     saldo_total = saldo_ctacte(proveedor.id)
     saldoTotal = saldo_total['total_debe'] - saldo_total['total_haber']
-    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('lst-ctacteprov.html', movimientos=movimientos, idProveedor=proveedor.id, nomProveedor=proveedor.nombre, saldoTotal=saldoTotal)
 
 @bp_ctacteprov.route('/saldosprov', methods=['GET', 'POST'])
 @check_session
@@ -66,7 +66,7 @@ def saldosprov():
         saldos = getSaldosCtacteProv()
 
         # Pasar los resultados a la plantilla
-        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+        return render_template('saldos-ctacteprov.html', saldos=saldos, desde=fecha_str)
     else:
         fecha_str = request.form['fecha']
         return redirect(url_for('ctacteprov.saldosprov', fecha=fecha_str))

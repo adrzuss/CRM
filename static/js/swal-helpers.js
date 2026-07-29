@@ -168,3 +168,39 @@ function toastAdvertencia(mensaje) {
         title: mensaje
     });
 }
+
+/**
+ * Estado global para controlar si hay cambios sin guardar.
+ * Se usa junto con confirmarSalida() para preguntar al usuario
+ * cuando intenta salir de una página con datos sin guardar.
+ * @type {boolean}
+ */
+let sinGuardar = false;
+
+/**
+ * Marca que hay cambios sin guardar en el formulario activo.
+ * Debe llamarse ante cualquier modificación (input change, adición de filas, etc.)
+ */
+function marcarSinGuardar() {
+    sinGuardar = true;
+}
+
+/**
+ * Confirma si el usuario quiere salir cuando hay datos sin guardar.
+ * 
+ * Se asigna a window.onbeforeunload para mostrar el diálogo nativo del navegador.
+ * En navegadores modernos, el mensaje personalizado ya no se muestra,
+ * pero Chrome/Firefox/Safari igual muestran un diálogo genérico si e.returnValue tiene valor.
+ * 
+ * Uso:
+ *   window.onbeforeunload = confirmarSalida;
+ *   // Al enviar el formulario exitosamente:
+ *   sinGuardar = false;
+ * 
+ * @param {Event} e - El evento beforeunload
+ */
+function confirmarSalida(e) {
+    if (!sinGuardar) return;
+    e.preventDefault();
+    e.returnValue = '';
+}

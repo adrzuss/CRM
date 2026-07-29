@@ -205,8 +205,8 @@ async function cuotasPendientes(idcliente) {
                                                 <td scope="row">${cuota.dias_mora}</td>
                                                 <td scope="row">$${interesMora.toFixed(2)}</td>
                                                 <td scope="row">$${totalAPagar.toFixed(2)}</td>
-                                                <td scope="col" style="text-align:center" onclick="calcularCuota()">
-                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" onchange="calcularCuota()">
+                                                <td scope="col" style="text-align:center">
+                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" class="chk-cuota">
                                                 </td>
                                                 <td scope="row">
                                                     <a href="#" class="btn btn-secundario">Ver crédito</a>
@@ -222,8 +222,8 @@ async function cuotasPendientes(idcliente) {
                                                 <td scope="row" style="color: red">${cuota.dias_mora}</td>
                                                 <td scope="row" style="color: red">$${interesMora.toFixed(2)}</td>
                                                 <td scope="row" style="color: red">$${totalAPagar.toFixed(2)}</td>
-                                                <td scope="col" style="text-align:center; color: red" onclick="calcularCuota()">
-                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" onchange="calcularCuota()">
+                                                <td scope="col" style="text-align:center; color: red">
+                                                    <input type="checkbox" name="cuotas" value="${cuota.id}-${cuota.numero_cuota}" data-monto="${totalAPagar.toFixed(2)}" class="chk-cuota">
                                                 </td>
                                                 <td scope="row">
                                                     <a href="#" class="btn btn-secundario">Ver crédito</a>
@@ -242,6 +242,13 @@ async function cuotasPendientes(idcliente) {
         console.error("Error al obtener cuotas pendientes:", error);
         mostrarError("Error al obtener cuotas pendientes.");
     }
+
+    // Delegación CSP-compatible: recalcular al cambiar checkbox de cuota
+    document.getElementById('lst_cuotas')?.addEventListener('change', function(e) {
+        if (e.target.classList.contains('chk-cuota')) {
+            calcularCuota();
+        }
+    });
 }
 
 // Función auxiliar para mostrar mensajes tipo flash

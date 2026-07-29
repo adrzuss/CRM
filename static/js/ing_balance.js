@@ -31,11 +31,7 @@ function ensureColorDetalleFields() {
   });
 }
 
-window.onbeforeunload = function() {
-    if (!isFormSubmited) {
-        return '¿Estás seguro de cerrar la venta sin guardar los cambios?';
-    }
-};        
+window.onbeforeunload = confirmarSalida;        
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -267,6 +263,7 @@ document.getElementById('invoice_form').addEventListener('submit', async functio
     
     const confirmado = await confirmar('¿Grabar el ingreso de balance?', 'Confirmar');
     if (confirmado) {
+        sinGuardar = false;
         isFormSubmited = true;
         this.submit();
     }

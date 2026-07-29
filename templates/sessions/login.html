@@ -72,6 +72,7 @@
                                         <p class="login-empresa-name mb-4">{{ empresa }}</p>
                                     </div>
                                     <form class="ingresar" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <div class="form-group">
                                             <input type="text" class="form-control form-control-user"
                                                 id="usuario" name="usuario" aria-describedby="userHelp"

@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g, current_app
+﻿from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, g, current_app
 from sqlalchemy import and_
+from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 import os
 import uuid
@@ -51,7 +52,7 @@ def configuraciones():
     monedasBilletes = MonedasBilletes.query.all()
     colores = Colores.query.all()
     detalles_articulos = DetallesArticulos.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes, colores=colores, detalles_articulos=detalles_articulos)
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, colores=colores, detalles_articulos=detalles_articulos)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -93,7 +94,7 @@ def update_config():
             
             # Eliminar logo anterior si existe
             try:
-                config_actual = Configuracion.query.get(session['id_empresa'])
+                config_actual = db.session.get(Configuracion, session['id_empresa'])
                 if config_actual and config_actual.logo:
                     old_logo_path = os.path.join(logos_dir, config_actual.logo)
                     if os.path.exists(old_logo_path):
@@ -218,7 +219,7 @@ def abm_sucursales():
         telefono_sucursal = request.form['telefono']
         email_sucursal = request.form['email']
         if id_sucursal:
-            sucursal = Sucursales.query.get(id_sucursal)
+            sucursal = db.session.get(Sucursales, id_sucursal)
             sucursal.nombre = nombre_sucursal
             sucursal.direccion = direccion_sucursal
             sucursal.telefono = telefono_sucursal
@@ -232,15 +233,15 @@ def abm_sucursales():
             flash('Datos de sucursal grabados')
     sucursal = None    
     sucursales = Sucursales.query.all()
-    return render_template('abm-sucursales.html', sucursal=sucursal, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('abm-sucursales.html', sucursal=sucursal, sucursales=sucursales)
 
 @bp_configuraciones.route('/update_sucursal/<int:id>', methods=['GET'])
 @check_session
 @alertas_mensajes
 def update_sucursal(id):
-    sucursal = Sucursales.query.get(id)
+    sucursal = db.session.get(Sucursales, id)
     sucursales = Sucursales.query.all()
-    return render_template('abm-sucursales.html', sucursales=sucursales, sucursal=sucursal, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('abm-sucursales.html', sucursales=sucursales, sucursal=sucursal)
 
 @bp_configuraciones.route('/abm-sucursales/<int:id>/delete', methods=['GET', 'POST'])
 @check_session
@@ -253,17 +254,17 @@ def abm_sucursales_delete(id):
 def puntos_venta(id=0):
     if request.method == 'POST':
         idPuntoVenta = grabarDatosPtoVta(request.form)
-        puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+        puntoVenta = db.session.get(PuntosVenta, idPuntoVenta)
         idPuntoVenta = puntoVenta.id if puntoVenta else None
     else:
         idPuntoVenta = id
         if idPuntoVenta > 0:
-            puntoVenta = PuntosVenta.query.get(idPuntoVenta)
+            puntoVenta = db.session.get(PuntosVenta, idPuntoVenta)
         else:
             puntoVenta = None    
     sucursales = Sucursales.query.all()    
-    puntos_venta = PuntosVenta.query.all()
-    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    puntos_venta = PuntosVenta.query.options(joinedload(PuntosVenta.sucursal)).all()
+    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales)
 
 @bp_configuraciones.route('/get_tipos_comprobantes/<id_tipo_iva>/<aplica>')
 @check_session
@@ -289,7 +290,7 @@ def checkCuit(cuit, tipo_doc):
 def planes_opciones():
     planes = PlanesSistema.query.all()
     opciones = OpcionesPlanSistema.query.all()
-    return render_template('planes-opciones.html', planes=planes, opciones=opciones, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes)
+    return render_template('planes-opciones.html', planes=planes, opciones=opciones)
 
 @bp_configuraciones.route('/add_color', methods=['POST'])
 @check_session
@@ -375,13 +376,13 @@ def htmx_add_alc_iva():
 @bp_configuraciones.route('/htmx/get_alc_iva/<int:id>', methods=['GET'])
 @check_session
 def get_alc_iva(id):
-    item = AlcIva.query.get_or_404(id)
+    item = db.get_or_404(AlcIva, id)
     return render_template('partials/_form_edit_alc_iva.html', item=item, entidad='alicuotas_iva')
 
 @bp_configuraciones.route('/htmx/update_alc_iva/<int:id>', methods=['POST'])
 @check_session
 def update_alc_iva(id):
-    item = AlcIva.query.get_or_404(id)
+    item = db.get_or_404(AlcIva, id)
     item.descripcion = request.form['descripcion']
     item.alicuota = request.form['alicuota']
     db.session.commit()
@@ -401,13 +402,13 @@ def htmx_add_alc_ib():
 @bp_configuraciones.route('/htmx/get_alc_ib/<int:id>', methods=['GET'])
 @check_session
 def get_alc_ib(id):
-    item = AlcIB.query.get_or_404(id)
+    item = db.get_or_404(AlcIB, id)
     return render_template('partials/_form_edit_alc_ib.html', item=item, entidad='alicuotas_ib')
 
 @bp_configuraciones.route('/htmx/update_alc_ib/<int:id>', methods=['POST'])
 @check_session
 def update_alc_ib(id):
-    item = AlcIB.query.get_or_404(id)
+    item = db.get_or_404(AlcIB, id)
     item.descripcion = request.form['descripcion']
     item.alicuota = request.form['alicuota']
     db.session.commit()
@@ -425,13 +426,13 @@ def htmx_add_lista_precio():
 @bp_configuraciones.route('/htmx/get_lista_precio/<int:id>', methods=['GET'])
 @check_session
 def get_lista_precio(id):
-    item = ListasPrecios.query.get_or_404(id)
+    item = db.get_or_404(ListasPrecios, id)
     return render_template('partials/_form_edit_lista_precio.html', item=item, entidad='listas_precios')
 
 @bp_configuraciones.route('/htmx/update_lista_precio/<int:id>', methods=['POST'])
 @check_session
 def update_lista_precio(id):
-    item = ListasPrecios.query.get_or_404(id)
+    item = db.get_or_404(ListasPrecios, id)
     item.nombre = request.form['nombre']
     item.markup = request.form['markup']
     db.session.commit()
@@ -450,13 +451,13 @@ def htmx_add_tarea():
 @bp_configuraciones.route('/htmx/get_tarea/<int:id>', methods=['GET'])
 @check_session
 def get_tarea(id):
-    item = Tareas.query.get_or_404(id)
+    item = db.get_or_404(Tareas, id)
     return render_template('partials/_form_edit_tarea.html', item=item, entidad='tareas')
 
 @bp_configuraciones.route('/htmx/update_tarea/<int:id>', methods=['POST'])
 @check_session
 def update_tarea(id):
-    item = Tareas.query.get_or_404(id)
+    item = db.get_or_404(Tareas, id)
     item.tarea = request.form['tarea']
     db.session.commit()
     return render_tabla_tareas()
@@ -474,13 +475,13 @@ def htmx_add_planCta():
 @bp_configuraciones.route('/htmx/get_planCta/<int:id>', methods=['GET'])
 @check_session
 def get_planCta(id):
-    item = PlanCtas.query.get_or_404(id)
+    item = db.get_or_404(PlanCtas, id)
     return render_template('partials/_form_edit_plan_cta.html', item=item, entidad='plan_ctas')
 
 @bp_configuraciones.route('/htmx/update_planCta/<int:id>', methods=['POST'])
 @check_session
 def update_planCta(id):
-    item = PlanCtas.query.get_or_404(id)
+    item = db.get_or_404(PlanCtas, id)
     item.nombre = request.form['nombre']
     db.session.commit()
     return render_tabla_plan_ctas()
@@ -498,13 +499,13 @@ def htmx_add_categoria():
 @bp_configuraciones.route('/htmx/get_categoria/<int:id>', methods=['GET'])
 @check_session
 def get_categoria(id):
-    item = Categorias.query.get_or_404(id)
+    item = db.get_or_404(Categorias, id)
     return render_template('partials/_form_edit_categoria.html', item=item, entidad='categorias')
 
 @bp_configuraciones.route('/htmx/update_categoria/<int:id>', methods=['POST'])
 @check_session
 def update_categoria(id):
-    item = Categorias.query.get_or_404(id)
+    item = db.get_or_404(Categorias, id)
     item.nombre = request.form['nombre']
     db.session.commit()
     return render_tabla_categorias()
@@ -523,13 +524,13 @@ def htmx_add_monedabillete():
 @bp_configuraciones.route('/htmx/get_monedabillete/<int:id>', methods=['GET'])
 @check_session
 def get_monedabillete(id):
-    item = MonedasBilletes.query.get_or_404(id)
+    item = db.get_or_404(MonedasBilletes, id)
     return render_template('partials/_form_edit_moneda_billete.html', item=item, entidad='monedas_billetes')
 
 @bp_configuraciones.route('/htmx/update_monedabillete/<int:id>', methods=['POST'])
 @check_session
 def update_monedabillete(id):
-    item = MonedasBilletes.query.get_or_404(id)
+    item = db.get_or_404(MonedasBilletes, id)
     item.descripcion = request.form['descripcion']
     item.valor = request.form['valor']
     db.session.commit()
@@ -538,7 +539,7 @@ def update_monedabillete(id):
 @bp_configuraciones.route('/htmx/delete_monedabillete/<int:id>', methods=['POST'])
 @check_session
 def delete_monedabillete(id):
-    item = MonedasBilletes.query.get_or_404(id)
+    item = db.get_or_404(MonedasBilletes, id)
     item.baja = date.today()
     db.session.commit()
     return render_tabla_monedas_billetes()
@@ -557,13 +558,13 @@ def htmx_add_color():
 @bp_configuraciones.route('/htmx/get_color/<int:id>', methods=['GET'])
 @check_session
 def get_color(id):
-    item = Colores.query.get_or_404(id)
+    item = db.get_or_404(Colores, id)
     return render_template('partials/_form_edit_color.html', item=item, entidad='colores')
 
 @bp_configuraciones.route('/htmx/update_color/<int:id>', methods=['POST'])
 @check_session
 def update_color(id):
-    item = Colores.query.get_or_404(id)
+    item = db.get_or_404(Colores, id)
     item.nombre = request.form['nombre']
     item.color = request.form['color']
     db.session.commit()
@@ -582,13 +583,13 @@ def htmx_add_detalle_articulo():
 @bp_configuraciones.route('/htmx/get_detalle_articulo/<int:id>', methods=['GET'])
 @check_session
 def get_detalle_articulo(id):
-    item = DetallesArticulos.query.get_or_404(id)
+    item = db.get_or_404(DetallesArticulos, id)
     return render_template('partials/_form_edit_detalle_articulo.html', item=item, entidad='detalles_articulos')
 
 @bp_configuraciones.route('/htmx/update_detalle_articulo/<int:id>', methods=['POST'])
 @check_session
 def update_detalle_articulo(id):
-    item = DetallesArticulos.query.get_or_404(id)
+    item = db.get_or_404(DetallesArticulos, id)
     item.nombre = request.form['nombre']
     db.session.commit()
     return render_tabla_detalles_articulos()
@@ -597,13 +598,13 @@ def update_detalle_articulo(id):
 @bp_configuraciones.route('/htmx/get_tipo_iva/<int:id>', methods=['GET'])
 @check_session
 def get_tipo_iva(id):
-    item = TipoIva.query.get_or_404(id)
+    item = db.get_or_404(TipoIva, id)
     return render_template('partials/_form_edit_tipo_iva.html', item=item, entidad='tipo_ivas')
 
 @bp_configuraciones.route('/htmx/update_tipo_iva/<int:id>', methods=['POST'])
 @check_session
 def update_tipo_iva(id):
-    item = TipoIva.query.get_or_404(id)
+    item = db.get_or_404(TipoIva, id)
     item.descripcion = request.form['descripcion']
     item.id_afip = request.form.get('id_afip', 0)
     db.session.commit()
@@ -613,13 +614,13 @@ def update_tipo_iva(id):
 @bp_configuraciones.route('/htmx/get_tipo_doc/<int:id>', methods=['GET'])
 @check_session
 def get_tipo_doc(id):
-    item = TipoDocumento.query.get_or_404(id)
+    item = db.get_or_404(TipoDocumento, id)
     return render_template('partials/_form_edit_tipo_doc.html', item=item, entidad='tipo_docs')
 
 @bp_configuraciones.route('/htmx/update_tipo_doc/<int:id>', methods=['POST'])
 @check_session
 def update_tipo_doc(id):
-    item = TipoDocumento.query.get_or_404(id)
+    item = db.get_or_404(TipoDocumento, id)
     item.nombre = request.form['nombre']
     item.id_afip = request.form.get('id_afip', 0)
     db.session.commit()
@@ -634,7 +635,7 @@ def update_tipo_doc(id):
 def lineas_comprobantes(id_punto_vta):
     """Obtiene las líneas de comprobantes de un punto de venta"""
     lineas = get_lineas_comprobantes(id_punto_vta)
-    punto_vta = PuntosVenta.query.get_or_404(id_punto_vta)
+    punto_vta = db.get_or_404(PuntosVenta, id_punto_vta)
     return render_template('partials/_modal-lineas-comprobantes.html', 
                           lineas=lineas, 
                           punto_vta=punto_vta)
@@ -696,11 +697,7 @@ def permisos_menu():
     from models.sessions import OpcionesMenu
     tareas = Tareas.query.all()
     return render_template('permisos-menu.html', 
-                          tareas=tareas,
-                          alertas=g.alertas, 
-                          cantidadAlertas=g.cantidadAlertas, 
-                          mensajes=g.mensajes, 
-                          cantidadMensajes=g.cantidadMensajes)
+                          tareas=tareas)
 
 @bp_configuraciones.route('/htmx/permisos_tarea', methods=['GET'])
 @check_session
@@ -714,7 +711,7 @@ def htmx_get_permisos_tarea():
     if not id_tarea:
         return render_template('configuracion/partials/_permisos_tarea.html', id_tarea=None)
     
-    tarea = Tareas.query.get(id_tarea)
+    tarea = db.session.get(Tareas, id_tarea)
     if not tarea:
         return render_template('configuracion/partials/_permisos_tarea.html', id_tarea=None)
     

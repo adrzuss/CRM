@@ -1,11 +1,11 @@
-from sqlalchemy import func, and_
+﻿from sqlalchemy import func, and_
 from utils.utils import format_currency
 from models.entidades_cred import EntidadesCred, FinanciacionEntCred
 from utils.db import db
 from decimal import Decimal
 
 def getFinanciamiento(id):
-    entidad = EntidadesCred.query.get(id)
+    entidad = db.session.get(EntidadesCred, id)
     if not entidad:
         return None, None
     financiamiento = db.session.query(FinanciacionEntCred).filter(FinanciacionEntCred.id_entidad == id).all()

@@ -116,11 +116,7 @@ def nueva_oferta():
         tipo_ofertas=TipoOferta,
         tipos_descuento=TipoDescuento,
         tipos_condiciones=servicio.obtener_tipos_condiciones(),
-        reglas_seleccion=ReglaSeleccion,
-        alertas=g.alertas,
-        cantidadAlertas=g.cantidadAlertas,
-        mensajes=g.mensajes,
-        cantidadMensajes=g.cantidadMensajes
+        reglas_seleccion=ReglaSeleccion
     )
 
 
@@ -129,7 +125,7 @@ def nueva_oferta():
 @alertas_mensajes
 def ofertas():
     ofertas = OfertaService().obtener_ofertas_activas()
-    return render_template('ofertas.html', ofertas= ofertas, alertas=g.alertas, cantidadAlertas=g.cantidadAlertas, mensajes=g.mensajes, cantidadMensajes=g.cantidadMensajes) 
+    return render_template('ofertas.html', ofertas= ofertas) 
 
 
 @bp_ofertas.route('/get_referencias/<int:tipo_condicion_id>')
@@ -240,11 +236,7 @@ def edit(id):
         tipo_ofertas = TipoOferta,
         tipos_descuento=TipoDescuento,
         tipos_condiciones=servicio.obtener_tipos_condiciones(),
-        reglas_seleccion=ReglaSeleccion,
-        alertas=g.alertas,
-        cantidadAlertas=g.cantidadAlertas,
-        mensajes=g.mensajes,
-        cantidadMensajes=g.cantidadMensajes
+        reglas_seleccion=ReglaSeleccion
     )
 
 

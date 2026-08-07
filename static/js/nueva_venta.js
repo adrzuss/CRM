@@ -3,6 +3,21 @@ import InvoiceHandler from './invoice_handler.js';
 
 console.log("🚀 Nueva Venta JS cargado - Versión corregida 2.0");
 
+/**
+ * Genera un UUID v4 usando crypto.randomUUID() con fallback manual.
+ * @returns {string} UUID v4 (36 caracteres, ej. 550e8400-e29b-41d4-a716-446655440000)
+ */
+function generarUUID() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0;
+        var v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 let isFormSubmited = false;
 let contadorFilas = 0;
 let articulosFacturados = [];
@@ -302,6 +317,7 @@ async function procesarTransaccion() {
     
     // Preparar datos del formulario
     const formData = new FormData(form);
+    formData.append('_idempotency_key', generarUUID());
     
     // Mostrar loading
     const originalText = 'Grabando venta...';
@@ -1276,6 +1292,7 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
     isFormSubmited = true;
     try {
         const formData = new FormData(this);
+        formData.append('_idempotency_key', generarUUID());
         const response = await fetch(`${BASE_URL}/ventas/nueva_venta`, {
             method: 'POST',
             body: formData

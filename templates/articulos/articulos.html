@@ -121,10 +121,9 @@
 
 </div>   
         
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script>
+    <script src="{{ url_for('static', filename='vendor/datatable/datatables.js')}}"></script>
+    <script nonce="{{ g.nonce }}">
+        const BASE_URL = "{{ url_for('static', filename='') }}";
         const tabla = new DataTable('#articulosTable', {
             processing: true, // Muestra un indicador de carga
             serverSide: true, // Habilita el procesamiento en el servidor
@@ -157,7 +156,7 @@
                 render: function (data, type, row) {
                     if (data) {
                         return `<div class="image-thumbnail">
-                                    <img src="${BASE_URL}/static/img/articulos/${data}" alt="Imagen del artículo" class="article-thumb">
+                                    <img src="${BASE_URL}img/articulos/${data}" alt="Imagen del artículo" class="article-thumb">
                                 </div>`;
                     } else {
                         return `<div class="no-image-thumb">
@@ -166,7 +165,7 @@
                     }
                 } },
                 { data: 'id',
-                ordereable: false,
+                orderable: false,
                 render: function (data, type, row) {
                     return `
                         <div class="btn-group action-buttons" role="group">
@@ -180,9 +179,6 @@
                     `;
                 } }
             ],
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" // Traducción al español
-            },
             rowCallback: function(row, data, index) {
                 if (data.baja && data.baja == 'Si') {
                     // Tachado y color rojo
@@ -208,7 +204,7 @@
 
         // Actualiza el contador de artículos cuando la tabla se dibuja
         tabla.on('draw', function () {
-            let total = tabla.data().count();
+            let total = tabla.page.info().recordsTotal;
             $('#contadorArticulos').text(total);
             $('#tableLoader').hide(); // Ocultar spinner al cargar
         });

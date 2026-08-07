@@ -3,6 +3,7 @@ import os
 import tempfile
 from decimal import Decimal
 from datetime import date, timedelta, datetime
+import uuid
 from services.articulos import actualizarStock, get_articulo_by_codigo
 from services.configs import discrimina_iva
 
@@ -16,7 +17,7 @@ from models.configs import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVent
                            TipoCompAplica, Localidades, Provincias
 from models.creditos import Creditos 
 from sqlalchemy import func, extract, text, and_
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from utils.db import db
 from utils.config import Config
 from services.facturador import Facturador
@@ -28,6 +29,18 @@ from .notas_credito import procesar_nueva_nc
 
 def procesar_nueva_venta(form, id_sucursal):
     try:
+        # --- Idempotency check ---
+        idempotency_key = form.get('_idempotency_key')
+        if idempotency_key:
+            try:
+                uuid.UUID(idempotency_key, version=4)
+            except ValueError:
+                raise ValueError("Formato de clave de idempotencia inválido")
+            factura_existente = Factura.query.filter_by(idempotency_key=idempotency_key).first()
+            if factura_existente:
+                return factura_existente.nro_comprobante, factura_existente.id
+        # --- End idempotency check ---
+
         idcliente = form['idcliente']
         fecha = form['fecha']
         idlista = form['idlista']
@@ -52,14 +65,12 @@ def procesar_nueva_venta(form, id_sucursal):
         #Obtener datos del vale
         idVale = form.get('id_vale_comprobante', None)
         vale = form.get('vale', None)
-        #Obtener nuemero de comprobante
-        nro_comprobante = getNroComprobante(id_tipo_comprobante)
         discrimina = discrimina_iva(id_tipo_comprobante)
         #Datos del comprobante original si es una noa de crédito
         id_comprobante_original = form.get('id_comprobante_original', None)
         total_comp_original = form.get('total_comp_original', None)
         nota_credito = form.get('nota_credito', 0)
-        # Crear la factura
+        # Crear la factura (sin nro_comprobante aún — se asigna justo antes del commit)
         nueva_factura = Factura(
             idcliente=idcliente,
             idlista=idlista,
@@ -69,7 +80,7 @@ def procesar_nueva_venta(form, id_sucursal):
             id_tipo_comprobante=id_tipo_comprobante,
             idsucursal=id_sucursal,
             idusuario=session['user_id'],
-            nro_comprobante=nro_comprobante,
+            nro_comprobante='',
             punto_vta=session['idPuntoVenta']
         )
         db.session.add(nueva_factura)
@@ -114,7 +125,20 @@ def procesar_nueva_venta(form, id_sucursal):
             )
             db.session.add(remitoFactura)
             db.session.flush()
-        db.session.commit()
+        # Late assignment: obtener correlativo justo antes del commit
+        nro_comprobante = getNroComprobante(id_tipo_comprobante)
+        nueva_factura.nro_comprobante = nro_comprobante
+        nueva_factura.idempotency_key = idempotency_key or None
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            if idempotency_key:
+                factura_existente = Factura.query.filter_by(idempotency_key=idempotency_key).first()
+                if factura_existente:
+                    return factura_existente.nro_comprobante, factura_existente.id
+            raise
     except SQLAlchemyError as e:
         db.session.rollback()
         print(f"Error sql grabando venta: {e}")

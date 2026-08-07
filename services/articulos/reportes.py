@@ -19,6 +19,7 @@ from .articulos import get_articulo_by_codigo
 def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, length, order_column, order_dir):            
      # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'detalle_articulo', 'color', 'es_compuesto']
+    # Índices 8 (Imagen) y 9 (Acciones) no son columnas de BD; caen al fallback 'codigo'
     order_by = columns[order_column] if order_column < len(columns) else 'codigo'
     
     # Consulta base
@@ -35,10 +36,16 @@ def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, 
         Rubro.nombre.label('rubro'),
         Marca.nombre.label('marca')
     ).join(
-        Rubro, and_(Articulo.idrubro == Rubro.id, Rubro.id == idrubro if idrubro else True)
+        Rubro, Articulo.idrubro == Rubro.id
     ).join(
-        Marca, and_(Articulo.idmarca == Marca.id, Marca.id == idmarca if idmarca else True)
+        Marca, Articulo.idmarca == Marca.id
     )
+
+    # Aplicar filtros opcionales de rubro y marca
+    if idrubro:
+        query = query.filter(Rubro.id == idrubro)
+    if idmarca:
+        query = query.filter(Marca.id == idmarca)
 
     # Aplicar búsqueda
     if search_value:

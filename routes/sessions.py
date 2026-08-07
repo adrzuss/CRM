@@ -2,6 +2,7 @@
 from services.sessions import check_user, new_user, get_usuarios, get_usuario, get_tareas, get_tareas_usuarios, limpiar_tareas, update_tareas_usuario, update_usuario
 from models.sucursales import Sucursales
 from models.configs import Configuracion
+from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from services.configs import get_sucursales

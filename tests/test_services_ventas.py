@@ -202,7 +202,171 @@ def test_procesar_pagos_intereses_sin_tarjeta(app):
                             assert calls[2][1]['total'] == Decimal('200')
 
 
-def test_procesar_pagos_con_tarjeta_y_vuelto(app):
+# ──────────────────────────────────────────────
+# Tests para idempotencia en procesar_nueva_venta
+# ──────────────────────────────────────────────
+
+
+def _make_form_dict(data):
+    """Convierte un dict en un objeto que soporta form['key'] y form.get()."""
+    d = dict(data)
+    m = MagicMock()
+    m.get.side_effect = lambda key, default=None: d.get(key, default)
+    m.__getitem__.side_effect = lambda key: d[key]
+    return m
+
+
+def test_idempotency_uuid_invalido(app):
+    """
+    REQ-01: UUID inválido debe lanzar ValueError (envuelto en Exception
+    por el except general de procesar_nueva_venta).
+    """
+    with app.test_request_context():
+        from flask import session
+        session['user_id'] = 1
+        session['idPuntoVenta'] = '0001'
+
+        form = _make_form_dict({'_idempotency_key': 'no-es-un-uuid'})
+
+        import pytest
+        with pytest.raises(Exception, match="Formato de clave de idempotencia inválido"):
+            from services.ventas.ventas import procesar_nueva_venta
+            procesar_nueva_venta(form, 1)
+
+
+def test_idempotency_early_return(app):
+    """
+    REQ-02: Si la factura con la misma key ya existe, retorna early
+    (nro_comprobante, id) sin procesar items/pagos.
+    """
+    with app.test_request_context():
+        from flask import session
+        session['user_id'] = 1
+        session['idPuntoVenta'] = '0001'
+
+        form = MagicMock()
+        form.get.side_effect = lambda key, default=None: {
+            '_idempotency_key': '550e8400-e29b-41d4-a716-446655440000',
+        }.get(key, default)
+
+        mock_factura = MagicMock()
+        mock_factura.id = 42
+        mock_factura.nro_comprobante = '0001-00000005'
+
+        with patch('services.ventas.ventas.Factura') as mock_factura_cls:
+            mock_factura_cls.query.filter_by.return_value.first.return_value = mock_factura
+
+            from services.ventas.ventas import procesar_nueva_venta
+            resultado = procesar_nueva_venta(form, 1)
+
+            assert resultado == ('0001-00000005', 42)
+            mock_factura_cls.query.filter_by.assert_called_once_with(
+                idempotency_key='550e8400-e29b-41d4-a716-446655440000'
+            )
+
+
+def test_no_idempotency_key_skips_check(app):
+    """
+    REQ-01: Sin _idempotency_key, el bloque de idempotencia se salta
+    (verificamos que NO se llama a Factura.query.filter_by).
+    """
+    with app.test_request_context():
+        from flask import session
+        session['user_id'] = 1
+        session['idPuntoVenta'] = '0001'
+
+        form = _make_form_dict({
+            'idcliente': '1',
+            'fecha': '2024-06-15',
+            'idlista': '1',
+            'id_tipo_comprobante': '1',
+            'efectivo': '1000',
+            'tarjeta': '0',
+            'cuotas': '1',
+            'coeficiente': '1',
+            'documento': '',
+            'telefono': '',
+            'entidad': '0',
+            'ctacte': '0',
+            'bonificacion': '0',
+            'totalFactura': '1000',
+            'nro_comprobante': '',
+        })
+
+        from models.ventas import Factura as FacturaModel
+        with patch('services.ventas.ventas.Factura', spec=FacturaModel) as mock_factura:
+            with patch('services.ventas.ventas.procesar_items', return_value=(0, 0, 0, 0, 0, 0)):
+                with patch('services.ventas.ventas.procesar_pagos'):
+                    with patch('services.ventas.ventas.getNroComprobante', return_value='0001-00000001'):
+                        with patch('utils.db.db.session.commit'):
+                            with patch('utils.db.db.session'):
+                                from services.ventas.ventas import procesar_nueva_venta
+
+                                resultado = procesar_nueva_venta(form, 1)
+
+                                assert resultado is not None
+                                filter_by_calls = mock_factura.query.filter_by.call_args_list
+                                idempotency_calls = [
+                                    c for c in filter_by_calls
+                                    if 'idempotency_key' in str(c)
+                                ]
+                                assert len(idempotency_calls) == 0
+
+
+def test_idempotency_integrity_error_rollback_recovery(app):
+    """
+    REQ-02: IntegrityError en commit → rollback + re-query por key + 
+    retorna factura existente.
+    """
+    from sqlalchemy.exc import IntegrityError
+    from models.ventas import Factura as FacturaModel
+
+    with app.test_request_context():
+        from flask import session
+        session['user_id'] = 1
+        session['idPuntoVenta'] = '0001'
+
+        form = _make_form_dict({
+            '_idempotency_key': '550e8400-e29b-41d4-a716-446655440000',
+            'idcliente': '1',
+            'fecha': '2024-06-15',
+            'idlista': '1',
+            'id_tipo_comprobante': '1',
+            'efectivo': '1000',
+            'tarjeta': '0',
+            'cuotas': '1',
+            'coeficiente': '1',
+            'documento': '',
+            'telefono': '',
+            'entidad': '0',
+            'ctacte': '0',
+            'bonificacion': '0',
+            'totalFactura': '1000',
+            'nro_comprobante': '',
+        })
+
+        mock_factura_existente = MagicMock()
+        mock_factura_existente.id = 42
+        mock_factura_existente.nro_comprobante = '0001-00000005'
+
+        with patch('services.ventas.ventas.Factura', spec=FacturaModel) as mock_factura_cls:
+            mock_factura_cls.query.filter_by.side_effect = [
+                MagicMock(first=lambda: None),                    # 1ra: early check → None
+                MagicMock(first=lambda: mock_factura_existente),  # 2da: tras IntegrityError
+            ]
+
+            with patch('services.ventas.ventas.procesar_items', return_value=(Decimal('1000'), Decimal('800'), Decimal('0'), Decimal('200'), Decimal('0'), Decimal('0'))):
+                with patch('services.ventas.ventas.procesar_pagos'):
+                    with patch('services.ventas.ventas.getNroComprobante', return_value='0001-00000005'):
+                        with patch('utils.db.db.session') as mock_session:
+                            mock_session.commit.side_effect = IntegrityError("test", "orig", "stmt")
+
+                            from services.ventas.ventas import procesar_nueva_venta
+
+                            resultado = procesar_nueva_venta(form, 1)
+
+                            assert resultado == ('0001-00000005', 42)
+                            assert mock_session.rollback.called
     """
     Test de cálculo de intereses y vuelto en procesar_pagos con tarjeta.
 

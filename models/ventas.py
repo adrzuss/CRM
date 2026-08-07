@@ -22,6 +22,7 @@ class Factura(db.Model):
     cae = db.Column(db.String(20))
     cae_vto = db.Column(db.Date)
     fecha_emision = db.Column(db.Date)
+    idempotency_key = db.Column(db.String(36), nullable=True)
     # Relación con otras tablas
     usuario = db.relationship('Usuarios', backref=db.backref('facturav', lazy=True))
     cliente = db.relationship('Clientes', backref=db.backref('facturav', lazy=True))

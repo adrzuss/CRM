@@ -88,7 +88,7 @@ def getNroComprobante(id_tipo_comprobante):
             puntoVta.ultimo_rem_x += 1 
         else:
             nro = 0       
-        db.session.commit()    
+        db.session.flush()    
         return idPuntoVta.zfill(4) + '-' + str(nro).zfill(8) 
     except Exception as e:
         db.session.rollback()

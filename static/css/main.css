@@ -1623,12 +1623,12 @@ body{
 
 /* Header de tabla con gradiente suave */
 .table-modern .table-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 2px solid #dee2e6;
+    background: linear-gradient(135deg, #00808a 0%, #005f66 100%);
+    border-bottom: 2px solid #005f66;
 }
 
 .table-modern .table-header th {
-    color: #495057;
+    color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;

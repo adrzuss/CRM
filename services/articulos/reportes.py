@@ -20,7 +20,7 @@ def get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, 
      # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'detalle_articulo', 'color', 'es_compuesto']
     # Índices 8 (Imagen) y 9 (Acciones) no son columnas de BD; caen al fallback 'codigo'
-    order_by = columns[order_column] if order_column < len(columns) else 'codigo'
+    order_by = columns[order_column] if order_column is not None and order_column < len(columns) else 'codigo'
     
     # Consulta base
     query = db.session.query(
@@ -103,7 +103,7 @@ def get_listado_stock(idmarca, idrubro, draw, search_value, start, length, order
     
     # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'actual', 'maximo', 'deseable']
-    order_by = columns[order_column] if order_column < len(columns) else 'codigo'
+    order_by = columns[order_column] if order_column is not None and order_column < len(columns) else 'codigo'
     query = db.session.query(
         Articulo.id.label('id'),
         Articulo.codigo.label('codigo'),
@@ -172,7 +172,7 @@ def get_listado_stock_faltantes(idmarca, idrubro, draw, search_value, start, len
     
     # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'actual', 'maximo', 'deseable']
-    order_by = columns[order_column] if order_column < len(columns) else 'codigo'
+    order_by = columns[order_column] if order_column is not None and order_column < len(columns) else 'codigo'
     query = db.session.query(
         Articulo.id.label('id'),
         Articulo.codigo.label('codigo'),

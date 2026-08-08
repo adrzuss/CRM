@@ -116,7 +116,7 @@ def obtener_stock_sucursales(idmarca, idrubro, draw, search_value, start, length
     # Mapear el índice de la columna al nombre de la columna en la base de datos
     #columns = ['codigo', 'rubro', 'marca', 'detalle', 'actual', 'maximo', 'deseable']
     #Sumo 1 a las columnas porque el primer elemento es el id y no se muestra en la tabla
-    order_by = columns_names[order_column+1] if order_column < len(columns_names) else 'codigo'
+    order_by = columns_names[order_column+1] if order_column is not None and order_column+1 < len(columns_names) else 'codigo'
     
     if order_dir == 'desc':
         pivot_query = pivot_query.order_by(desc(order_by))

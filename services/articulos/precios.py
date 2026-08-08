@@ -17,7 +17,7 @@ def get_listado_precios(idlista, idmarca, idrubro, draw, search_value, start, le
     
     # Mapear el índice de la columna al nombre de la columna en la base de datos
     columns = ['codigo', 'rubro', 'marca', 'detalle', 'costo', 'precio']
-    order_by = columns[order_column] if order_column < len(columns) else 'codigo'
+    order_by = columns[order_column] if order_column is not None and order_column < len(columns) else 'codigo'
         
     query = db.session.query(
         Articulo.id.label('id'),

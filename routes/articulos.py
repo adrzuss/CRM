@@ -104,14 +104,14 @@ def articulos():
 @check_session
 def api_articulos(): 
     # Obtener parámetros de DataTables
-    draw = request.args.get('draw', type=int)
-    start = request.args.get('start', type=int)  # Índice del primer registro
-    length = request.args.get('length', type=int)  # Número de registros por página
+    draw = request.args.get('draw', 1, type=int)
+    start = request.args.get('start', 0, type=int)  # Índice del primer registro
+    length = request.args.get('length', 25, type=int)  # Número de registros por página
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
     verBaja = request.args.get('ver_baja', type=int)# != None  # Ver artículos de baja
-    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_column = request.args.get('order[0][column]', 0, type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
     
     draw, total_records, total_records, data = get_listado_articulos(idmarca, idrubro, verBaja, draw, search_value, start, length, order_column, order_dir)
@@ -424,7 +424,7 @@ def lst_precios():
 @check_session
 def api_lst_precios():
     # Obtener parámetros de DataTables 
-    draw = request.args.get('draw', type=int)
+    draw = request.args.get('draw', 1, type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
@@ -432,7 +432,7 @@ def api_lst_precios():
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
     
-    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_column = request.args.get('order[0][column]', 0, type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
 
     # Construir la consulta
@@ -443,6 +443,7 @@ def api_lst_precios():
             'recordsFiltered': 0,  # Cambiar si aplicas filtros
             'data': []
         }
+        return jsonify(response)
         
     draw, total_records, total_filtered, data = get_listado_precios(idlista, idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)    
     resposne = {
@@ -487,14 +488,14 @@ def stock_art():
 def api_lst_stock():
     # Obtener parámetros de DataTables 
     
-    draw = request.args.get('draw', type=int)
+    draw = request.args.get('draw', 1, type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
     
-    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_column = request.args.get('order[0][column]', 0, type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
 
     # Construir la consulta
@@ -505,6 +506,7 @@ def api_lst_stock():
             'recordsFiltered': 0,  # Cambiar si aplicas filtros
             'data': []
         }
+        return jsonify(response)
         
     draw, total_records, total_filtered, data = get_listado_stock(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)    
     resposne = {
@@ -520,14 +522,14 @@ def api_lst_stock():
 def api_lst_stock_faltantes():
     # Obtener parámetros de DataTables 
     
-    draw = request.args.get('draw', type=int)
+    draw = request.args.get('draw', 1, type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
     
-    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_column = request.args.get('order[0][column]', 0, type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
 
     # Construir la consulta
@@ -538,6 +540,7 @@ def api_lst_stock_faltantes():
             'recordsFiltered': 0,  # Cambiar si aplicas filtros
             'data': []
         }
+        return jsonify(response)
     draw, total_records, total_filtered, data = get_listado_stock_faltantes(idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)    
     resposne = {
         'draw': draw,

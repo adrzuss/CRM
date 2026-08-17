@@ -164,7 +164,7 @@
                         <div class="chart-area">
                             <canvas id="barrasEventos"></canvas>
                             
-                            <script>
+                            <script nonce="{{ g.nonce }}">
                                 mesess = {{ meses|tojson }};
                                 eventoss = {{ operaciones|tojson }};
                             </script>
@@ -200,7 +200,7 @@
                     <div class="card-body">
                         <div class="chart-pie pt-4 pb-2">
                             <canvas id="myPieChart"></canvas>
-                            <script>
+                            <script nonce="{{ g.nonce }}">
                                 tipoPagos = {{ tipoPagoss|tojson }};
                                 cantPagos = {{ cantPagoss|tojson }};
                             </script>    
@@ -246,7 +246,7 @@
                                 <div class="chart-pie2" style="min-height: 400px;">
                                     <canvas id="myPieChart2"></canvas>
                                     
-                                    <script>
+                                    <script nonce="{{ g.nonce }}">
                                         nombresRubros = {{ rubros|tojson }};
                                         ventasRubros = {{ vtaRubros|tojson }};
                                     </script>
@@ -260,7 +260,7 @@
                                 <div class="chart-pie3" style="min-height: 400px;">
                                     <canvas id="myPieChart3"></canvas>
                                     
-                                    <script>
+                                    <script nonce="{{ g.nonce }}">
                                         nombresRubros = {{ rubros|tojson }};
                                         cantidadRubros = {{ cantRubros|tojson }};
                                     </script>

@@ -276,18 +276,29 @@ def get_vta_rubros(desde_vend, hasta_vend):
     nombres_rubros = []
     ventas_rubros = []
     cantidad_rubros = []
-    db.session.execute(text("SET lc_time_names = 'es_ES'"))
-    resultados = db.session.execute(text("CALL venta_rubros(:desde, :hasta)"),
-                         {'desde': desde_vend, 'hasta': hasta_vend}).fetchall()
-    for resultado in resultados:
-        nombres_rubros.append(resultado.rubro)
-        ventas_rubros.append(round(resultado.vtaRubro, 2))
-        cantidad_rubros.append(round(resultado.cantRubro, 2))
-    return {
-            'rubros': nombres_rubros,
-            'vtaRubros': ventas_rubros,
-            'cantRubros': cantidad_rubros
-        }
+    try:
+        db.session.execute(text("SET lc_time_names = 'es_ES'"))
+        resultados = db.session.execute(text("CALL venta_rubros(:desde, :hasta)"),
+                             {'desde': desde_vend, 'hasta': hasta_vend}).fetchall()
+        for resultado in resultados:
+            nombres_rubros.append(resultado.rubro)
+            ventas_rubros.append(round(resultado.vtaRubro, 2))
+            cantidad_rubros.append(round(resultado.cantRubro, 2))
+        return {
+                'rubros': nombres_rubros,
+                'vtaRubros': ventas_rubros,
+                'cantRubros': cantidad_rubros
+            }
+    except Exception as e:
+        print('Error calculando ventas por rubros:', str(e))
+        nombres_rubros = []
+        ventas_rubros = []
+        cantidad_rubros = []
+        return {
+                'rubros': nombres_rubros,
+                'vtaRubros': ventas_rubros,
+                'cantRubros': cantidad_rubros
+            }
         
 
 def pagos_hoy():

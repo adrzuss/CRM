@@ -142,7 +142,7 @@
                     <div class="card-body">
                         <div class="chart-area">
                             <canvas id="barrasMasVendidos"></canvas>
-                            <script>
+                            <script nonce="{{ g.nonce }}">
                                 det_art = {{ detalles|tojson }};
                                 vtas_art = {{ cantidades|tojson }};
                             </script>

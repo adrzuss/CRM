@@ -41,12 +41,12 @@ Chain strategy: feature-branch-chain
 
 ## Fase 2: PR2 — Modal de pagos (transversal)
 
-- [ ] 2.1 Reemplazar `_modal-transacciones.html:764-833` por bloque mínimo vanilla (ADR-6): `focusin` delegado `.select-on-focus`; sin duplicar atajos del módulo
-- [ ] 2.2 5 `onclick` (L461, 580, 583, 682, 685) → `addEventListener` con referencia perezosa a `window.*`
-- [ ] 2.3 16 `onfocus="this.select()"` → clase `select-on-focus`
-- [ ] 2.4 Verificar foco `#efectivo` al abrir (decisión abierta #2); replicar en el bloque mínimo si falta
-- [ ] 2.5 Commit `fix(csp): handlers modal pagos a addEventListener`
-- [ ] 2.6 Verificar: modal en 5 pantallas; atajos Alt+E/T/C/R/B/Q/V; gate 2 = 0; sin duplicados
+- [x] 2.1 Reemplazar `_modal-transacciones.html:764-833` por bloque mínimo vanilla (ADR-6): `focusin` delegado `.select-on-focus`; sin duplicar atajos del módulo
+- [x] 2.2 5 `onclick` (L461, 580, 583, 682, 685) → `addEventListener` con referencia perezosa a `window.*`
+- [x] 2.3 16 `onfocus="this.select()"` → clase `select-on-focus`
+- [x] 2.4 Verificar foco `#efectivo` al abrir (decisión abierta #2): cubierto por módulo (primer input no readonly = `#efectivo`) + clase `select-on-focus` restaura el select; sin replicación extra
+- [x] 2.5 Commit `fix(csp): handlers modal pagos a addEventListener`
+- [x] 2.6 Verificar: gate 2 = 0 + gate 1 = 0 (OK); sin duplicados (OK, revisión estática); checklist manual de navegador PENDIENTE (modal en 5 pantallas + atajos Alt+E/T/C/R/B/Q/V)
 
 ## Fase 3: PR3 — Ventas
 

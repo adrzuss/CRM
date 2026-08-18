@@ -111,8 +111,8 @@
                                     <span class="input-group-text">$</span>
                                 </div>
                                 <input type="number" name="ofertas_especiales" id="ofertas_especiales" 
-                                       class="form-control text-dos-bold font-weight-bold" 
-                                       step="0.01" value="0" onfocus="this.select()" readonly>
+                                       class="form-control text-dos-bold font-weight-bold select-on-focus" 
+                                       step="0.01" value="0" readonly>
                             </div>
                         </div>
                     </div>
@@ -251,8 +251,8 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="efectivo" id="efectivo" 
-                                                           class="form-control text-dos-bold" 
-                                                           step="0.01" value="0" onfocus="this.select()" 
+                                                           class="form-control text-dos-bold select-on-focus" 
+                                                           step="0.01" value="0" 
                                                            placeholder="0.00">
                                                 </div>
                                             </div>
@@ -290,8 +290,8 @@
                                             <div class="form-group">
                                                 <label for="cuotas" class="form-label">Cuotas</label>
                                                 <input type="number" name="cuotas" id="cuotas" 
-                                                       class="form-control" step="1" value="1" 
-                                                       min="1" onfocus="this.select()">
+                                                       class="form-control select-on-focus" step="1" value="1" 
+                                                       min="1">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-3">
@@ -309,8 +309,8 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="tarjeta" id="tarjeta" 
-                                                           class="form-control text-dos-bold" 
-                                                           step="0.01" value="0" onfocus="this.select()">
+                                                           class="form-control text-dos-bold select-on-focus" 
+                                                           step="0.01" value="0">
                                                 </div>
                                             </div>
                                         </div>
@@ -320,14 +320,14 @@
                                             <div class="form-group">
                                                 <label for="documento" class="form-label">Documento</label>
                                                 <input type="text" name="documento" id="documento" 
-                                                       class="form-control" onfocus="this.select()">
+                                                       class="form-control select-on-focus">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-4">
                                             <div class="form-group">
                                                 <label for="telefono" class="form-label">Teléfono</label>
                                                 <input type="text" name="telefono" id="telefono" 
-                                                       class="form-control" onfocus="this.select()">
+                                                       class="form-control select-on-focus">
                                             </div>
                                         </div>
                                         <div class="col-12 col-md-4">
@@ -367,8 +367,8 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="ctacte" id="ctacte" 
-                                                           class="form-control text-dos-bold" 
-                                                           step="0.01" value="0" onfocus="this.select()">
+                                                           class="form-control text-dos-bold select-on-focus" 
+                                                           step="0.01" value="0">
                                                 </div>
                                             </div>
                                         </div>
@@ -399,8 +399,8 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="credito" id="credito" 
-                                                           class="form-control text-dos-bold" 
-                                                           step="0.01" value="0" onfocus="this.select()">
+                                                           class="form-control text-dos-bold select-on-focus" 
+                                                           step="0.01" value="0">
                                                 </div>
                                             </div>
                                         </div>
@@ -428,8 +428,8 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="bonificacion" id="bonificacion" 
-                                                           class="form-control text-dos-bold" 
-                                                           step="0.01" value="0" onfocus="this.select()">
+                                                           class="form-control text-dos-bold select-on-focus" 
+                                                           step="0.01" value="0">
                                                 </div>
                                             </div>
                                         </div>
@@ -454,11 +454,10 @@
                                                 <label for="nro_vale" class="form-label">Nro. de Vale</label>
                                                 <div class="input-group">
                                                     <input type="text" name="nro_vale" id="nro_vale" 
-                                                           class="form-control" 
+                                                           class="form-control select-on-focus" 
                                                            placeholder="0000-00000000"
-                                                           maxlength="13"
-                                                           onfocus="this.select()">
-                                                    <button class="btn btn-primary" type="button" id="btnBuscarVale" onclick="buscarVale()">
+                                                           maxlength="13">
+                                                    <button class="btn btn-primary" type="button" id="btnBuscarVale">
                                                         <i class="fas fa-search"></i>
                                                     </button>
                                                 </div>
@@ -538,7 +537,7 @@
                                             <div class="form-group">
                                                 <label for="cantCheques" class="form-label">Cantidad</label>
                                                 <input type="number" name="cantCheques" id="cantCheques" 
-                                                       class="form-control" value="0" min="0" onfocus="this.select()">
+                                                       class="form-control select-on-focus" value="0" min="0">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-2">
@@ -552,14 +551,14 @@
                                             <div class="form-group">
                                                 <label for="vtoCheque" class="form-label">Vto. 1° Cheque</label>
                                                 <input type="date" name="vtoCheque" id="vtoCheque" 
-                                                       class="form-control" onfocus="this.select()">
+                                                       class="form-control select-on-focus">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-2">
                                             <div class="form-group">
                                                 <label for="diasCheques" class="form-label">Días entre cheques</label>
                                                 <input type="number" name="diasCheques" id="diasCheques" 
-                                                       class="form-control" value="30" min="1" max="365" onfocus="this.select()">
+                                                       class="form-control select-on-focus" value="30" min="1" max="365">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-2">
@@ -570,17 +569,17 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="importeCheques" id="importeCheques" 
-                                                           class="form-control" value="0" step="0.01" onfocus="this.select()">
+                                                           class="form-control select-on-focus" value="0" step="0.01">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row mt-3">
                                         <div class="col-md-6">
-                                            <button class="btn btn-success" onclick="generarCheque()">
+                                            <button class="btn btn-success" id="btnGenerarCheque">
                                                 <i class="fas fa-plus"></i> Generar Cheque(s)
                                             </button>
-                                            <button class="btn btn-danger ml-2" onclick="limpiarCheque()">
+                                            <button class="btn btn-danger ml-2" id="btnLimpiarCheque">
                                                 <i class="fas fa-trash"></i> Eliminar
                                             </button>
                                         </div>
@@ -634,7 +633,7 @@
                                             <div class="form-group">
                                                 <label for="numeroValor" class="form-label">Número</label>
                                                 <input type="text" name="numeroValor" id="numeroValor" 
-                                                       class="form-control" onfocus="this.select()">
+                                                       class="form-control select-on-focus">
                                             </div>
                                         </div>
                                         <div class="col-6 col-md-2">
@@ -672,17 +671,17 @@
                                                         <span class="input-group-text">$</span>
                                                     </div>
                                                     <input type="number" name="importeValor" id="importeValor" 
-                                                           class="form-control" step="0.01" value="0" onfocus="this.select()">
+                                                           class="form-control select-on-focus" step="0.01" value="0">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row mt-3">
                                         <div class="col-md-6">
-                                            <button class="btn btn-success" onclick="agregarValor()">
+                                            <button class="btn btn-success" id="btnAgregarValor">
                                                 <i class="fas fa-plus"></i> Agregar Valor
                                             </button>
-                                            <button class="btn btn-danger ml-2" onclick="limpiarValores()">
+                                            <button class="btn btn-danger ml-2" id="btnLimpiarValores">
                                                 <i class="fas fa-trash"></i> Limpiar Todo
                                             </button>
                                         </div>
@@ -760,74 +759,32 @@
     </div>
 </div>
 
-<!-- Script para atajos de teclado y manejo del modal -->
+<!-- Wiring mínimo vanilla del modal (ADR-6): el módulo modal-transacciones-universal.js
+     ya cubre atajos Alt+E/T/C/R/B/Q/V + F9, foco al abrir (primer input no readonly,
+     que es #efectivo) y calcSaldo. Este bloque solo cablea los botones del partial y
+     la delegación de foco, sin duplicar lo que ya hace el módulo (evita doble disparo). -->
 <script nonce="{{ g.nonce }}">
-// Event listener para cuando se muestra el modal
-$('#transaccionesModal').on('shown.bs.modal', function () {
-    console.log('🔔 Modal de transacciones mostrado');
-    
-    // NO aplicar crédito automáticamente aquí
-    // El event listener en nueva_venta.js ya lo hace
-    // Solo mantener el tab de efectivo activo
-    
-    // Enfocar el primer campo del tab activo (efectivo)
-    const efectivoInput = document.querySelector('#efectivo');
-    if (efectivoInput) {
-        setTimeout(() => {
-            efectivoInput.focus();
-            efectivoInput.select();
-        }, 200);
-    }
+// Botones del modal -> funciones exportadas por el módulo (referencia perezosa, ADR-3)
+document.getElementById('btnBuscarVale')?.addEventListener('click', function () {
+    window.buscarVale();
+});
+document.getElementById('btnGenerarCheque')?.addEventListener('click', function () {
+    window.generarCheque();
+});
+document.getElementById('btnLimpiarCheque')?.addEventListener('click', function () {
+    window.limpiarCheque();
+});
+document.getElementById('btnAgregarValor')?.addEventListener('click', function () {
+    window.agregarValor();
+});
+document.getElementById('btnLimpiarValores')?.addEventListener('click', function () {
+    window.limpiarValores();
 });
 
-document.addEventListener('keydown', function(e) {
-    if (e.altKey && $('#transaccionesModal').hasClass('show')) {
-        e.preventDefault();
-        switch(e.key.toLowerCase()) {
-            case 'e': 
-                if (document.getElementById('efectivo-tab')) {
-                    document.getElementById('efectivo-tab').click();
-                    setTimeout(() => document.getElementById('efectivo').focus(), 100);
-                }
-                break;
-            case 't': 
-                if (document.getElementById('tarjetas-tab')) {
-                    document.getElementById('tarjetas-tab').click();
-                    setTimeout(() => document.getElementById('tarjeta').focus(), 100);
-                }
-                break;
-            case 'c': 
-                if (document.getElementById('ctacte-tab')) {
-                    document.getElementById('ctacte-tab').click();
-                    setTimeout(() => document.getElementById('ctacte').focus(), 100);
-                }
-                break;
-            case 'r': 
-                if (document.getElementById('credito-tab')) {
-                    document.getElementById('credito-tab').click();
-                    setTimeout(() => document.getElementById('credito').focus(), 100);
-                }
-                break;
-            case 'b': 
-                if (document.getElementById('bonificacion-tab')) {
-                    document.getElementById('bonificacion-tab').click();
-                    setTimeout(() => document.getElementById('bonificacion').focus(), 100);
-                }
-                break;
-            case 'q': 
-                if (document.getElementById('cheques-tab')) {
-                    document.getElementById('cheques-tab').click();
-                    setTimeout(() => document.getElementById('cantCheques').focus(), 100);
-                }
-                break;
-            case 'v': 
-                if (document.getElementById('valores-tab')) {
-                    document.getElementById('valores-tab').click();
-                    setTimeout(() => document.getElementById('numeroValor').focus(), 100);
-                }
-                break;
-        }
+// Delegación de foco: selecciona el contenido al enfocar inputs con clase select-on-focus (ADR-5)
+document.addEventListener('focusin', function (e) {
+    if (e.target.classList && e.target.classList.contains('select-on-focus')) {
+        e.target.select();
     }
 });
-
 </script>

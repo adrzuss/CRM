@@ -226,7 +226,7 @@
     <script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
     <script src="{{ url_for('static', filename='js/nuevo_gasto.js')}}"></script>
     
-    <script>
+    <script nonce="{{ g.nonce }}">
     function abrirModalPagos() {
         const total = document.getElementById('total').value;
         cargarDatosModal(parseFloat(total) || 0);

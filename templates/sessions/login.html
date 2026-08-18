@@ -123,7 +123,7 @@
     <!-- Custom scripts for all pages-->
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
 
-    <script>
+    <script nonce="{{ g.nonce }}">
         window.APP_PREFIX = "{{ request.script_root }}";
         console.log(window.APP_PREFIX);
         document.addEventListener('DOMContentLoaded', function() {

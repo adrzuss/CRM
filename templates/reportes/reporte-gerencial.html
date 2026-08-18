@@ -594,7 +594,7 @@
 {% block js_script %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/reporte-gerencial.js') }}"></script>
-<script>
+<script nonce="{{ g.nonce }}">
     // Datos para los gráficos pasados desde el servidor
     const datosReporte = {
         evolucion: {

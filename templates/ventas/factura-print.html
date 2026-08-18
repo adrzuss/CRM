@@ -38,7 +38,7 @@
         <div id="status" style="display:none;"></div>
     </div>
 
-    <script type="module">
+    <script type="module" nonce="{{ g.nonce }}">
         import InvoiceHandler from '/static/js/invoice_handler.js';
         
         const invoiceHandler = new InvoiceHandler();

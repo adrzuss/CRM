@@ -227,7 +227,7 @@
 </div>        
 
     
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Solo si hay presupuesto
         {% if presupuesto %}
             window.PRESUPUESTO = {
@@ -251,7 +251,7 @@
             window.PRESUPUESTO = null;
         {% endif %}
     </script>
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Solo si hay remito
         {% if remito %}
             window.REMITO = {
@@ -280,7 +280,7 @@
     {% include 'partials/modal-color-detalle.html' %}
     
     <!-- Script para sincronización del total -->
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Sincronizar el total visual con el input oculto
         function sincronizarTotal() {
             const totalInput = document.getElementById('totalFactura');

@@ -41,7 +41,7 @@
 <!--           CAMBIOS EN JAVASCRIPT (nueva_venta.js)              -->
 <!-- ================================================================ -->
 
-<script>
+<script nonce="{{ g.nonce }}">
 // ANTES: Abrir modal antigua
 function abrirModalPagos() {
     $('#pagosModal').modal('show');
@@ -160,7 +160,7 @@ document.getElementById("efectivo").addEventListener("input", function (event) {
 <script src="/static/js/modal-transacciones-universal.js"></script>
 <script src="/static/js/nueva_compra.js"></script>
 
-<script>
+<script nonce="{{ g.nonce }}">
 // Función específica para abrir modal de compras
 function abrirModalPagos() {
     const total = calcularTotalCompra(); // Tu función específica

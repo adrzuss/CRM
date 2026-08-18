@@ -24,7 +24,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ g.nonce }}">
     // Cerrar modal después de una actualización exitosa
     document.body.addEventListener('htmx:afterRequest', function(evt) {
         if (evt.detail.successful && evt.detail.elt.closest('#modal-config-body')) {

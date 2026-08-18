@@ -105,7 +105,7 @@
 -->
 
 <!-- Ejemplo de apertura del modal: -->
-<script>
+<script nonce="{{ g.nonce }}">
 function abrirModalPagos() {
     // Configurar totales antes de abrir
     document.getElementById('total_factura').textContent = totalFactura.toFixed(2);

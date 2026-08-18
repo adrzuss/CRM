@@ -89,7 +89,7 @@
     </div>
 </div>    
     
-<script>
+<script nonce="{{ g.nonce }}">
     const datos_plan = {{ datos_planes | tojson }};
     document.getElementById("idPlan").addEventListener("change", function (event) {
         const idPlan = event.target.value;

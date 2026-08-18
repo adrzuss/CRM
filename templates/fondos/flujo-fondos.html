@@ -59,7 +59,7 @@
                     <div class="chart-area">
                         <canvas id="flujoFondos"></canvas>
                         
-                        <script>
+                        <script nonce="{{ g.nonce }}">
                             leyendasFlujos = {{ detalles|tojson }};
                             totalesFlujos = {{ montos|tojson }};
                         </script>
@@ -98,7 +98,7 @@
                 <div class="card-body">
                     <div class="chart-area">
                         <canvas id="pieChartIngEgr"></canvas>
-                        <script>
+                        <script nonce="{{ g.nonce }}">
                             tipoPagos = {{ detalleVtasCompras|tojson }};
                             cantPagos = {{ valoresVtasCompras|tojson }};
                         </script>    
@@ -138,7 +138,7 @@
                 <div class="card-body">
                     <div class="chart-area">
                         <canvas id="polarChartCtaCtes"></canvas>
-                        <script>
+                        <script nonce="{{ g.nonce }}">
                             detCtasCtes = {{ detallesCtasCtes|tojson }};
                             saldosCtasCtes = {{ valoresCtasCtes|tojson }};
                         </script>
@@ -184,7 +184,7 @@
                 <div class="card-body">
                     <div class="chart-area">
                         <canvas id="barrasDetalleGastos"></canvas>
-                        <script>
+                        <script nonce="{{ g.nonce }}">
                             det_gastos = {{ detalleGastosLeyendas|tojson }};
                             total_gastos = {{ detalleGastosValores|tojson }};
                         </script>    

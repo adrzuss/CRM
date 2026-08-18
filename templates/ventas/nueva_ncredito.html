@@ -296,7 +296,7 @@
     {% include 'partials/modal-color-detalle.html' %}
     
     <!-- Script para sincronización del total -->
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Sincronizar el total visual con el input oculto
         function sincronizarTotal() {
             const totalInput = document.getElementById('totalFactura');

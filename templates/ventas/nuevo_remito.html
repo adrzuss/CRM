@@ -323,7 +323,7 @@
 <!-- Modal universal de búsqueda -->
 {% include 'partials/_modal-busqueda-universal.html' %}
 
-<script>
+<script nonce="{{ g.nonce }}">
 function limpiarFormulario() {
     if (confirm('¿Está seguro de que desea limpiar el formulario?')) {
         document.getElementById('invoice_form').reset();

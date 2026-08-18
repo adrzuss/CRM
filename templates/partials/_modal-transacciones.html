@@ -761,7 +761,7 @@
 </div>
 
 <!-- Script para atajos de teclado y manejo del modal -->
-<script>
+<script nonce="{{ g.nonce }}">
 // Event listener para cuando se muestra el modal
 $('#transaccionesModal').on('shown.bs.modal', function () {
     console.log('🔔 Modal de transacciones mostrado');

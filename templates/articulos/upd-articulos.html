@@ -565,7 +565,7 @@
     <script src="{{ url_for('static', filename='js/detail-manager.js')}}"></script>
     
     {% if colores_articulo or detalles_articulo %}
-    <script>
+    <script nonce="{{ g.nonce }}">
         // Inicializar colores y detalles seleccionados del artículo
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {

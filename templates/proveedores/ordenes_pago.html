@@ -201,7 +201,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ g.nonce }}">
 // Funciones de utilidad
 function exportarExcel() {
     window.open(`${window.location.pathname}/export/excel${window.location.search}`, '_blank');

@@ -373,7 +373,7 @@ input[type="checkbox"] {
 <script src="/static/js/modal-transacciones-universal.js"></script>
 <script src="/static/js/seleccion-cuotas-pagos.js"></script>
 
-<script>
+<script nonce="{{ g.nonce }}">
 // Personalizar procesamiento para cobranzas
 function procesarTransaccion() {
     console.log('💵 [COBRANZAS] procesarTransaccion() llamada');

@@ -154,7 +154,7 @@
                                                 </td>
                                             </tr>
                                         {% endif %}
-                                        <script>
+                                        <script nonce="{{ g.nonce }}">
                                             contadorFilas = {{ financiamiento|length }};
                                         </script>
                                     </tbody>
@@ -176,7 +176,7 @@
     </div>
 </div>    
 
-<script>
+<script nonce="{{ g.nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Agregar nueva fila
     let contadorFilas = {{ financiamiento|length }} || 0;

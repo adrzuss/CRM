@@ -57,9 +57,9 @@ Chain strategy: feature-branch-chain
 
 ## Fase 4: PR4 — Proveedores
 
-- [ ] 4.1 Refactor 18 handlers en 7 archivos proveedores (design §3.2): export/print; `abrirModalPagos()` perezosa (módulos)
-- [ ] 4.2 Commit `fix(csp): handlers proveedores a addEventListener`
-- [ ] 4.3 Verificar §5.2/PR4: export/print; modal abre y procesa en nueva_op, nuevo_gasto, nueva_compra
+- [x] 4.1 Refactor 18 handlers en 7 archivos proveedores (design §3.2): export/print; `abrirModalPagos()` perezosa (módulos)
+- [x] 4.2 Commit `fix(csp): handlers proveedores a addEventListener`
+- [ ] 4.3 Verificar §5.2/PR4: export/print; modal abre y procesa en nueva_op, nuevo_gasto, nueva_compra (gates OK; checklist manual de navegador PENDIENTE)
 
 ## Fase 5: PR5 — Fondos + créditos
 

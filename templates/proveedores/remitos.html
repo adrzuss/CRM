@@ -116,10 +116,10 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                    <button class="btn btn-outline-light btn-sm btn-exportar">
                         <i class="fas fa-file-excel me-1"></i>Excel
                     </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                    <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                         <i class="fas fa-print me-1"></i>Imprimir
                     </button>
                 </div>
@@ -208,14 +208,14 @@
                                                     <i class="fas fa-file-invoice"></i>
                                                 </a>
                                             {% else %}
-                                                <button class="btn btn-outline-warning btn-sm" 
-                                                        onclick="facturarRemito({{ remito.id }})" 
+                                                <button class="btn btn-outline-warning btn-sm btn-facturar-remito" 
+                                                        data-remito-id="{{ remito.id }}" 
                                                         title="Facturar remito">
                                                     <i class="fas fa-plus-square"></i>
                                                 </button>
                                             {% endif %}
-                                            <button class="btn btn-outline-secondary btn-sm" 
-                                                    onclick="imprimirRemito({{ remito.id }})" 
+                                            <button class="btn btn-outline-secondary btn-sm btn-imprimir-remito" 
+                                                    data-remito-id="{{ remito.id }}" 
                                                     title="Imprimir remito">
                                                 <i class="fas fa-print"></i>
                                             </button>
@@ -329,6 +329,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Wiring de handlers (refactor CSP)
+document.querySelector('.btn-exportar').addEventListener('click', function () {
+    exportarExcel();
+});
+document.querySelector('.btn-imprimir-tabla').addEventListener('click', function () {
+    imprimirTabla();
+});
+// Delegación en filas dinámicas de la tabla (DataTables)
+const tablaRemitos = document.getElementById('dataTable');
+if (tablaRemitos) {
+    tablaRemitos.addEventListener('click', function (e) {
+        const btnFacturar = e.target.closest('.btn-facturar-remito');
+        if (btnFacturar) { facturarRemito(btnFacturar.dataset.remitoId); return; }
+        const btnImprimir = e.target.closest('.btn-imprimir-remito');
+        if (btnImprimir) { imprimirRemito(btnImprimir.dataset.remitoId); }
+    });
+}
 </script>
 
 <script src="/static/vendor/datatable/jquery-3.7.1.js"></script>

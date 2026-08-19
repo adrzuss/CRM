@@ -237,7 +237,7 @@
                     
                     <div class="col-lg-4">
                         <div class="d-grid gap-3">
-                            <button class="btn btn-success btn-lg shadow-sm" type="button" onclick="abrirModalPagos()">
+                            <button id="btnAbrirPagos" class="btn btn-success btn-lg shadow-sm" type="button">
                                 <i class="fas fa-credit-card me-2"></i>Procesar Pago <kbd>F8</kbd>
                             </button>
                             <button class="btn btn-primary btn-lg shadow-sm" type="submit" id="grabarCompra" style="display:none;">
@@ -284,5 +284,12 @@
     <script src="{{ url_for('static', filename='js/invoice-utils.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
     <script type="module" src="{{ url_for('static', filename='js/nueva_compra.js')}}"></script>
+    
+    <script nonce="{{ g.nonce }}">
+    // Wiring de handlers (refactor CSP): abrirModalPagos se resuelve desde el módulo (deferred)
+    document.getElementById('btnAbrirPagos').addEventListener('click', function () {
+        window.abrirModalPagos();
+    });
+    </script>
         
 {% endblock %}

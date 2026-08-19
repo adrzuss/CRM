@@ -37,10 +37,10 @@
             <p class="page-subtitle text-muted mb-0">Análisis de ventas agrupadas por forma de pago y tipo de comprobante</p>
         </div>
         <div class="ms-auto d-flex gap-2">
-            <button class="btn btn-outline-success" onclick="exportarExcel()">
+            <button class="btn btn-outline-success btn-exportar">
                 <i class="fas fa-file-excel me-1"></i>Exportar Excel
             </button>
-            <button class="btn btn-outline-info" onclick="imprimirReporte()">
+            <button class="btn btn-outline-info btn-imprimir-tabla">
                 <i class="fas fa-print me-1"></i>Imprimir
             </button>
         </div>
@@ -55,7 +55,7 @@
                 <i class="fas fa-filter me-2"></i>
                 <h5 class="card-title mb-0">Filtros de Búsqueda</h5>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-limpiar-filtros">
                         <i class="fas fa-broom me-1"></i>Limpiar
                     </button>
                 </div>
@@ -104,8 +104,8 @@
 
     <!-- Tab links -->
     <div class="tab">
-        <button class="tablinks bg-uno active" onclick="openTab(event, 'VtaTipoPago')">Tipos de pagos</button>
-        <button class="tablinks bg-dos" onclick="openTab(event, 'VtaListas')">Listas de precios</button>
+        <button class="tablinks bg-uno active" id="tabVtaTipoPago">Tipos de pagos</button>
+        <button class="tablinks bg-dos" id="tabVtaListas">Listas de precios</button>
     </div>
 
     <div class="tabcontent" id="VtaTipoPago">
@@ -161,10 +161,10 @@
                     <i class="fas fa-table me-2"></i>Detalle de Ventas por Tipo de Pago
                 </h5>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                    <button class="btn btn-outline-light btn-sm btn-exportar">
                         <i class="fas fa-file-excel me-1"></i>Excel
                     </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="imprimirReporte()">
+                    <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                         <i class="fas fa-print me-1"></i>Imprimir
                     </button>
                 </div>
@@ -303,10 +303,10 @@
                     <i class="fas fa-table me-2"></i>Detalle de Ventas por Listas de precio
                 </h5>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                    <button class="btn btn-outline-light btn-sm btn-exportar">
                         <i class="fas fa-file-excel me-1"></i>Excel
                     </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="imprimirReporte()">
+                    <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                         <i class="fas fa-print me-1"></i>Imprimir
                     </button>
                 </div>
@@ -525,6 +525,24 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         imprimirReporte();
     }
+});
+
+// Wiring de handlers (refactor CSP)
+// Los tabs requieren listener directo (openTab usa evt.currentTarget)
+document.getElementById('tabVtaTipoPago').addEventListener('click', function (e) {
+    openTab(e, 'VtaTipoPago');
+});
+document.getElementById('tabVtaListas').addEventListener('click', function (e) {
+    openTab(e, 'VtaListas');
+});
+// Delegación para botones repetidos (exportar/imprimir en ambos tabs)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-exportar');
+    if (btn) { exportarExcel(); return; }
+    const btnImprimir = e.target.closest('.btn-imprimir-tabla');
+    if (btnImprimir) { imprimirReporte(); return; }
+    const btnLimpiar = e.target.closest('.btn-limpiar-filtros');
+    if (btnLimpiar) { limpiarFiltros(); }
 });
 </script>
 

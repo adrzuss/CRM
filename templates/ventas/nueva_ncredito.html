@@ -117,7 +117,7 @@
                             <label for="cliente_nombre"><i class="fas fa-user-tag me-2"></i>Nombre del Cliente</label>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-action btn-sm col-md-2" id="buscar_comprobante_original" onclick="buscarComprobantesParaNC()">
+                    <button type="button" class="btn btn-action btn-sm col-md-2" id="buscar_comprobante_original">
                             <i class="fas fa-receipt"></i>
                             Buscar
                     </button>
@@ -276,7 +276,7 @@
                             <i class="fas fa-file-invoice"></i>
                             Finalizar Nota de Crédito
                         </h5>
-                        <button class="btn btn-success btn-lg btn-block" type="button" id="btnGrabarNC" name="btnGrabarNC" onclick="grabarNotaCredito()">
+                        <button class="btn btn-success btn-lg btn-block" type="button" id="btnGrabarNC" name="btnGrabarNC">
                             <i class="fas fa-save"></i>
                             Grabar Nota de Crédito
                         </button>
@@ -369,6 +369,14 @@
         
         // Exponer función globalmente para uso en otros scripts
         window.sincronizarTotal = sincronizarTotal;
+        
+        // Wiring de handlers (refactor CSP)
+        // Referencia perezosa: grabarNotaCredito se exporta desde nueva_nota_credito.js (módulo deferred)
+        document.getElementById('btnGrabarNC').addEventListener('click', function () {
+            window.grabarNotaCredito();
+        });
+        // Nota: buscar_comprobante_original ya tiene listener en nueva_nota_credito.js (initBuscarComprobante);
+        // no se agrega otro para evitar doble disparo.
     </script>
     
     <!-- Scripts -->

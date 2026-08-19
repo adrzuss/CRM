@@ -39,10 +39,10 @@
             <a href="{{ url_for('ventas.nuevo_remito') }}" class="btn btn-info">
                 <i class="fas fa-plus me-1"></i>Nuevo Remito
             </a>
-            <button class="btn btn-outline-success" onclick="exportarExcel()">
+            <button class="btn btn-outline-success btn-exportar">
                 <i class="fas fa-file-excel me-1"></i>Exportar Excel
             </button>
-            <button class="btn btn-outline-warning" onclick="facturarMasivo()">
+            <button class="btn btn-outline-warning btn-facturar-masivo">
                 <i class="fas fa-file-invoice me-1"></i>Facturar Masivo
             </button>
         </div>
@@ -57,7 +57,7 @@
                 <i class="fas fa-filter me-2"></i>
                 <h5 class="card-title mb-0">Filtros de Remitos</h5>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-limpiar-filtros">
                         <i class="fas fa-broom me-1"></i>Limpiar
                     </button>
                 </div>
@@ -195,13 +195,13 @@
                 <i class="fas fa-list me-2"></i>Lista de Remitos
             </h5>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-light btn-sm" onclick="seleccionarTodos()">
+                <button class="btn btn-outline-light btn-sm btn-seleccionar-todos">
                     <i class="fas fa-check-square me-1"></i>Seleccionar Todos
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                <button class="btn btn-outline-light btn-sm btn-exportar">
                     <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                     <i class="fas fa-print me-1"></i>Imprimir
                 </button>
             </div>
@@ -309,13 +309,14 @@
                                                     <i class="fas fa-receipt"></i>
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-outline-secondary btn-sm" 
-                                                    onclick="imprimirRemito({{ remito.id }})" 
+                                            <button class="btn btn-outline-secondary btn-sm btn-imprimir-remito" 
+                                                    data-remito-id="{{ remito.id }}" 
                                                     title="Imprimir remito">
                                                 <i class="fas fa-print"></i>
                                             </button>
-                                            <button class="btn btn-outline-warning btn-sm" 
-                                                    onclick="cambiarEstado({{ remito.id }}, '{{ remito.estado }}')" 
+                                            <button class="btn btn-outline-warning btn-sm btn-cambiar-estado" 
+                                                    data-remito-id="{{ remito.id }}" 
+                                                    data-estado="{{ remito.estado }}" 
                                                     title="Cambiar estado">
                                                 <i class="fas fa-flag"></i>
                                             </button>
@@ -369,16 +370,16 @@
                     <span id="contadorSeleccionados" class="badge bg-warning text-dark ms-2">0</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-success" onclick="facturarSeleccionados()">
+                    <button class="btn btn-success btn-facturar-seleccionados">
                         <i class="fas fa-file-invoice me-1"></i>Facturar Seleccionados
                     </button>
-                    <button class="btn btn-info" onclick="cambiarEstadoMasivo()">
+                    <button class="btn btn-info btn-cambiar-estado-masivo">
                         <i class="fas fa-flag me-1"></i>Cambiar Estado
                     </button>
-                    <button class="btn btn-secondary" onclick="imprimirSeleccionados()">
+                    <button class="btn btn-secondary btn-imprimir-seleccionados">
                         <i class="fas fa-print me-1"></i>Imprimir Todos
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="limpiarSeleccion()">
+                    <button class="btn btn-outline-secondary btn-limpiar-seleccion">
                         <i class="fas fa-times me-1"></i>Limpiar
                     </button>
                 </div>
@@ -634,14 +635,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checkbox.addEventListener('change', actualizarSeleccion);
     });
     
-    // Configurar "Seleccionar todos"
-    const selectAllBtn = document.querySelector('button[onclick="seleccionarTodos()"]');
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            seleccionarTodos();
-        });
-    }
+    // Configurar "Seleccionar todos" (wireado por delegación al final del script, CSP)
     
     // Inicializar DataTables
     const table = document.getElementById('dataTable');
@@ -713,6 +707,35 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         seleccionarTodos();
     }
+});
+
+// Wiring de handlers (refactor CSP)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-limpiar-filtros');
+    if (btn) { limpiarFiltros(); return; }
+    const btnExportar = e.target.closest('.btn-exportar');
+    if (btnExportar) { exportarExcel(); return; }
+    const btnImprimir = e.target.closest('.btn-imprimir-tabla');
+    if (btnImprimir) { imprimirTabla(); return; }
+    const btnFacturarMasivo = e.target.closest('.btn-facturar-masivo');
+    if (btnFacturarMasivo) { facturarMasivo(); return; }
+    const btnSeleccionar = e.target.closest('.btn-seleccionar-todos');
+    if (btnSeleccionar) { seleccionarTodos(); return; }
+    const btnFacturarSel = e.target.closest('.btn-facturar-seleccionados');
+    if (btnFacturarSel) { facturarSeleccionados(); return; }
+    const btnEstadoMasivo = e.target.closest('.btn-cambiar-estado-masivo');
+    if (btnEstadoMasivo) { cambiarEstadoMasivo(); return; }
+    const btnImprimirSel = e.target.closest('.btn-imprimir-seleccionados');
+    if (btnImprimirSel) { imprimirSeleccionados(); return; }
+    const btnLimpiarSel = e.target.closest('.btn-limpiar-seleccion');
+    if (btnLimpiarSel) { limpiarSeleccion(); }
+});
+// Delegación en filas dinámicas de la tabla (DataTables)
+document.getElementById('dataTable').addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-imprimir-remito');
+    if (btn) { imprimirRemito(btn.dataset.remitoId); return; }
+    const btnEstado = e.target.closest('.btn-cambiar-estado');
+    if (btnEstado) { cambiarEstado(btnEstado.dataset.remitoId, btnEstado.dataset.estado); }
 });
 </script>
 

@@ -39,13 +39,13 @@
             <a href="{{ url_for('ventas.nuevo_presupuesto') }}" class="btn btn-warning">
                 <i class="fas fa-plus me-1"></i>Nuevo Presupuesto
             </a>
-            <button class="btn btn-outline-success" onclick="exportarExcel()">
+            <button class="btn btn-outline-success btn-exportar">
                 <i class="fas fa-file-excel me-1"></i>Exportar Excel
             </button>
-            <button class="btn btn-outline-info" onclick="enviarMasivo()">
+            <button class="btn btn-outline-info btn-enviar-masivo">
                 <i class="fas fa-envelope me-1"></i>Enviar Masivo
             </button>
-            <button class="btn btn-outline-primary" onclick="analizarConversion()">
+            <button class="btn btn-outline-primary btn-analizar-conversion">
                 <i class="fas fa-chart-line me-1"></i>Análisis Conversión
             </button>
         </div>
@@ -60,7 +60,7 @@
                 <i class="fas fa-filter me-2"></i>
                 <h5 class="card-title mb-0">Filtros de Presupuestos</h5>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-outline-dark btn-sm" onclick="limpiarFiltros()">
+                    <button type="button" class="btn btn-outline-dark btn-sm btn-limpiar-filtros">
                         <i class="fas fa-broom me-1"></i>Limpiar
                     </button>
                 </div>
@@ -291,13 +291,13 @@
                 <i class="fas fa-list me-2"></i>Lista de Presupuestos
             </h5>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-dark btn-sm" onclick="seleccionarTodos()">
+                <button class="btn btn-outline-dark btn-sm btn-seleccionar-todos">
                     <i class="fas fa-check-square me-1"></i>Seleccionar Todos
                 </button>
-                <button class="btn btn-outline-dark btn-sm" onclick="exportarExcel()">
+                <button class="btn btn-outline-dark btn-sm btn-exportar">
                     <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button class="btn btn-outline-dark btn-sm" onclick="imprimirTabla()">
+                <button class="btn btn-outline-dark btn-sm btn-imprimir-tabla">
                     <i class="fas fa-print me-1"></i>Imprimir
                 </button>
             </div>
@@ -438,18 +438,20 @@
                                                     <i class="fas fa-receipt"></i>
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-outline-warning btn-sm" 
-                                                    onclick="enviarPresupuesto({{ presupuesto.id }}, '{{ presupuesto.cliente }}')" 
+                                            <button class="btn btn-outline-warning btn-sm btn-enviar-presupuesto" 
+                                                    data-presupuesto-id="{{ presupuesto.id }}" 
+                                                    data-cliente="{{ presupuesto.cliente }}" 
                                                     title="Enviar por email">
                                                 <i class="fas fa-envelope"></i>
                                             </button>
-                                            <button class="btn btn-outline-secondary btn-sm" 
-                                                    onclick="duplicarPresupuesto({{ presupuesto.id }})" 
+                                            <button class="btn btn-outline-secondary btn-sm btn-duplicar-presupuesto" 
+                                                    data-presupuesto-id="{{ presupuesto.id }}" 
                                                     title="Duplicar presupuesto">
                                                 <i class="fas fa-copy"></i>
                                             </button>
-                                            <button class="btn btn-outline-dark btn-sm" 
-                                                    onclick="cambiarEstado({{ presupuesto.id }}, '{{ presupuesto.estado }}')" 
+                                            <button class="btn btn-outline-dark btn-sm btn-cambiar-estado" 
+                                                    data-presupuesto-id="{{ presupuesto.id }}" 
+                                                    data-estado="{{ presupuesto.estado }}" 
                                                     title="Cambiar estado">
                                                 <i class="fas fa-flag"></i>
                                             </button>
@@ -503,19 +505,19 @@
                     <span id="contadorSeleccionados" class="badge bg-warning text-dark ms-2">0</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-success" onclick="facturarSeleccionados()">
+                    <button class="btn btn-success btn-facturar-seleccionados">
                         <i class="fas fa-file-invoice me-1"></i>Facturar Masivo
                     </button>
-                    <button class="btn btn-info" onclick="enviarSeleccionados()">
+                    <button class="btn btn-info btn-enviar-seleccionados">
                         <i class="fas fa-envelope me-1"></i>Enviar Emails
                     </button>
-                    <button class="btn btn-warning" onclick="cambiarEstadoMasivo()">
+                    <button class="btn btn-warning btn-cambiar-estado-masivo">
                         <i class="fas fa-flag me-1"></i>Cambiar Estado
                     </button>
-                    <button class="btn btn-secondary" onclick="duplicarSeleccionados()">
+                    <button class="btn btn-secondary btn-duplicar-seleccionados">
                         <i class="fas fa-copy me-1"></i>Duplicar Todos
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="limpiarSeleccion()">
+                    <button class="btn btn-outline-secondary btn-limpiar-seleccion">
                         <i class="fas fa-times me-1"></i>Limpiar
                     </button>
                 </div>
@@ -954,6 +956,41 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         enviarMasivo();
     }
+});
+
+// Wiring de handlers (refactor CSP)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-limpiar-filtros');
+    if (btn) { limpiarFiltros(); return; }
+    const btnExportar = e.target.closest('.btn-exportar');
+    if (btnExportar) { exportarExcel(); return; }
+    const btnImprimir = e.target.closest('.btn-imprimir-tabla');
+    if (btnImprimir) { imprimirTabla(); return; }
+    const btnMasivo = e.target.closest('.btn-enviar-masivo');
+    if (btnMasivo) { enviarMasivo(); return; }
+    const btnConversion = e.target.closest('.btn-analizar-conversion');
+    if (btnConversion) { analizarConversion(); return; }
+    const btnSeleccionar = e.target.closest('.btn-seleccionar-todos');
+    if (btnSeleccionar) { seleccionarTodos(); return; }
+    const btnFacturar = e.target.closest('.btn-facturar-seleccionados');
+    if (btnFacturar) { facturarSeleccionados(); return; }
+    const btnEnviarSel = e.target.closest('.btn-enviar-seleccionados');
+    if (btnEnviarSel) { enviarSeleccionados(); return; }
+    const btnEstadoMasivo = e.target.closest('.btn-cambiar-estado-masivo');
+    if (btnEstadoMasivo) { cambiarEstadoMasivo(); return; }
+    const btnDuplicarSel = e.target.closest('.btn-duplicar-seleccionados');
+    if (btnDuplicarSel) { duplicarSeleccionados(); return; }
+    const btnLimpiarSel = e.target.closest('.btn-limpiar-seleccion');
+    if (btnLimpiarSel) { limpiarSeleccion(); }
+});
+// Delegación en filas dinámicas de la tabla (DataTables)
+document.getElementById('dataTable').addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-enviar-presupuesto');
+    if (btn) { enviarPresupuesto(btn.dataset.presupuestoId, btn.dataset.cliente); return; }
+    const btnDuplicar = e.target.closest('.btn-duplicar-presupuesto');
+    if (btnDuplicar) { duplicarPresupuesto(btnDuplicar.dataset.presupuestoId); return; }
+    const btnEstado = e.target.closest('.btn-cambiar-estado');
+    if (btnEstado) { cambiarEstado(btnEstado.dataset.presupuestoId, btnEstado.dataset.estado); }
 });
 </script>
 

@@ -50,10 +50,10 @@ Chain strategy: feature-branch-chain
 
 ## Fase 3: PR3 — Ventas
 
-- [ ] 3.1 Refactor 70 handlers en 9 archivos ventas (design §3.2) → `addEventListener` en bloque nonceado; `onfocus` → `.select-on-focus`; delegación en filas dinámicas (ADR-5)
-- [ ] 3.2 Conservar `window.*`; referencias perezosas a funciones de módulos (ADR-3)
-- [ ] 3.3 Commit `fix(csp): handlers ventas a addEventListener`
-- [ ] 3.4 Verificar §5.2/PR3: export/print/filtros/masivo/estado; `grabarNotaCredito()` guarda NC
+- [x] 3.1 Refactor handlers en 9 archivos ventas (design §3.2) → `addEventListener` en bloque nonceado; delegación en filas dinámicas (ADR-5). NOTA: 69 handlers reales (design decía 70; el "13°" de remitos era el selector JS `button[onclick="seleccionarTodos()"]` en L638, actualizado a clase); NO hay `onfocus` en los 9 archivos ventas (los 14 onfocus viven en fin-ent-cred/rend-cajas/_modal-cobranzas, PR5/PR7)
+- [x] 3.2 Conservar `window.*`; referencias perezosas a funciones de módulos (ADR-3): `btnGrabarNC` → `window.grabarNotaCredito()` (lazy); `buscar_comprobante_original` ya lo wirea `nueva_nota_credito.js:1597` (sin listener duplicado)
+- [x] 3.3 Commit `fix(csp): handlers ventas a addEventListener`
+- [x] 3.4 Verificar: gate 1 = 0 + gate 2 = 0 en templates/ventas (OK); sin duplicados (OK, revisión estática); checklist manual de navegador PENDIENTE (presupuestos/remitos/ventas/NC + botones de fila dinámicos)
 
 ## Fase 4: PR4 — Proveedores
 

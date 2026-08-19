@@ -127,7 +127,7 @@
                 <i class="fas fa-filter me-2"></i>
                 <h5 class="card-title mb-0">Filtros de Búsqueda</h5>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-limpiar-filtros">
                         <i class="fas fa-broom me-1"></i>Limpiar
                     </button>
                 </div>
@@ -185,10 +185,10 @@
                 <i class="fas fa-list me-2"></i>Lista de Facturas
             </h5>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                <button class="btn btn-outline-light btn-sm btn-exportar">
                     <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                     <i class="fas fa-print me-1"></i>Imprimir
                 </button>
             </div>
@@ -451,6 +451,17 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         exportarExcel();
     }
+});
+
+// Wiring de handlers (refactor CSP)
+document.querySelector('.btn-limpiar-filtros').addEventListener('click', function () {
+    limpiarFiltros();
+});
+document.querySelector('.btn-exportar').addEventListener('click', function () {
+    exportarExcel();
+});
+document.querySelector('.btn-imprimir-tabla').addEventListener('click', function () {
+    imprimirTabla();
 });
 </script>
 

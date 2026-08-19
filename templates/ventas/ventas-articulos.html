@@ -36,10 +36,10 @@
             <p class="page-subtitle text-muted mb-0">Análisis de ventas por artículo con detalles y colores</p>
         </div>
         <div class="ms-auto d-flex gap-2">
-            <button class="btn btn-outline-success" onclick="exportarExcel()">
+            <button class="btn btn-outline-success btn-exportar">
                 <i class="fas fa-file-excel me-1"></i>Exportar Excel
             </button>
-            <button class="btn btn-outline-primary" onclick="generarReporte()">
+            <button class="btn btn-outline-primary btn-generar-reporte">
                 <i class="fas fa-chart-line me-1"></i>Generar Reporte
             </button>
         </div>
@@ -54,7 +54,7 @@
                 <i class="fas fa-filter me-2"></i>
                 <h5 class="card-title mb-0">Filtros de Análisis</h5>
                 <div class="ms-auto">
-                    <button type="button" class="btn btn-outline-light btn-sm" onclick="limpiarFiltros()">
+                    <button type="button" class="btn btn-outline-light btn-sm btn-limpiar-filtros">
                         <i class="fas fa-broom me-1"></i>Limpiar
                     </button>
                 </div>
@@ -187,10 +187,10 @@
                 <i class="fas fa-chart-bar me-2"></i>Detalle por Artículos
             </h5>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-light btn-sm" onclick="exportarExcel()">
+                <button class="btn btn-outline-light btn-sm btn-exportar">
                     <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="imprimirTabla()">
+                <button class="btn btn-outline-light btn-sm btn-imprimir-tabla">
                     <i class="fas fa-print me-1"></i>Imprimir
                 </button>
             </div>
@@ -270,8 +270,8 @@
                                                title="Ver artículo">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button class="btn btn-outline-info btn-sm" 
-                                                    onclick="verDetalleVentas({{ articulo.id }})" 
+                                            <button class="btn btn-outline-info btn-sm btn-ver-detalle-ventas" 
+                                                    data-articulo-id="{{ articulo.id }}" 
                                                     title="Ver detalle de ventas">
                                                 <i class="fas fa-chart-line"></i>
                                             </button>
@@ -537,6 +537,23 @@ function actualizarAnalisis() {
         });
     }
 }
+
+// Wiring de handlers (refactor CSP)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-limpiar-filtros');
+    if (btn) { limpiarFiltros(); return; }
+    const btnExportar = e.target.closest('.btn-exportar');
+    if (btnExportar) { exportarExcel(); return; }
+    const btnImprimir = e.target.closest('.btn-imprimir-tabla');
+    if (btnImprimir) { imprimirTabla(); return; }
+    const btnReporte = e.target.closest('.btn-generar-reporte');
+    if (btnReporte) { generarReporte(); }
+});
+// Delegación en filas dinámicas de la tabla (DataTables)
+document.getElementById('dataTable').addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-ver-detalle-ventas');
+    if (btn) { verDetalleVentas(btn.dataset.articuloId); }
+});
 </script>
 
 <script src="{{ url_for('static', filename='vendor/datatable/jquery-3.7.1.js') }}"></script>

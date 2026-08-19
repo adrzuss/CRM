@@ -552,8 +552,8 @@
                     <a class="btn btn-moderno btn-primario col-1 m-3" href="{{ url_for('articulos.componer_art', id=articulo.id) }}">Componer</a>
                 
                 {% endif %}
-                <button class="btn btn-moderno btn-secundario col-2 m-3" type="button" onclick="abrirModalMovArticulos({{ articulo.id }})">Mov. del artículo</button>
-                <button class="btn btn-moderno btn-terciario col-2 m-3" type="button" onclick="abrirModalMovArticulosDetalle({{ articulo.id }})">Mov. del artículo detallado</button>
+                <button class="btn btn-moderno btn-secundario col-2 m-3" type="button" id="btn-mov-articulos" data-id="{{ articulo.id }}">Mov. del artículo</button>
+                <button class="btn btn-moderno btn-terciario col-2 m-3" type="button" id="btn-mov-articulos-detalle" data-id="{{ articulo.id }}">Mov. del artículo detallado</button>
             </div>
             
         </div>
@@ -583,6 +583,24 @@
         });
     </script>
     {% endif %}
+
+    <script nonce="{{ g.nonce }}">
+        // Botones de movimientos del artículo -> exports del módulo upd-articulos.js
+        // (referencia perezosa, ADR-3). Guard por elemento: el bloque queda fuera del
+        // condicional de colores/detalles para que los botones operen siempre.
+        var btnMovArticulos = document.getElementById('btn-mov-articulos');
+        if (btnMovArticulos) {
+            btnMovArticulos.addEventListener('click', function () {
+                window.abrirModalMovArticulos(btnMovArticulos.dataset.id);
+            });
+        }
+        var btnMovArticulosDetalle = document.getElementById('btn-mov-articulos-detalle');
+        if (btnMovArticulosDetalle) {
+            btnMovArticulosDetalle.addEventListener('click', function () {
+                window.abrirModalMovArticulosDetalle(btnMovArticulosDetalle.dataset.id);
+            });
+        }
+    </script>
     
 {% endblock %}
 

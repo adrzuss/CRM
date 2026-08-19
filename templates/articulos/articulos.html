@@ -172,7 +172,7 @@
                             <a href="update_articulo/${data}" class="btn btn-sm btn-outline-primary" title="Editar artículo">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="#" onclick="eliminarArticulo(${data})" class="btn btn-sm btn-outline-danger" title="Eliminar artículo">
+                            <a href="#" class="btn btn-sm btn-outline-danger btn-eliminar-articulo" data-id="${data}" title="Eliminar artículo">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>
@@ -207,6 +207,14 @@
             let total = tabla.page.info().recordsTotal;
             $('#contadorArticulos').text(total);
             $('#tableLoader').hide(); // Ocultar spinner al cargar
+        });
+
+        // Eliminar artículo desde la fila (delegación en el tbody, ADR-7):
+        // el HTML de la columna se genera en runtime por DataTables y no puede
+        // llevar onclick (CSP). El botón expone clase + data-id.
+        document.getElementById('articulosTable').addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-eliminar-articulo');
+            if (btn) { window.eliminarArticulo(btn.dataset.id); }
         });
 
         // Recargar la tabla cuando se haga clic en el botón "Aplicar Filtros"

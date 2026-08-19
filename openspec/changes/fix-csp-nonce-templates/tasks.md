@@ -70,10 +70,10 @@ Chain strategy: feature-branch-chain
 
 ## Fase 6: PR6 — Artículos + ctacte
 
-- [ ] 6.1 `articulos.html:175`: render-string sin `onclick` (clase + data-id) + delegación tbody en script existente (ADR-7)
-- [ ] 6.2 Refactor `upd-articulos` (2, condicional Jinja) y `_ctacte-cli` (1) → `addEventListener`
-- [ ] 6.3 Commit `fix(csp): handlers articulos y ctacte`
-- [ ] 6.4 Verificar §5.2/PR6
+- [x] 6.1 `articulos.html:175`: render-string sin `onclick` (clase + data-id) + delegación tbody en script existente (ADR-7)
+- [x] 6.2 Refactor `upd-articulos` (2, condicional Jinja) y `_ctacte-cli` (1) → `addEventListener`
+- [x] 6.3 Commit `fix(csp): handlers articulos y ctacte`
+- [ ] 6.4 Verificar §5.2/PR6 (gates OK; checklist manual de navegador PENDIENTE)
 
 ## Fase 7: PR7 — Resto
 

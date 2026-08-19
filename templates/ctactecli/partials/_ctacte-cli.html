@@ -117,7 +117,7 @@
             <button class="btn btn-success btn-lg px-4" type="submit">
                 <i class="fas fa-save me-2"></i>Grabar Movimiento
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-lg px-4 ms-2" onclick="this.form.reset()">
+            <button type="button" class="btn btn-outline-secondary btn-lg px-4 ms-2" id="btn-limpiar-mov">
                 <i class="fas fa-times me-2"></i>Limpiar
             </button>
         </div>
@@ -154,5 +154,13 @@ document.addEventListener('DOMContentLoaded', function() {
     efectivoInput.addEventListener('input', validarTotal);
     tarjetaInput.addEventListener('input', validarTotal);
     importeInput.addEventListener('input', validarTotal);
+
+    // Limpiar el formulario (antes usaba this.form.reset() inline - CSP bloquea handlers)
+    const btnLimpiar = document.getElementById('btn-limpiar-mov');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function () {
+            document.getElementById('movCtaCte').reset();
+        });
+    }
 });
 </script>   

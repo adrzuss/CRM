@@ -101,37 +101,34 @@
                                                 <td class="text-center fw-medium">{{ alicuota.id }}</td>
                                                 <td>
                                                     <div class="form-floating">
-                                                        <input type="text" class="form-control form-control-sm alicuota-cuota" 
+                                                        <input type="text" class="form-control form-control-sm alicuota-cuota select-on-focus" 
                                                                name="items[{{loop.index}}][cuota]" 
                                                                id="cuota_{{loop.index}}"
                                                                required 
                                                                value="{{ alicuota.cuotas }}" 
-                                                               onfocus="this.select()"
                                                                placeholder="Cuotas">
                                                         <label for="cuota_{{loop.index}}">Cantidad</label>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="form-floating">
-                                                        <input type="number" class="form-control form-control-sm alicuota-alicuota" 
+                                                        <input type="number" class="form-control form-control-sm alicuota-alicuota select-on-focus" 
                                                                name="items[{{loop.index}}][alicuota]" 
                                                                id="coef_{{loop.index}}"
                                                                step="0.0001" 
                                                                required 
                                                                value="{{'{0:0.4f}'.format(alicuota.coeficiente)}}" 
-                                                               onfocus="this.select()"
                                                                placeholder="Coeficiente">
                                                         <label for="coef_{{loop.index}}">Factor</label>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="form-floating">
-                                                        <input type="number" class="form-control form-control-sm alicuota-dias" 
+                                                        <input type="number" class="form-control form-control-sm alicuota-dias select-on-focus" 
                                                                name="items[{{loop.index}}][dias]" 
                                                                id="dias_{{loop.index}}"
                                                                required 
                                                                value="{{ alicuota.acreditacion_dias }}" 
-                                                               onfocus="this.select()"
                                                                placeholder="Días">
                                                         <label for="dias_{{loop.index}}">Días</label>
                                                     </div>
@@ -183,6 +180,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const tablaItems = document.querySelector("#tabla-alicuotas tbody");
     const emptyRow = document.querySelector('.empty-row');
 
+    // Selección automática de texto al enfocar (patrón CSP, ADR-5)
+    document.addEventListener('focusin', function (e) {
+        if (e.target.classList && e.target.classList.contains('select-on-focus')) {
+            e.target.select();
+        }
+    });
+
     document.getElementById("agregarAlicuota").addEventListener("click", () => {
         console.log('📝 Agregando nueva alícuota, contador:', contadorFilas);
         
@@ -196,36 +200,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="text-center fw-medium">Nuevo</td>
                 <td>
                     <div class="form-floating">
-                        <input type="text" class="form-control form-control-sm alicuota-cuota" 
+                        <input type="text" class="form-control form-control-sm alicuota-cuota select-on-focus" 
                                name="items[${contadorFilas}][cuota]" 
                                id="cuota_${contadorFilas}"
                                required 
-                               onfocus="this.select()"
                                placeholder="Cuotas">
                         <label for="cuota_${contadorFilas}">Cantidad</label>
                     </div>
                 </td>
                 <td>
                     <div class="form-floating">
-                        <input type="number" class="form-control form-control-sm alicuota-alicuota" 
+                        <input type="number" class="form-control form-control-sm alicuota-alicuota select-on-focus" 
                                name="items[${contadorFilas}][alicuota]" 
                                id="coef_${contadorFilas}"
                                step="0.0001" 
                                required 
                                value="1.0000"
-                               onfocus="this.select()"
                                placeholder="Coeficiente">
                         <label for="coef_${contadorFilas}">Factor</label>
                     </div>
                 </td>
                 <td>
                     <div class="form-floating">
-                        <input type="number" class="form-control form-control-sm alicuota-dias" 
+                        <input type="number" class="form-control form-control-sm alicuota-dias select-on-focus" 
                                name="items[${contadorFilas}][dias]" 
                                id="dias_${contadorFilas}"
                                required 
                                value="0"
-                               onfocus="this.select()"
                                placeholder="Días">
                         <label for="dias_${contadorFilas}">Días</label>
                     </div>

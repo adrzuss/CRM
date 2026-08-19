@@ -72,8 +72,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="{{ url_for('clientes.delete_cliente', id=cliente.id) }}" 
-                                       class="btn btn-outline-danger btn-sm" title="Eliminar" 
-                                       onclick="return confirm('¿Está seguro de eliminar este cliente?')">
+                                       class="btn btn-outline-danger btn-sm btn-eliminar-cliente" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                     <a href="{{ url_for('clientes.facturas_cliente', id=cliente.id) }}" 
@@ -90,3 +89,14 @@
         </div>
     </div>    
 </div>
+
+<script nonce="{{ g.nonce }}">
+    // Confirmación de eliminación (patrón CSP, ADR-5): los enlaces viven en filas
+    // del listado server-side; delegación sobre el documento.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-eliminar-cliente');
+        if (btn && !confirm('¿Está seguro de eliminar este cliente?')) {
+            e.preventDefault();
+        }
+    });
+</script>

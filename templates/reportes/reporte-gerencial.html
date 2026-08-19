@@ -24,7 +24,7 @@
             <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fas fa-sync-alt me-1"></i>Actualizar
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnImprimir">
                 <i class="fas fa-print me-1"></i>Imprimir
             </button>
         </form>
@@ -616,6 +616,11 @@
     // Inicializar gráficos cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
         inicializarGraficos(datosReporte);
+    });
+
+    // Botón imprimir (refactor CSP)
+    document.getElementById('btnImprimir').addEventListener('click', function () {
+        window.print();
     });
 </script>
 {% endblock %}    

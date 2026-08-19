@@ -15,10 +15,10 @@
                     {{ permisos_activos|length }} de {{ opciones_menu|length }} permisos
                 </span>
                 <div class="btn-group">
-                    <button type="button" class="btn-seleccionar-todos" onclick="seleccionarTodos()">
+                    <button type="button" class="btn-seleccionar-todos" data-accion="seleccionar">
                         <i class="fas fa-check-double me-1"></i>Todos
                     </button>
-                    <button type="button" class="btn-seleccionar-todos" onclick="deseleccionarTodos()">
+                    <button type="button" class="btn-seleccionar-todos" data-accion="deseleccionar">
                         <i class="fas fa-times me-1"></i>Ninguno
                     </button>
                 </div>

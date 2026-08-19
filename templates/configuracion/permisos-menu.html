@@ -57,6 +57,21 @@
     </div>
 </div>
 
+<script nonce="{{ g.nonce }}">
+    // Delegación CSP (ADR-4): el partial _permisos_tarea se inyecta por HTMX con
+    // un nonce fresco que no coincide con el del documento; el wiring vive en el host.
+    // window.seleccionarTodos / window.deseleccionarTodos se exportan en permisos-menu.js.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-seleccionar-todos');
+        if (!btn) return;
+        if (btn.dataset.accion === 'deseleccionar') {
+            window.deseleccionarTodos();
+        } else {
+            window.seleccionarTodos();
+        }
+    });
+</script>
+
 {% endblock %}
 
 {% block js_script %}

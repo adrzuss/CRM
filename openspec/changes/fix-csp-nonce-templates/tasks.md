@@ -77,10 +77,10 @@ Chain strategy: feature-branch-chain
 
 ## Fase 7: PR7 — Resto
 
-- [ ] 7.1 `_permisos_tarea` (2, HTMX) y `_modal-lineas-comprobantes` (1, fetch) → delegación desde host (ADR-4)
-- [ ] 7.2 Refactor `fin-ent-cred` (6), `_lst-clientes`, `_lst-entidades`, `reporte-gerencial`, `_lst-puntos-ventas`; partials con bloque mínimo (ADR-5)
-- [ ] 7.3 Commit `fix(csp): handlers resto a addEventListener`
-- [ ] 7.4 Verificar §5.2/PR7
+- [x] 7.1 `_permisos_tarea` (2, HTMX) y `_modal-lineas-comprobantes` (1, fetch) → delegación desde host (ADR-4): host `permisos-menu.html` (bloque nonceado nuevo + `window.seleccionarTodos`/`deseleccionarTodos` perezosas, `data-accion` en los 2 botones) y host `_lst-puntos-ventas.html` (listener delegado `.btn-guardar-lineas` → `guardarLineasComprobantes`)
+- [x] 7.2 Refactor `fin-ent-cred` (6 onfocus→`select-on-focus` + focusin delegado; 3 estáticos + 3 en render-string), `_lst-clientes` (1 confirm→delegación `btn-eliminar-cliente`), `_lst-entidades` (1 confirm→delegación `btn-eliminar-entidad`), `reporte-gerencial` (1 `window.print`→`btnImprimir`), `_lst-puntos-ventas` (1 `abrirModalLineas`→delegación `.btn-lineas-ticket` + data-*) — partials con bloque mínimo nonceado (ADR-5)
+- [x] 7.3 Commit `fix(csp): handlers resto a addEventListener`
+- [x] 7.4 Verificar §5.2/PR7 (gates OK: gate 1 = 0 recursivo, gate 2 = 0 en los 7 archivos; full-tree solo restan los 2 archivos muertos; checklist manual de navegador PENDIENTE)
 
 ## Fase 8: Gates finales e integración
 

@@ -162,7 +162,7 @@ input[type="checkbox"] {
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-user-circle text-gray-400"></i> Información del Cliente
                 </h6>
-                <button class="btn btn-success btn-sm" type="button" id="btnPagos" name="btnPagos" onclick="abrirModalPagos()" title="Abrir métodos de cobro">
+                <button class="btn btn-success btn-sm" type="button" id="btnPagos" name="btnPagos" title="Abrir métodos de cobro">
                     <i class="fas fa-credit-card"></i> F8 Procesar Cobro
                 </button>
             </div>
@@ -248,13 +248,13 @@ input[type="checkbox"] {
                 <div class="d-flex align-items-center">
                     <!-- Botones de selección rápida -->
                     <div class="btn-group btn-group-sm mr-2" role="group">
-                        <button type="button" class="btn btn-outline-success btn-sm" onclick="seleccionarTodas()" title="Seleccionar todas">
+                        <button type="button" class="btn btn-outline-success btn-sm" id="btn-seleccionar-todas" title="Seleccionar todas">
                             <i class="fas fa-check-double"></i> Todas
                         </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="seleccionarVencidas()" title="Seleccionar solo vencidas">
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="btn-seleccionar-vencidas" title="Seleccionar solo vencidas">
                             <i class="fas fa-exclamation-triangle"></i> Vencidas
                         </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="limpiarSeleccion()" title="Limpiar selección">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-limpiar-seleccion" title="Limpiar selección">
                             <i class="fas fa-times"></i> Ninguna
                         </button>
                     </div>
@@ -348,7 +348,7 @@ input[type="checkbox"] {
                                 <span class="badge badge-success badge-pill mr-2" id="badge_seleccionadas">
                                     <span id="display_seleccionadas">0</span> cuotas
                                 </span>
-                                <button type="button" class="btn btn-success" onclick="abrirModalPagos()" 
+                                <button type="button" class="btn btn-success" 
                                         id="btn_procesar_cobro" disabled title="Seleccione al menos una cuota">
                                     <i class="fas fa-credit-card"></i> Procesar Cobro
                                 </button>
@@ -638,6 +638,23 @@ function debugEstructuraTabla() {
 
 // Exponer función de debug globalmente
 window.debugEstructuraTabla = debugEstructuraTabla;
+
+// Wiring CSP: botones de cobranza (ADR-5, referencia perezosa a módulo)
+document.getElementById('btnPagos').addEventListener('click', function () {
+    window.abrirModalPagos();
+});
+document.getElementById('btn_procesar_cobro').addEventListener('click', function () {
+    window.abrirModalPagos();
+});
+document.getElementById('btn-seleccionar-todas').addEventListener('click', function () {
+    seleccionarTodas();
+});
+document.getElementById('btn-seleccionar-vencidas').addEventListener('click', function () {
+    seleccionarVencidas();
+});
+document.getElementById('btn-limpiar-seleccion').addEventListener('click', function () {
+    limpiarSeleccion();
+});
 </script>
 
 {% endblock %}

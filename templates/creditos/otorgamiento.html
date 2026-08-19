@@ -270,7 +270,7 @@
                     <div class="col-lg-1 col-md-12">
                         <div class="form-group">
                             <label>&nbsp;</label>
-                            <button type="button" class="btn btn-outline-primary btn-block" onclick="buscarCliente()" title="Buscar cliente">
+                            <button type="button" class="btn btn-outline-primary btn-block" id="btn-buscar-cliente" title="Buscar cliente">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -717,6 +717,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value) {
             actualizarPasoActual(2);
         }
+    });
+    
+    // Wiring CSP: búsqueda de cliente (ADR-5)
+    document.getElementById('btn-buscar-cliente').addEventListener('click', function () {
+        window.buscarCliente();
     });
     
     // Interceptar el botón generar original

@@ -345,7 +345,7 @@
                         {% if credito.estado not in (3,4,5) %}
                         <div class="form-group">
                             <label>&nbsp;</label>
-                            <button type="button" class="btn btn-outline-primary btn-block" onclick="buscarCliente()" title="Buscar cliente">
+                            <button type="button" class="btn btn-outline-primary btn-block" id="btn-buscar-cliente" title="Buscar cliente">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -513,7 +513,7 @@
                                 <div class="form-group">
                                     <label>&nbsp;</label>
                                     {% if credito.estado not in (3,4,5) %}
-                                    <button type="button" class="btn btn-outline-info btn-block" onclick="buscarGarante({{ loop.index }})" title="Buscar garante">
+                                    <button type="button" class="btn btn-outline-info btn-block btn-buscar-garante" data-indice="{{ loop.index }}" title="Buscar garante">
                                         <i class="fas fa-search"></i> Buscar
                                     </button>
                                     {% else %}
@@ -780,6 +780,26 @@
     document.getElementById("idcliente").addEventListener("blur", function () {
         const idcliente = this.value;
         fetchCliente(idcliente);
+    });
+
+    // Wiring CSP: búsqueda de cliente (botón condicional según estado, ADR-5)
+    const btnBuscarCliente = document.getElementById("btn-buscar-cliente");
+    if (btnBuscarCliente) {
+        btnBuscarCliente.addEventListener("click", function () {
+            if (typeof window.buscarCliente === 'function') {
+                window.buscarCliente();
+            }
+        });
+    }
+
+    // Wiring CSP: búsqueda de garante (delegación en botones repetidos, ADR-5)
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest(".btn-buscar-garante");
+        if (btn) {
+            if (typeof window.buscarGarante === 'function') {
+                window.buscarGarante(btn.dataset.indice);
+            }
+        }
     });
 
     document.getElementById("idplan").addEventListener("change", function (event) {

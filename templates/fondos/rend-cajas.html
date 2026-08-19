@@ -116,7 +116,7 @@
                                             <td scope="row">{{ valor['id'] }} <input type="hidden" name="item[{{loop.index}}][idMoneda]" value="{{ valor['idmoneda_billete'] }}"></td>
                                             <td>{{ valor['descripcion'] }}</td>
                                             <td> <input type="number" class="form-control valor" name="item[{{loop.index}}][valor]" id="valor" value="{{valor['valor']}}" readonly /></td>
-                                            <td> <input type="number" class="form-control cantidad" name="item[{{loop.index}}][cantidad]" id="cantidad" aria-describedby="helpId"  placeholder="Cantidad" value="{{ valor['cantidad'] }}" onfocus="this.select()" /></td>
+                                            <td> <input type="number" class="form-control cantidad select-on-focus" name="item[{{loop.index}}][cantidad]" id="cantidad" aria-describedby="helpId"  placeholder="Cantidad" value="{{ valor['cantidad'] }}" /></td>
                                             {% if valor['total'] > 0 %}
                                                 <td> <input type="number" class="form-control total text-success fw-bold" name="item[{{loop.index}}][total]" id="total" aria-describedby="helpId"  placeholder="Total" value="{{ valor['total'] }}" readonly /></td>
                                             {% else %}
@@ -199,6 +199,13 @@
             isFormSubmited = true;
         }
     });    
+
+    // Selección automática del contenido al enfocar (ADR-5)
+    document.addEventListener('focusin', function (e) {
+        if (e.target.classList && e.target.classList.contains('select-on-focus')) {
+            e.target.select();
+        }
+    });
 
     actualizarTotalGeneral();
 </script>

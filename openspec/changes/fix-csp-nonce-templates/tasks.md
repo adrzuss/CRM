@@ -63,10 +63,10 @@ Chain strategy: feature-branch-chain
 
 ## Fase 5: PR5 — Fondos + créditos
 
-- [ ] 5.1 Refactor 9 handlers en 4 archivos (design §3.2) → `addEventListener`
-- [ ] 5.2 Confirmar `_modal-cobranzas.html` sin referencias (decisión abierta #1); si aparece, incluirlo aquí
-- [ ] 5.3 Commit `fix(csp): handlers fondos y creditos`
-- [ ] 5.4 Verificar §5.2/PR5
+- [x] 5.1 Refactor 9 handlers en 4 archivos (design §3.2) → `addEventListener`: rend-cajas (1 onfocus→`select-on-focus` + focusin delegado; submit/validation guard ya estaba como addEventListener en el script nonceado), otorgamiento (1 `buscarCliente` → id `btn-buscar-cliente`), seleccion-cuotas-pago (5: `abrirModalPagos`×2 perezosa vía `window.*`, `seleccionarTodas`/`seleccionarVencidas`/`limpiarSeleccion` directas — ids nuevos en botones), ver-credito (2: `buscarCliente` condicional con guard, `buscarGarante` delegación `closest()` + `data-indice`)
+- [x] 5.2 Confirmar `_modal-cobranzas.html` sin referencias: grep `_modal-cobranzas` en `routes/**` + `templates/**` = 0 resultados → excluido (ADR-8, decisión #1 confirmada)
+- [x] 5.3 Commit `fix(csp): handlers fondos y creditos`
+- [ ] 5.4 Verificar §5.2/PR5: gates OK (gate 1 = 0 recursivo, gate 2 = 0 en los 4 archivos); checklist manual de navegador PENDIENTE (rend-cajas submit/validación, otorgamiento wizard, seleccion-cuotas-pago cobrar cuotas, ver-credito cargar cuotas + blur cliente)
 
 ## Fase 6: PR6 — Artículos + ctacte
 

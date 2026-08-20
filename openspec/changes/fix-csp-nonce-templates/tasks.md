@@ -84,6 +84,6 @@ Chain strategy: feature-branch-chain
 
 ## Fase 8: Gates finales e integración
 
-- [ ] 8.1 Gate 1 = 0; gate 2 = 0 en renderizados (excepciones: `_modal-transacciones-migracion`, `_modal-transacciones-ejemplos`, `_modal-cobranzas`)
+- [x] 8.1 Gate 1 = 0; gate 2 = 0 en renderizados (excepciones: `_modal-transacciones-migracion`, `_modal-transacciones-ejemplos`, `_modal-cobranzas`) — verificado en sdd-verify (49 tests OK, gates ejecutados)
 - [ ] 8.2 Verificación integrada: consola limpia en 9 pantallas clave (proposal); modal en 5; export/print/charts/DataTables OK
-- [ ] 8.3 Revisar diffs por PR (sin líneas de otros slices); mergear cadena al tracker; tracker → main
+- [x] 8.3 Revisar diffs por PR (sin líneas de otros slices); mergear cadena al tracker; tracker → main (fast-forward d7e89c0..71a04d2, main actualizado)

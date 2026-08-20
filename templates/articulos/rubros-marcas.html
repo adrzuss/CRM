@@ -7,9 +7,8 @@
         {% include 'partials/_marcas.html' %}
     </div>
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/datatable/datatables.css') }}">
+    <script src="{{ url_for('static', filename='vendor/datatable/datatables.js') }}"></script>
 
     <script nonce="{{ g.nonce }}">
         new DataTable('#marcasTable', {
@@ -18,17 +17,8 @@
             searchable: true,
             sortable: true,
             language: {
-                    entries: {
-                        _: "entradas",
-                        1: "entrada"
-                    },
-                    sEmptyTable: "No se encontraron resultados",
-                    sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ registros",
-                    sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
-                    sLengthMenu: "_MENU_ registros por páginas",
-                    sSearch: 'Buscar',
-                    sSearchPlaceholder: 'Buscar registros'
-                }
+                url: "{{ url_for('static', filename='vendor/datatable/i18n/es-ES.json') }}"
+            }
             
         });
         new DataTable('#rubrosTable', {
@@ -37,17 +27,8 @@
             searchable: true,
             sortable: true,
             language: {
-                    entries: {
-                        _: "entradas",
-                        1: "entrada"
-                    },
-                    sEmptyTable: "No se encontraron resultados",
-                    sInfo: "Mostrando _START_ de _END_ de un total de _TOTAL_ registros",
-                    sInfoEmpty: "Mostrando 0 de 0 de 0 _ENTRIES-TOTAL_",
-                    sLengthMenu: "_MENU_ registros por páginas",
-                    sSearch: 'Buscar',
-                    sSearchPlaceholder: 'Buscar registros'
-                },
+                url: "{{ url_for('static', filename='vendor/datatable/i18n/es-ES.json') }}"
+            },
             labels: {
                 placeholder: 'Buscar...',
                 perPage: '{select} registros por página',

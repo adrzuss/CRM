@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (table && typeof $ !== 'undefined') {
         $(table).DataTable({
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                url: "{{ url_for('static', filename='vendor/datatable/i18n/es-ES.json') }}"
             },
             pageLength: 25,
             order: [[3, 'desc']], // Ordenar por total facturado descendente

@@ -487,7 +487,7 @@ function imprimirReporte() {
             <head>
                 <title>Reporte de Desempeño de Vendedores</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
                 <style>
                     @media print {
                         .btn { display: none !important; }
@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (table && typeof $ !== 'undefined') {
         $(table).DataTable({
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                url: "{{ url_for('static', filename='vendor/datatable/i18n/es-ES.json') }}"
             },
             pageLength: 25,
             order: [[3, 'desc']], // Ordenar por total ventas descendente

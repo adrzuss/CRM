@@ -589,14 +589,14 @@ def stock_sucursales():
 @alertas_mensajes
 def api_lst_stock_sucursales():
     # Obtener parámetros de DataTables
-    draw = request.args.get('draw', type=int)
+    draw = request.args.get('draw', 1, type=int)
     start = request.args.get('start', 0, type=int)  # Índice del primer registro
     length = request.args.get('length', 25, type=int)  # Número de registros por página
     search_value = request.args.get('search[value]', '', type=str)  # Valor de búsqueda
     idmarca = request.args.get('idmarca', type=int)
     idrubro = request.args.get('idrubro', type=int)
     
-    order_column = request.args.get('order[0][column]', type=int)  # Índice de la columna
+    order_column = request.args.get('order[0][column]', 0, type=int)  # Índice de la columna
     order_dir = request.args.get('order[0][dir]', 'asc')  # Dirección del ordenamiento
 
     # Construir la consulta
@@ -607,6 +607,7 @@ def api_lst_stock_sucursales():
             'recordsFiltered': 0,  # Cambiar si aplicas filtros
             'data': []
         }
+        return jsonify(response)
     try:
         # Obtener los datos de stock por sucursal
         # y aplicar los filtros de búsqueda y ordenamiento

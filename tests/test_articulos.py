@@ -399,3 +399,77 @@ def test_get_articulo_colores_detalles_no_encontrado(client):
         data = response.get_json()
         assert data['success'] is False
         assert 'Artículo no encontrado' in data['message']
+
+
+# ──────────────────────────────────────────────
+# Tests para GET /articulos/api/lst_stock_sucursales (DataTables)
+# ──────────────────────────────────────────────
+
+def test_api_lst_stock_sucursales_sin_parametros(client):
+    """
+    Test GET /articulos/api/lst_stock_sucursales sin query string.
+
+    Verifica que:
+      1. Responde con status 200 (nunca 500)
+      2. Retorna JSON con formato DataTables (draw=1 default, recordsTotal=0, data=[])
+      3. No se invoca obtener_stock_sucursales (el guard de filtro vacío corta antes)
+
+    NO se parchea render_template porque es un endpoint JSON.
+    """
+    _configurar_sesion(client)
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtener_stock_sucursales') as mock_service:
+
+                    response = client.get('/articulos/api/lst_stock_sucursales')
+
+                    assert response.status_code == 200
+                    data = response.get_json()
+                    assert data['draw'] == 1
+                    assert data['recordsTotal'] == 0
+                    assert data['recordsFiltered'] == 0
+                    assert data['data'] == []
+                    # El guard retorna antes de ejecutar el service
+                    mock_service.assert_not_called()
+
+
+def test_api_lst_stock_sucursales_sin_order_column(client):
+    """
+    Test GET /articulos/api/lst_stock_sucursales con filtros y sin order[0][column].
+
+    Verifica que:
+      1. Responde con status 200
+      2. Retorna JSON con formato DataTables (draw echo)
+      3. El service se llama con order_column=0 (default del handler)
+
+    NO se parchea render_template porque es un endpoint JSON.
+    """
+    _configurar_sesion(client)
+
+    mock_data = [
+        {'id': 1, 'codigo': '001', 'detalle': 'Artículo 1'},
+        {'id': 2, 'codigo': '002', 'detalle': 'Artículo 2'},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtener_stock_sucursales',
+                       return_value=(1, 2, 2, mock_data, ['id', 'codigo', 'detalle'])) as mock_service:
+
+                    response = client.get('/articulos/api/lst_stock_sucursales?idmarca=1&idrubro=1&draw=1')
+
+                    assert response.status_code == 200
+                    data = response.get_json()
+                    assert data['draw'] == 1
+                    assert data['recordsTotal'] == 2
+                    assert data['recordsFiltered'] == 2
+                    assert len(data['data']) == 2
+                    # Verificar que el service fue llamado con order_column=0 (default)
+                    mock_service.assert_called_once()
+                    args, kwargs = mock_service.call_args
+                    # args: (idmarca, idrubro, draw, search_value, start, length, order_column, order_dir)
+                    assert args[0] == 1  # idmarca
+                    assert args[1] == 1  # idrubro
+                    assert args[2] == 1  # draw
+                    assert args[6] == 0  # order_column default

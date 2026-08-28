@@ -89,17 +89,26 @@ def actualizarPrecio(idlista, idarticulo, precio_nuevo):
 def procesar_cambio_precio(form):
     #---------------------
     try:
+        # Validar que existan items en el formulario
+        items_count = 0
+        for key in form.keys():
+            if key.startswith('items') and key.endswith('[codigo]'):
+                items_count += 1
+        
+        if items_count == 0:
+            raise Exception("No se pueden procesar cambios de precio sin items. Debe agregar al menos un artículo.")
+        
         fecha = form['fecha']
         idusuario = session['user_id']
         idsucursal = session['id_sucursal']
         idlista = form['lista_precio']
-                                                
+                                                 
         nuevo_cambio_precio = CambioPrecios(fecha, idsucursal, idusuario, idlista)
         db.session.add(nuevo_cambio_precio)
         db.session.flush()
 
         idcambioprecio = nuevo_cambio_precio.id
-            
+             
         # Procesar los items
         items = form
         for key, value in items.items():

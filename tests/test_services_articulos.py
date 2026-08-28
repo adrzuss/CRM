@@ -165,3 +165,154 @@ def test_guardar_precios_procesa_items_del_formulario():
             assert mock_precio_db.precio == '1500.00'
             # Verificar que se creó un nuevo precio (segundo item)
             assert mock_precio_model.call_count == 1
+
+
+# ──────────────────────────────────────────────
+# Tests para procesar_cambio_precio (validación de items vacíos)
+# ──────────────────────────────────────────────
+
+def test_procesar_cambio_precio_con_items_validos():
+    """
+    Test SCE-007: procesar_cambio_precio con items válidos procesa correctamente.
+
+    Verifica que:
+      1. Crea un registro CambioPrecios
+      2. Procesa cada item creando CambioPreciosItem
+      3. Actualiza los precios en la tabla Precio
+      4. Hace commit de la transacción
+    """
+    from services.articulos.precios import procesar_cambio_precio
+
+    # Mock del formulario con 1 item
+    mock_form = {
+        'fecha': '2024-01-15',
+        'lista_precio': '1',
+        'items[0][codigo]': '001',
+        'items[0][precio_actual]': '100.00',
+        'items[0][precio_nuevo]': '110.00',
+    }
+
+    # Crear un objeto simple para el artículo (no MagicMock) para que .id sea un int real
+    class MockArticulo:
+        id = 1
+    
+    mock_articulo = MockArticulo()
+
+    mock_cambio_precio = MagicMock()
+    mock_cambio_precio.id = 10
+
+    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('services.articulos.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
+            with patch('services.articulos.precios.db.session') as mock_db:
+                with patch('services.articulos.precios.CambioPreciosItem') as mock_cpi:
+                    with patch('services.articulos.precios.actualizarPrecio') as mock_actualizar:
+                        # Configurar mock para db.session.query(Articulo).filter_by(...).first()
+                        mock_query = MagicMock()
+                        mock_query.filter_by.return_value.first.return_value = mock_articulo
+                        mock_db.query.return_value = mock_query
+                        mock_db.flush.return_value = None
+                        mock_db.commit.return_value = None
+
+                        procesar_cambio_precio(mock_form)
+
+                        # Verificar que se creó el cambio de precios
+                        mock_cp.assert_called_once_with('2024-01-15', 1, 1, '1')
+                        mock_db.add.assert_any_call(mock_cambio_precio)
+                        mock_db.flush.assert_called_once()
+                        # Verificar que se llamó a db.session.query con Articulo
+                        mock_db.query.assert_called()
+                        # Verificar que se creó el item
+                        mock_cpi.assert_called_once()
+                        # Verificar que se actualizó el precio (articulo.id = 1)
+                        mock_actualizar.assert_called_once_with('1', 1, '110.00')
+                        mock_db.commit.assert_called_once()
+
+
+def test_procesar_cambio_precio_sin_items_lanza_error():
+    """
+    Test SCE-008: procesar_cambio_precio sin items lanza error y no modifica DB.
+
+    Verifica que:
+      1. Lanza Exception con mensaje indicando que se requieren items
+      2. No se llama a db.session.commit
+      3. Se hace rollback de la transacción
+    """
+    from services.articulos.precios import procesar_cambio_precio
+
+    # Mock del formulario SIN items (solo headers)
+    mock_form = {
+        'fecha': '2024-01-15',
+        'lista_precio': '1',
+    }
+
+    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('services.articulos.precios.db.session') as mock_db:
+            mock_db.rollback.return_value = None
+
+            try:
+                procesar_cambio_precio(mock_form)
+                assert False, "Debería haber lanzado una excepción"
+            except Exception as e:
+                assert 'sin items' in str(e).lower() or 'items' in str(e).lower()
+
+            # Verificar que NO se hizo commit, pero SÍ rollback
+            mock_db.commit.assert_not_called()
+            mock_db.rollback.assert_called()
+
+
+def test_procesar_cambio_precio_items_agregados_manualmente():
+    """
+    Test SCE-009: procesar_cambio_precio con items agregados manualmente (no por filtro).
+
+    Verifica que la validación de items pasa cuando el usuario agrega
+    filas manualmente en la tabla (simula formulario con items).
+    """
+    from services.articulos.precios import procesar_cambio_precio
+
+    # Mock del formulario con 2 items agregados manualmente
+    mock_form = {
+        'fecha': '2024-01-15',
+        'lista_precio': '1',
+        'items[0][codigo]': '001',
+        'items[0][precio_actual]': '100.00',
+        'items[0][precio_nuevo]': '110.00',
+        'items[1][codigo]': '002',
+        'items[1][precio_actual]': '200.00',
+        'items[1][precio_nuevo]': '220.00',
+    }
+
+    mock_articulo_1 = MagicMock()
+    mock_articulo_1.id = 1
+    mock_articulo_2 = MagicMock()
+    mock_articulo_2.id = 2
+
+    mock_cambio_precio = MagicMock()
+    mock_cambio_precio.id = 10
+
+    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('services.articulos.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
+            with patch('services.articulos.precios.db.session') as mock_db:
+                with patch('services.articulos.precios.Articulo') as mock_articulo_model:
+                    with patch('services.articulos.precios.CambioPreciosItem') as mock_cpi:
+                        with patch('services.articulos.precios.actualizarPrecio') as mock_actualizar:
+                            # Configurar mocks para devolver artículos diferentes según el código
+                            def mock_filter_by(**kwargs):
+                                m = MagicMock()
+                                if kwargs.get('codigo') == '001':
+                                    m.first.return_value = mock_articulo_1
+                                elif kwargs.get('codigo') == '002':
+                                    m.first.return_value = mock_articulo_2
+                                else:
+                                    m.first.return_value = None
+                                return m
+                            
+                            mock_articulo_model.query.filter_by.side_effect = mock_filter_by
+                            mock_db.flush.return_value = None
+                            mock_db.commit.return_value = None
+
+                            procesar_cambio_precio(mock_form)
+
+                            # Verificar que se procesaron ambos items
+                            assert mock_cpi.call_count == 2
+                            assert mock_actualizar.call_count == 2
+                            mock_db.commit.assert_called_once()

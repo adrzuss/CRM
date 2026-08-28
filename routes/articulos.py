@@ -293,9 +293,33 @@ def cambio_precio():
 """
 filtra los articulos según las condiciones de la petición
 para pasarlos a la carga de precios
+
+Nueva versión: acepta query parameters (marca, rubro, lista_precio, porcentaje)
+donde solo lista_precio es obligatorio. Marca y rubro son opcionales.
+Porcentaje es opcional y por defecto 0.
 """
+
+# Mantener compatibilidad con la ruta antigua (path parameters) - DEBE ir ANTES de la ruta con query params
 @bp_articulos.route('/filtrar_articulos/<int:marca>/<int:rubro>/<int:lista_precio>/<float:porcentaje>', methods=['GET'])
-def filtrar_articulos(marca, rubro, lista_precio, porcentaje):
+def filtrar_articulos_legacy(marca, rubro, lista_precio, porcentaje):
+    """Ruta legacy para compatibilidad hacia atrás"""
+    resultado = obtenerArticulosMarcaRubro(marca, rubro, lista_precio, Decimal(porcentaje))
+    return jsonify(success=True, articulos=resultado)
+
+
+@bp_articulos.route('/filtrar_articulos', methods=['GET'])
+def filtrar_articulos():
+    # Obtener parámetros de query string
+    marca = request.args.get('marca', type=int)
+    rubro = request.args.get('rubro', type=int)
+    lista_precio = request.args.get('lista_precio', type=int)
+    porcentaje = request.args.get('porcentaje', default=0, type=float)
+    
+    # Validar que lista_precio sea obligatorio
+    if lista_precio is None:
+        return jsonify(success=False, error='lista_precio es requerido'), 400
+    
+    # Marca y rubro son opcionales - pasar None si no se proporcionan
     resultado = obtenerArticulosMarcaRubro(marca, rubro, lista_precio, Decimal(porcentaje))
     return jsonify(success=True, articulos=resultado)
 

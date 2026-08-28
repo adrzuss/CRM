@@ -115,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const rubro = document.getElementById('rubro').value;
         const listaPrecio = document.getElementById('lista_precio').value;
         const porcentaje = parseFloat(document.getElementById('porcentaje').value).toFixed(2);
+        
         if (!listaPrecio) {
             Swal.fire({
                 icon: 'warning',
@@ -122,19 +123,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 text: 'Seleccione una lista de precios'
             });
             return;
-        } else if (!marca || !rubro) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atención',
-                text: 'Seleccione una marca y un rubro'
-            });
-            return;
         }
+        // marca y rubro son opcionales - se pueden filtrar por uno solo, ambos o ninguno
     
         try {
+            // Construir query string con parámetros opcionales
+            const params = new URLSearchParams();
+            params.append('lista_precio', listaPrecio);
+            if (marca) params.append('marca', marca);
+            if (rubro) params.append('rubro', rubro);
+            if (porcentaje) params.append('porcentaje', porcentaje);
+            
             let response;
-            response = await fetch(`${BASE_URL}/articulos/filtrar_articulos/${marca}/${rubro}/${listaPrecio}/${porcentaje}`);
-            if (!response.ok) throw new Error('Error al cargar los artículos');
+            response = await fetch(`${BASE_URL}/articulos/filtrar_articulos?${params.toString()}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al cargar los artículos');
+            }
             const data = await response.json();
             if (data.success) {
                 cargarArticulosEnTabla(data.articulos);
@@ -149,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Ocurrió un error al cargar los productos: ' + data.error
+                    text: 'Ocurrió un error al cargar los productos: ' + (data.error || 'Error desconocido')
                 });
             }
         } catch (error) {

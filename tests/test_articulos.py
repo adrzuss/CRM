@@ -399,3 +399,202 @@ def test_get_articulo_colores_detalles_no_encontrado(client):
         data = response.get_json()
         assert data['success'] is False
         assert 'Artículo no encontrado' in data['message']
+
+
+# ──────────────────────────────────────────────
+# Tests para GET /articulos/filtrar_articulos (nueva ruta con query params)
+# ──────────────────────────────────────────────
+
+def test_filtrar_articulos_con_todos_parametros(client):
+    """
+    Test SCE-001: GET /articulos/filtrar_articulos con todos los parámetros.
+
+    Verifica que:
+      1. Responde con status 200
+      2. Llama a obtenerArticulosMarcaRubro con marca, rubro, lista_precio, porcentaje
+      3. Retorna JSON con success=True y lista de artículos
+    """
+    _configurar_sesion(client)
+
+    mock_articulos = [
+        {'codigo': '001', 'descripcion': 'ARTÍCULO 1', 'precio_actual': 100.00, 'precio_nuevo': 110.00},
+        {'codigo': '002', 'descripcion': 'ARTÍCULO 2', 'precio_actual': 200.00, 'precio_nuevo': 220.00},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=mock_articulos) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos?marca=1&rubro=2&lista_precio=3&porcentaje=10')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                assert len(data['articulos']) == 2
+                assert data['articulos'][0]['codigo'] == '001'
+                # Verificar que el servicio fue llamado con los parámetros correctos
+                mock_obtener.assert_called_once_with(1, 2, 3, 10)
+
+
+def test_filtrar_articulos_solo_lista_precio(client):
+    """
+    Test SCE-002: GET /articulos/filtrar_articulos solo con lista_precio obligatorio.
+
+    Verifica que:
+      1. Responde con status 200
+      2. Llama a obtenerArticulosMarcaRubro con marca=None, rubro=None, lista_precio, porcentaje=None
+      3. Retorna todos los productos de esa lista de precios
+    """
+    _configurar_sesion(client)
+
+    mock_articulos = [
+        {'codigo': '001', 'descripcion': 'ARTÍCULO 1', 'precio_actual': 100.00, 'precio_nuevo': 100.00},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=mock_articulos) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos?lista_precio=3')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                assert len(data['articulos']) == 1
+                # Verificar que marca y rubro son None, porcentaje es 0 (default)
+                mock_obtener.assert_called_once_with(None, None, 3, 0)
+
+
+def test_filtrar_articulos_solo_marca(client):
+    """
+    Test SCE-003: GET /articulos/filtrar_articulos solo con marca (sin rubro).
+
+    Verifica que:
+      1. Responde con status 200
+      2. Llama a obtenerArticulosMarcaRubro con marca=1, rubro=None, lista_precio=3
+    """
+    _configurar_sesion(client)
+
+    mock_articulos = [
+        {'codigo': '001', 'descripcion': 'ARTÍCULO 1', 'precio_actual': 100.00, 'precio_nuevo': 110.00},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=mock_articulos) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos?marca=1&lista_precio=3')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                mock_obtener.assert_called_once_with(1, None, 3, 0)
+
+
+def test_filtrar_articulos_solo_rubro(client):
+    """
+    Test SCE-004: GET /articulos/filtrar_articulos solo con rubro (sin marca).
+
+    Verifica que:
+      1. Responde con status 200
+      2. Llama a obtenerArticulosMarcaRubro con marca=None, rubro=2, lista_precio=3
+    """
+    _configurar_sesion(client)
+
+    mock_articulos = [
+        {'codigo': '001', 'descripcion': 'ARTÍCULO 1', 'precio_actual': 100.00, 'precio_nuevo': 110.00},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=mock_articulos) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos?rubro=2&lista_precio=3')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                mock_obtener.assert_called_once_with(None, 2, 3, 0)
+
+
+def test_filtrar_articulos_sin_lista_precio_retorna_400(client):
+    """
+    Test SCE-005: GET /articulos/filtrar_articulos sin lista_precio retorna 400.
+
+    Verifica que:
+      1. Responde con status 400
+      2. Retorna error indicando que lista_precio es requerido
+    """
+    _configurar_sesion(client)
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+
+            response = client.get('/articulos/filtrar_articulos?marca=1&rubro=2')
+
+            assert response.status_code == 400
+            data = response.get_json()
+            assert data['success'] is False
+            assert 'lista_precio es requerido' in data['error']
+
+
+def test_filtrar_articulos_resultado_vacio_retorna_200(client):
+    """
+    Test SCE-006: GET /articulos/filtrar_articulos con filtros que no coinciden.
+
+    Verifica que:
+      1. Responde con status 200
+      2. Retorna JSON con array vacío []
+    """
+    _configurar_sesion(client)
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=[]) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos?lista_precio=999')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                assert data['articulos'] == []
+
+
+# ──────────────────────────────────────────────
+# Tests para compatibilidad hacia atrás (path params legacy)
+# ──────────────────────────────────────────────
+
+def test_filtrar_articulos_legacy_path_params(client):
+    """
+    Test SCE-008: GET /articulos/filtrar_articulos/1/2/3/10.0 (formato legacy).
+
+    Verifica que la ruta antigua con path parameters sigue funcionando:
+      1. Responde con status 200
+      2. Llama a obtenerArticulosMarcaRubro con los mismos parámetros
+      3. Retorna JSON con success=True y lista de artículos
+      
+    Nota: El converter float de Flask requiere punto decimal (10.0, no 10)
+    """
+    _configurar_sesion(client)
+
+    mock_articulos = [
+        {'codigo': '001', 'descripcion': 'ARTÍCULO 1', 'precio_actual': 100.00, 'precio_nuevo': 110.00},
+    ]
+
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
+        with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+                       return_value=mock_articulos) as mock_obtener:
+
+                response = client.get('/articulos/filtrar_articulos/1/2/3/10.0')
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['success'] is True
+                assert len(data['articulos']) == 1
+                mock_obtener.assert_called_once_with(1, 2, 3, 10.0)

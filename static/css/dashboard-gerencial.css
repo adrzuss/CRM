@@ -1,0 +1,467 @@
+/*
+ * Estilos para Dashboard Gerencial — Etapas 1-6
+ * Sistema CRM - SoftTech
+ */
+
+/* Namespace */
+.dashboard-gerencial {}
+
+/* Variables */
+:root {
+    --dg-primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    --dg-success-gradient: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    --dg-info-gradient: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    --dg-warning-gradient: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+}
+
+/* KPI Cards */
+.dashboard-gerencial .card-kpi {
+    border-left-width: 4px !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-gerencial .card-kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.dashboard-gerencial .border-start-primary {
+    border-left-color: #4e73df !important;
+}
+
+.dashboard-gerencial .border-start-success {
+    border-left-color: #1cc88a !important;
+}
+
+.dashboard-gerencial .border-start-warning {
+    border-left-color: #f6c23e !important;
+}
+
+.dashboard-gerencial .border-start-info {
+    border-left-color: #36b9cc !important;
+}
+
+.dashboard-gerencial .border-start-danger {
+    border-left-color: #e74a3b !important;
+}
+
+/* Charts */
+.dashboard-gerencial .chart-area {
+    position: relative;
+    width: 100%;
+}
+
+.dashboard-gerencial .chart-pie {
+    position: relative;
+    width: 100%;
+}
+
+/* Tables */
+.dashboard-gerencial .table-dashboard {
+    font-size: 0.875rem;
+}
+
+.dashboard-gerencial .table-dashboard thead th {
+    background-color: #f8f9fc;
+    border-bottom: 2px solid #e3e6f0;
+    font-weight: 600;
+    color: #5a5c69;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 0.75rem;
+}
+
+.dashboard-gerencial .table-dashboard tbody td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.dashboard-gerencial .table-dashboard tbody tr:hover {
+    background-color: #f8f9fc;
+}
+
+/* Text utilities */
+.dashboard-gerencial .text-xs {
+    font-size: 0.7rem;
+}
+
+/* Filter bar */
+.dashboard-gerencial .form-check-input:checked {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+/* Badges de estado de stock */
+.dashboard-gerencial .badge-stock-sin-stock {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-stock-bajo-minimo {
+    background-color: #f6c23e;
+    color: #000;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-stock-saludable {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-stock-exceso {
+    background-color: #36b9cc;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Badges de estado cta_cte */
+.dashboard-gerencial .badge-cta-vencido {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-cta-por-vencer {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Badges de estado créditos */
+.dashboard-gerencial .badge-creditos-vigente {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-creditos-vencido {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Badges de bancos */
+.dashboard-gerencial .badge-bancos-ingreso {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-bancos-egreso {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-bancos-saldo-positivo {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.dashboard-gerencial .badge-bancos-saldo-negativo {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Botones de toggle días (sin movimiento) */
+.dashboard-gerencial .dias-btn.active {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #fff;
+}
+
+/* ═══ Etapa 6: Alertas Gerenciales ═══════════════════════════════════════ */
+
+/* Contenedor de alertas */
+.dg-alertas-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+/* Tarjeta de alerta */
+.dg-alerta-card {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: 280px;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid;
+    background-color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dg-alerta-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
+}
+
+/* Severidad: danger */
+.dg-alerta-danger {
+    border-left-color: #e74a3b;
+    background-color: #fdf2f2;
+}
+
+.dg-alerta-danger .dg-alerta-icono {
+    color: #e74a3b;
+}
+
+/* Severidad: warning */
+.dg-alerta-warning {
+    border-left-color: #f6c23e;
+    background-color: #fef9e7;
+}
+
+.dg-alerta-warning .dg-alerta-icono {
+    color: #f6c23e;
+}
+
+/* Severidad: info */
+.dg-alerta-info {
+    border-left-color: #36b9cc;
+    background-color: #e8f8fb;
+}
+
+.dg-alerta-info .dg-alerta-icono {
+    color: #36b9cc;
+}
+
+/* Icono de alerta */
+.dg-alerta-icono {
+    font-size: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Acción de alerta (flecha) */
+.dg-alerta-action {
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.dg-alerta-card:hover .dg-alerta-action {
+    opacity: 1;
+}
+
+/* Header de alertas */
+.dg-alertas-header {
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* ═══ Etapa 6: Drill-Down ═══════════════════════════════════════════════ */
+
+.drill-down {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.drill-down:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ═══ Etapa 6: Loading Spinner ══════════════════════════════════════════ */
+
+.dg-spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 0.375rem;
+}
+
+/* ═══ Etapa 6: Empty States ═════════════════════════════════════════════ */
+
+.empty-state-dg {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.empty-state-dg i {
+    opacity: 0.4;
+}
+
+.empty-state-dg h6 {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+/* ═══ Etapa 6: Navegación entre Secciones ═══════════════════════════════ */
+
+.dg-nav-secciones {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+}
+
+.dg-nav-toggle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #4e73df;
+    color: #fff;
+    border: none;
+    box-shadow: 0 0.25rem 0.75rem rgba(78, 115, 223, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.dg-nav-toggle:hover {
+    background-color: #224abe;
+    transform: scale(1.05);
+}
+
+.dg-nav-links {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    display: none;
+    min-width: 200px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.dg-nav-links--open {
+    display: block;
+}
+
+.nav-seccion {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: #5a5c69;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.nav-seccion:hover {
+    background-color: #f8f9fc;
+    color: #4e73df;
+    text-decoration: none;
+}
+
+.nav-seccion i {
+    width: 1.25rem;
+    text-align: center;
+    margin-right: 0.25rem;
+    font-size: 0.8rem;
+}
+
+/* ═══ Etapa 6: Badge de período (drill-down línea) ══════════════════════ */
+
+.dg-periodo-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: #4e73df;
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: none;
+    z-index: 5;
+}
+
+/* ═══ Etapa 6: Responsive ═══════════════════════════════════════════════ */
+
+@media (max-width: 767.98px) {
+    /* Alertas: 1 columna */
+    .dg-alerta-card {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    /* Navegación: offcanvas simplificado */
+    .dg-nav-secciones {
+        bottom: 1rem;
+        right: 1rem;
+    }
+
+    .dg-nav-toggle {
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+    }
+
+    .dg-nav-links {
+        right: 0;
+        bottom: 52px;
+        min-width: 180px;
+    }
+
+    /* KPI cards: 2 columnas */
+    #seccion-kpis .col-xl-3,
+    #seccion-stock-kpis .col-xl-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* KPI cards: 1 columna en mobile muy pequeño */
+    #seccion-kpis .col-xl-3,
+    #seccion-stock-kpis .col-xl-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Print */
+@media print {
+    .dashboard-gerencial .btn,
+    .dashboard-gerencial #filtros-form,
+    .dashboard-gerencial .granularidad-btn,
+    .dashboard-gerencial #dias-btns {
+        display: none !important;
+    }
+
+    .dashboard-gerencial .card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #e3e6f0 !important;
+    }
+
+    .dashboard-gerencial .card-kpi:hover {
+        transform: none;
+    }
+}

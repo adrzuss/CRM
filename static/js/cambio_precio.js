@@ -1,3 +1,4 @@
+
 let isFormSubmited = false;
 
 window.onbeforeunload = confirmarSalida;
@@ -115,7 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const rubro = document.getElementById('rubro').value;
         const listaPrecio = document.getElementById('lista_precio').value;
         const porcentaje = parseFloat(document.getElementById('porcentaje').value).toFixed(2);
-        
         if (!listaPrecio) {
             Swal.fire({
                 icon: 'warning',
@@ -135,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (porcentaje) params.append('porcentaje', porcentaje);
             
             let response;
+            console.log(`${BASE_URL}/articulos/filtrar_articulos?${params.toString()}`);
             response = await fetch(`${BASE_URL}/articulos/filtrar_articulos?${params.toString()}`);
             if (!response.ok) {
                 const errorData = await response.json();
@@ -177,7 +178,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" value="${articulo.codigo}" required></td>
                     <td class="descripcion-articulo">${articulo.descripcion}</td>
                     <td><input type="number" class="form-control precio-actual" name="items[${contadorFilas}][precio_actual]" value="${articulo.precio_actual}" readonly></td>
-                    <td><input type="number" class="form-control precio-nuevo" name="items[${contadorFilas}][precio_nuevo]" step="0.01" min="0" value="${articulo.precio_nuevo}" required></td>
+                    <td><input type="number" class="form-control precio-nuevo" name="items[${contadorFilas}][precio_nuevo]" step="0.01" min="0" value="${articulo.precio_nuevo}" readonly></td>
+                    <td><input type="number" class="form-control precio-redondeado" name="items[${contadorFilas}][precio_redondeado]" step="0.01" min="0" value="${articulo.precio_redondeado || articulo.precio_nuevo}" required></td>
                     <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
                 </tr>`;
             contadorFilas++;

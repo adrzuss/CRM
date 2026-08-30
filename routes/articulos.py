@@ -3,7 +3,7 @@ from flask import g
 from werkzeug.utils import secure_filename
 import os
 from models.articulos import Articulo, Marca, Stock, Precio, ListasPrecios, Rubro, ArticuloCompuesto, ProvByArt, PedirEnVentas, Colores, ArticulosColores, DetallesArticulos, ArticulosDetalles
-from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB
+from models.configs import AlcIva, TipoArticulos, TipoBalances, AlcIB, ReglaRedondeo
 from models.sucursales import Sucursales
 from models.proveedores import Proveedores
 from services.articulos import get_listado_precios, obtener_stock_sucursales, update_insert_articulo_compuesto, \
@@ -208,7 +208,16 @@ def update_articulo(id):
             detalles_articulo_query = db.session.query(ArticulosDetalles.id_detalle).filter_by(id_articulo=articulo.id).all()
             detalles_articulo = [detalle.id_detalle for detalle in detalles_articulo_query]
         
-        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo)
+        reglas_redondeo_query = ReglaRedondeo.query.filter_by(activo=True).all()
+        reglas_redondeo = [{
+            'desde_precio': float(r.desde_precio),
+            'hasta_precio': float(r.hasta_precio),
+            'multiplo': r.multiplo,
+            'tipo_redondeo': r.tipo_redondeo,
+            'restar_unidades': r.restar_unidades
+        } for r in reglas_redondeo_query]
+
+        return render_template('upd-articulos.html', articulo=articulo, pedirEnVentas=PedirEnVentas, rubros=rubros, marcas=marcas, ivas=ivas, ibs=ibs, tipoarticulos=tipoarticulos, listas_precio=listas_precios, stocks=stocks, provByArt=provByArt, colores_disponibles=colores_disponibles, colores_articulo=colores_articulo, detalles_disponibles=detalles_disponibles, detalles_articulo=detalles_articulo, reglas_redondeo=reglas_redondeo)
 
     if request.method == 'POST':
         resultado = guardar_articulo(id, request.form, request.files)

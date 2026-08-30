@@ -11,6 +11,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from utils.db import db
 from datetime import datetime, date
 from decimal import Decimal
+from models.configs import ReglaRedondeo
+from services.articulos.redondeo import calcular_precio_comercial
 
 
 def get_articulo_by_codigo(codigo):
@@ -299,14 +301,25 @@ def obtenerArticulosMarcaRubro(marca, rubro, lista_precio, porcentaje):
     if rubro:
         query = query.filter(Articulo.idrubro == rubro)
     articulos = query.all()
+
+    reglas = ReglaRedondeo.query.filter_by(activo=True).all()
+    reglas_dict = [{
+        'desde_precio': float(r.desde_precio),
+        'hasta_precio': float(r.hasta_precio),
+        'multiplo': r.multiplo,
+        'tipo_redondeo': r.tipo_redondeo,
+        'restar_unidades': r.restar_unidades
+    } for r in reglas]
+
     resultado = []
     for articulo in articulos:
         precio_actual = articulo.precio
-        precio_nuevo = Decimal(precio_actual) * Decimal((1 + porcentaje / 100))
+        precio_nuevo, precio_redondeado = calcular_precio_comercial(Decimal(precio_actual), porcentaje, reglas_dict)
         resultado.append({
             'codigo': articulo.codigo,
             'descripcion': articulo.detalle,
-            'precio_actual':round(precio_actual, 2),
+            'precio_actual': round(precio_actual, 2),
             'precio_nuevo': round(precio_nuevo, 2),
-        })    
+            'precio_redondeado': round(precio_redondeado, 2),
+        })
     return resultado

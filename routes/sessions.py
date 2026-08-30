@@ -99,8 +99,6 @@ def add_user():
 def update_user(id):
     if request.method == 'GET':
         usuario, status_code = get_usuario(id)
-        print('------------------------------------------------------------------------------------------')
-        print(usuario)
         tareas = get_tareas()
         
         # Tareas asignadas a este usuario

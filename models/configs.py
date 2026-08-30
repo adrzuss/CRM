@@ -175,7 +175,9 @@ class PuntosVenta(db.Model):
     token = db.Column(db.String(1000))
     sign = db.Column(db.String(500))
     expiration = db.Column(db.DateTime)
+    id_lista_precio = db.Column(db.Integer, db.ForeignKey('listas_precio.id'), nullable=True)
     sucursal = db.relationship('Sucursales', backref=db.backref('idsucursal', lazy=True))
+    lista_precio = db.relationship('ListasPrecios', foreign_keys=[id_lista_precio], lazy='select')
     
     def __init__(self, punto_vta, idsucursal, ultima_fac_a = 0, ultima_fac_b = 0, ultima_fac_c = 0, ultima_deb_a = 0, ultima_deb_b = 0, ultima_deb_c = 0, ultima_nc_a = 0, ultima_nc_b = 0, ultima_nc_c = 0, ultimo_rem_x = 0, ultimo_rec_x = 0):
         self.punto_vta = punto_vta
@@ -281,5 +283,23 @@ class ItemsRendicionesCaja(db.Model):
         self.idrendicion = idrendicion
         self.idmoneda_billete = idmoneda_billete
         self.cantidad = cantidad
-        
-        
+
+class ReglaRedondeo(db.Model):
+    __tablename__ = 'reglas_redondeo'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    desde_precio = db.Column(db.Numeric(12,2), nullable=False)
+    hasta_precio = db.Column(db.Numeric(12,2), nullable=False)
+    multiplo = db.Column(db.Integer, nullable=False)
+    tipo_redondeo = db.Column(db.Enum('arriba', 'abajo', 'cercano'), nullable=False, default='cercano')
+    restar_unidades = db.Column(db.Integer, nullable=False, default=0)
+    activo = db.Column(db.Boolean, nullable=False, default=True)
+    
+    def __init__(self, nombre, desde_precio, hasta_precio, multiplo, tipo_redondeo='cercano', restar_unidades=0, activo=True):
+        self.nombre = nombre
+        self.desde_precio = desde_precio
+        self.hasta_precio = hasta_precio
+        self.multiplo = multiplo
+        self.tipo_redondeo = tipo_redondeo
+        self.restar_unidades = restar_unidades
+        self.activo = activo

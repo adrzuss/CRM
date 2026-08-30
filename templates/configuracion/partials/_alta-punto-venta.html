@@ -20,7 +20,7 @@
                         <label for="puntoVenta" class="form-label">Punto de venta</label>
                         <input class="form-control" type="number" name="puntoVenta" id="puntoVenta" placeholder="Ej: 1, 2, 3..." value="{{ puntoVenta.punto_vta if puntoVenta else '' }}" required>
                     </div>
-                    <div class="col-md-5 mb-3"> 
+                    <div class="col-md-3 mb-3"> 
                         <label for="idsucursal" class="form-label">Sucursal</label>
                         <select name="idsucursal" id="idsucursal" class="form-select" required>
                             <option value="">Seleccione una sucursal</option>
@@ -30,6 +30,18 @@
                                 {% else %}
                                     <option value="{{ sucursal.id }}">{{ sucursal.nombre }}</option>
                                 {% endif %}    
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_lista_precio" class="form-label">Lista de precios</label>
+                        <select name="id_lista_precio" id="id_lista_precio" class="form-select">
+                            <option value="">Sin lista</option>
+                            {% for lista in listas_precios %}
+                                <option value="{{ lista.id }}"
+                                    {{ 'selected' if puntoVenta and puntoVenta.id_lista_precio == lista.id else '' }}>
+                                    {{ lista.nombre }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>

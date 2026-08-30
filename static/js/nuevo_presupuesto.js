@@ -50,12 +50,15 @@ document.getElementById("cambiar_pto_vta").addEventListener("click", async funct
 
 function saleccionarPtoVta(datos) {
   const modalContent = document.getElementById("modalContentPtoVta");
-        
+
+  // Limpiar contenido previo para evitar acumulación de selects al reabrir el modal
+  modalContent.innerHTML = "";
+
   const listaPtosVtasSucursal = document.createElement("select");
-  listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
-  listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
-  
-  // Agregar una opción por defecto
+  listaPtosVtasSucursal.classList.add("form-select");
+  listaPtosVtasSucursal.id = "selectPtoVta";
+
+  // Opción por defecto
   const defaultOption = document.createElement("option");
   defaultOption.value = "";
   defaultOption.textContent = "Seleccione un punto de venta";
@@ -66,15 +69,15 @@ function saleccionarPtoVta(datos) {
   // Recorrer los puntos de venta y agregarlos como opciones
   datos.forEach((ptovta) => {
     const ptoVtaOption = document.createElement("option");
-    ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
-    ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica; // Mostrar el nombre del punto de venta
+    ptoVtaOption.value = ptovta.id;
+    const infoLista = ptovta.nombreLista ? " - Lista: " + ptovta.nombreLista : "";
+    ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica + infoLista;
     listaPtosVtasSucursal.appendChild(ptoVtaOption);
   });
-  
-  // Agregar el <select> al modal
+
   modalContent.appendChild(listaPtosVtasSucursal);
 
-  // Agregar un botón para confirmar la selección
+  // Botón para confirmar la selección
   const confirmButton = document.createElement("button");
   confirmButton.classList.add("btn", "btn-primary", "mt-3");
   confirmButton.textContent = "Confirmar";
@@ -108,6 +111,15 @@ async function asignarPuntoVenta(idPuntoVenta) {
       // Actualizar el texto en la página con el punto de venta seleccionado
       const ptoVtaElement = document.getElementById("punto_vta");
       ptoVtaElement.innerHTML = `<i class="fas fa-store me-1"></i>Punto de venta: ${idPuntoVenta}`;
+      // Auto-seleccionar lista de precios del punto de venta
+      const selectLista = document.getElementById('idlista');
+      if (selectLista) {
+        if (result.id_lista_precio) {
+          selectLista.value = result.id_lista_precio;
+        } else if (selectLista.options.length > 0) {
+          selectLista.value = selectLista.options[0].value;
+        }
+      }
       document.getElementById("idcliente").focus();
     } else {
       mostrarError('Error al asignar el punto de venta: ' + result.message);

@@ -5,332 +5,473 @@
     {# Modal reutilizable para edición #}
     {% include 'partials/_modal_config_editar.html' %}
 
-    <div class="card m-3">
-        <h4 class="m-3">Configuración general</h4>
-        <div class="card-body">
-            {% include 'partials/_configuracion.html' %}
-        </div>    
-    </div>
+    <div class="accordion m-3" id="configAccordion">
+        {# ==================== CONFIGURACIÓN GENERAL ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeneral" aria-expanded="true" aria-controls="collapseGeneral">
+                    <i class="fas fa-cog me-2"></i> Configuración general
+                </button>
+            </h2>
+            <div id="collapseGeneral" class="accordion-collapse collapse show" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    {% include 'partials/_configuracion.html' %}
+                </div>
+            </div>
+        </div>
 
-    {# ==================== ALÍCUOTAS IVA ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Alícuotas de IVA</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de alícuotas</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_alc_iva') }}" 
-                                  hx-target="#tabla-alicuotas_iva" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="descripcion">Descripción</label>
-                                    <input class="form-control" type="text" name="descripcion" id="descripcion_iva" placeholder="Descripción de alícuota" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="alicuota">Alícuota</label>
-                                    <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_iva" placeholder="Porcentaje alícuota" required>
+        {# ==================== ALÍCUOTAS IVA ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAlcIva" aria-expanded="false" aria-controls="collapseAlcIva">
+                    <i class="fas fa-percent me-2"></i> Alícuotas de IVA
+                </button>
+            </h2>
+            <div id="collapseAlcIva" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de alícuotas</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_alc_iva') }}" 
+                                          hx-target="#tabla-alicuotas_iva" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="descripcion">Descripción</label>
+                                            <input class="form-control" type="text" name="descripcion" id="descripcion_iva" placeholder="Descripción de alícuota" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="alicuota">Alícuota</label>
+                                            <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_iva" placeholder="Porcentaje alícuota" required>
+                                        </div>    
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
                                 </div>    
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-alicuotas_iva">
-                        {% include 'partials/_tabla_alc_iva.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-alicuotas_iva">
+                                {% include 'partials/_tabla_alc_iva.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
+                </div>    
             </div>
-        </div>    
-    </div>
+        </div>
 
-    {# ==================== ALÍCUOTAS ING. BRUTOS ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Alícuotas de Ing. Brutos</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de alícuotas</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_alc_ib') }}" 
-                                  hx-target="#tabla-alicuotas_ib" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="descripcion">Descripción</label>
-                                    <input class="form-control" type="text" name="descripcion" id="descripcion_ib" placeholder="Descripción de alícuota" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="alicuota">Alícuota</label>
-                                    <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_ib" placeholder="Porcentaje alícuota" required>
+        {# ==================== ALÍCUOTAS ING. BRUTOS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAlcIb" aria-expanded="false" aria-controls="collapseAlcIb">
+                    <i class="fas fa-building me-2"></i> Alícuotas de Ing. Brutos
+                </button>
+            </h2>
+            <div id="collapseAlcIb" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de alícuotas</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_alc_ib') }}" 
+                                          hx-target="#tabla-alicuotas_ib" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="descripcion">Descripción</label>
+                                            <input class="form-control" type="text" name="descripcion" id="descripcion_ib" placeholder="Descripción de alícuota" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="alicuota">Alícuota</label>
+                                            <input class="form-control" type="number" step="0.01" name="alicuota" id="alicuota_ib" placeholder="Porcentaje alícuota" required>
+                                        </div>    
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
                                 </div>    
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-alicuotas_ib">
-                        {% include 'partials/_tabla_alc_ib.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-alicuotas_ib">
+                                {% include 'partials/_tabla_alc_ib.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
-            </div>
-        </div>    
-    </div>
-
-    {# ==================== LISTAS DE PRECIOS ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Listas de precios</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de listas de precios</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_lista_precio') }}" 
-                                  hx-target="#tabla-listas_precios" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="nombre">Descripción</label>
-                                    <input class="form-control" type="text" name="nombre" id="lista_precio" placeholder="Lista de precio" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="markup">Markup de la lista</label>
-                                    <input class="form-control" type="number" step="0.01" name="markup" id="markup" placeholder="Markup de la lista" required>
-                                </div> 
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
-                        </div>    
-                    </div>   
                 </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-listas_precios">
-                        {% include 'partials/_tabla_listas_precios.html' %}
-                    </div>
-                </div>     
             </div>
         </div>
-    </div>
 
-    {# ==================== LISTAS DE TAREAS ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Listas de tareas</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de tareas</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_tarea') }}" 
-                                  hx-target="#tabla-tareas" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="tarea">Tarea</label>
-                                    <input class="form-control" type="text" name="tarea" id="tarea" placeholder="Tarea" required>
-                                </div>
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+        {# ==================== LISTAS DE PRECIOS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseListasPrecios" aria-expanded="false" aria-controls="collapseListasPrecios">
+                    <i class="fas fa-tags me-2"></i> Listas de precios
+                </button>
+            </h2>
+            <div id="collapseListasPrecios" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de listas de precios</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_lista_precio') }}" 
+                                          hx-target="#tabla-listas_precios" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Descripción</label>
+                                            <input class="form-control" type="text" name="nombre" id="lista_precio" placeholder="Lista de precio" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="markup">Markup de la lista</label>
+                                            <input class="form-control" type="number" step="0.01" name="markup" id="markup" placeholder="Markup de la lista" required>
+                                        </div> 
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-tareas">
-                        {% include 'partials/_tabla_tareas.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-listas_precios">
+                                {% include 'partials/_tabla_listas_precios.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
+                </div>    
             </div>
         </div>
-    </div>
 
-    {# ==================== PLAN DE CUENTAS ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Plan de cuentas</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de plan de cuentas</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_planCta') }}" 
-                                  hx-target="#tabla-plan_ctas" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="nombre">Plan cuenta</label>
-                                    <input class="form-control" type="text" name="nombre" id="plan_cta" placeholder="Cuenta" required>
-                                </div>
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+        {# ==================== LISTAS DE TAREAS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseListasTareas" aria-expanded="false" aria-controls="collapseListasTareas">
+                    <i class="fas fa-tasks me-2"></i> Listas de tareas
+                </button>
+            </h2>
+            <div id="collapseListasTareas" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de tareas</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_tarea') }}" 
+                                          hx-target="#tabla-tareas" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="tarea">Tarea</label>
+                                            <input class="form-control" type="text" name="tarea" id="tarea" placeholder="Tarea" required>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-plan_ctas">
-                        {% include 'partials/_tabla_plan_ctas.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-tareas">
+                                {% include 'partials/_tabla_tareas.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
+                </div>    
             </div>
         </div>
-    </div>
 
-    {# ==================== TIPO IVAS Y TIPO DOCUMENTOS ==================== #}
-    <div class="card m-3">
-        <div class="row">
-            <div class="col-6">
-                <h4 class="m-3">Tipo IVAs</h4>
-                <div class="card-body">
+        {# ==================== PLAN DE CUENTAS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePlanCtas" aria-expanded="false" aria-controls="collapsePlanCtas">
+                    <i class="fas fa-book me-2"></i> Plan de cuentas
+                </button>
+            </h2>
+            <div id="collapsePlanCtas" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de plan de cuentas</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_planCta') }}" 
+                                          hx-target="#tabla-plan_ctas" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Plan cuenta</label>
+                                            <input class="form-control" type="text" name="nombre" id="plan_cta" placeholder="Cuenta" required>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
+                        </div>    
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-plan_ctas">
+                                {% include 'partials/_tabla_plan_ctas.html' %}
+                            </div>
+                        </div>     
+                    </div>
+                </div>    
+            </div>
+        </div>
+
+        {# ==================== TIPO IVAS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTipoIvas" aria-expanded="false" aria-controls="collapseTipoIvas">
+                    <i class="fas fa-file-invoice me-2"></i> Tipo IVAs
+                </button>
+            </h2>
+            <div id="collapseTipoIvas" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
                     <div class="card" id="tabla-tipo_ivas">
                         {% include 'partials/_tabla_tipo_ivas.html' %}
                     </div>
-                </div>
+                </div>    
             </div>
-            <div class="col-6">
-                <h4 class="m-3">Tipo Documentos</h4>
-                <div class="card-body">
+        </div>
+
+        {# ==================== TIPO DOCUMENTOS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTipoDocs" aria-expanded="false" aria-controls="collapseTipoDocs">
+                    <i class="fas fa-id-card me-2"></i> Tipo Documentos
+                </button>
+            </h2>
+            <div id="collapseTipoDocs" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
                     <div class="card" id="tabla-tipo_docs">
                         {% include 'partials/_tabla_tipo_docs.html' %}
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# ==================== CATEGORÍAS DE CLIENTES ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Categorías de clientes</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de categorías de clientes</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_categoria') }}" 
-                                  hx-target="#tabla-categorias" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="nombre">Categoría</label>
-                                    <input class="form-control" type="text" name="nombre" id="categoria" placeholder="Nombre de la categoría" required>
-                                </div>
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
-                        </div>    
-                    </div>   
                 </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-categorias">
-                        {% include 'partials/_tabla_categorias.html' %}
-                    </div>
-                </div>     
             </div>
         </div>
-    </div>
 
-    {# ==================== MONEDAS Y BILLETES ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Monedas y billetes que se rinden</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de monedas y billetes</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_monedabillete') }}" 
-                                  hx-target="#tabla-monedas_billetes" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="descripcion">Descripción</label>
-                                    <input class="form-control" type="text" name="descripcion" id="descripcion_mb" placeholder="Descripción de la moneda/billete" required>
-                                </div>
-                                <div class="mb-3"> 
-                                    <label for="valor">Valor</label>
-                                    <input class="form-control" type="number" name="valor" id="valor_mb" placeholder="Valor de la moneda/billete" required>
-                                </div>
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
-                        </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-monedas_billetes">
-                        {% include 'partials/_tabla_monedas_billetes.html' %}
-                    </div>
-                </div>     
-            </div>
-        </div>
-    </div>
-
-    {# ==================== COLORES ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Colores</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de colores</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_color') }}" 
-                                  hx-target="#tabla-colores" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="nombre">Descripción</label>
-                                    <input class="form-control" type="text" name="nombre" id="nombreColor" placeholder="Nombre del color" required>
-                                </div>
-                                <div class="mb-3 col-4">
-                                    <label for="color">Color</label>
-                                    <input class="form-control" type="color" name="color" id="color" placeholder="Color">
+        {# ==================== CATEGORÍAS DE CLIENTES ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCategorias" aria-expanded="false" aria-controls="collapseCategorias">
+                    <i class="fas fa-users me-2"></i> Categorías de clientes
+                </button>
+            </h2>
+            <div id="collapseCategorias" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de categorías de clientes</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_categoria') }}" 
+                                          hx-target="#tabla-categorias" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Categoría</label>
+                                            <input class="form-control" type="text" name="nombre" id="categoria" placeholder="Nombre de la categoría" required>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
                                 </div>    
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-colores">
-                        {% include 'partials/_tabla_colores.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-categorias">
+                                {% include 'partials/_tabla_categorias.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
+                </div>    
             </div>
         </div>
-    </div>
 
-    {# ==================== DETALLES DE ARTÍCULOS ==================== #}
-    <div class="card m-3">
-        <h4 class="m-3">Detalle</h4>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>Ingreso de detalles de artículos</h6>
-                            <form hx-post="{{ url_for('configuraciones.htmx_add_detalle_articulo') }}" 
-                                  hx-target="#tabla-detalles_articulos" 
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="if(event.detail.successful) this.reset()">
-                                <div class="mb-3"> 
-                                    <label for="nombre">Descripción</label>
-                                    <input class="form-control" type="text" name="nombre" id="nombreDetalleArticulo" placeholder="Nombre del detalle del artículo" required>
-                                </div>
-                                <button class="btn btn-exito" type="submit">Grabar</button>
-                            </form>
+        {# ==================== MONEDAS Y BILLETES ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMonedas" aria-expanded="false" aria-controls="collapseMonedas">
+                    <i class="fas fa-money-bill-wave me-2"></i> Monedas y billetes que se rinden
+                </button>
+            </h2>
+            <div id="collapseMonedas" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de monedas y billetes</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_monedabillete') }}" 
+                                          hx-target="#tabla-monedas_billetes" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="descripcion">Descripción</label>
+                                            <input class="form-control" type="text" name="descripcion" id="descripcion_mb" placeholder="Descripción de la moneda/billete" required>
+                                        </div>
+                                        <div class="mb-3"> 
+                                            <label for="valor">Valor</label>
+                                            <input class="form-control" type="number" name="valor" id="valor_mb" placeholder="Valor de la moneda/billete" required>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
                         </div>    
-                    </div>   
-                </div>    
-                <div class="col-md-7">
-                    <div class="card" id="tabla-detalles_articulos">
-                        {% include 'partials/_tabla_detalles_articulos.html' %}
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-monedas_billetes">
+                                {% include 'partials/_tabla_monedas_billetes.html' %}
+                            </div>
+                        </div>     
                     </div>
-                </div>     
+                </div>    
             </div>
         </div>
+
+        {# ==================== COLORES ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseColores" aria-expanded="false" aria-controls="collapseColores">
+                    <i class="fas fa-palette me-2"></i> Colores
+                </button>
+            </h2>
+            <div id="collapseColores" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de colores</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_color') }}" 
+                                          hx-target="#tabla-colores" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Descripción</label>
+                                            <input class="form-control" type="text" name="nombre" id="nombreColor" placeholder="Nombre del color" required>
+                                        </div>
+                                        <div class="mb-3 col-4">
+                                            <label for="color">Color</label>
+                                            <input class="form-control" type="color" name="color" id="color" placeholder="Color">
+                                        </div>    
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
+                        </div>    
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-colores">
+                                {% include 'partials/_tabla_colores.html' %}
+                            </div>
+                        </div>     
+                    </div>
+                </div>    
+            </div>
+        </div>
+
+        {# ==================== DETALLES DE ARTÍCULOS ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDetalles" aria-expanded="false" aria-controls="collapseDetalles">
+                    <i class="fas fa-list-ul me-2"></i> Detalle
+                </button>
+            </h2>
+            <div id="collapseDetalles" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de detalles de artículos</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_detalle_articulo') }}" 
+                                          hx-target="#tabla-detalles_articulos" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Descripción</label>
+                                            <input class="form-control" type="text" name="nombre" id="nombreDetalleArticulo" placeholder="Nombre del detalle del artículo" required>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Grabar</button>
+                                    </form>
+                                </div>    
+                            </div>   
+                        </div>    
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-detalles_articulos">
+                                {% include 'partials/_tabla_detalles_articulos.html' %}
+                            </div>
+                        </div>     
+                    </div>
+                </div>    
+            </div>
+        </div>
+
+        {# ==================== REGLAS DE REDONDEO ==================== #}
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRedondeo" aria-expanded="false" aria-controls="collapseRedondeo">
+                    <i class="fas fa-ruler-combined me-2"></i> Reglas de Redondeo
+                </button>
+            </h2>
+            <div id="collapseRedondeo" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Ingreso de reglas de redondeo</h6>
+                                    <form hx-post="{{ url_for('configuraciones.htmx_add_regla_redondeo') }}" 
+                                          hx-target="#tabla-reglas_redondeo" 
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="if(event.detail.successful) this.reset()">
+                                        <div class="mb-3"> 
+                                            <label for="nombre">Nombre</label>
+                                            <input class="form-control" type="text" name="nombre" id="nombreRegla" placeholder="Nombre de la regla" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="desde_precio">Precio Desde</label>
+                                                <input class="form-control" type="number" step="0.01" name="desde_precio" id="desde_precio" placeholder="0.00" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="hasta_precio">Precio Hasta</label>
+                                                <input class="form-control" type="number" step="0.01" name="hasta_precio" id="hasta_precio" placeholder="0.00" required>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="multiplo">Múltiplo</label>
+                                                <input class="form-control" type="number" name="multiplo" id="multiplo" placeholder="1" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="tipo_redondeo">Tipo de Redondeo</label>
+                                                <select class="form-select" name="tipo_redondeo" id="tipo_redondeo" required>
+                                                    <option value="arriba">Arriba</option>
+                                                    <option value="abajo">Abajo</option>
+                                                    <option value="cercano" selected>Cercano</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="restar_unidades" id="restar_unidades" value="1">
+                                                <label class="form-check-label" for="restar_unidades">Restar Unidades</label>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-exito" type="submit">Agregar</button>
+                                    </form>
+                                </div>    
+                            </div>   
+                        </div>    
+                        <div class="col-md-7">
+                            <div class="card" id="tabla-reglas_redondeo">
+                                {% include 'partials/_tabla_reglas_redondeo.html' %}
+                            </div>
+                        </div>     
+                    </div>
+                </div>    
+            </div>
+        </div>
+
     </div>
 
     <script nonce="{{ g.nonce }}">

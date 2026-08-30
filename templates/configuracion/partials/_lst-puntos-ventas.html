@@ -13,6 +13,7 @@
                         <th scope="col" class="text-center" style="width: 60px;">#Id</th>
                         <th scope="col" class="text-center" style="width: 80px;">Pto Vta</th>
                         <th scope="col">Sucursal</th>
+                        <th scope="col">Lista de precios</th>
                         {% if session['tipo_iva'] == 1 %}
                             <th scope="col" class="text-center">Ult. FA</th>
                             <th scope="col" class="text-center">Ult. NCA</th>
@@ -41,6 +42,13 @@
                             <span class="pv-sucursal-badge">
                                 <i class="fas fa-store me-1"></i>{{ punto.sucursal.nombre }}
                             </span>
+                        </td>
+                        <td>
+                            {% if punto.lista_precio %}
+                                <span class="badge bg-secondary">{{ punto.lista_precio.nombre }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
                         </td>
                         {% if session['tipo_iva'] == 1 %}
                             <td class="text-center">{{ punto.ultima_fac_a }}</td>
@@ -86,9 +94,7 @@
                 <h5 class="modal-title" id="modalLineasLabel">
                     <i class="fas fa-file-alt me-2"></i>Configurar Líneas de Ticket - Punto de Venta: <span id="pvNumero"></span>
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="modalLineasBody">
                 <!-- Contenido cargado dinámicamente -->
@@ -113,13 +119,13 @@ function abrirModalLineas(idPuntoVta, numeroPv) {
         .then(response => response.text())
         .then(html => {
             document.getElementById('modalLineasBody').innerHTML = html;
-            $('#modalLineasComprobantes').modal('show');
+            new bootstrap.Modal(document.getElementById('modalLineasComprobantes')).show();
         })
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('modalLineasBody').innerHTML = 
                 '<div class="alert alert-danger">Error al cargar las líneas</div>';
-            $('#modalLineasComprobantes').modal('show');
+            new bootstrap.Modal(document.getElementById('modalLineasComprobantes')).show();
         });
 }
 
@@ -136,16 +142,16 @@ function guardarLineasComprobantes() {
         if (data.success) {
             // Mostrar mensaje de éxito
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
             alertDiv.innerHTML = `
                 <i class="fas fa-check-circle me-2"></i>${data.message}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
             document.getElementById('modalLineasBody').insertBefore(alertDiv, document.getElementById('formLineasComprobantes'));
             
             // Cerrar modal después de 1.5 segundos
             setTimeout(() => {
-                $('#modalLineasComprobantes').modal('hide');
+                bootstrap.Modal.getInstance(document.getElementById('modalLineasComprobantes')).hide();
             }, 1500);
         } else {
             alert('Error: ' + data.message);

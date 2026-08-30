@@ -106,6 +106,7 @@ def grabarDatosPtoVta(form):
     fac_electronica = 1 if form.get('fac_electronica') else 0
     certificado_p12 = form.get('certificado', '')
     clave_certificado = form.get('clave_cert', '')
+    id_lista_precio = form.get('id_lista_precio') or None
     
     print('------------------------------------------------------------------------------------------')
     print(f'Impresora pos: {pos_printer} - Fac. Electrónica: {fac_electronica}')
@@ -130,6 +131,7 @@ def grabarDatosPtoVta(form):
             puntoVenta.fac_electronica = fac_electronica
             puntoVenta.certificado_p12 = certificado_p12
             puntoVenta.clave_certificado = clave_certificado
+            puntoVenta.id_lista_precio = id_lista_precio
             db.session.commit()
             flash(f'Punto de venta actualizado: {puntoVenta.punto_vta}')
         else:
@@ -138,6 +140,7 @@ def grabarDatosPtoVta(form):
             puntoVenta.fac_electronica = fac_electronica
             puntoVenta.certificado_p12 = certificado_p12
             puntoVenta.clave_certificado = clave_certificado
+            puntoVenta.id_lista_precio = id_lista_precio
             db.session.add(puntoVenta)
             db.session.commit()
             idPuntoVenta = puntoVenta.id

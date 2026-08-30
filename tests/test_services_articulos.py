@@ -50,6 +50,8 @@ def test_obtener_articulos_marca_rubro_con_porcentaje():
 
     with patch('services.articulos.articulos.db.session.query',
                return_value=mock_query):
+        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+            mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
                 marca=1, rubro=1, lista_precio=1, porcentaje=10
@@ -83,6 +85,8 @@ def test_obtener_articulos_marca_rubro_porcentaje_cero():
 
     with patch('services.articulos.articulos.db.session.query',
                return_value=mock_query):
+        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+            mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
                 marca=0, rubro=0, lista_precio=1, porcentaje=0
@@ -110,6 +114,8 @@ def test_obtener_articulos_marca_rubro_sin_resultados():
 
     with patch('services.articulos.articulos.db.session.query',
                return_value=mock_query):
+        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+            mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
                 marca=99, rubro=99, lista_precio=1, porcentaje=10

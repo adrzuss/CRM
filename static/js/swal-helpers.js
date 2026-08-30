@@ -175,7 +175,7 @@ function toastAdvertencia(mensaje) {
  * cuando intenta salir de una página con datos sin guardar.
  * @type {boolean}
  */
-let sinGuardar = false;
+var sinGuardar = false;
 
 /**
  * Marca que hay cambios sin guardar en el formulario activo.

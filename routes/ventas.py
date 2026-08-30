@@ -59,10 +59,21 @@ def get_punto_vta():
 def get_puntos_vta_sucursal():
     try:
         session['posPrinter'] = None
-        puntosVtaSucursal = db.session.query(PuntosVenta.id, 
-                                            PuntosVenta.punto_vta, 
-                                            PuntosVenta.fac_electronica).filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
-        return jsonify([{'id': pv.id, 'puntoVta': pv.punto_vta, 'facElectronica': 'Si' if pv.fac_electronica else 'No'} for pv in puntosVtaSucursal])
+        puntosVtaSucursal = db.session.query(
+                                            PuntosVenta.id,
+                                            PuntosVenta.punto_vta,
+                                            PuntosVenta.fac_electronica,
+                                            PuntosVenta.id_lista_precio,
+                                            ListasPrecios.nombre.label('nombre_lista')
+                                        ).outerjoin(ListasPrecios, PuntosVenta.id_lista_precio == ListasPrecios.id)\
+                                         .filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
+        return jsonify([{
+            'id': pv.id,
+            'puntoVta': pv.punto_vta,
+            'facElectronica': 'Si' if pv.fac_electronica else 'No',
+            'idListaPrecio': pv.id_lista_precio,
+            'nombreLista': pv.nombre_lista
+        } for pv in puntosVtaSucursal])
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -80,7 +91,7 @@ def set_punto_vta():
         puntoVta = db.session.get(PuntosVenta, punto_vta_id)
         session['posPrinter'] = puntoVta.pos_printer
         
-        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica})
+        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica, 'id_lista_precio': puntoVta.id_lista_precio})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al asignar el punto de venta: {str(e)}'}), 500
     

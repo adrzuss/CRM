@@ -1,4 +1,5 @@
 from .articulos import guardar_articulo, _guardar_precios, _guardar_stocks, _guardar_colores, _guardar_detalles, get_articulo_by_codigo, obtenerArticulosMarcaRubro, update_insert_articulo_compuesto, eliminarComp, actulizarProvByArt
+from .redondeo import aplicar_redondeo, calcular_precio_comercial
 from .stock import actualizarStock, get_stocks_negativos, get_stocks_faltantes, obtener_stock_sucursales, alerta_stocks_faltante, alerta_stocks_limite, alerta_precios_nuevos
 from .precios import get_listado_precios, actualizarPrecio, procesar_cambio_precio
 from .remitos import procesar_remito_a_sucursal, enviar_remito_sucursal, recibir_remito_sucursal, get_remitos_sucursales, get_detalle_remito, remitos_mercaderia

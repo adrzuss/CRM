@@ -205,7 +205,7 @@
                         <div class="form-floating">
                             <select class="form-select form-control-modern" name="idlista" id="idlista">
                                 {% for lista in listas_precio %}
-                                    <option value="{{ lista.id }}" {{ 'selected' if lista.id == 1 else '' }}>
+                                    <option value="{{ lista.id }}" {{ 'selected' if loop.first else '' }}>
                                         {{ lista.nombre }}
                                     </option>
                                 {% endfor %}

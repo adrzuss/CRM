@@ -1,0 +1,66 @@
+{# Tabla de Reglas de Redondeo - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Desde</th>
+                    <th scope="col">Hasta</th>
+                    <th scope="col">Múltiplo</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Restar Unidades</th>
+                    <th scope="col">Activo</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for regla in reglas_redondeo %}
+                <tr class="table table-light">
+                    <td>{{ regla.nombre }}</td>
+                    <td>${{ regla.desde_precio }}</td>
+                    <td>${{ regla.hasta_precio }}</td>
+                    <td>{{ regla.multiplo }}</td>
+                    <td>{{ regla.tipo_redondeo|capitalize }}</td>
+                    <td>
+                        {% if regla.restar_unidades %}
+                            <i class="fas fa-check text-success"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if regla.activo %}
+                            <i class="fas fa-check text-success"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-exito btn-sm" 
+                                hx-get="{{ url_for('configuraciones.get_regla_redondeo', id=regla.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm ms-1" 
+                                hx-post="{{ url_for('configuraciones.delete_regla_redondeo', id=regla.id) }}"
+                                hx-target="#tabla-reglas_redondeo"
+                                hx-swap="innerHTML"
+                                hx-confirm="¿Está seguro que desea eliminar esta regla de redondeo?">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not reglas_redondeo %}
+                <tr>
+                    <td colspan="8" class="text-center">Sin resultados</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

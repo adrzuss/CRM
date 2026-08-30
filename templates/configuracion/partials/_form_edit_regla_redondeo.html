@@ -1,0 +1,52 @@
+{# Formulario de edición - Regla de Redondeo #}
+<h5 class="mb-3">Editar Regla de Redondeo</h5>
+<form hx-post="{{ url_for('configuraciones.update_regla_redondeo', id=item.id) }}" 
+      hx-target="#tabla-reglas_redondeo" 
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ item.nombre }}" required>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="desde_precio" class="form-label">Precio Desde</label>
+            <input type="number" step="0.01" class="form-control" name="desde_precio" id="desde_precio" value="{{ item.desde_precio }}" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="hasta_precio" class="form-label">Precio Hasta</label>
+            <input type="number" step="0.01" class="form-control" name="hasta_precio" id="hasta_precio" value="{{ item.hasta_precio }}" required>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="multiplo" class="form-label">Múltiplo</label>
+            <input type="number" class="form-control" name="multiplo" id="multiplo" value="{{ item.multiplo }}" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="tipo_redondeo" class="form-label">Tipo de Redondeo</label>
+            <select class="form-select" name="tipo_redondeo" id="tipo_redondeo" required>
+                <option value="arriba" {% if item.tipo_redondeo == 'arriba' %}selected{% endif %}>Arriba</option>
+                <option value="abajo" {% if item.tipo_redondeo == 'abajo' %}selected{% endif %}>Abajo</option>
+                <option value="cercano" {% if item.tipo_redondeo == 'cercano' %}selected{% endif %}>Cercano</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="restar_unidades" id="restar_unidades" value="1" {% if item.restar_unidades %}checked{% endif %}>
+                <label class="form-check-label" for="restar_unidades">Restar Unidades</label>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="activo" id="activo" value="1" {% if item.activo %}checked{% endif %}>
+                <label class="form-check-label" for="activo">Activo</label>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer px-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-exito">Guardar cambios</button>
+    </div>
+</form>

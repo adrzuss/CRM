@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         asignarPuntoVenta(datos[0].id);
       }
       else{
-        saleccionarPtoVta(datos);
+        seleccionarPtoVta(datos);
       }  
     }
     else{
@@ -153,18 +153,21 @@ document.getElementById("cambiar_pto_vta").addEventListener("click", async funct
     asignarPuntoVenta(datos[0].id);
   }
   else{
-    saleccionarPtoVta(datos);
+    seleccionarPtoVta(datos);
   }    
 });
 
-function saleccionarPtoVta(datos) {
+function seleccionarPtoVta(datos) {
   const modalContent = document.getElementById("modalContentPtoVta");
+
+  // Limpiar contenido previo para evitar acumulación de selects al reabrir el modal
+  modalContent.innerHTML = "";
         
   const listaPtosVtasSucursal = document.createElement("select");
-  listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
-  listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
+  listaPtosVtasSucursal.classList.add("form-select");
+  listaPtosVtasSucursal.id = "selectPtoVta";
   
-  // Agregar una opción por defecto
+  // Opción por defecto
   const defaultOption = document.createElement("option");
   defaultOption.value = "";
   defaultOption.textContent = "Seleccione un punto de venta";
@@ -175,16 +178,16 @@ function saleccionarPtoVta(datos) {
   // Recorrer los puntos de venta y agregarlos como opciones
   datos.forEach((ptovta) => {
     const ptoVtaOption = document.createElement("option");
-    ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
-    ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica; // Mostrar el nombre del punto de venta
+    ptoVtaOption.value = ptovta.id;
+    // Mostrar lista de precio si tiene una asignada
+    const infoLista = ptovta.nombreLista ? " - Lista: " + ptovta.nombreLista : "";
+    ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica + infoLista;
     listaPtosVtasSucursal.appendChild(ptoVtaOption);
-    
   });
   
-  // Agregar el <select> al modal
   modalContent.appendChild(listaPtosVtasSucursal);
 
-  // Agregar un botón para confirmar la selección
+  // Botón para confirmar la selección
   const confirmButton = document.createElement("button");
   confirmButton.classList.add("btn", "btn-primary", "mt-3");
   confirmButton.textContent = "Confirmar";
@@ -280,6 +283,7 @@ function abrirModalPagos(){
 // Hacer funciones disponibles globalmente
 window.abrirModalPagos = abrirModalPagos;
 window.procesarTransaccion = procesarTransaccion;
+window.asignarArticulo = asignarArticulo;
 
 // Event listener CSP-compatible para el botón de pagos
 document.getElementById('btnPagos')?.addEventListener('click', abrirModalPagos);
@@ -569,6 +573,15 @@ async function asignarPuntoVenta(idPuntoVenta) {
       document.getElementById("fac_electronica").value = result.facElectronica ? 'true' : 'false';
       // Guardar la impresora POS si existe
       document.getElementById("pos_printer").value = result.posPrinter || '';
+      // Auto-seleccionar lista de precios del punto de venta
+      const selectLista = document.getElementById('idlista');
+      if (selectLista) {
+        if (result.id_lista_precio) {
+          selectLista.value = result.id_lista_precio;
+        } else if (selectLista.options.length > 0) {
+          selectLista.value = selectLista.options[0].value;
+        }
+      }
       document.getElementById("idcliente").focus();
     } else {
       mostrarError('Error al asignar el punto de venta: ' + result.message);
@@ -1001,10 +1014,13 @@ function mostrarModalSeleccionArticulos(articulos, idlista, itemDiv) {
       asignarArticuloElegido(articulo, itemDiv);
     }
 
-    // Esperar a que Bootstrap termine de cerrar el modal
-    setTimeout(function() {
-      itemDiv?.target?.focus();
-    }, 200);
+    // Esperar a que Bootstrap termine de cerrar el modal antes de devolver el foco
+    document.getElementById('universalSearchModal')?.addEventListener('hidden.bs.modal', function() {
+      const row = itemDiv?.target?.closest('tr');
+      const inputCodigo = row?.querySelector('.codigo-articulo');
+      console.log('Modal cerrado, devolviendo foco al input de código:', inputCodigo);
+      if (inputCodigo) inputCodigo.focus();
+    }, { once: true });
   };
   
   window.universalSearchModal.show('articulos', articulos || [], callback);
@@ -1023,6 +1039,10 @@ function updateTotalFactura() {
     }
   });
   document.getElementById("totalFactura").value = totalFactura.toFixed(2);
+  // Actualizar el display visual (la asignación via JS no dispara eventos ni MutationObserver)
+  if (typeof window.sincronizarTotal === 'function') {
+    window.sincronizarTotal();
+  }
   
   // Solo llamar calcSaldo si el modal está abierto y las funciones universales están disponibles
   const modal = document.getElementById('transaccionesModal');

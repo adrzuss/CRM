@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import uuid
 from models.configs import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, \
-                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema, LineasComprobantes
+                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema, LineasComprobantes, ReglaRedondeo
 from models.sessions import Tareas
 from models.articulos import ListasPrecios, Colores, DetallesArticulos
 from models.sucursales import Sucursales
@@ -52,7 +52,8 @@ def configuraciones():
     monedasBilletes = MonedasBilletes.query.all()
     colores = Colores.query.all()
     detalles_articulos = DetallesArticulos.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, colores=colores, detalles_articulos=detalles_articulos)
+    reglas_redondeo = ReglaRedondeo.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, colores=colores, detalles_articulos=detalles_articulos, reglas_redondeo=reglas_redondeo)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -263,8 +264,12 @@ def puntos_venta(id=0):
         else:
             puntoVenta = None    
     sucursales = Sucursales.query.all()    
-    puntos_venta = PuntosVenta.query.options(joinedload(PuntosVenta.sucursal)).all()
-    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales)
+    puntos_venta = PuntosVenta.query.options(
+        joinedload(PuntosVenta.sucursal),
+        joinedload(PuntosVenta.lista_precio)
+    ).all()
+    listas_precios = ListasPrecios.query.all()
+    return render_template('puntos-venta.html', puntos_venta=puntos_venta, puntoVenta=puntoVenta, sucursales=sucursales, listas_precios=listas_precios)
 
 @bp_configuraciones.route('/get_tipos_comprobantes/<id_tipo_iva>/<aplica>')
 @check_session
@@ -786,3 +791,101 @@ def htmx_save_permisos_tarea():
         db.session.rollback()
         print(f"Error SQL guardando permisos: {e}")
         return f"<div class='alert alert-danger'>Error guardando permisos: {e}</div>", 500
+
+# =============================================================================
+# REGLAS DE REDONDEO - HTMX CRUD
+# =============================================================================
+
+def render_tabla_reglas_redondeo():
+    """Renderiza la tabla parcial de reglas de redondeo"""
+    reglas = ReglaRedondeo.query.all()
+    return render_template('partials/_tabla_reglas_redondeo.html', reglas_redondeo=reglas)
+
+@bp_configuraciones.route('/htmx/add_regla_redondeo', methods=['POST'])
+@check_session
+def htmx_add_regla_redondeo():
+    """Crea una nueva regla de redondeo"""
+    try:
+        nombre = request.form['nombre']
+        desde_precio = request.form['desde_precio']
+        hasta_precio = request.form['hasta_precio']
+        multiplo = request.form['multiplo']
+        tipo_redondeo = request.form.get('tipo_redondeo', 'cercano')
+        restar_unidades = 1 if request.form.get('restar_unidades') else 0
+        
+        # Validaciones
+        if float(desde_precio) >= float(hasta_precio):
+            return render_template('partials/_error_htmx.html', mensaje='El precio desde debe ser menor que el precio hasta'), 400
+        
+        if int(multiplo) <= 0:
+            return render_template('partials/_error_htmx.html', mensaje='El múltiplo debe ser mayor a 0'), 400
+        
+        regla = ReglaRedondeo(
+            nombre=nombre,
+            desde_precio=desde_precio,
+            hasta_precio=hasta_precio,
+            multiplo=multiplo,
+            tipo_redondeo=tipo_redondeo,
+            restar_unidades=restar_unidades,
+            activo=True
+        )
+        db.session.add(regla)
+        db.session.commit()
+        return render_tabla_reglas_redondeo()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al crear regla: {str(e)}'), 500
+
+@bp_configuraciones.route('/htmx/get_regla_redondeo/<int:id>', methods=['GET'])
+@check_session
+def get_regla_redondeo(id):
+    """Obtiene una regla de redondeo para editar"""
+    item = db.get_or_404(ReglaRedondeo, id)
+    return render_template('partials/_form_edit_regla_redondeo.html', item=item)
+
+@bp_configuraciones.route('/htmx/update_regla_redondeo/<int:id>', methods=['POST'])
+@check_session
+def update_regla_redondeo(id):
+    """Actualiza una regla de redondeo"""
+    try:
+        item = db.get_or_404(ReglaRedondeo, id)
+        nombre = request.form['nombre']
+        desde_precio = request.form['desde_precio']
+        hasta_precio = request.form['hasta_precio']
+        multiplo = request.form['multiplo']
+        tipo_redondeo = request.form.get('tipo_redondeo', 'cercano')
+        restar_unidades = 1 if request.form.get('restar_unidades') else 0
+        activo = 1 if request.form.get('activo') else 0
+        
+        # Validaciones
+        if float(desde_precio) >= float(hasta_precio):
+            return render_template('partials/_error_htmx.html', mensaje='El precio desde debe ser menor que el precio hasta'), 400
+        
+        if int(multiplo) <= 0:
+            return render_template('partials/_error_htmx.html', mensaje='El múltiplo debe ser mayor a 0'), 400
+        
+        item.nombre = nombre
+        item.desde_precio = desde_precio
+        item.hasta_precio = hasta_precio
+        item.multiplo = multiplo
+        item.tipo_redondeo = tipo_redondeo
+        item.restar_unidades = restar_unidades
+        item.activo = activo
+        db.session.commit()
+        return render_tabla_reglas_redondeo()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al actualizar regla: {str(e)}'), 500
+
+@bp_configuraciones.route('/htmx/delete_regla_redondeo/<int:id>', methods=['POST'])
+@check_session
+def delete_regla_redondeo(id):
+    """Elimina una regla de redondeo"""
+    try:
+        item = db.get_or_404(ReglaRedondeo, id)
+        db.session.delete(item)
+        db.session.commit()
+        return render_tabla_reglas_redondeo()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al eliminar regla: {str(e)}'), 500

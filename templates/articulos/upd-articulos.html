@@ -559,6 +559,9 @@
         </div>
     </div>      
     </form>
+    <script nonce="{{ g.nonce }}">
+        var REGLAS_REDONDEO = {{ reglas_redondeo | tojson }};
+    </script>
     <script type="module" src="{{ url_for('static', filename='js/utilidades.js')}}"></script>
     <script type="module" src="{{ url_for('static', filename='js/upd-articulos.js')}}"></script>
     <script src="{{ url_for('static', filename='js/color-manager.js')}}"></script>

@@ -39,6 +39,26 @@ document.getElementById('con_colores').addEventListener('change', function(e) {
 });
 
 
+function aplicarRedondeo(precio, reglas) {
+    for (const regla of reglas) {
+        if (precio >= regla.desde_precio && precio <= regla.hasta_precio) {
+            let redondeado;
+            if (regla.tipo_redondeo === 'arriba') {
+                redondeado = Math.ceil(precio / regla.multiplo) * regla.multiplo;
+            } else if (regla.tipo_redondeo === 'abajo') {
+                redondeado = Math.floor(precio / regla.multiplo) * regla.multiplo;
+            } else { // cercano
+                redondeado = Math.round(precio / regla.multiplo) * regla.multiplo;
+            }
+            if (regla.restar_unidades > 0 && redondeado >= regla.restar_unidades) {
+                redondeado -= regla.restar_unidades;
+            }
+            return { precio: redondeado, aplicado: true };
+        }
+    }
+    return { precio: precio, aplicado: false };
+}
+
 async function calcularPrecio() {
     const costo = parseFloat(document.getElementById('costo').value);
     const idiva = document.getElementById('idiva').value;
@@ -62,7 +82,24 @@ async function calcularPrecio() {
     itemDivs.forEach((itemDiv, index) => {
         const markup = parseFloat(itemDiv.querySelector('.markup').value);
         let precioVP = itemDiv.querySelector('.precio');
-        precioVP.value = (markup.toFixed(2) * costoTotal.toFixed(2)).toFixed(2);
+        let precioCalculado = markup * costoTotal;
+        const resultado = aplicarRedondeo(precioCalculado, REGLAS_REDONDEO);
+        precioVP.value = resultado.precio.toFixed(2);
+
+        // Indicador visual si no se aplicó redondeo
+        let indicador = itemDiv.querySelector('.sin-redondeo');
+        if (!indicador) {
+            indicador = document.createElement('div');
+            indicador.className = 'sin-redondeo';
+            indicador.style.cssText = 'font-size: 0.75rem; color: #dc3545; margin-top: 2px;';
+            precioVP.parentElement.appendChild(indicador);
+        }
+        if (!resultado.aplicado && REGLAS_REDONDEO.length > 0) {
+            indicador.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sin regla de redondeo';
+            indicador.style.display = 'block';
+        } else {
+            indicador.style.display = 'none';
+        }
     });
 }
 

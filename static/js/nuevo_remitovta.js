@@ -25,12 +25,15 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
       else{
         const modalContent = document.getElementById("modalContentPtoVta");
-        
+
+        // Limpiar contenido previo para evitar acumulación de selects al reabrir el modal
+        modalContent.innerHTML = "";
+
         const listaPtosVtasSucursal = document.createElement("select");
-        listaPtosVtasSucursal.classList.add("form-select"); // Agregar clases de Bootstrap
-        listaPtosVtasSucursal.id = "selectPtoVta"; // Asignar un ID para referencia futura
+        listaPtosVtasSucursal.classList.add("form-select");
+        listaPtosVtasSucursal.id = "selectPtoVta";
         
-        // Agregar una opción por defecto
+        // Opción por defecto
         const defaultOption = document.createElement("option");
         defaultOption.value = "";
         defaultOption.textContent = "Seleccione un punto de venta";
@@ -41,15 +44,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Recorrer los puntos de venta y agregarlos como opciones
         datos.forEach((ptovta) => {
           const ptoVtaOption = document.createElement("option");
-          ptoVtaOption.value = ptovta.id; // Asignar el ID como valor
-          ptoVtaOption.textContent = "Punto de venta:" + ptovta.puntoVta; // Mostrar el nombre del punto de venta
+          ptoVtaOption.value = ptovta.id;
+          const infoLista = ptovta.nombreLista ? " - Lista: " + ptovta.nombreLista : "";
+          ptoVtaOption.textContent = "Punto de venta: " + ptovta.puntoVta + " - Fac. Electrónica: " + ptovta.facElectronica + infoLista;
           listaPtosVtasSucursal.appendChild(ptoVtaOption);
         });
         
-        // Agregar el <select> al modal
         modalContent.appendChild(listaPtosVtasSucursal);
 
-        // Agregar un botón para confirmar la selección
+        // Botón para confirmar la selección
         const confirmButton = document.createElement("button");
         confirmButton.classList.add("btn", "btn-primary", "mt-3");
         confirmButton.textContent = "Confirmar";

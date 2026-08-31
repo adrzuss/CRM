@@ -377,6 +377,117 @@ def get_ventas_rubro(desde, hasta, id_sucursal=None):
         return {'rubros': [], 'total_importe': 0}
 
 
+# ─── 1.4 Comparación Rubro × Sucursal ────────────────────────────────────────
+def get_rubro_sucursal_comparacion(desde, hasta, id_sucursal=None):
+    """
+    Cross-tab: rubros como filas, sucursales como columnas.
+    Cada celda tiene unidades, porcentaje (participación en la sucursal),
+    e indicador (up/down/neutral) comparando contra el benchmark de la sucursal.
+    """
+    params = _params_base(desde, hasta, id_sucursal)
+    suc_filter = _sucursal_filter('f', params)
+
+    try:
+        sql = text(f"""
+            SELECT
+                COALESCE(r.nombre, 'Sin rubro') AS rubro,
+                s.nombre AS sucursal,
+                s.id AS id_sucursal,
+                COALESCE(SUM(iv.cantidad), 0) AS unidades
+            FROM itemsv iv
+            JOIN facturav f ON iv.idfactura = f.id
+            JOIN articulos a ON iv.idarticulo = a.id
+            LEFT JOIN rubros r ON a.idrubro = r.id
+            JOIN sucursales s ON f.idsucursal = s.id
+            JOIN clientes c ON f.idcliente = c.id
+            JOIN tipo_comprobantes tc ON f.idtipocomprobante = tc.id
+            JOIN tipo_comp_aplica tca ON tc.id = tca.id_tipo_comp
+                AND tca.id_iva_entidad = c.id_tipo_iva
+            JOIN tipo_operacion top ON tca.id_tipo_oper = top.id
+            WHERE f.fecha BETWEEN :desde AND :hasta
+                AND top.nombre IN ('VENTA', 'CREDITO', 'DEBITO')
+            {suc_filter}
+            GROUP BY r.id, r.nombre, s.id, s.nombre
+            ORDER BY r.nombre, s.nombre
+        """)
+
+        rows = db.session.execute(sql, params).fetchall()
+
+        if not rows:
+            return {'rubros': [], 'sucursales': [], 'cells': {}, 'benchmarks': {}, 'grand_total': 0}
+
+        # Collect unique rubros and sucursales (sorted alphabetically)
+        rubros_set = set()
+        sucursales_set = set()
+        for row in rows:
+            rubros_set.add(row.rubro)
+            sucursales_set.add(row.sucursal)
+
+        rubros = sorted(rubros_set)
+        sucursales = sorted(sucursales_set)
+
+        # Build per-sucursal totals
+        sucursal_totals = {s: 0 for s in sucursales}
+        cells_raw = {}  # rubro -> sucursal -> unidades
+        for row in rows:
+            r = row.rubro
+            s = row.sucursal
+            u = int(row.unidades or 0)
+            sucursal_totals[s] += u
+            if r not in cells_raw:
+                cells_raw[r] = {}
+            cells_raw[r][s] = u
+
+        grand_total = sum(sucursal_totals.values())
+
+        # Calculate benchmarks (sucursal's overall share of grand_total)
+        benchmarks = {}
+        for s in sucursales:
+            benchmarks[s] = round((sucursal_totals[s] / grand_total * 100), 1) if grand_total > 0 else 0
+
+        # Build rubro totals (sum of all sucursales per rubro)
+        rubro_totals = {}
+        for r in rubros:
+            rubro_totals[r] = sum(cells_raw.get(r, {}).get(s, 0) for s in sucursales)
+
+        # Build cells with percentage and indicator
+        cells = {}
+        for r in rubros:
+            cells[r] = {}
+            # Benchmark: rubro's % of grand total
+            rubro_pct_total = round((rubro_totals[r] / grand_total * 100), 1) if grand_total > 0 else 0
+            for s in sucursales:
+                u = cells_raw.get(r, {}).get(s, 0)
+                total_s = sucursal_totals[s]
+                pct = round((u / total_s * 100), 1) if total_s > 0 else 0
+
+                if pct > rubro_pct_total:
+                    indicator = 'up'
+                elif pct < rubro_pct_total:
+                    indicator = 'down'
+                else:
+                    indicator = 'neutral'
+
+                cells[r][s] = {
+                    'unidades': u,
+                    'porcentaje': pct,
+                    'indicator': indicator,
+                }
+
+        return {
+            'rubros': rubros,
+            'sucursales': sucursales,
+            'cells': cells,
+            'rubro_totals': rubro_totals,
+            'benchmarks': benchmarks,
+            'grand_total': grand_total,
+        }
+
+    except SQLAlchemyError as e:
+        print(f"Error en comparación rubro-sucursal dashboard gerencial: {e}")
+        return {'rubros': [], 'sucursales': [], 'cells': {}, 'benchmarks': {}, 'grand_total': 0}
+
+
 # ─── 1.5 Top productos ──────────────────────────────────────────────────────
 def get_top_productos(desde, hasta, id_sucursal=None, limite=10):
     """
@@ -1398,6 +1509,7 @@ def get_datos_dashboard(desde, hasta, id_sucursal=None, comparar=False):
         'evolucion': get_evolucion_ventas(desde, hasta, id_sucursal, comparar),
         'sucursales': get_ventas_sucursal(desde, hasta, id_sucursal),
         'rubros': get_ventas_rubro(desde, hasta, id_sucursal),
+        'rubro_sucursal': get_rubro_sucursal_comparacion(desde, hasta, id_sucursal),
         'top_productos': get_top_productos(desde, hasta, id_sucursal, 10),
         'top_vendedores': get_top_vendedores(desde, hasta, id_sucursal, 10),
         'stock_kpis': stock_kpis,

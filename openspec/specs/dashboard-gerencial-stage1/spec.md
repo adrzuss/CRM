@@ -337,18 +337,19 @@ LIMIT 10
 
 ### F17: Agregador `get_datos_dashboard()`
 
-The system SHALL extend the aggregator `get_datos_dashboard()` to include creditos section data alongside existing sections.
+The system SHALL extend the aggregator `get_datos_dashboard()` to include creditos section data alongside existing sections AND rubro-sucursal comparison data.
 
 The aggregator SHALL add:
 - `creditos_kpis`: result of `get_creditos_kpis(id_sucursal)`
 - `creditos_top`: result of `get_creditos_top_deudores(limite=10, id_sucursal=id_sucursal)`
+- `rubro_sucursal`: result of `get_rubro_sucursal_comparacion(desde, hasta)`
 
-#### Scenario: Agregador incluye créditos
+#### Scenario: Agregador incluye créditos y rubro-sucursal
 
 - GIVEN `get_datos_dashboard()` called with valid params
 - WHEN response is assembled
-- THEN returned dict contains keys `creditos_kpis` and `creditos_top`
-- AND both keys contain valid data structures
+- THEN returned dict contains keys `creditos_kpis`, `creditos_top`, and `rubro_sucursal`
+- AND all keys contain valid data structures
 
 ---
 
@@ -693,7 +694,18 @@ KPIs de rendiciones de caja.
 
 El layout existente SE MANTIENE. Se agregan 4 nuevas secciones al final del dashboard, después de "Productos sin Movimiento".
 
-- **Layout**: Extiende `base.html`. 4 columnas de KPI cards arriba, gráfico evolución full-width, 2 tablas lado a lado (sucursales + rubros), doughnut al lado de rubros, 2 tablasabajo (top productos + top vendedores), luego secciones de cuentas por cobrar/pagar.
+- **Layout**: Extiende `base.html`. 4 columnas de KPI cards arriba, gráfico evolución full-width, 2 tablas lado a lado (sucursales + rubros), doughnut al lado de rubros, **Comparación Rubro × Sucursal (full-width)**, 2 tablas abajo (top productos + top vendedores), luego secciones de cuentas por cobrar/pagar.
+
+### UI Specification (layout order)
+
+The layout SHALL add a new full-width section "Comparación Rubro × Sucursal" after the existing Sucursales y Rubros cards and before the Top Productos section.
+
+#### Scenario: Layout con sección cross-tab
+
+- GIVEN dashboard completo
+- WHEN se renderiza
+- THEN la sección "Comparación Rubro × Sucursal" aparece después de Sucursales/Rubros
+- AND antes de Top Productos
 - **Responsive**: KPI cards → 2 columnas en tablet, 1 en móvil. Tablas → scroll horizontal en móvil.
 - **Chart.js**: Línea (evolución), Doughnut (rubros). Paleta de colores consistente.
 - **Filtros**: Barra superior con date inputs, select sucursal, toggle comparar, botón actualizar. HTMX `hx-get` para refresh de secciones individuales.
@@ -701,9 +713,9 @@ El layout existente SE MANTIENE. Se agregan 4 nuevas secciones al final del dash
 
 #### Scenario: Layout con todas las secciones
 
-- GIVEN dashboard completo con Etapas 1+2+3+4+5
+- GIVEN dashboard completo con Etapas 1+2+3+4+5+6
 - WHEN se renderiza
-- THEN el orden de secciones es: KPIs → Evolución → Sucursales → Rubros → Top Productos → Top Vendedores → Stock KPIs → Stock por Sucursal → Sin Movimiento → Ctas por Cobrar → Top Deudores → Ctas por Pagar → Top Proveedores → Créditos KPIs → Top Deudores por Crédito → Bancos KPIs → Saldos por Banco → Caja KPIs → Últimas Rendiciones
+- THEN el orden de secciones es: KPIs → Evolución → Sucursales → Rubros → Comparación Rubro × Sucursal → Top Productos → Top Vendedores → Stock KPIs → Stock por Sucursal → Sin Movimiento → Ctas por Cobrar → Top Deudores → Ctas por Pagar → Top Proveedores → Créditos KPIs → Top Deudores por Crédito → Bancos KPIs → Saldos por Banco → Caja KPIs → Últimas Rendiciones
 
 #### Scenario: Badges de saldo vencido/por vencer
 

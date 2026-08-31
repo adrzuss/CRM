@@ -48,10 +48,10 @@
     <div id="seccion-alertas" class="row mb-4">
         <div class="col-12">
             <div class="card shadow border-0">
-                <div class="card-header py-3 dg-alertas-header bg-light">
+                <div class="card-header3 py-3 dg-alertas-header bg-light">
                     <h6 class="m-0 font-weight-bold text-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>Alertas Gerenciales
-                        <span class="badge bg-danger ms-2">{{ data.alertas|length }}</span>
+                        <span class="badge-alert bg-danger ms-2">{{ data.alertas|length }}</span>
                     </h6>
                 </div>
                 <div class="card-body">
@@ -187,8 +187,8 @@
     <div id="seccion-evolucion" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-chart-area me-2"></i>Evolución de Ventas
                     </h6>
                     <div class="btn-group btn-group-sm" role="group" id="granularidad-btns">
@@ -212,14 +212,14 @@
         <!-- Ventas por Sucursal -->
         <div id="seccion-sucursales" class="col-xl-7 col-lg-7 mb-3">
             <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-store me-2"></i>Ventas por Sucursal
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Sucursal</th>
@@ -266,8 +266,8 @@
         <!-- Ventas por Rubro -->
         <div id="seccion-rubros" class="col-xl-5 col-lg-5 mb-3">
             <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-tags me-2"></i>Ventas por Rubro
                     </h6>
                 </div>
@@ -276,7 +276,7 @@
                         <canvas id="chartRubros"></canvas>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Rubro</th>
@@ -312,19 +312,101 @@
         </div>
     </div>
 
+    <!-- SECCIÓN: Comparación Rubro × Sucursal -->
+    <div id="seccion-rubro-sucursal" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-table-cells me-2"></i>Comparación Rubro × Sucursal
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if data.rubro_sucursal.rubros %}
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-center" colspan="2">Total</th>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    <th class="text-center" colspan="2">{{ s }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th class="text-center">Unid.</th>
+                                    <th class="text-center">%</th>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    <th class="text-center">Unid.</th>
+                                    <th class="text-center">%</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.rubro_sucursal.rubros %}
+                                {% set total_u = data.rubro_sucursal.rubro_totals.get(r, 0) %}
+                                {% set total_pct = (total_u / data.rubro_sucursal.grand_total * 100) | round(1) if data.rubro_sucursal.grand_total > 0 else 0 %}
+                                <tr>
+                                    <td>{{ r }}</td>
+                                    <td class="text-center">{{ total_u }}</td>
+                                    <td class="text-center">{{ total_pct }}%</td>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    {% set cell = data.rubro_sucursal.cells.get(r, {}).get(s, {}) %}
+                                    <td class="text-center">{{ cell.get('unidades', 0) }}</td>
+                                    <td class="text-center">
+                                        {{ cell.get('porcentaje', 0) }}%
+                                        {% if data.rubro_sucursal.sucursales|length > 1 %}
+                                            {% if cell.get('indicator') == 'up' %}
+                                            <span class="indicator-up">↑</span>
+                                            {% elif cell.get('indicator') == 'down' %}
+                                            <span class="indicator-down">↓</span>
+                                            {% else %}
+                                            <span class="indicator-neutral">—</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-3 pb-3">
+                        <small class="text-muted">
+                            Total unidades: {{ data.rubro_sucursal.grand_total }} |
+                            {% for s in data.rubro_sucursal.sucursales %}
+                            {{ s }}: {{ data.rubro_sucursal.benchmarks.get(s, 0) }}%{% if not loop.last %} | {% endif %}
+                            {% endfor %}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="empty-state-dg">
+                            <i class="fas fa-table-cells fa-3x text-gray-300 mb-3"></i>
+                            <h6 class="text-muted">Sin datos de comparación</h6>
+                            <p class="text-muted small mb-0">No hay ventas de rubros en el período seleccionado.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SECCIÓN: Top Productos y Top Vendedores -->
     <div class="row mb-4">
         <!-- Top 10 Productos -->
         <div id="seccion-top-productos" class="col-xl-6 col-lg-6 mb-3">
             <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-box-open me-2"></i>Top 10 Productos
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -370,14 +452,14 @@
         <!-- Top 10 Vendedores -->
         <div id="seccion-top-vendedores" class="col-xl-6 col-lg-6 mb-3">
             <div class="card shadow h-100">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-user-tie me-2"></i>Top 10 Vendedores
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -536,14 +618,14 @@
     <div id="seccion-stock-sucursal" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-store me-2"></i>Stock por Sucursal
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Sucursal</th>
@@ -591,8 +673,8 @@
     <div id="seccion-sin-movimiento" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-clock me-2"></i>Productos sin Movimiento
                     </h6>
                     <div class="btn-group btn-group-sm" role="group" id="dias-btns">
@@ -603,7 +685,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Código</th>
@@ -752,14 +834,14 @@
     <div id="seccion-cta-cobrar-top" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-ranking-star me-2"></i>Top Deudores
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -898,14 +980,14 @@
     <div id="seccion-cta-pagar-top" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-ranking-star me-2"></i>Top Proveedores
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -1046,14 +1128,14 @@
     <div id="seccion-creditos-top" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-ranking-star me-2"></i>Top Deudores por Crédito
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -1176,14 +1258,14 @@
     <div id="seccion-bancos-detalle" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-list me-2"></i>Saldos por Banco
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -1289,14 +1371,14 @@
     <div id="seccion-caja-rendiciones" class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
                         <i class="fas fa-clipboard-list me-2"></i>Últimas Rendiciones
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-dashboard table-sm mb-0">
+                        <table class="table2 table-dashboard table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
@@ -1346,6 +1428,7 @@
             <a href="#seccion-evolucion" class="nav-seccion"><i class="fas fa-chart-area me-1"></i>Evolución</a>
             <a href="#seccion-sucursales" class="nav-seccion"><i class="fas fa-store me-1"></i>Sucursales</a>
             <a href="#seccion-rubros" class="nav-seccion"><i class="fas fa-tags me-1"></i>Rubros</a>
+            <a href="#seccion-rubro-sucursal" class="nav-seccion"><i class="fas fa-table-cells me-1"></i>Comparación</a>
             <a href="#seccion-top-productos" class="nav-seccion"><i class="fas fa-box-open me-1"></i>Productos</a>
             <a href="#seccion-top-vendedores" class="nav-seccion"><i class="fas fa-user-tie me-1"></i>Vendedores</a>
             <a href="#seccion-stock-kpis" class="nav-seccion"><i class="fas fa-boxes-stacked me-1"></i>Stock</a>

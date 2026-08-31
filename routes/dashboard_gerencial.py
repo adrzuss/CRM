@@ -14,6 +14,7 @@ from services.dashboard_gerencial import (
     get_evolucion_ventas,
     get_ventas_sucursal,
     get_ventas_rubro,
+    get_rubro_sucursal_comparacion,
     get_top_productos,
     get_top_vendedores,
     get_stock_kpis,
@@ -138,6 +139,13 @@ def api_sucursales():
 def api_rubros():
     desde, hasta, id_sucursal, comparar = _parsear_filtros()
     return _api_respuesta(get_ventas_rubro, desde, hasta, id_sucursal)
+
+
+@bp_dashboard_gerencial.route('/api/dashboard-gerencial/rubro-sucursal')
+@check_session
+def api_rubro_sucursal():
+    desde, hasta, id_sucursal, comparar = _parsear_filtros()
+    return _api_respuesta(get_rubro_sucursal_comparacion, desde, hasta, id_sucursal)
 
 
 @bp_dashboard_gerencial.route('/api/dashboard-gerencial/top-productos')

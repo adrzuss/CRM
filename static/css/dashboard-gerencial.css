@@ -446,6 +446,23 @@
     }
 }
 
+/* ═══ Indicadores de Comparación Rubro × Sucursal ════════════════════════════ */
+
+.dashboard-gerencial .indicator-up {
+    color: #1cc88a;
+    font-weight: 600;
+}
+
+.dashboard-gerencial .indicator-down {
+    color: #e74a3b;
+    font-weight: 600;
+}
+
+.dashboard-gerencial .indicator-neutral {
+    color: #6c757d;
+    font-weight: 600;
+}
+
 /* Print */
 @media print {
     .dashboard-gerencial .btn,

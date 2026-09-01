@@ -356,6 +356,7 @@ def get_ventas_rubro(desde, hasta, id_sucursal=None):
         result = db.session.execute(sql, params).fetchall()
 
         total_importe = sum(float(row.importe or 0) for row in result)
+        total_unidades = sum(float(row.unidades or 0) for row in result)
 
         rubros = []
         for row in result:
@@ -370,7 +371,10 @@ def get_ventas_rubro(desde, hasta, id_sucursal=None):
                 'participacion': round(pct, 1),
             })
 
-        return {'rubros': rubros, 'total_importe': total_importe}
+        # Lista ordenada por unidades (para tabla de cantidad)
+        rubros_por_unidades = sorted(rubros, key=lambda x: x['unidades'], reverse=True)
+
+        return {'rubros': rubros, 'rubros_por_unidades': rubros_por_unidades, 'total_importe': total_importe, 'total_unidades': int(total_unidades)}
 
     except SQLAlchemyError as e:
         print(f"Error en ventas por rubro dashboard gerencial: {e}")

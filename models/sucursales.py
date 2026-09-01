@@ -1,5 +1,4 @@
 from utils.db import db
-from datetime import timedelta  
 
 class Sucursales(db.Model):
     __tablename__ = 'sucursales'
@@ -19,4 +18,4 @@ class Sucursales(db.Model):
         self.direccion = direccion
         self.telefono = telefono
         self.email = email  
-        self.baja = timedelta(0)
+        self.baja = None

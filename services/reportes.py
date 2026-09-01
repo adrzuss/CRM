@@ -664,7 +664,7 @@ def get_sucursales_lista():
     Obtiene lista de sucursales activas para el filtro
     """
     try:
-        sql = text("SELECT id, nombre FROM sucursales WHERE baja IS NULL ORDER BY nombre")
+        sql = text("SELECT id, nombre FROM sucursales WHERE (baja IS NULL OR YEAR(baja) = 0) ORDER BY nombre")
         result = db.session.execute(sql).fetchall()
         return [{'id': row.id, 'nombre': row.nombre} for row in result]
     except SQLAlchemyError as e:

@@ -90,7 +90,6 @@ def dashboard_gerencial():
 
     data = get_datos_dashboard(desde, hasta, id_sucursal, comparar)
     sucursales = get_sucursales_lista()
-
     return render_template(
         'dashboard-gerencial.html',
         data=data,

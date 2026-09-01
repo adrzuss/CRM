@@ -21,8 +21,10 @@
                 <span class="input-group-text">a</span>
                 <input type="date" class="form-control" name="hasta" id="hasta" value="{{ hasta }}">
             </div>
+            
             <select class="form-select form-select-sm" name="id_sucursal" id="id_sucursal" style="width: auto;">
                 <option value="">Todas las sucursales</option>
+                
                 {% for s in sucursales %}
                 <option value="{{ s.id }}" {{ 'selected' if id_sucursal|string == s.id|string }}>{{ s.nombre }}</option>
                 {% endfor %}
@@ -207,10 +209,9 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: Sucursales y Rubros -->
+    <!-- SECCIÓN: Sucursal (full width) -->
     <div class="row mb-4">
-        <!-- Ventas por Sucursal -->
-        <div id="seccion-sucursales" class="col-xl-7 col-lg-7 mb-3">
+        <div id="seccion-sucursales" class="col-12 mb-3">
             <div class="card shadow h-100">
                 <div class="card-header2 py-3">
                     <h6 class="m-0 font-weight-bold text-black">
@@ -262,18 +263,21 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Ventas por Rubro -->
-        <div id="seccion-rubros" class="col-xl-5 col-lg-5 mb-3">
+    <!-- SECCIÓN: Rubros (dual view: Monto + Cantidad) -->
+    <div class="row mb-4">
+        <!-- Rubro Monto -->
+        <div id="seccion-rubros-monto" class="col-xl-6 col-lg-6 mb-3">
             <div class="card shadow h-100">
                 <div class="card-header2 py-3">
                     <h6 class="m-0 font-weight-bold text-black">
-                        <i class="fas fa-tags me-2"></i>Ventas por Rubro
+                        <i class="fas fa-tags me-2"></i>Ventas por Rubro — Monto
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="chart-pie mb-3" style="height: 200px;">
-                        <canvas id="chartRubros"></canvas>
+                        <canvas id="chartRubrosMonto"></canvas>
                     </div>
                     <div class="table-responsive">
                         <table class="table2 table-dashboard table-sm mb-0">
@@ -281,7 +285,6 @@
                                 <tr>
                                     <th>Rubro</th>
                                     <th class="text-end">Importe</th>
-                                    <th class="text-center">Unid.</th>
                                     <th class="text-center">%</th>
                                 </tr>
                             </thead>
@@ -290,12 +293,57 @@
                                 <tr>
                                     <td>{{ r.rubro }}</td>
                                     <td class="text-end">{{ r.importe }}</td>
-                                    <td class="text-center">{{ r.unidades }}</td>
                                     <td class="text-center">{{ r.participacion }}%</td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-4">
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-tags fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin rubros</h6>
+                                            <p class="text-muted small mb-0">No hay datos de rubros para el período seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rubro Cantidad -->
+        <div id="seccion-rubros-cantidad" class="col-xl-6 col-lg-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-tags me-2"></i>Ventas por Rubro — Cantidad
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie mb-3" style="height: 200px;">
+                        <canvas id="chartRubrosCantidad"></canvas>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-end">Unid.</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.rubros.rubros_por_unidades %}
+                                <tr>
+                                    <td>{{ r.rubro }}</td>
+                                    <td class="text-end">{{ r.unidades }}</td>
+                                    <td class="text-center">{{ ((r.unidades / data.rubros.total_unidades * 100) if data.rubros.total_unidades > 0 else 0) | round(1) }}%</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
                                         <div class="empty-state-dg">
                                             <i class="fas fa-tags fa-3x text-gray-300 mb-3"></i>
                                             <h6 class="text-muted">Sin rubros</h6>

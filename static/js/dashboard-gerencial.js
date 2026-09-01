@@ -24,6 +24,7 @@
     // ─── Instancias de charts ───────────────────────────────────────────
     let chartEvolucion = null;
     let chartRubros = null;
+    let chartRubrosCantidad = null;
 
     // ─── Helpers ────────────────────────────────────────────────────────
     function formatearMoneda(valor) {
@@ -143,7 +144,7 @@
 
     // ─── Gráfico doughnut de rubros ─────────────────────────────────────
     function crearGraficoRubros(rubros) {
-        const ctx = document.getElementById('chartRubros');
+        const ctx = document.getElementById('chartRubrosMonto');
         if (!ctx || !rubros || !rubros.rubros || rubros.rubros.length === 0) return;
 
         if (chartRubros) {
@@ -151,8 +152,10 @@
             chartRubros = null;
         }
 
-        const labels = rubros.rubros.map(function(r) { return r.rubro; });
-        const values = rubros.rubros.map(function(r) { return r.importe_raw; });
+        // Ordenar por importe de mayor a menor
+        const rubrosOrdenados = rubros.rubros.slice().sort(function(a, b) { return b.importe_raw - a.importe_raw; });
+        const labels = rubrosOrdenados.map(function(r) { return r.rubro; });
+        const values = rubrosOrdenados.map(function(r) { return r.importe_raw; });
 
         chartRubros = new Chart(ctx, {
             type: 'doughnut',
@@ -180,6 +183,57 @@
                                 const total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
                                 const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
                                 return ctx.label + ': ' + formatearMoneda(ctx.parsed) + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    // ─── Gráfico doughnut de rubros por cantidad ──────────────────────────
+    function crearGraficoRubrosCantidad(rubros) {
+        const ctx = document.getElementById('chartRubrosCantidad');
+        if (!ctx || !rubros || !rubros.rubros || rubros.rubros.length === 0) return;
+
+        if (chartRubrosCantidad) {
+            chartRubrosCantidad.destroy();
+            chartRubrosCantidad = null;
+        }
+
+        // Ordenar por unidades de mayor a menor
+        const rubrosOrdenados = rubros.rubros.slice().sort(function(a, b) { return b.unidades - a.unidades; });
+        const labels = rubrosOrdenados.map(function(r) { return r.rubro; });
+        const values = rubrosOrdenados.map(function(r) { return r.unidades; });
+        const totalUnidades = rubros.total_unidades || 1;
+
+        chartRubrosCantidad = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: PALETA.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                var unidades = ctx.parsed;
+                                var pct = totalUnidades > 0 ? ((unidades / totalUnidades) * 100).toFixed(1) : 0;
+                                return ctx.label + ': ' + unidades + ' uds (' + pct + '%)';
                             }
                         }
                     }
@@ -220,7 +274,9 @@
         }
         if (datos.rubros) {
             crearGraficoRubros(datos.rubros);
-            configurarDrillDownDoughnut(chartRubros);
+            crearGraficoRubrosCantidad(datos.rubros);
+            configurarDrillDownDoughnut(chartRubros, '#seccion-rubros-monto');
+            configurarDrillDownDoughnut(chartRubrosCantidad, '#seccion-rubros-cantidad');
         }
         inicializarCtaCte();
         inicializarBancosCaja();
@@ -314,6 +370,7 @@
     window.destruirCharts = function() {
         if (chartEvolucion) { chartEvolucion.destroy(); chartEvolucion = null; }
         if (chartRubros) { chartRubros.destroy(); chartRubros = null; }
+        if (chartRubrosCantidad) { chartRubrosCantidad.destroy(); chartRubrosCantidad = null; }
     };
 
     // ─── Drill-Down: click en KPI cards ──────────────────────────────────
@@ -427,14 +484,14 @@
     }
 
     // ─── Actualizar gráfico doughnut con onClick ─────────────────────────
-    function configurarDrillDownDoughnut(chart) {
+    function configurarDrillDownDoughnut(chart, tableSelector) {
         if (!chart) return;
         chart.options.onClick = function(evt, activeElements) {
             if (activeElements.length > 0) {
                 var index = activeElements[0].index;
                 var label = chart.data.labels[index];
-                // Resaltar fila en tabla de rubros
-                var tabla = document.querySelector('#seccion-rubros table tbody');
+                // Resaltar fila en tabla correspondiente
+                var tabla = document.querySelector(tableSelector + ' table tbody');
                 if (tabla) {
                     // Remover highlight anterior
                     tabla.querySelectorAll('tr.table-active').forEach(function(r) {
@@ -496,12 +553,13 @@
                 } catch(e) {}
             }
         }
-        if (el && el.id === 'seccion-rubros') {
+        if (el && (el.id === 'seccion-rubros-monto' || el.id === 'seccion-rubros-cantidad')) {
             var json = el.dataset.json;
             if (json) {
                 try {
                     var data = JSON.parse(json);
                     crearGraficoRubros(data);
+                    crearGraficoRubrosCantidad(data);
                 } catch(e) {}
             }
         }
@@ -509,6 +567,8 @@
 
     // ─── Filtros: submit del form ───────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard Gerencial JS cargado');
+        // Nota: los datos iniciales se pasan desde Jinja al final del archivo
         var form = document.getElementById('filtros-form');
         if (form) {
             form.addEventListener('submit', function(e) {
@@ -560,6 +620,7 @@
                             crearGraficoEvolucion(json.data);
                             if (datosDashboard && datosDashboard.rubros) {
                                 crearGraficoRubros(datosDashboard.rubros);
+                                crearGraficoRubrosCantidad(datosDashboard.rubros);
                             }
                         }
                     })
@@ -575,10 +636,10 @@
 
         // Atajos de teclado
         document.addEventListener('keydown', function(e) {
-            if (e.altKey && e.key === 'h') { e.preventDefault(); setRangoFechas(0); }
-            if (e.altKey && e.key === 's') { e.preventDefault(); setRangoFechas(7); }
-            if (e.altKey && e.key === 'm') { e.preventDefault(); setRangoFechas(30); }
-            if (e.altKey && e.key === 't') { e.preventDefault(); setRangoFechas(90); }
+            if (e.altKey && e.key === 'h') { e.preventDefault(); setRangoFechas(0); form.dispatchEvent(new Event('submit')); }
+            if (e.altKey && e.key === 's') { e.preventDefault(); setRangoFechas(7); form.dispatchEvent(new Event('submit')); }
+            if (e.altKey && e.key === 'm') { e.preventDefault(); setRangoFechas(30); form.dispatchEvent(new Event('submit')); }
+            if (e.altKey && e.key === 't') { e.preventDefault(); setRangoFechas(90); form.dispatchEvent(new Event('submit')); }
         });
 
         // Inicializar toggle de días para productos sin movimiento

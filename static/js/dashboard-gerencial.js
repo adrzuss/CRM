@@ -567,7 +567,6 @@
 
     // ─── Filtros: submit del form ───────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Dashboard Gerencial JS cargado');
         // Nota: los datos iniciales se pasan desde Jinja al final del archivo
         var form = document.getElementById('filtros-form');
         if (form) {

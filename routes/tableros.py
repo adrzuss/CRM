@@ -58,6 +58,7 @@ def tablero_inicial():
 @alertas_mensajes
 def tablero_gerencial():
     # Obtener parámetros de fecha del request
+    
     desde_str = request.args.get('desde')
     hasta_str = request.args.get('hasta')
     

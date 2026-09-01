@@ -1,0 +1,1504 @@
+{% extends 'base.html' %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-gerencial.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4 dashboard-gerencial">
+    <!-- Encabezado y Filtros -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chart-line me-2"></i>Dashboard Gerencial
+            </h1>
+            <p class="text-muted mb-0">Análisis integral del negocio — Etapa 1</p>
+        </div>
+        <form id="filtros-form" class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                <input type="date" class="form-control" name="desde" id="desde" value="{{ desde }}">
+                <span class="input-group-text">a</span>
+                <input type="date" class="form-control" name="hasta" id="hasta" value="{{ hasta }}">
+            </div>
+            
+            <select class="form-select form-select-sm" name="id_sucursal" id="id_sucursal" style="width: auto;">
+                <option value="">Todas las sucursales</option>
+                
+                {% for s in sucursales %}
+                <option value="{{ s.id }}" {{ 'selected' if id_sucursal|string == s.id|string }}>{{ s.nombre }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="comparar" name="comparar" value="1" {{ 'checked' if comparar }}>
+                <label class="form-check-label small" for="comparar">Comparar</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-sync-alt me-1"></i>Actualizar
+            </button>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary preset-btn" data-dias="0" title="Hoy (Alt+H)">Hoy</button>
+                <button type="button" class="btn btn-outline-secondary preset-btn" data-dias="7" title="Semana (Alt+S)">Sem</button>
+                <button type="button" class="btn btn-outline-secondary preset-btn" data-dias="30" title="Mes (Alt+M)">Mes</button>
+                <button type="button" class="btn btn-outline-secondary preset-btn" data-dias="90" title="Trimestre (Alt+T)">Trim</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SECCIÓN: Alertas Gerenciales (Etapa 6) -->
+    {% if data.alertas %}
+    <div id="seccion-alertas" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header3 py-3 dg-alertas-header bg-light">
+                    <h6 class="m-0 font-weight-bold text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Alertas Gerenciales
+                        <span class="badge-alert bg-danger ms-2">{{ data.alertas|length }}</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="dg-alertas-container">
+                        {% for alerta in data.alertas %}
+                        <div class="dg-alerta-card dg-alerta-{{ alerta.severidad }}" data-target="{{ alerta.seccion_target }}">
+                            <div class="d-flex align-items-center">
+                                <div class="dg-alerta-icono me-3">
+                                    <i class="fas {{ alerta.icono }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 font-weight-bold">{{ alerta.titulo }}</h6>
+                                    <small class="text-muted">{{ alerta.mensaje }}</small>
+                                </div>
+                                <div class="dg-alerta-action">
+                                    <i class="fas fa-arrow-right text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SECCIÓN: KPIs -->
+    <div id="seccion-kpis" class="row mb-4">
+        <!-- Ventas Totales -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100 drill-down" data-target="seccion-evolucion">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Suma neta de ventas y débitos menos notas de crédito">Ventas Totales</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.kpis.ventas_totales }}</div>
+                            <div class="mt-2 small {% if data.kpis.var_ventas is not none %}{% if data.kpis.var_ventas >= 0 %}text-success{% else %}text-danger{% endif %}{% else %}text-muted{% endif %}">
+                                {% if data.kpis.var_ventas is not none %}
+                                <i class="fas fa-arrow-{{ 'up' if data.kpis.var_ventas >= 0 else 'down' }}"></i>
+                                {{ data.kpis.var_ventas }}% vs período anterior
+                                {% else %}
+                                <i class="fas fa-minus"></i> N/D vs período anterior
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Cobranzas -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-info h-100 drill-down" data-target="seccion-top-vendedores">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Total de pagos recibidos de clientes en el período">Cobranzas</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.kpis.cobranzas }}</div>
+                            <div class="mt-2 small {% if data.kpis.var_cobranzas is not none %}{% if data.kpis.var_cobranzas >= 0 %}text-success{% else %}text-danger{% endif %}{% else %}text-muted{% endif %}">
+                                {% if data.kpis.var_cobranzas is not none %}
+                                <i class="fas fa-arrow-{{ 'up' if data.kpis.var_cobranzas >= 0 else 'down' }}"></i>
+                                {{ data.kpis.var_cobranzas }}% vs período anterior
+                                {% else %}
+                                <i class="fas fa-minus"></i> N/D vs período anterior
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding-dollar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Margen Bruto -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-success h-100 drill-down" data-target="seccion-top-productos">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Ventas menos costo de mercadería vendida">Margen Bruto</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.kpis.margen_bruto }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-percentage"></i>
+                                {{ data.kpis.pct_margen }}% sobre ventas
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Ticket Promedio -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-warning h-100 drill-down" data-target="seccion-sucursales">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Promedio de ventas por operación">Ticket Promedio</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.kpis.ticket_promedio }}</div>
+                            <div class="mt-2 small {% if data.kpis.var_ticket is not none %}{% if data.kpis.var_ticket >= 0 %}text-success{% else %}text-danger{% endif %}{% else %}text-muted{% endif %}">
+                                {% if data.kpis.var_ticket is not none %}
+                                <i class="fas fa-arrow-{{ 'up' if data.kpis.var_ticket >= 0 else 'down' }}"></i>
+                                {{ data.kpis.var_ticket }}% vs período anterior
+                                {% else %}
+                                <i class="fas fa-minus"></i> N/D vs período anterior
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Evolución de Ventas -->
+    <div id="seccion-evolucion" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-chart-area me-2"></i>Evolución de Ventas
+                    </h6>
+                    <div class="btn-group btn-group-sm" role="group" id="granularidad-btns">
+                        <button type="button" class="btn btn-outline-primary granularidad-btn active" data-g="auto">Auto</button>
+                        <button type="button" class="btn btn-outline-primary granularidad-btn" data-g="diaria">Diaria</button>
+                        <button type="button" class="btn btn-outline-primary granularidad-btn" data-g="semanal">Semanal</button>
+                        <button type="button" class="btn btn-outline-primary granularidad-btn" data-g="mensual">Mensual</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="chartEvolucion"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Sucursal (full width) -->
+    <div class="row mb-4">
+        <div id="seccion-sucursales" class="col-12 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-store me-2"></i>Ventas por Sucursal
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Sucursal</th>
+                                    <th class="text-end">Ventas</th>
+                                    <th class="text-center">Operaciones</th>
+                                    <th class="text-end">Ticket Prom.</th>
+                                    <th class="text-center">Participación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in data.sucursales %}
+                                <tr>
+                                    <td>{{ s.sucursal }}</td>
+                                    <td class="text-end">{{ s.ventas_totales }}</td>
+                                    <td class="text-center">{{ s.operaciones }}</td>
+                                    <td class="text-end">{{ s.ticket_promedio }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px; max-width: 80px;">
+                                                <div class="progress-bar bg-primary" style="width: {{ s.participacion }}%"></div>
+                                            </div>
+                                            <small>{{ s.participacion }}%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-store fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin ventas por sucursal</h6>
+                                            <p class="text-muted small mb-0">No se registraron operaciones en el rango seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Rubros (dual view: Monto + Cantidad) -->
+    <div class="row mb-4">
+        <!-- Rubro Monto -->
+        <div id="seccion-rubros-monto" class="col-xl-6 col-lg-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-tags me-2"></i>Ventas por Rubro — Monto
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie mb-3" style="height: 200px;">
+                        <canvas id="chartRubrosMonto"></canvas>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-end">Importe</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.rubros.rubros %}
+                                <tr>
+                                    <td>{{ r.rubro }}</td>
+                                    <td class="text-end">{{ r.importe }}</td>
+                                    <td class="text-center">{{ r.participacion }}%</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-tags fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin rubros</h6>
+                                            <p class="text-muted small mb-0">No hay datos de rubros para el período seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rubro Cantidad -->
+        <div id="seccion-rubros-cantidad" class="col-xl-6 col-lg-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-tags me-2"></i>Ventas por Rubro — Cantidad
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie mb-3" style="height: 200px;">
+                        <canvas id="chartRubrosCantidad"></canvas>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-end">Unid.</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.rubros.rubros_por_unidades %}
+                                <tr>
+                                    <td>{{ r.rubro }}</td>
+                                    <td class="text-end">{{ r.unidades }}</td>
+                                    <td class="text-center">{{ ((r.unidades / data.rubros.total_unidades * 100) if data.rubros.total_unidades > 0 else 0) | round(1) }}%</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-tags fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin rubros</h6>
+                                            <p class="text-muted small mb-0">No hay datos de rubros para el período seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Comparación Rubro × Sucursal -->
+    <div id="seccion-rubro-sucursal" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-table-cells me-2"></i>Comparación Rubro × Sucursal
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if data.rubro_sucursal.rubros %}
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rubro</th>
+                                    <th class="text-center" colspan="2">Total</th>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    <th class="text-center" colspan="2">{{ s }}</th>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th class="text-center">Unid.</th>
+                                    <th class="text-center">%</th>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    <th class="text-center">Unid.</th>
+                                    <th class="text-center">%</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.rubro_sucursal.rubros %}
+                                {% set total_u = data.rubro_sucursal.rubro_totals.get(r, 0) %}
+                                {% set total_pct = (total_u / data.rubro_sucursal.grand_total * 100) | round(1) if data.rubro_sucursal.grand_total > 0 else 0 %}
+                                <tr>
+                                    <td>{{ r }}</td>
+                                    <td class="text-center">{{ total_u }}</td>
+                                    <td class="text-center">{{ total_pct }}%</td>
+                                    {% for s in data.rubro_sucursal.sucursales %}
+                                    {% set cell = data.rubro_sucursal.cells.get(r, {}).get(s, {}) %}
+                                    <td class="text-center">{{ cell.get('unidades', 0) }}</td>
+                                    <td class="text-center">
+                                        {{ cell.get('porcentaje', 0) }}%
+                                        {% if data.rubro_sucursal.sucursales|length > 1 %}
+                                            {% if cell.get('indicator') == 'up' %}
+                                            <span class="indicator-up">↑</span>
+                                            {% elif cell.get('indicator') == 'down' %}
+                                            <span class="indicator-down">↓</span>
+                                            {% else %}
+                                            <span class="indicator-neutral">—</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-3 pb-3">
+                        <small class="text-muted">
+                            Total unidades: {{ data.rubro_sucursal.grand_total }} |
+                            {% for s in data.rubro_sucursal.sucursales %}
+                            {{ s }}: {{ data.rubro_sucursal.benchmarks.get(s, 0) }}%{% if not loop.last %} | {% endif %}
+                            {% endfor %}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="empty-state-dg">
+                            <i class="fas fa-table-cells fa-3x text-gray-300 mb-3"></i>
+                            <h6 class="text-muted">Sin datos de comparación</h6>
+                            <p class="text-muted small mb-0">No hay ventas de rubros en el período seleccionado.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Top Productos y Top Vendedores -->
+    <div class="row mb-4">
+        <!-- Top 10 Productos -->
+        <div id="seccion-top-productos" class="col-xl-6 col-lg-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-box-open me-2"></i>Top 10 Productos
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Producto</th>
+                                    <th>Rubro</th>
+                                    <th class="text-end">Facturación</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Margen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in data.top_productos %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>
+                                        <span class="small">{{ p.detalle }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="small text-muted">{{ p.rubro }}</span>
+                                    </td>
+                                    <td class="text-end">{{ p.facturacion }}</td>
+                                    <td class="text-center">{{ p.cantidad }}</td>
+                                    <td class="text-end">{{ p.margen }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-box-open fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin productos</h6>
+                                            <p class="text-muted small mb-0">No hay datos de productos para el período seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Vendedores -->
+        <div id="seccion-top-vendedores" class="col-xl-6 col-lg-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-user-tie me-2"></i>Top 10 Vendedores
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Vendedor</th>
+                                    <th class="text-end">Ventas</th>
+                                    <th class="text-center">Operaciones</th>
+                                    <th class="text-center">Participación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in data.top_vendedores %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>{{ v.vendedor }}</td>
+                                    <td class="text-end">{{ v.ventas_totales }}</td>
+                                    <td class="text-center">{{ v.operaciones }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px; max-width: 80px;">
+                                                <div class="progress-bar bg-info" style="width: {{ v.participacion }}%"></div>
+                                            </div>
+                                            <small>{{ v.participacion }}%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-user-tie fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin vendedores</h6>
+                                            <p class="text-muted small mb-0">No hay datos de vendedores para el período seleccionado.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Stock (Etapa 2) ══════════════════════════════════════ -->
+
+    <!-- SECCIÓN: Resumen de Stock -->
+    <div id="seccion-stock-kpis" class="row mb-4">
+        <!-- Sin Stock -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-danger h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Artículos con unidades = 0 en el inventario">Sin Stock</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.stock_kpis.sin_stock }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Artículos sin unidades
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bajo Mínimo -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Artículos con stock entre mínimo y máximo configurado">Bajo Mínimo</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.stock_kpis.bajo_minimo }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-arrow-down"></i>
+                                Por debajo del deseable
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Stock Saludable -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Stock Saludable</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.stock_kpis.stock_saludable }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-check-circle"></i>
+                                En rango óptimo
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Exceso -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Exceso</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.stock_kpis.exceso }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-arrow-up"></i>
+                                Por encima del máximo
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-warehouse fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valor total del stock -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted small">
+                            <i class="fas fa-boxes-stacked me-1"></i>
+                            Total artículos en inventario:
+                            <strong>{{ data.stock_kpis.total_articulos }}</strong>
+                        </span>
+                        <span class="font-weight-bold text-gray-800">
+                            Valor total: {{ data.stock_kpis.valor_total_stock }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Stock por Sucursal -->
+    <div id="seccion-stock-sucursal" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-store me-2"></i>Stock por Sucursal
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Sucursal</th>
+                                    <th class="text-center">Artículos</th>
+                                    <th class="text-end">Unidades</th>
+                                    <th class="text-end">Valor Estimado</th>
+                                    <th class="text-center">Sin Stock</th>
+                                    <th class="text-center">Bajo Mínimo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in data.stock_sucursal %}
+                                <tr>
+                                    <td>{{ s.sucursal }}</td>
+                                    <td class="text-center">{{ s.total_articulos }}</td>
+                                    <td class="text-end">{{ s.unidades_totales }}</td>
+                                    <td class="text-end">{{ s.valor_estimado }}</td>
+                                    <td class="text-center">
+                                        <span class="badge badge-stock-sin-stock">{{ s.sin_stock }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge badge-stock-bajo-minimo">{{ s.bajo_minimo }}</span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-boxes-stacked fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Inventario no disponible</h6>
+                                            <p class="text-muted small mb-0">No hay datos de inventario para esta sucursal.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: Productos sin Movimiento -->
+    <div id="seccion-sin-movimiento" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-clock me-2"></i>Productos sin Movimiento
+                    </h6>
+                    <div class="btn-group btn-group-sm" role="group" id="dias-btns">
+                        <button type="button" class="btn btn-outline-primary dias-btn active" data-dias="30">30 días</button>
+                        <button type="button" class="btn btn-outline-primary dias-btn" data-dias="60">60 días</button>
+                        <button type="button" class="btn btn-outline-primary dias-btn" data-dias="90">90 días</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th>Rubro</th>
+                                    <th class="text-center">Stock Actual</th>
+                                    <th>Última Venta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-sin-movimiento">
+                                {% for p in data.productos_sin_movimiento.productos %}
+                                <tr>
+                                    <td class="text-muted">{{ p.codigo }}</td>
+                                    <td>{{ p.detalle }}</td>
+                                    <td><span class="small text-muted">{{ p.rubro }}</span></td>
+                                    <td class="text-center">{{ p.stock_actual }}</td>
+                                    <td>
+                                        {% if p.ultima_venta %}
+                                        <span class="small">{{ p.ultima_venta_display }}</span>
+                                        {% else %}
+                                        <span class="badge badge-stock-bajo-minimo">Sin ventas</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-clock fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin productos sin movimiento</h6>
+                                            <p class="text-muted small mb-0">Todos los productos tienen actividad reciente.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if data.productos_sin_movimiento.tiene_mas %}
+                    <div class="text-center text-muted small py-2 border-top">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Mostrando {{ data.productos_sin_movimiento.mostrando }} de {{ data.productos_sin_movimiento.total }}+ productos
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Cuentas por Cobrar (Etapa 3) ══════════════════════════ -->
+
+    <!-- SECCIÓN: Cuentas por Cobrar KPIs -->
+    <div class="row mb-2 mt-4">
+        <div class="col-12">
+            <h6 class="text-uppercase text-muted small font-weight-bold">
+                <i class="fas fa-hand-holding-dollar me-1"></i>Cuentas por Cobrar
+            </h6>
+        </div>
+    </div>
+    <div id="seccion-cta-cobrar-kpis" class="row mb-4">
+        <!-- Saldo Total -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Saldo Total</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_cobrar_kpis.saldo_total }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-dollar-sign"></i>
+                                Saldo a cobrar
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Saldo Vencido -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-danger h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Saldos con fecha de movimiento mayor a días de vencimiento">Saldo Vencido</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_cobrar_kpis.saldo_vencido }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                &gt; {{ data.cta_cobrar_kpis.dias_vto }} días
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Saldo por Vencer -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Saldo por Vencer</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_cobrar_kpis.saldo_por_vencer }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-clock"></i>
+                                &le; {{ data.cta_cobrar_kpis.dias_vto }} días
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Clientes con Deuda -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Clientes con Deuda</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_cobrar_kpis.cantidad_deudores }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-users"></i>
+                                Con saldo positivo
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Deudores -->
+    <div id="seccion-cta-cobrar-top" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-ranking-star me-2"></i>Top Deudores
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Documento</th>
+                                    <th class="text-end">Saldo</th>
+                                    <th>Último Mov.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in data.cta_cobrar_top %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>{{ d.nombre }}</td>
+                                    <td><span class="small text-muted">{{ d.documento }}</span></td>
+                                    <td class="text-end">{{ d.saldo }}</td>
+                                    <td>
+                                        <span class="badge {{ 'badge-cta-vencido' if d.es_vencido else 'badge-cta-por-vencer' }}">
+                                            {{ d.ultima_fecha }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-hand-holding-dollar fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin deudores</h6>
+                                            <p class="text-muted small mb-0">Todos los clientes están al día con sus pagos.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Cuentas por Pagar (Etapa 3) ═══════════════════════════ -->
+
+    <!-- SECCIÓN: Cuentas por Pagar KPIs -->
+    <div class="row mb-2 mt-4">
+        <div class="col-12">
+            <h6 class="text-uppercase text-muted small font-weight-bold">
+                <i class="fas fa-file-invoice me-1"></i>Cuentas por Pagar
+            </h6>
+        </div>
+    </div>
+    <div id="seccion-cta-pagar-kpis" class="row mb-4">
+        <!-- Saldo Total -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Saldo Total</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_pagar_kpis.saldo_total }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-dollar-sign"></i>
+                                Saldo a pagar
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Saldo Vencido -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-danger h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Saldo Vencido</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_pagar_kpis.saldo_vencido }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                &gt; {{ data.cta_pagar_kpis.dias_vto }} días
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Saldo por Vencer -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Saldo por Vencer</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_pagar_kpis.saldo_por_vencer }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-clock"></i>
+                                &le; {{ data.cta_pagar_kpis.dias_vto }} días
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Proveedores con Deuda -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Proveedores con Deuda</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.cta_pagar_kpis.cantidad_proveedores }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-truck"></i>
+                                Con saldo positivo
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Proveedores -->
+    <div id="seccion-cta-pagar-top" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-ranking-star me-2"></i>Top Proveedores
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Proveedor</th>
+                                    <th>Fantasía</th>
+                                    <th class="text-end">Saldo</th>
+                                    <th>Último Mov.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in data.cta_pagar_top %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>{{ p.nombre }}</td>
+                                    <td><span class="small text-muted">{{ p.fantasia }}</span></td>
+                                    <td class="text-end">{{ p.saldo }}</td>
+                                    <td>
+                                        <span class="badge {{ 'badge-cta-vencido' if p.es_vencido else 'badge-cta-por-vencer' }}">
+                                            {{ p.ultima_fecha }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-file-invoice-dollar fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin proveedores con deuda</h6>
+                                            <p class="text-muted small mb-0">No hay facturas pendientes de pago.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Créditos (Etapa 4) ════════════════════════════════════ -->
+
+    <!-- SECCIÓN: Créditos KPIs -->
+    <div class="row mb-2 mt-4">
+        <div class="col-12">
+            <h6 class="text-uppercase text-muted small font-weight-bold">
+                <i class="fas fa-credit-card me-1"></i>Créditos
+            </h6>
+        </div>
+    </div>
+    <div id="seccion-creditos-kpis" class="row mb-4">
+        <!-- Créditos Activos -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Créditos Activos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.creditos_kpis.creditos_activos }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-credit-card"></i>
+                                Con saldo impago
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Créditos Vencidos -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-danger h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Créditos Vencidos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.creditos_kpis.creditos_vencidos }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Con cuota vencida
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Monto Total Cartera -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Monto Cartera</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.creditos_kpis.monto_total_cartera }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-dollar-sign"></i>
+                                Total impago
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Morosidad % -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card card-kpi border-start-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Créditos con al menos 1 cuota vencida / total créditos activos">Morosidad</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.creditos_kpis.porcentaje_morosidad }}%</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-chart-line"></i>
+                                {{ data.creditos_kpis.cantidad_deudores }} deudores
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Deudores Créditos -->
+    <div id="seccion-creditos-top" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-ranking-star me-2"></i>Top Deudores por Crédito
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Documento</th>
+                                    <th class="text-center">Créditos</th>
+                                    <th class="text-end">Saldo Impago</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in data.creditos_top_deudores %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>{{ d.nombre }}</td>
+                                    <td><span class="small text-muted">{{ d.documento }}</span></td>
+                                    <td class="text-center">
+                                        <span class="badge badge-creditos-vigente">{{ d.cantidad_creditos }}</span>
+                                    </td>
+                                    <td class="text-end">{{ d.saldo_total }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-credit-card fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin créditos activos</h6>
+                                            <p class="text-muted small mb-0">No hay créditos registrados en el sistema.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Bancos (Etapa 5) ══════════════════════════════════════ -->
+
+    <!-- SECCIÓN: Bancos KPIs -->
+    <div class="row mb-2 mt-4">
+        <div class="col-12">
+            <h6 class="text-uppercase text-muted small font-weight-bold">
+                <i class="fas fa-university me-1"></i>Bancos
+            </h6>
+        </div>
+    </div>
+    <div id="seccion-bancos-kpis" class="row mb-4">
+        <!-- Saldo Total Bancos -->
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card card-kpi border-start-{{ 'success' if data.bancos_kpis.saldo_total_bancos_raw >= 0 else 'danger' }} h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-{{ 'success' if data.bancos_kpis.saldo_total_bancos_raw >= 0 else 'danger' }} text-uppercase mb-1"
+                                 data-bs-toggle="tooltip" data-bs-placement="top"
+                                 title="Acumulado histórico de todos los movimientos bancarios">Saldo Total Bancos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.bancos_kpis.saldo_total_bancos }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-building-columns"></i>
+                                Consolidado histórico
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building-columns fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Movimientos del Mes -->
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Movimientos del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.bancos_kpis.movimientos_mes }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-exchange-alt"></i>
+                                Operaciones bancarias
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Ingresos vs Egresos -->
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card card-kpi border-start-info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Ingresos vs Egresos</div>
+                            <div class="d-flex align-items-center gap-3 mt-1">
+                                <span class="badge badge-bancos-ingreso">{{ data.bancos_kpis.ingresos_mes }}</span>
+                                <span class="text-muted">/</span>
+                                <span class="badge badge-bancos-egreso">{{ data.bancos_kpis.egresos_mes }}</span>
+                            </div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-arrow-up text-success"></i> Ing.
+                                <i class="fas fa-arrow-down text-danger ms-2"></i> Egr.
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saldos por Banco -->
+    <div id="seccion-bancos-detalle" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-list me-2"></i>Saldos por Banco
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Banco</th>
+                                    <th class="text-end">Saldo ($)</th>
+                                    <th class="text-center">Movimientos</th>
+                                    <th class="text-center">Participación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in data.bancos_detalle %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>{{ b.banco }}</td>
+                                    <td class="text-end">
+                                        <span class="badge {{ 'badge-bancos-saldo-positivo' if b.saldo_raw >= 0 else 'badge-bancos-saldo-negativo' }}">
+                                            {{ b.saldo }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">{{ b.movimientos }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 6px; max-width: 80px;">
+                                                <div class="progress-bar bg-primary" style="width: {{ b.participacion }}%"></div>
+                                            </div>
+                                            <small>{{ b.participacion }}%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-building-columns fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin movimientos bancarios</h6>
+                                            <p class="text-muted small mb-0">No se registraron movimientos en el período.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECCIÓN: Caja (Etapa 5) ════════════════════════════════════════ -->
+
+    <!-- SECCIÓN: Caja KPIs -->
+    <div class="row mb-2 mt-4">
+        <div class="col-12">
+            <h6 class="text-uppercase text-muted small font-weight-bold">
+                <i class="fas fa-money-bill-wave me-1"></i>Caja
+            </h6>
+        </div>
+    </div>
+    <div id="seccion-caja-kpis" class="row mb-4">
+        <!-- Total Efectivo Rendido -->
+        <div class="col-xl-6 col-md-6 mb-3">
+            <div class="card card-kpi border-start-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Efectivo Rendido</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.caja_kpis.total_efectivo }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-coins"></i>
+                                Efectivo en rendiciones
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Rendiciones del Mes -->
+        <div class="col-xl-6 col-md-6 mb-3">
+            <div class="card card-kpi border-start-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Rendiciones del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.caja_kpis.cantidad_rendiciones }}</div>
+                            <div class="mt-2 small text-muted">
+                                <i class="fas fa-clipboard-check"></i>
+                                Arqueos realizados
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas Rendiciones -->
+    <div id="seccion-caja-rendiciones" class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header2 py-3">
+                    <h6 class="m-0 font-weight-bold text-black">
+                        <i class="fas fa-clipboard-list me-2"></i>Últimas Rendiciones
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table2 table-dashboard table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Sucursal</th>
+                                    <th class="text-end">Total Ventas</th>
+                                    <th class="text-end">Efectivo</th>
+                                    <th class="text-end">Otros Valores</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in data.caja_rendiciones %}
+                                <tr>
+                                    <td>{{ r.fecha }}</td>
+                                    <td>{{ r.usuario }}</td>
+                                    <td><span class="small text-muted">{{ r.sucursal }}</span></td>
+                                    <td class="text-end">{{ r.total_ventas }}</td>
+                                    <td class="text-end">{{ r.total_efectivo }}</td>
+                                    <td class="text-end">{{ r.total_otros_valores }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="empty-state-dg">
+                                            <i class="fas fa-cash-register fa-3x text-gray-300 mb-3"></i>
+                                            <h6 class="text-muted">Sin rendiciones</h6>
+                                            <p class="text-muted small mb-0">No hay rendiciones de caja en este período.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Navegación entre Secciones (Etapa 6) ═══════════════════════════ -->
+    <nav id="nav-secciones" class="dg-nav-secciones">
+        <button class="dg-nav-toggle" type="button" title="Navegación">
+            <i class="fas fa-list"></i>
+        </button>
+        <div class="dg-nav-links">
+            <a href="#seccion-kpis" class="nav-seccion"><i class="fas fa-chart-bar me-1"></i>KPIs</a>
+            <a href="#seccion-evolucion" class="nav-seccion"><i class="fas fa-chart-area me-1"></i>Evolución</a>
+            <a href="#seccion-sucursales" class="nav-seccion"><i class="fas fa-store me-1"></i>Sucursales</a>
+            <a href="#seccion-rubros" class="nav-seccion"><i class="fas fa-tags me-1"></i>Rubros</a>
+            <a href="#seccion-rubro-sucursal" class="nav-seccion"><i class="fas fa-table-cells me-1"></i>Comparación</a>
+            <a href="#seccion-top-productos" class="nav-seccion"><i class="fas fa-box-open me-1"></i>Productos</a>
+            <a href="#seccion-top-vendedores" class="nav-seccion"><i class="fas fa-user-tie me-1"></i>Vendedores</a>
+            <a href="#seccion-stock-kpis" class="nav-seccion"><i class="fas fa-boxes-stacked me-1"></i>Stock</a>
+            <a href="#seccion-cta-cobrar-kpis" class="nav-seccion"><i class="fas fa-hand-holding-dollar me-1"></i>Cta Cobrar</a>
+            <a href="#seccion-cta-pagar-kpis" class="nav-seccion"><i class="fas fa-file-invoice-dollar me-1"></i>Cta Pagar</a>
+            <a href="#seccion-creditos-kpis" class="nav-seccion"><i class="fas fa-credit-card me-1"></i>Créditos</a>
+            <a href="#seccion-bancos-kpis" class="nav-seccion"><i class="fas fa-building-columns me-1"></i>Bancos</a>
+            <a href="#seccion-caja-kpis" class="nav-seccion"><i class="fas fa-cash-register me-1"></i>Caja</a>
+        </div>
+    </nav>
+
+</div>
+{% endblock %}
+
+{% block js_script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard-gerencial.js') }}"></script>
+<script nonce="{{ g.nonce }}">
+    const datosDashboard = {{ data | tojson }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        inicializarDashboard(datosDashboard);
+    });
+</script>
+{% endblock %}

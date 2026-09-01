@@ -25,7 +25,7 @@ from routes.creditos import bp_creditos
 from routes.bancos import bp_bancos
 from routes.ofertas import bp_ofertas
 from routes.reportes import bp_reportes
-from routes.dashboard_gerencial import bp_dashboard_gerencial
+
 
 migrate = Migrate()
 
@@ -59,8 +59,7 @@ def create_app():
     app.register_blueprint(bp_bancos, url_prefix='/bancos')
     app.register_blueprint(bp_ofertas, url_prefix='/ofertas')
     app.register_blueprint(bp_reportes, url_prefix='/reportes')
-    app.register_blueprint(bp_dashboard_gerencial, url_prefix='/')
-    
+
     @app.before_request
     def make_session_permanent():
         session.permanent = True  # Hace que la sesión sea permanente (respetará PERMANENT_SESSION_LIFETIME)

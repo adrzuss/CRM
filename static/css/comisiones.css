@@ -1,0 +1,327 @@
+/*
+ * Estilos para el módulo de Comisiones — CRM SoftTech
+ * Complementa estilos inline de las plantillas comisiones
+ */
+
+/* Namespace */
+.comisiones {}
+
+/* Variables */
+:root {
+    --com-primary: #4e73df;
+    --com-primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    --com-success: #1cc88a;
+    --com-success-gradient: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    --com-warning: #f6c23e;
+    --com-warning-gradient: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    --com-danger: #e74a3b;
+    --com-info: #36b9cc;
+    --com-secondary: #858796;
+}
+
+/* Page Header */
+.comisiones .page-header {
+    padding: 1rem 0;
+}
+
+.comisiones .page-header .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+}
+
+.comisiones .page-header .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #5a5c69;
+}
+
+.comisiones .page-header .page-subtitle {
+    font-size: 0.875rem;
+}
+
+/* Status Badges */
+.comisiones .badge-borrador {
+    background-color: #858796;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.comisiones .badge-calculada {
+    background-color: #36b9cc;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.comisiones .badge-confirmada {
+    background-color: #1cc88a;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.comisiones .badge-pagada {
+    background-color: #4e73df;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.comisiones .badge-anulada {
+    background-color: #e74a3b;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Active/Inactive plan badges */
+.comisiones .badge-activo {
+    background-color: #1cc88a;
+    color: #fff;
+}
+
+.comisiones .badge-inactivo {
+    background-color: #e74a3b;
+    color: #fff;
+}
+
+/* KPI Cards */
+.comisiones .card-kpi {
+    border-left-width: 4px !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.comisiones .card-kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.comisiones .border-start-primary {
+    border-left-color: #4e73df !important;
+}
+
+.comisiones .border-start-success {
+    border-left-color: #1cc88a !important;
+}
+
+.comisiones .border-start-warning {
+    border-left-color: #f6c23e !important;
+}
+
+.comisiones .border-start-info {
+    border-left-color: #36b9cc !important;
+}
+
+.comisiones .border-start-danger {
+    border-left-color: #e74a3b !important;
+}
+
+/* Tables */
+.comisiones .table-comisiones {
+    font-size: 0.875rem;
+}
+
+.comisiones .table-comisiones thead th {
+    background-color: #f8f9fc;
+    border-bottom: 2px solid #e3e6f0;
+    font-weight: 600;
+    color: #5a5c69;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+}
+
+.comisiones .table-comisiones tbody td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.comisiones .table-comisiones tbody tr:hover {
+    background-color: #f8f9fc;
+}
+
+/* Table Sort */
+.comisiones .sortable-table thead th.sort-asc::after {
+    content: ' \f0de';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.65rem;
+    margin-left: 4px;
+}
+
+.comisiones .sortable-table thead th.sort-desc::after {
+    content: ' \f0dd';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.65rem;
+    margin-left: 4px;
+}
+
+/* Calculation Preview */
+.comisiones .preview-section {
+    background-color: #f8f9fc;
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid #e3e6f0;
+}
+
+.comisiones .preview-section .preview-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4e73df;
+}
+
+.comisiones .preview-resumen {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.comisiones .preview-resumen .resumen-item {
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+}
+
+.comisiones .preview-resumen .resumen-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a5c69;
+    margin-bottom: 0.25rem;
+}
+
+.comisiones .preview-resumen .resumen-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Commission amount highlighting */
+.comisiones .comision-positiva {
+    color: #1cc88a;
+    font-weight: 600;
+}
+
+.comisiones .comision-negativa {
+    color: #e74a3b;
+    font-weight: 600;
+}
+
+.comisiones .comision-cero {
+    color: #858796;
+}
+
+/* Tramo rows */
+.comisiones .tramo-row {
+    border: 1px solid #e3e6f0;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+
+.comisiones .tramo-row:hover {
+    border-color: #4e73df;
+}
+
+.comisiones .tramo-row .form-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a5c69;
+    margin-bottom: 0.15rem;
+}
+
+/* Report filters */
+.comisiones .filter-bar {
+    background-color: #f8f9fc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e3e6f0;
+}
+
+.comisiones .filter-bar .preset-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Text utilities */
+.comisiones .text-xs {
+    font-size: 0.7rem;
+}
+
+.comisiones .text-muted-custom {
+    color: #b7b9cc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .comisiones .preview-resumen {
+        gap: 0.75rem;
+    }
+
+    .comisiones .preview-resumen .resumen-item {
+        min-width: 80px;
+    }
+
+    .comisiones .preview-resumen .resumen-value {
+        font-size: 1rem;
+    }
+
+    .comisiones .page-header .page-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* Empty state */
+.comisiones .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.comisiones .empty-state i {
+    font-size: 3rem;
+    color: #e3e6f0;
+    margin-bottom: 1rem;
+}
+
+.comisiones .empty-state h5 {
+    color: #5a5c69;
+    font-weight: 600;
+}
+
+.comisiones .empty-state p {
+    color: #b7b9cc;
+}
+
+/* Modal form adjustments */
+.comisiones .modal .form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+/* Loading overlay for AJAX */
+.comisiones .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 8px;
+}

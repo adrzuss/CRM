@@ -362,6 +362,40 @@
             </li>
 
             <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Comisiones
+            </div>
+            <!-- Nav Item - Comisiones -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('comisiones.dashboard') }}">
+                    <i class="fas fa-percentage fa-fw"></i>
+                    <span>Comisiones</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseComisiones"
+                    aria-expanded="true" aria-controls="collapseComisiones">
+                    <i class="fas fa-fw fa-file-invoice"></i>
+                    <span>Gestión</span>
+                </a>
+                <div id="collapseComisiones" class="collapse" aria-labelledby="headingComisiones"
+                    data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Comisiones:</h6>
+                        <a class="collapse-item" href="{{ url_for('comisiones.dashboard') }}">Dashboard</a>
+                        <a class="collapse-item" href="{{ url_for('comisiones.listar_planes') }}">Planes</a>
+                        <a class="collapse-item" href="{{ url_for('comisiones.listar_asignaciones') }}">Asignaciones</a>
+                        <a class="collapse-item" href="{{ url_for('comisiones.calcular_form') }}">Calcular</a>
+                        <a class="collapse-item" href="{{ url_for('comisiones.listar_liquidaciones') }}">Liquidaciones</a>
+                        <a class="collapse-item" href="{{ url_for('comisiones.reportes') }}">Reportes</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler (Sidebar) -->

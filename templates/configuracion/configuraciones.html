@@ -418,7 +418,12 @@
                         <div class="col-md-5">
                             <div class="card">
                                 <div class="card-body">
-                                    <h6>Ingreso de reglas de redondeo</h6>
+                                    <h6>
+                                            Ingreso de reglas de redondeo
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#helpRedondeoInfo" class="text-decoration-none ms-1" title="¿Qué son las reglas de redondeo?">
+                                                <i class="fas fa-question-circle text-info"></i>
+                                            </a>
+                                        </h6>
                                     <form hx-post="{{ url_for('configuraciones.htmx_add_regla_redondeo') }}" 
                                           hx-target="#tabla-reglas_redondeo" 
                                           hx-swap="innerHTML"
@@ -429,21 +434,41 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="desde_precio">Precio Desde</label>
+                                                <label for="desde_precio">
+                                                    Precio Desde
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpRangoPrecio" class="text-decoration-none" title="¿Qué es?">
+                                                        <i class="fas fa-question-circle text-info"></i>
+                                                    </a>
+                                                </label>
                                                 <input class="form-control" type="number" step="0.01" name="desde_precio" id="desde_precio" placeholder="0.00" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label for="hasta_precio">Precio Hasta</label>
+                                                <label for="hasta_precio">
+                                                    Precio Hasta
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpRangoPrecio" class="text-decoration-none" title="¿Qué es?">
+                                                        <i class="fas fa-question-circle text-info"></i>
+                                                    </a>
+                                                </label>
                                                 <input class="form-control" type="number" step="0.01" name="hasta_precio" id="hasta_precio" placeholder="0.00" required>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="multiplo">Múltiplo</label>
+                                                <label for="multiplo">
+                                                    Múltiplo
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpMultiplo" class="text-decoration-none" title="¿Qué es?">
+                                                        <i class="fas fa-question-circle text-info"></i>
+                                                    </a>
+                                                </label>
                                                 <input class="form-control" type="number" name="multiplo" id="multiplo" placeholder="1" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label for="tipo_redondeo">Tipo de Redondeo</label>
+                                                <label for="tipo_redondeo">
+                                                    Tipo de Redondeo
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpTipoRedondeo" class="text-decoration-none" title="¿Qué es?">
+                                                        <i class="fas fa-question-circle text-info"></i>
+                                                    </a>
+                                                </label>
                                                 <select class="form-select" name="tipo_redondeo" id="tipo_redondeo" required>
                                                     <option value="arriba">Arriba</option>
                                                     <option value="abajo">Abajo</option>
@@ -454,7 +479,12 @@
                                         <div class="mb-3">
                                             <div class="form-check">
                                                 <input type="checkbox" class="form-check-input" name="restar_unidades" id="restar_unidades" value="1">
-                                                <label class="form-check-label" for="restar_unidades">Restar Unidades</label>
+                                                <label class="form-check-label" for="restar_unidades">
+                                                    Restar Unidades
+                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpRestarUnidades" class="text-decoration-none" title="¿Qué es?">
+                                                        <i class="fas fa-question-circle text-info"></i>
+                                                    </a>
+                                                </label>
                                             </div>
                                         </div>
                                         <button class="btn btn-exito" type="submit">Agregar</button>
@@ -472,6 +502,97 @@
             </div>
         </div>
 
+    </div>
+
+    {# ==================== HELP MODALS - REGLAS DE REDONDEO ==================== #}
+    <div class="modal fade" id="helpRedondeoInfo" tabindex="-1" aria-labelledby="helpRedondeoInfoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpRedondeoInfoLabel">Reglas de Redondeo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Las reglas de redondeo definen cómo se ajustan los <strong>precios de venta</strong> al momento de facturar.</p>
+                    <p>Se evalúan en orden de rango de precios: si un artículo tiene un precio que cae dentro del rango <em>Desde</em> — <em>Hasta</em> de una regla, se aplica esa regla.</p>
+                    <p class="mb-0">Ejemplo: una regla "Redondeo a 10" con rango $0 – $1000 y múltiplo 10 redondea $23.70 a $20 (abajo) o $30 (arriba).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="helpRangoPrecio" tabindex="-1" aria-labelledby="helpRangoPrecioLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpRangoPrecioLabel">Rango de Precios</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Define el rango de precios al que aplica la regla. El precio del artículo (con IVA) se compara contra estos valores.</p>
+                    <ul class="mb-0">
+                        <li><strong>Desde</strong>: precio mínimo del rango (inclusivo).</li>
+                        <li><strong>Hasta</strong>: precio máximo del rango (inclusivo).</li>
+                    </ul>
+                    <p class="mt-2 mb-0">Si un artículo cuesta $150, una regla con Desde=100 y Hasta=200 le aplica. Las reglas se evalúan de menor a mayor rango.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="helpMultiplo" tabindex="-1" aria-labelledby="helpMultiploLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpMultiploLabel">Múltiplo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>El múltiplo es el valor al que se redondea el precio.</p>
+                    <ul class="mb-0">
+                        <li><strong>Múltiplo 1</strong>: redondea a enteros ($23.70 → $24 o $23).</li>
+                        <li><strong>Múltiplo 5</strong>: redondea a múltiplos de 5 ($23.70 → $25 o $20).</li>
+                        <li><strong>Múltiplo 10</strong>: redondea a múltiplos de 10 ($23.70 → $30 o $20).</li>
+                        <li><strong>Múltiplo 50</strong>: redondea a múltiplos de 50 ($23.70 → $50 o $0).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="helpTipoRedondeo" tabindex="-1" aria-labelledby="helpTipoRedondeoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpTipoRedondeoLabel">Tipo de Redondeo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Define la dirección del redondeo:</p>
+                    <ul class="mb-0">
+                        <li><strong>Arriba</strong>: siempre hacia arriba al múltiplo siguiente. $23.70 con múltiplo 10 → <strong>$30</strong>.</li>
+                        <li><strong>Abajo</strong>: siempre hacia abajo al múltiplo anterior. $23.70 con múltiplo 10 → <strong>$20</strong>.</li>
+                        <li><strong>Cercano</strong>: al múltiplo más cercano. $23.70 con múltiplo 10 → <strong>$20</strong>. $26.30 con múltiplo 10 → <strong>$30</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="helpRestarUnidades" tabindex="-1" aria-labelledby="helpRestarUnidadesLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpRestarUnidadesLabel">Restar Unidades</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Cuando está activado, el redondeo <strong>resta</strong> el monto redondeado al total de la factura en vez de sumarlo.</p>
+                    <p>Ejemplo: si el total bruto es $1023.70 y se redondea a $1020 (abajo con múltiplo 10), la factura queda en <strong>$1020</strong> (se restan $3.70).</p>
+                    <p class="mb-0">Si estuviera desactivado, el redondeo sería $1030 (se suman $6.30 para llegar al múltiplo superior).</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script nonce="{{ g.nonce }}">

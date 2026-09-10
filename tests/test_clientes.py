@@ -78,24 +78,24 @@ def test_get_cliente_existente(client):
     # con valores controlados que NO necesitan conexión MySQL.
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.clientes.render_template', return_value='') as mock_render:
-                with patch('models.clientes.Clientes.query') as mock_clientes_query:
+            with patch('clientes.routes.render_template', return_value='') as mock_render:
+                with patch('clientes.models.Clientes.query') as mock_clientes_query:
                     mock_clientes_query.get.return_value = mock_cliente
                     mock_clientes_query.all.return_value = [mock_cliente]
 
-                    with patch('models.configs.TipoDocumento.query') as mock_td:
+                    with patch('configs.models.TipoDocumento.query') as mock_td:
                         mock_td.all.return_value = []
 
-                        with patch('models.configs.TipoIva.query') as mock_ti:
+                        with patch('configs.models.TipoIva.query') as mock_ti:
                             mock_ti.all.return_value = []
 
-                            with patch('models.configs.Categorias.query') as mock_cat:
+                            with patch('configs.models.Categorias.query') as mock_cat:
                                 mock_cat.all.return_value = []
 
-                                with patch('models.configs.Provincias.query') as mock_prov:
+                                with patch('configs.models.Provincias.query') as mock_prov:
                                     mock_prov.all.return_value = []
 
-                                    with patch('models.configs.Localidades.query') as mock_loc:
+                                    with patch('configs.models.Localidades.query') as mock_loc:
                                         # filter_by retorna un objeto que tiene .all()
                                         mock_loc.filter_by.return_value.all.return_value = []
 
@@ -123,25 +123,25 @@ def test_get_cliente_inexistente(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.clientes.render_template', return_value='') as mock_render:
-                with patch('models.clientes.Clientes.query') as mock_clientes_query:
+            with patch('clientes.routes.render_template', return_value='') as mock_render:
+                with patch('clientes.models.Clientes.query') as mock_clientes_query:
                     # get() retorna None → cliente no encontrado
                     mock_clientes_query.get.return_value = None
                     mock_clientes_query.all.return_value = []
 
-                    with patch('models.configs.TipoDocumento.query') as mock_td:
+                    with patch('configs.models.TipoDocumento.query') as mock_td:
                         mock_td.all.return_value = []
 
-                        with patch('models.configs.TipoIva.query') as mock_ti:
+                        with patch('configs.models.TipoIva.query') as mock_ti:
                             mock_ti.all.return_value = []
 
-                            with patch('models.configs.Categorias.query') as mock_cat:
+                            with patch('configs.models.Categorias.query') as mock_cat:
                                 mock_cat.all.return_value = []
 
-                                with patch('models.configs.Provincias.query') as mock_prov:
+                                with patch('configs.models.Provincias.query') as mock_prov:
                                     mock_prov.all.return_value = []
 
-                                    with patch('models.configs.Localidades.query') as mock_loc:
+                                    with patch('configs.models.Localidades.query') as mock_loc:
                                         mock_loc.filter_by.return_value.all.return_value = []
 
                                         response = client.get('/clientes/clientes/999')
@@ -186,7 +186,7 @@ def test_get_localidades(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('models.configs.Localidades.query') as mock_loc_query:
+            with patch('configs.models.Localidades.query') as mock_loc_query:
                 mock_loc_query.filter_by.return_value.all.return_value = [
                     mock_localidad1, mock_localidad2
                 ]
@@ -212,7 +212,7 @@ def test_get_localidades_sin_resultados(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('models.configs.Localidades.query') as mock_loc_query:
+            with patch('configs.models.Localidades.query') as mock_loc_query:
                 mock_loc_query.filter_by.return_value.all.return_value = []
 
                 response = client.get('/clientes/localidades/999')

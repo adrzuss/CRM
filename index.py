@@ -3,28 +3,38 @@ import secrets
 from flask import Flask, session, redirect, url_for, render_template, flash, g
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.exc import OperationalError
-from services.configs import getOwner, getTareaUsuario
-from services.sessions import get_permisos_usuario, tiene_permiso
+from configs.services import getOwner, getTareaUsuario
+from sessions.services import get_permisos_usuario, tiene_permiso
 from utils.db import db
 from flask_migrate import Migrate, upgrade
 from utils.utils import check_session
 from utils.config import Config
-from models.articulos import PedirEnVentas
-from routes.sessions import bp_sesiones
-from routes.tableros import bp_tableros
-from routes.clientes import bp_clientes
-from routes.ctactecli import bp_ctactecli
-from routes.articulos import bp_articulos
-from routes.ventas import bp_ventas
-from routes.proveedores import bp_proveedores
-from routes.ctacteprov import bp_ctacteprov
-from routes.configs import bp_configuraciones
-from routes.entidades_cred import bp_entidades
-from routes.fondos import bp_fondos
-from routes.creditos import bp_creditos
-from routes.bancos import bp_bancos
-from routes.ofertas import bp_ofertas
-from routes.reportes import bp_reportes
+from articulos.models import PedirEnVentas
+from sessions import bp_sesiones
+import sessions.routes  # noqa: F401 - registra las rutas (ver comentario en sessions/__init__.py)
+from tableros import bp_tableros
+import tableros.routes  # noqa: F401
+from clientes import bp_clientes
+import clientes.routes  # noqa: F401 - registra las rutas (ver comentario en clientes/__init__.py)
+from ctactecli import bp_ctactecli
+import ctactecli.routes  # noqa: F401
+from ventas import bp_ventas
+import ventas.routes  # noqa: F401
+from configs import bp_configuraciones
+import configs.routes  # noqa: F401 - registra las rutas (ver comentario en configs/__init__.py)
+from entidades_cred import bp_entidades
+import entidades_cred.routes  # noqa: F401
+from creditos import bp_creditos
+import creditos.routes  # noqa: F401
+from comisiones import comisiones_bp
+from ofertas import ofertas_bp
+from fondos import fondos_bp
+from bancos import bancos_bp
+from ctacteprov import ctacteprov_bp
+from reportes import reportes_bp
+from proveedores import proveedores_bp
+from articulos import articulos_bp
+import articulos.routes  # noqa: F401 - registra las rutas del blueprint (ver comentario en articulos/__init__.py)
 
 
 migrate = Migrate()
@@ -48,17 +58,18 @@ def create_app():
     app.register_blueprint(bp_tableros, url_prefix='/')
     app.register_blueprint(bp_clientes, url_prefix='/clientes')
     app.register_blueprint(bp_ctactecli, url_prefix='/ctactecli')
-    app.register_blueprint(bp_articulos, url_prefix='/articulos')
     app.register_blueprint(bp_ventas, url_prefix='/ventas')
-    app.register_blueprint(bp_proveedores, url_prefix='/proveedores')
-    app.register_blueprint(bp_ctacteprov, url_prefix='/ctacteprov')
     app.register_blueprint(bp_configuraciones, url_prefix='/configuracion')
     app.register_blueprint(bp_entidades, url_prefix='/entidades')
-    app.register_blueprint(bp_fondos, url_prefix='/fondos')
     app.register_blueprint(bp_creditos, url_prefix='/creditos')
-    app.register_blueprint(bp_bancos, url_prefix='/bancos')
-    app.register_blueprint(bp_ofertas, url_prefix='/ofertas')
-    app.register_blueprint(bp_reportes, url_prefix='/reportes')
+    app.register_blueprint(ofertas_bp, url_prefix='/ofertas')
+    app.register_blueprint(fondos_bp, url_prefix='/fondos')
+    app.register_blueprint(bancos_bp, url_prefix='/bancos')
+    app.register_blueprint(ctacteprov_bp, url_prefix='/ctacteprov')
+    app.register_blueprint(reportes_bp, url_prefix='/reportes')
+    app.register_blueprint(proveedores_bp, url_prefix='/proveedores')
+    app.register_blueprint(articulos_bp, url_prefix='/articulos')
+    app.register_blueprint(comisiones_bp, url_prefix='/')
 
     @app.before_request
     def make_session_permanent():

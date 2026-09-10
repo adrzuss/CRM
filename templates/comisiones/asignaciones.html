@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-user-check me-1"></i>Asignaciones
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="header-icon bg-primary">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="page-title mb-0">Asignaciones de Planes</h1>
+                <p class="page-subtitle text-muted mb-0">Asignar planes de comisiones a vendedores</p>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevaAsignacion">
+                <i class="fas fa-plus me-1"></i>Nueva Asignación
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="usuario_id" class="form-label">Vendedor</label>
+                            <select class="form-select" id="usuario_id" name="usuario_id">
+                                <option value="">Todos</option>
+                                {% for vendedor in vendedores %}
+                            <option value="{{ vendedor.id }}">{{ vendedor.usuario }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="plan_id" class="form-label">Plan</label>
+                            <select class="form-select" id="plan_id" name="plan_id">
+                                <option value="">Todos</option>
+                                {% for plan in planes %}
+                                <option value="{{ plan.id }}">{{ plan.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de asignaciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Asignaciones Registradas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if asignaciones %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Vendedor</th>
+                                    <th>Plan</th>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for asignacion in asignaciones %}
+                                <tr>
+                                    <td><strong>{{ asignacion.nombre_usuario }}</strong></td>
+                                    <td><span class="badge bg-info">{{ asignacion.nombre_plan }}</span></td>
+                                    <td>{{ asignacion.fecha_desde.strftime('%d/%m/%Y') if asignacion.fecha_desde else '-' }}</td>
+                                    <td>{{ asignacion.fecha_hasta.strftime('%d/%m/%Y') if asignacion.fecha_hasta else 'Sin fin' }}</td>
+                                    <td>
+                                        {% if asignacion.activo %}
+                                        <span class="badge bg-success">Activa</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactiva</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-editar-asignacion"
+                                                    title="Editar"
+                                                    data-id="{{ asignacion.id }}"
+                                                    data-id-usuario="{{ asignacion.id_usuario }}"
+                                                    data-id-plan="{{ asignacion.id_plan }}"
+                                                    data-fecha-desde="{{ asignacion.fecha_desde.strftime('%Y-%m-%d') if asignacion.fecha_desde else '' }}"
+                                                    data-fecha-hasta="{{ asignacion.fecha_hasta.strftime('%Y-%m-%d') if asignacion.fecha_hasta else '' }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form method="POST" action="{{ url_for('comisiones.eliminar_asignacion', id=asignacion.id) }}" 
+                                                  class="d-inline frm-confirmar-eliminar">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-check fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-muted">No hay asignaciones registradas</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaAsignacion">
+                            <i class="fas fa-plus me-1"></i>Crear Primera Asignación
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Asignación -->
+<div class="modal fade" id="modalNuevaAsignacion" tabindex="-1" aria-labelledby="modalNuevaAsignacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('comisiones.nueva_asignacion') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevaAsignacionLabel">Nueva Asignación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_usuario" class="form-label">Vendedor *</label>
+                        <select class="form-select" id="id_usuario" name="id_usuario" required>
+                            <option value="">Seleccionar vendedor...</option>
+                            {% for vendedor in vendedores %}
+                            <option value="{{ vendedor.id }}">{{ vendedor.usuario }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_plan" class="form-label">Plan *</label>
+                        <select class="form-select" id="id_plan" name="id_plan" required>
+                            <option value="">Seleccionar plan...</option>
+                            {% for plan in planes %}
+                            <option value="{{ plan.id }}">{{ plan.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="fecha_desde" class="form-label">Fecha Desde *</label>
+                            <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+                            <small class="text-muted">Dejar vacío para sin fecha de fin</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Guardar Asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Asignación -->
+<div class="modal fade" id="modalEditarAsignacion" tabindex="-1" aria-labelledby="modalEditarAsignacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditarAsignacion">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarAsignacionLabel">Editar Asignación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editar_id_usuario" class="form-label">Vendedor *</label>
+                        <select class="form-select" id="editar_id_usuario" name="id_usuario" required>
+                            <option value="">Seleccionar vendedor...</option>
+                            {% for vendedor in vendedores %}
+                            <option value="{{ vendedor.id }}">{{ vendedor.usuario }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar_id_plan" class="form-label">Plan *</label>
+                        <select class="form-select" id="editar_id_plan" name="id_plan" required>
+                            <option value="">Seleccionar plan...</option>
+                            {% for plan in planes %}
+                            <option value="{{ plan.id }}">{{ plan.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editar_fecha_desde" class="form-label">Fecha Desde *</label>
+                            <input type="date" class="form-control" id="editar_fecha_desde" name="fecha_desde" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar_fecha_hasta" class="form-label">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="editar_fecha_hasta" name="fecha_hasta">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Actualizar Asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_script %}
+<script nonce="{{ g.nonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Editar asignación
+    document.querySelectorAll('.btn-editar-asignacion').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var d = this.dataset;
+            document.getElementById('formEditarAsignacion').action = '/comisiones/asignaciones/' + d.id + '/editar';
+            document.getElementById('editar_id_usuario').value = d.idUsuario;
+            document.getElementById('editar_id_plan').value = d.idPlan;
+            document.getElementById('editar_fecha_desde').value = d.fechaDesde;
+            document.getElementById('editar_fecha_hasta').value = d.fechaHasta;
+            new bootstrap.Modal(document.getElementById('modalEditarAsignacion')).show();
+        });
+    });
+
+    // Confirmar eliminación
+    document.querySelectorAll('.frm-confirmar-eliminar').forEach(function(frm) {
+        frm.addEventListener('submit', function(e) {
+            if (!confirm('¿Está seguro de eliminar esta asignación?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

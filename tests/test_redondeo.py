@@ -16,7 +16,7 @@ from decimal import Decimal
 
 def test_aplicar_redondeo_arriba():
     """SCE-001: redondeo hacia arriba al múltiplo más cercano."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327, multiplo=100, tipo='arriba') == 4400
     assert aplicar_redondeo(1501, multiplo=1000, tipo='arriba') == 2000
@@ -25,7 +25,7 @@ def test_aplicar_redondeo_arriba():
 
 def test_aplicar_redondeo_abajo():
     """SCE-002: redondeo hacia abajo al múltiplo más cercano."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327, multiplo=100, tipo='abajo') == 4300
     assert aplicar_redondeo(1999, multiplo=1000, tipo='abajo') == 1000
@@ -34,7 +34,7 @@ def test_aplicar_redondeo_abajo():
 
 def test_aplicar_redondeo_cercano():
     """SCE-003: redondeo al múltiplo más cercano."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327, multiplo=100, tipo='cercano') == 4300  # 4327/100=43.27 -> round=43 -> 4300
     assert aplicar_redondeo(4350, multiplo=100, tipo='cercano') == 4400  # 4350/100=43.5 -> round=44 -> 4400
@@ -43,7 +43,7 @@ def test_aplicar_redondeo_cercano():
 
 def test_aplicar_redondeo_con_restar():
     """SCE-004: redondeo con resta de unidades."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327, multiplo=100, tipo='arriba', restar=1) == 4399
     assert aplicar_redondeo(4327, multiplo=100, tipo='arriba', restar=50) == 4350
@@ -53,7 +53,7 @@ def test_aplicar_redondeo_con_restar():
 
 def test_aplicar_redondeo_multiplo_cero():
     """Edge case: multiplo <= 0 retorna precio redondeado a 2 decimales."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327.567, multiplo=0, tipo='arriba') == 4327.57
     assert aplicar_redondeo(100.1, multiplo=-10, tipo='abajo') == 100.1
@@ -61,7 +61,7 @@ def test_aplicar_redondeo_multiplo_cero():
 
 def test_aplicar_redondeo_precio_exacto_multiplo():
     """Edge case: precio es exactamente múltiplo, no cambia."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4300, multiplo=100, tipo='arriba') == 4300
     assert aplicar_redondeo(4300, multiplo=100, tipo='abajo') == 4300
@@ -70,7 +70,7 @@ def test_aplicar_redondeo_precio_exacto_multiplo():
 
 def test_aplicar_redondeo_restar_cero():
     """Edge case: restar=0 no modifica el resultado."""
-    from services.articulos.redondeo import aplicar_redondeo
+    from articulos.services.redondeo import aplicar_redondeo
 
     assert aplicar_redondeo(4327, multiplo=100, tipo='arriba', restar=0) == 4400
 
@@ -81,7 +81,7 @@ def test_aplicar_redondeo_restar_cero():
 
 def test_calcular_precio_comercial_regla_encontrada():
     """Regla encontrada: aplica redondeo según la regla del rango."""
-    from services.articulos.redondeo import calcular_precio_comercial
+    from articulos.services.redondeo import calcular_precio_comercial
 
     reglas = [{
         'desde_precio': 1000,
@@ -106,7 +106,7 @@ def test_calcular_precio_comercial_regla_encontrada():
 
 def test_calcular_precio_comercial_sin_regla():
     """Sin regla aplicable: retorna precio con 2 decimales, sin redondeo comercial."""
-    from services.articulos.redondeo import calcular_precio_comercial
+    from articulos.services.redondeo import calcular_precio_comercial
 
     resultado = calcular_precio_comercial(4000, 10, [])
     assert resultado == round(4000 * 1.1, 2)  # 4400.0
@@ -125,7 +125,7 @@ def test_calcular_precio_comercial_sin_regla():
 
 def test_calcular_precio_comercial_multiples_reglas():
     """Múltiples reglas: selecciona la primera que coincida por rango."""
-    from services.articulos.redondeo import calcular_precio_comercial
+    from articulos.services.redondeo import calcular_precio_comercial
 
     reglas = [
         {
@@ -159,7 +159,7 @@ def test_calcular_precio_comercial_multiples_reglas():
 
 def test_calcular_precio_comercial_con_restar():
     """Regla con restar_unidades: aplica resta después del redondeo."""
-    from services.articulos.redondeo import calcular_precio_comercial
+    from articulos.services.redondeo import calcular_precio_comercial
 
     reglas = [{
         'desde_precio': 1000,
@@ -184,7 +184,7 @@ def test_obtener_articulos_con_redondeo_activo():
     Mockea ReglaRedondeo.query y db.session.query para verificar que
     el precio_nuevo usa calcular_precio_comercial en vez del cálculo directo.
     """
-    from services.articulos.articulos import obtenerArticulosMarcaRubro
+    from articulos.services.articulos import obtenerArticulosMarcaRubro
 
     mock_articulo = MagicMock()
     mock_articulo.codigo = '001'
@@ -203,9 +203,9 @@ def test_obtener_articulos_con_redondeo_activo():
     mock_regla.tipo_redondeo = 'arriba'
     mock_regla.restar_unidades = 0
 
-    with patch('services.articulos.articulos.db.session.query',
+    with patch('articulos.services.articulos.db.session.query',
                return_value=mock_query):
-        with patch('services.articulos.articulos.ReglaRedondeo') as mock_model:
+        with patch('articulos.services.articulos.ReglaRedondeo') as mock_model:
             mock_model.query.filter_by.return_value.all.return_value = [mock_regla]
 
             resultado = obtenerArticulosMarcaRubro(
@@ -222,7 +222,7 @@ def test_obtener_articulos_sin_reglas_mantiene_calculo_original():
     Integración: sin reglas activas, el cálculo es precio * (1 + porcentaje/100).
     Verifica backward compatibility.
     """
-    from services.articulos.articulos import obtenerArticulosMarcaRubro
+    from articulos.services.articulos import obtenerArticulosMarcaRubro
 
     mock_articulo = MagicMock()
     mock_articulo.codigo = '002'
@@ -234,9 +234,9 @@ def test_obtener_articulos_sin_reglas_mantiene_calculo_original():
     mock_query.filter.return_value = mock_query
     mock_query.all.return_value = [mock_articulo]
 
-    with patch('services.articulos.articulos.db.session.query',
+    with patch('articulos.services.articulos.db.session.query',
                return_value=mock_query):
-        with patch('services.articulos.articulos.ReglaRedondeo') as mock_model:
+        with patch('articulos.services.articulos.ReglaRedondeo') as mock_model:
             mock_model.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(

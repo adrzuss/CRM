@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.listar_planes') }}">
+                <i class="fas fa-file-invoice me-1"></i>Planes
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            {% if solo_lectura %}
+                {{ plan.nombre }}
+            {% elif plan %}
+                Editar: {{ plan.nombre }}
+            {% else %}
+                Nuevo Plan
+            {% endif %}
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="header-icon bg-primary">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="page-title mb-0">
+                    {% if solo_lectura %}
+                        {{ plan.nombre }}
+                    {% elif plan %}
+                        Editar Plan
+                    {% else %}
+                        Nuevo Plan de Comisiones
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle text-muted mb-0">
+                    {% if solo_lectura %}
+                        Detalle del plan con reglas y tramos
+                    {% elif plan %}
+                        Modificar configuración del plan
+                    {% else %}
+                        Crear un nuevo plan de comisiones
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div>
+            {% if solo_lectura %}
+            <a href="{{ url_for('comisiones.editar_plan', id=plan.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-1"></i>Editar
+            </a>
+            {% endif %}
+            <a href="{{ url_for('comisiones.listar_planes') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Formulario del plan -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-info-circle me-1"></i>Información del Plan
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" 
+                          action="{% if plan and not solo_lectura %}{{ url_for('comisiones.editar_plan', id=plan.id) }}{% else %}{{ url_for('comisiones.nuevo_plan') }}{% endif %}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label">Nombre del Plan *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       value="{{ plan.nombre if plan else '' }}" required
+                                       {{ 'readonly' if solo_lectura }}>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <input type="text" class="form-control" id="descripcion" name="descripcion" 
+                                       value="{{ plan.descripcion if plan else '' }}"
+                                       {{ 'readonly' if solo_lectura }}>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="tipo_calculo" class="form-label">
+                                    Tipo de Cálculo *
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpTipoCalculo" class="text-decoration-none" title="¿Qué es?">
+                                        <i class="fas fa-question-circle text-info"></i>
+                                    </a>
+                                </label>
+                                <select class="form-select" id="tipo_calculo" name="tipo_calculo" required
+                                        {{ 'disabled' if solo_lectura }}>
+                                    {% for tc in tipos_calculo %}
+                                    <option value="{{ tc.value }}" 
+                                            {{ 'selected' if plan and plan.tipo_calculo == tc.value }}>
+                                        {{ tc.value }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="base_calculo" class="form-label">
+                                    Base de Cálculo *
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpBaseCalculo" class="text-decoration-none" title="¿Qué es?">
+                                        <i class="fas fa-question-circle text-info"></i>
+                                    </a>
+                                </label>
+                                <select class="form-select" id="base_calculo" name="base_calculo" required
+                                        {{ 'disabled' if solo_lectura }}>
+                                    {% for bc in bases_calculo %}
+                                    <option value="{{ bc.value }}" 
+                                            {{ 'selected' if plan and plan.base_calculo == bc.value }}>
+                                        {{ bc.value }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="modo_escalas" class="form-label">
+                                    Modo Escalas *
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpModoEscalas" class="text-decoration-none" title="¿Qué es?">
+                                        <i class="fas fa-question-circle text-info"></i>
+                                    </a>
+                                </label>
+                                <select class="form-select" id="modo_escalas" name="modo_escalas" required
+                                        {{ 'disabled' if solo_lectura }}>
+                                    {% for me in modos_escalas %}
+                                    <option value="{{ me.value }}" 
+                                            {{ 'selected' if plan and plan.modo_escalas == me.value }}>
+                                        {{ me.value }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="fecha_desde" class="form-label">Fecha Desde *</label>
+                                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                                       value="{{ plan.fecha_desde.strftime('%Y-%m-%d') if plan and plan.fecha_desde else '' }}" 
+                                       required {{ 'readonly' if solo_lectura }}>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
+                                       value="{{ plan.fecha_hasta.strftime('%Y-%m-%d') if plan and plan.fecha_hasta else '' }}"
+                                       {{ 'readonly' if solo_lectura }}>
+                                <small class="text-muted">Dejar vacío para plan sin fecha de fin</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
+                                      {{ 'readonly' if solo_lectura }}>{{ plan.observaciones if plan else '' }}</textarea>
+                        </div>
+
+                        {% if not solo_lectura %}
+                        <div class="text-end">
+                            <a href="{{ url_for('comisiones.listar_planes') }}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>{{ 'Guardar Cambios' if plan else 'Crear Plan' }}
+                            </button>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            {% if plan and solo_lectura %}
+            <!-- Reglas del plan -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-gavel me-1"></i>Reglas de Comisión
+                    </h6>
+                    <a href="{{ url_for('comisiones.listar_reglas', id_plan=plan.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Gestionar
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if reglas %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Criterio</th>
+                                    <th>Porcentaje</th>
+                                    <th>Importe Fijo</th>
+                                    <th>Prioridad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for regla in reglas %}
+                                <tr>
+                                    <td>{{ regla.nombre }}</td>
+                                    <td><span class="badge bg-info">{{ regla.tipo_regla }}</span></td>
+                                    <td>{{ regla.criterio }}: {{ regla.valor_criterio }}</td>
+                                    <td>{{ regla.porcentaje }}%</td>
+                                    <td>${{ regla.importe_fijo }}</td>
+                                    <td>{{ regla.prioridad }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No hay reglas configuradas</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tramos del plan -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-layer-group me-1"></i>Tramos de Escala
+                    </h6>
+                    <a href="{{ url_for('comisiones.listar_tramos', id_plan=plan.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Gestionar
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if tramos %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th>Porcentaje</th>
+                                    <th>Importe Fijo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tramo in tramos %}
+                                <tr>
+                                    <td>{{ tramo.orden }}</td>
+                                    <td>${{ tramo.desde }}</td>
+                                    <td>${{ tramo.hasta }}</td>
+                                    <td>{{ tramo.porcentaje }}%</td>
+                                    <td>${{ tramo.importe_fijo }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No hay tramos configurados</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="col-lg-4">
+            {% if plan %}
+            <!-- Duplicar plan -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-copy me-1"></i>Duplicar Plan
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Crear una copia de este plan con todas sus reglas y tramos</p>
+                    <form method="POST" action="{{ url_for('comisiones.duplicar_plan', id=plan.id) }}">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="nuevo_nombre" 
+                                   placeholder="Nombre del nuevo plan" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-copy me-1"></i>Duplicar Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información del plan -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-info-circle me-1"></i>Información
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <strong>Estado:</strong>
+                            {% if plan.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </li>
+                        <li class="mb-2">
+                            <strong>Creado:</strong> {{ plan.fecha_creacion.strftime('%d/%m/%Y %H:%M') if plan.fecha_creacion else '-' }}
+                        </li>
+                        <li class="mb-2">
+                            <strong>Actualizado:</strong> {{ plan.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') if plan.fecha_actualizacion else '-' }}
+                        </li>
+                        <li>
+                            <strong>ID:</strong> {{ plan.id }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Help Modals -->
+<div class="modal fade" id="helpTipoCalculo" tabindex="-1" aria-labelledby="helpTipoCalculoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpTipoCalculoLabel">Tipo de Cálculo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Define si la comisión es un <strong>porcentaje sobre la venta</strong> o un <strong>importe fijo</strong> por operación.</p>
+                <ul class="mb-0">
+                    <li><strong>Porcentaje</strong>: se aplica el % sobre la base de cálculo. Ej: 5% sobre precio final = $5.000 en una venta de $100.000.</li>
+                    <li><strong>Importe Fijo</strong>: se paga una suma fija por cada venta, sin importar el monto. Ej: $2.000 por operación.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpBaseCalculo" tabindex="-1" aria-labelledby="helpBaseCalculoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpBaseCalculoLabel">Base de Cálculo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Define sobre qué monto se calcula la comisión.</p>
+                <ul class="mb-0">
+                    <li><strong>Precio Final</strong>: el total que pagó el cliente (con IVA).</li>
+                    <li><strong>Total Neto</strong>: el monto sin IVA (base imponible).</li>
+                    <li><strong>Utilidad</strong>: precio final menos costo del producto (margen bruto).</li>
+                    <li><strong>Costo</strong>: el costo del producto (para planes que premian volumen, no margen).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpModoEscalas" tabindex="-1" aria-labelledby="helpModoEscalasLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModoEscalasLabel">Modo Escalas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Define cómo se aplican las escalas cuando hay tramos configurados.</p>
+                <ul class="mb-0">
+                    <li><strong>Tasa Alcanzada</strong>: la venta se evalúa como un todo. Si cae en un tramo, se aplica ese % al monto completo.<br>
+                        <em>Ej: venta de $500.000 cae en tramo 300k–700k → 8% sobre $500.000 enteros.</em></li>
+                    <li><strong>Progresiva</strong>: la venta se fracciona tramo por tramo, como el impuesto a las ganancias.<br>
+                        <em>Ej: $500.000 → 5% sobre los primeros $100k + 8% sobre los $400k restantes.</em></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

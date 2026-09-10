@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-file-invoice me-1"></i>Planes
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="header-icon bg-primary">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="page-title mb-0">Planes de Comisiones</h1>
+                <p class="page-subtitle text-muted mb-0">Gestionar planes, reglas y tramos</p>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('comisiones.nuevo_plan') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Nuevo Plan
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-auto">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="todos" value="1" 
+                                       id="incluirInactivos" {{ 'checked' if incluir_inactivos }}>
+                                <label class="form-check-label" for="incluirInactivos">
+                                    Incluir inactivos
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de planes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Planes Registrados
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if planes %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo Cálculo</th>
+                                    <th>Base Cálculo</th>
+                                    <th>Modo Escalas</th>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in planes %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}" class="text-decoration-none">
+                                            <strong>{{ plan.nombre }}</strong>
+                                        </a>
+                                        {% if plan.descripcion %}
+                                        <br><small class="text-muted">{{ plan.descripcion[:50] }}{{ '...' if plan.descripcion|length > 50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-info">{{ plan.tipo_calculo }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ plan.base_calculo }}</span></td>
+                                    <td><span class="badge bg-dark">{{ plan.modo_escalas }}</span></td>
+                                    <td>{{ plan.fecha_desde.strftime('%d/%m/%Y') if plan.fecha_desde else '-' }}</td>
+                                    <td>{{ plan.fecha_hasta.strftime('%d/%m/%Y') if plan.fecha_hasta else 'Sin fin' }}</td>
+                                    <td>
+                                        {% if plan.activo %}
+                                        <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Ver">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('comisiones.editar_plan', id=plan.id) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('comisiones.toggle_plan', id=plan.id) }}" 
+                                                  class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if plan.activo else 'success' }}" 
+                                                        title="{{ 'Desactivar' if plan.activo else 'Activar' }}">
+                                                    <i class="fas fa-{{ 'ban' if plan.activo else 'check' }}"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-invoice fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-muted">No se encontraron planes de comisiones</p>
+                        <a href="{{ url_for('comisiones.nuevo_plan') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Crear Primer Plan
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

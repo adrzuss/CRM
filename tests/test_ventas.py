@@ -51,8 +51,8 @@ def test_get_ventas_con_fechas(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.ventas.render_template', return_value='') as mock_render:
-                with patch('routes.ventas.ventas_desde_hasta', return_value=[]) as mock_ventas:
+            with patch('ventas.routes.render_template', return_value='') as mock_render:
+                with patch('ventas.routes.ventas_desde_hasta', return_value=[]) as mock_ventas:
 
                     response = client.get('/ventas/ventas?desde=2024-01-01&hasta=2024-12-31')
 
@@ -101,8 +101,8 @@ def test_get_ver_factura_vta(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.ventas.render_template', return_value='') as mock_render:
-                with patch('routes.ventas.get_factura',
+            with patch('ventas.routes.render_template', return_value='') as mock_render:
+                with patch('ventas.routes.get_factura',
                            return_value=(mock_factura, mock_items, mock_pagos)) as mock_get_factura:
 
                     response = client.get('/ventas/ver_factura_vta/1')
@@ -145,7 +145,7 @@ def test_buscar_comprobantes_nc(client):
         {'id': 2, 'nro_comprobante': '0001-00000006', 'total': 8500.00},
     ]
 
-    with patch('routes.ventas.get_comprobantes_para_nc',
+    with patch('ventas.routes.get_comprobantes_para_nc',
                return_value=mock_comprobantes) as mock_get_comp:
 
             response = client.post(
@@ -170,7 +170,7 @@ def test_buscar_comprobantes_nc_sin_fecha(client):
     """
     _configurar_sesion(client)
 
-    with patch('routes.ventas.get_comprobantes_para_nc') as mock_get_comp:
+    with patch('ventas.routes.get_comprobantes_para_nc') as mock_get_comp:
         response = client.post(
             '/ventas/buscar_comprobantes_nc',
             json={'nro_comprobante': ''}

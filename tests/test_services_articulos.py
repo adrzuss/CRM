@@ -35,7 +35,7 @@ def test_obtener_articulos_marca_rubro_con_porcentaje():
     Se parchea db.session.query y sus encadenamientos para simular
     resultados de la DB sin conexión real.
     """
-    from services.articulos.articulos import obtenerArticulosMarcaRubro
+    from articulos.services.articulos import obtenerArticulosMarcaRubro
 
     # Mock para el resultado de la consulta
     mock_articulo = MagicMock()
@@ -48,9 +48,9 @@ def test_obtener_articulos_marca_rubro_con_porcentaje():
     mock_query.filter.return_value = mock_query
     mock_query.all.return_value = [mock_articulo]
 
-    with patch('services.articulos.articulos.db.session.query',
+    with patch('articulos.services.articulos.db.session.query',
                return_value=mock_query):
-        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+        with patch('articulos.services.articulos.ReglaRedondeo') as mock_regla:
             mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
@@ -71,7 +71,7 @@ def test_obtener_articulos_marca_rubro_porcentaje_cero():
 
     Verifica que precio_nuevo == precio_actual cuando el porcentaje es 0.
     """
-    from services.articulos.articulos import obtenerArticulosMarcaRubro
+    from articulos.services.articulos import obtenerArticulosMarcaRubro
 
     mock_articulo = MagicMock()
     mock_articulo.codigo = '002'
@@ -83,9 +83,9 @@ def test_obtener_articulos_marca_rubro_porcentaje_cero():
     mock_query.filter.return_value = mock_query
     mock_query.all.return_value = [mock_articulo]
 
-    with patch('services.articulos.articulos.db.session.query',
+    with patch('articulos.services.articulos.db.session.query',
                return_value=mock_query):
-        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+        with patch('articulos.services.articulos.ReglaRedondeo') as mock_regla:
             mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
@@ -105,16 +105,16 @@ def test_obtener_articulos_marca_rubro_sin_resultados():
 
     Verifica que retorna lista vacía.
     """
-    from services.articulos.articulos import obtenerArticulosMarcaRubro
+    from articulos.services.articulos import obtenerArticulosMarcaRubro
 
     mock_query = MagicMock()
     mock_query.outerjoin.return_value = mock_query
     mock_query.filter.return_value = mock_query
     mock_query.all.return_value = []
 
-    with patch('services.articulos.articulos.db.session.query',
+    with patch('articulos.services.articulos.db.session.query',
                return_value=mock_query):
-        with patch('services.articulos.articulos.ReglaRedondeo') as mock_regla:
+        with patch('articulos.services.articulos.ReglaRedondeo') as mock_regla:
             mock_regla.query.filter_by.return_value.all.return_value = []
 
             resultado = obtenerArticulosMarcaRubro(
@@ -139,7 +139,7 @@ def test_guardar_precios_procesa_items_del_formulario():
 
     Se parchea Precio y db.session para evitar DB real.
     """
-    from services.articulos.articulos import _guardar_precios
+    from articulos.services.articulos import _guardar_precios
 
     # Mock del formulario con 2 items de precio
     mock_form = {
@@ -152,8 +152,8 @@ def test_guardar_precios_procesa_items_del_formulario():
     mock_precio_db = MagicMock()
     mock_precio_db.precio = Decimal('1400.00')
 
-    with patch('services.articulos.articulos.Precio') as mock_precio_model:
-        with patch('services.articulos.articulos.db.session') as mock_db:
+    with patch('articulos.services.articulos.Precio') as mock_precio_model:
+        with patch('articulos.services.articulos.db.session') as mock_db:
             mock_db.add.return_value = None
 
             # Simular que el primer precio existe, el segundo no
@@ -187,7 +187,7 @@ def test_procesar_cambio_precio_con_items_validos():
       3. Actualiza los precios en la tabla Precio
       4. Hace commit de la transacción
     """
-    from services.articulos.precios import procesar_cambio_precio
+    from articulos.services.precios import procesar_cambio_precio
 
     # Mock del formulario con 1 item
     mock_form = {
@@ -207,11 +207,11 @@ def test_procesar_cambio_precio_con_items_validos():
     mock_cambio_precio = MagicMock()
     mock_cambio_precio.id = 10
 
-    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
-        with patch('services.articulos.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
-            with patch('services.articulos.precios.db.session') as mock_db:
-                with patch('services.articulos.precios.CambioPreciosItem') as mock_cpi:
-                    with patch('services.articulos.precios.actualizarPrecio') as mock_actualizar:
+    with patch('articulos.services.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('articulos.services.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
+            with patch('articulos.services.precios.db.session') as mock_db:
+                with patch('articulos.services.precios.CambioPreciosItem') as mock_cpi:
+                    with patch('articulos.services.precios.actualizarPrecio') as mock_actualizar:
                         # Configurar mock para db.session.query(Articulo).filter_by(...).first()
                         mock_query = MagicMock()
                         mock_query.filter_by.return_value.first.return_value = mock_articulo
@@ -243,7 +243,7 @@ def test_procesar_cambio_precio_sin_items_lanza_error():
       2. No se llama a db.session.commit
       3. Se hace rollback de la transacción
     """
-    from services.articulos.precios import procesar_cambio_precio
+    from articulos.services.precios import procesar_cambio_precio
 
     # Mock del formulario SIN items (solo headers)
     mock_form = {
@@ -251,8 +251,8 @@ def test_procesar_cambio_precio_sin_items_lanza_error():
         'lista_precio': '1',
     }
 
-    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
-        with patch('services.articulos.precios.db.session') as mock_db:
+    with patch('articulos.services.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('articulos.services.precios.db.session') as mock_db:
             mock_db.rollback.return_value = None
 
             try:
@@ -273,7 +273,7 @@ def test_procesar_cambio_precio_items_agregados_manualmente():
     Verifica que la validación de items pasa cuando el usuario agrega
     filas manualmente en la tabla (simula formulario con items).
     """
-    from services.articulos.precios import procesar_cambio_precio
+    from articulos.services.precios import procesar_cambio_precio
 
     # Mock del formulario con 2 items agregados manualmente
     mock_form = {
@@ -295,12 +295,12 @@ def test_procesar_cambio_precio_items_agregados_manualmente():
     mock_cambio_precio = MagicMock()
     mock_cambio_precio.id = 10
 
-    with patch('services.articulos.precios.session', {'user_id': 1, 'id_sucursal': 1}):
-        with patch('services.articulos.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
-            with patch('services.articulos.precios.db.session') as mock_db:
-                with patch('services.articulos.precios.Articulo') as mock_articulo_model:
-                    with patch('services.articulos.precios.CambioPreciosItem') as mock_cpi:
-                        with patch('services.articulos.precios.actualizarPrecio') as mock_actualizar:
+    with patch('articulos.services.precios.session', {'user_id': 1, 'id_sucursal': 1}):
+        with patch('articulos.services.precios.CambioPrecios', return_value=mock_cambio_precio) as mock_cp:
+            with patch('articulos.services.precios.db.session') as mock_db:
+                with patch('articulos.services.precios.Articulo') as mock_articulo_model:
+                    with patch('articulos.services.precios.CambioPreciosItem') as mock_cpi:
+                        with patch('articulos.services.precios.actualizarPrecio') as mock_actualizar:
                             # Configurar mocks para devolver artículos diferentes según el código
                             def mock_filter_by(**kwargs):
                                 m = MagicMock()

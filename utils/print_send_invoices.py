@@ -10,9 +10,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
-from services.ventas import get_factura
+from ventas.services import get_factura
 from utils.config import Config
-from models.configs import Configuracion
+from configs.models import Configuracion
 # Generación de factura
 
 def generar_factura_pdf(id, footer_text=""):

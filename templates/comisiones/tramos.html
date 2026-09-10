@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.listar_planes') }}">
+                <i class="fas fa-file-invoice me-1"></i>Planes
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}">{{ plan.nombre }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-layer-group me-1"></i>Tramos
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="header-icon bg-primary">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="page-title mb-0">Tramos de Escala
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpTramos" class="text-decoration-none ms-2" title="¿Qué son los tramos?">
+                        <i class="fas fa-question-circle text-info"></i>
+                    </a>
+                </h1>
+                <p class="page-subtitle text-muted mb-0">Plan: {{ plan.nombre }}</p>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoTramo">
+                <i class="fas fa-plus me-1"></i>Nuevo Tramo
+            </button>
+            <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Lista de tramos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Tramos Configurados
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if tramos %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th>Porcentaje</th>
+                                    <th>Importe Fijo</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tramo in tramos %}
+                                <tr>
+                                    <td>{{ tramo.orden }}</td>
+                                    <td>${{ tramo.desde }}</td>
+                                    <td>${{ tramo.hasta }}</td>
+                                    <td>{{ tramo.porcentaje }}%</td>
+                                    <td>${{ tramo.importe_fijo }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-editar-tramo"
+                                                    title="Editar"
+                                                    data-id="{{ tramo.id }}"
+                                                    data-desde="{{ tramo.desde }}"
+                                                    data-hasta="{{ tramo.hasta }}"
+                                                    data-porcentaje="{{ tramo.porcentaje }}"
+                                                    data-importe-fijo="{{ tramo.importe_fijo }}"
+                                                    data-orden="{{ tramo.orden }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form method="POST" action="{{ url_for('comisiones.eliminar_tramo', id=tramo.id) }}" 
+                                                  class="d-inline frm-confirmar-eliminar">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-layer-group fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-muted">No hay tramos configurados para este plan</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoTramo">
+                            <i class="fas fa-plus me-1"></i>Crear Primer Tramo
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Tramo -->
+<div class="modal fade" id="modalNuevoTramo" tabindex="-1" aria-labelledby="modalNuevoTramoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('comisiones.nuevo_tramo', id_plan=plan.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoTramoLabel">Nuevo Tramo de Escala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="desde" class="form-label">Desde *</label>
+                            <input type="number" class="form-control" id="desde" name="desde" 
+                                   step="0.01" min="0" required>
+                            <small class="text-muted">Límite inferior del tramo</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hasta" class="form-label">Hasta *</label>
+                            <input type="number" class="form-control" id="hasta" name="hasta" 
+                                   step="0.01" min="0" required>
+                            <small class="text-muted">Límite superior del tramo</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="porcentaje" class="form-label">Porcentaje (%)</label>
+                            <input type="number" class="form-control" id="porcentaje" name="porcentaje" 
+                                   step="0.000001" min="0" value="0">
+                            <small class="text-muted">Comisión % para este tramo</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="importe_fijo" class="form-label">Importe Fijo</label>
+                            <input type="number" class="form-control" id="importe_fijo" name="importe_fijo" 
+                                   step="0.01" min="0" value="0">
+                            <small class="text-muted">O usar monto fijo en vez de %</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orden" class="form-label">Orden</label>
+                        <input type="number" class="form-control" id="orden" name="orden" 
+                               min="0" value="0">
+                        <small class="text-muted">Número de orden del tramo (menor = primero)</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Guardar Tramo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Tramo -->
+<div class="modal fade" id="modalEditarTramo" tabindex="-1" aria-labelledby="modalEditarTramoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditarTramo">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarTramoLabel">Editar Tramo de Escala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editar_desde" class="form-label">Desde *</label>
+                            <input type="number" class="form-control" id="editar_desde" name="desde" 
+                                   step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar_hasta" class="form-label">Hasta *</label>
+                            <input type="number" class="form-control" id="editar_hasta" name="hasta" 
+                                   step="0.01" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editar_porcentaje" class="form-label">Porcentaje (%)</label>
+                            <input type="number" class="form-control" id="editar_porcentaje" name="porcentaje" 
+                                   step="0.000001" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar_importe_fijo" class="form-label">Importe Fijo</label>
+                            <input type="number" class="form-control" id="editar_importe_fijo" name="importe_fijo" 
+                                   step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar_orden" class="form-label">Orden</label>
+                        <input type="number" class="form-control" id="editar_orden" name="orden" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Actualizar Tramo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpTramos" tabindex="-1" aria-labelledby="helpTramosLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpTramosLabel">Tramos de Escala</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Los tramos permiten definir <strong>comisiones variables según el monto de la venta</strong>.</p>
+                <p>Ejemplo de tramos:</p>
+                <table class="table table-sm table-bordered mb-3">
+                    <thead><tr><th>Desde</th><th>Hasta</th><th>Porcentaje</th></tr></thead>
+                    <tbody>
+                        <tr><td>$0</td><td>$100.000</td><td>3%</td></tr>
+                        <tr><td>$100.001</td><td>$300.000</td><td>5%</td></tr>
+                        <tr><td>$300.001</td><td>$999.999.999</td><td>8%</td></tr>
+                    </tbody>
+                </table>
+                <p class="mb-1"><strong>Campos:</strong></p>
+                <ul class="mb-0">
+                    <li><strong>Desde / Hasta</strong>: los límites del rango de venta.</li>
+                    <li><strong>Porcentaje</strong>: la comisión % que se aplica a ventas dentro de este tramo.</li>
+                    <li><strong>Importe Fijo</strong>: alternativa al porcentaje, un monto fijo por operación.</li>
+                    <li><strong>Orden</strong>: define el orden de visualización. Se recomienda usar valores secuenciales (0, 10, 20...).</li>
+                </ul>
+                <hr>
+                <p class="mb-0"><strong>¿Cómo se aplican?</strong> Depende del <em>Modo Escalas</em> configurado en el plan:</p>
+                <ul class="mb-0">
+                    <li><strong>Tasa Alcanzada</strong>: se usa UN solo tramo según el monto total.</li>
+                    <li><strong>Progresiva</strong>: la venta se fracciona y cada porción aplica su tramo correspondiente.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_script %}
+<script nonce="{{ g.nonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Editar tramo
+    document.querySelectorAll('.btn-editar-tramo').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var d = this.dataset;
+            document.getElementById('formEditarTramo').action = '/comisiones/tramos/' + d.id + '/editar';
+            document.getElementById('editar_desde').value = d.desde;
+            document.getElementById('editar_hasta').value = d.hasta;
+            document.getElementById('editar_porcentaje').value = d.porcentaje;
+            document.getElementById('editar_importe_fijo').value = d.importeFijo;
+            document.getElementById('editar_orden').value = d.orden;
+            new bootstrap.Modal(document.getElementById('modalEditarTramo')).show();
+        });
+    });
+
+    // Confirmar eliminación
+    document.querySelectorAll('.frm-confirmar-eliminar').forEach(function(frm) {
+        frm.addEventListener('submit', function(e) {
+            if (!confirm('¿Está seguro de eliminar este tramo?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

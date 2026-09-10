@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.reportes') }}">
+                <i class="fas fa-chart-bar me-1"></i>Reportes
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-user me-1"></i>Por Vendedor
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Reporte por Vendedor</h1>
+            <p class="page-subtitle text-muted mb-0">Comisiones calculadas por vendedor</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-cog me-1"></i>Parámetros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="usuario_id" class="form-label">Vendedor *</label>
+                            <select class="form-select" id="usuario_id" name="usuario_id" required>
+                                <option value="">Seleccionar vendedor...</option>
+                                {% for vendedor in vendedores %}
+                                <option value="{{ vendedor.id }}">{{ vendedor.usuario }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="desde" class="form-label">Desde *</label>
+                                <input type="date" class="form-control" id="desde" name="desde" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="hasta" class="form-label">Hasta *</label>
+                                <input type="date" class="form-control" id="hasta" name="hasta" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Generar Reporte
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="col-lg-8">
+            {% if datos %}
+            <!-- Resumen -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-1"></i>Resumen
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Comisiones
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-success">
+                                    ${{ "{:,.2f}".format(datos.total) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Período
+                                </div>
+                                <div class="h6 mb-0 font-weight-bold text-info">
+                                    {{ datos.desde.strftime('%d/%m/%Y') }} - {{ datos.hasta.strftime('%d/%m/%Y') }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Registros
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-warning">
+                                    {{ datos.detalles|length }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle -->
+            {% if datos.detalles %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Detalle
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Artículo</th>
+                                    <th>Tipo</th>
+                                    <th class="text-end">Venta</th>
+                                    <th class="text-end">Comisión</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for det in datos.detalles %}
+                                <tr>
+                                    <td>{{ det.id_factura }}</td>
+                                    <td>{{ det.id_item }}</td>
+                                    <td><span class="badge bg-{{ 'success' if det.tipo_movimiento == 'VENTA' else 'danger' }}">{{ det.tipo_movimiento }}</span></td>
+                                    <td class="text-end">${{ "{:,.2f}".format(det.importe_venta|float) }}</td>
+                                    <td class="text-end font-weight-bold text-{{ 'success' if det.importe_comision|float > 0 else 'danger' }}">
+                                        ${{ "{:,.2f}".format(det.importe_comision|float) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="card shadow mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-muted">Seleccione un vendedor y período para generar el reporte</h5>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

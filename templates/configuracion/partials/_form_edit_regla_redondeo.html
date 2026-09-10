@@ -9,21 +9,41 @@
     </div>
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label for="desde_precio" class="form-label">Precio Desde</label>
+            <label for="desde_precio" class="form-label">
+                Precio Desde
+                <a href="#" data-bs-toggle="modal" data-bs-target="#helpRangoPrecio" class="text-decoration-none" title="¿Qué es?">
+                    <i class="fas fa-question-circle text-info"></i>
+                </a>
+            </label>
             <input type="number" step="0.01" class="form-control" name="desde_precio" id="desde_precio" value="{{ item.desde_precio }}" required>
         </div>
         <div class="col-md-6 mb-3">
-            <label for="hasta_precio" class="form-label">Precio Hasta</label>
+            <label for="hasta_precio" class="form-label">
+                Precio Hasta
+                <a href="#" data-bs-toggle="modal" data-bs-target="#helpRangoPrecio" class="text-decoration-none" title="¿Qué es?">
+                    <i class="fas fa-question-circle text-info"></i>
+                </a>
+            </label>
             <input type="number" step="0.01" class="form-control" name="hasta_precio" id="hasta_precio" value="{{ item.hasta_precio }}" required>
         </div>
     </div>
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label for="multiplo" class="form-label">Múltiplo</label>
+            <label for="multiplo" class="form-label">
+                Múltiplo
+                <a href="#" data-bs-toggle="modal" data-bs-target="#helpMultiplo" class="text-decoration-none" title="¿Qué es?">
+                    <i class="fas fa-question-circle text-info"></i>
+                </a>
+            </label>
             <input type="number" class="form-control" name="multiplo" id="multiplo" value="{{ item.multiplo }}" required>
         </div>
         <div class="col-md-6 mb-3">
-            <label for="tipo_redondeo" class="form-label">Tipo de Redondeo</label>
+            <label for="tipo_redondeo" class="form-label">
+                Tipo de Redondeo
+                <a href="#" data-bs-toggle="modal" data-bs-target="#helpTipoRedondeo" class="text-decoration-none" title="¿Qué es?">
+                    <i class="fas fa-question-circle text-info"></i>
+                </a>
+            </label>
             <select class="form-select" name="tipo_redondeo" id="tipo_redondeo" required>
                 <option value="arriba" {% if item.tipo_redondeo == 'arriba' %}selected{% endif %}>Arriba</option>
                 <option value="abajo" {% if item.tipo_redondeo == 'abajo' %}selected{% endif %}>Abajo</option>
@@ -35,7 +55,12 @@
         <div class="col-md-6 mb-3">
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" name="restar_unidades" id="restar_unidades" value="1" {% if item.restar_unidades %}checked{% endif %}>
-                <label class="form-check-label" for="restar_unidades">Restar Unidades</label>
+                <label class="form-check-label" for="restar_unidades">
+                    Restar Unidades
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpRestarUnidades" class="text-decoration-none" title="¿Qué es?">
+                        <i class="fas fa-question-circle text-info"></i>
+                    </a>
+                </label>
             </div>
         </div>
         <div class="col-md-6 mb-3">

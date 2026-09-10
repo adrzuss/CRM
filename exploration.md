@@ -1,150 +1,139 @@
-## Exploration: Configuraciones.html Visual Redesign — Accordion Pattern
+## Exploration: comisiones
 
 ### Current State
 
-The `configuraciones.html` template is a **357-line monolithic template** containing **12 configuration sections**, each rendered as a stacked `div.card.m-3`. Every section has an `<h4>` title inside the card, followed by a `card-body` with the section content.
+**Architecture Overview:**
+- Flask app factory pattern (`create_app()` in `index.py`)
+- Blueprints registered with url_prefix (e.g., `bp_ventas` → `/ventas`)
+- SQLAlchemy ORM with `db = SQLAlchemy()` in `utils/db.py`
+- MySQL database, Alembic migrations in `migrations/`
+- Templates: Jinja2 extending `base.html`, using Bootstrap 5, SweetAlert2, HTMX, jQuery
+- Frontend JS: separate files per module in `static/js/`, jQuery-based with `swal-helpers.js`
+- Spanish naming throughout (snake_case functions, PascalCase models)
 
-**Section inventory (in order):**
+**Models Pattern (models/ventas.py):**
+- `Factura` → table `facturav`: id, idcliente, idlista, fecha, total, neto, bonificacion, iva, exento, impint, idtipocomprobante, idsucursal, idusuario, nro_comprobante, punto_vta, cae, cae_vto, fecha_emision, idempotency_key
+- `Item` → table `itemsv`: idfactura (FK), id, idarticulo, cantidad, precio_unitario, precio_total, neto, bonificacion, iva, idalciva, ingbto, idingbto, exento, impint, idoferta, id_color, id_detalle
+- `PagosFV` → table `pagos_fv`: idfactura, idpago, tipo, total, entidad
+- `ControlNc` → tracks credit notes: id_comprobante, id_comprobante_org, fecha
+- NOTE: No `costo_unitario` field in `itemsv` currently — must be added
 
-| # | Section | Pattern | HTMX Add Route | Partial Table |
-|---|---------|---------|----------------|---------------|
-| 1 | Configuración general | Standalone form (no table) | N/A (POST form) | N/A |
-| 2 | Alícuotas de IVA | Form (col-5) + Table (col-7) | `htmx_add_alc_iva` | `_tabla_alc_iva.html` |
-| 3 | Alícuotas de Ing. Brutos | Form (col-5) + Table (col-7) | `htmx_add_alc_ib` | `_tabla_alc_ib.html` |
-| 4 | Listas de precios | Form (col-5) + Table (col-7) | `htmx_add_lista_precio` | `_tabla_listas_precios.html` |
-| 5 | Listas de tareas | Form (col-5) + Table (col-7) | `htmx_add_tarea` | `_tabla_tareas.html` |
-| 6 | Plan de cuentas | Form (col-5) + Table (col-7) | `htmx_add_planCta` | `_tabla_plan_ctas.html` |
-| 7 | Tipo IVAs + Tipo Documentos | **Side-by-side** (col-6 + col-6), table-only | N/A (edit-only) | `_tabla_tipo_ivas.html` + `_tabla_tipo_docs.html` |
-| 8 | Categorías de clientes | Form (col-5) + Table (col-7) | `htmx_add_categoria` | `_tabla_categorias.html` |
-| 9 | Monedas y billetes | Form (col-5) + Table (col-7) | `htmx_add_monedabillete` | `_tabla_monedas_billetes.html` |
-| 10 | Colores | Form (col-5) + Table (col-7) | `htmx_add_color` | `_tabla_colores.html` |
-| 11 | Detalle | Form (col-5) + Table (col-7) | `htmx_add_detalle_articulo` | `_tabla_detalles_articulos.html` |
+**Articulo model (models/articulos.py):**
+- Has `costo` (Decimal 20,6) and `costo_total` (Decimal 20,6)
+- Has `idmarca`, `idrubro`, `idtipoarticulo` — all FKs needed for commission rules
+- Has `precios` relationship to `Precio` model
 
-**Existing consistent pattern (9 of 12 sections):**
-```html
-<div class="card m-3">
-    <h4 class="m-3">Title</h4>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-5">
-                <div class="card">
-                    <div class="card-body">
-                        <h6>Ingreso de ...</h6>
-                        <form hx-post="..." hx-target="#tabla-xxx" hx-swap="innerHTML" ...>
-                            <!-- form fields -->
-                            <button class="btn btn-exito" type="submit">Grabar</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="card" id="tabla-xxx">
-                    {% include 'partials/_tabla_xxx.html' %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+**Sales Flow (services/ventas/ventas.py):**
+1. `procesar_nueva_venta(form, id_sucursal)` — main entry point
+2. Checks idempotency key, creates `Factura` record
+3. `procesar_items()` — iterates form items, creates `Item` records, updates stock
+4. `procesar_pagos()` — creates `PagosFV` records (efectivo=tipo1, tarjeta=tipo2, ctacte=tipo3, bonificacion=tipo4, credito=tipo5, nota_credito=tipo20, vale=tipo21)
+5. If credit note: calls `procesar_nueva_nc()` which creates `ControlNc` record
+6. All within one transaction with rollback on error
+
+**Credit Note Flow:**
+- Route `nueva_nota_credito` reuses `procesar_nueva_venta()` with same transaction
+- `ControlNc` links NC to original invoice
+- Stock updates with `tipoMovimiento = 'NotaCredito'` for NC types
+- NC types identified via `tipo_comp_aplica.id_tipo_oper` (Venta vs Nota de Crédito)
+- NC used as payment method (vale) via `PagosFV` tipo=21
+
+**Payment Flow:**
+- `pagos_fv` table: tipo 1=efectivo, 2=tarjeta, 3=ctacte, 4=bonificacion, 5=credito, 20=nota_credito, 21=vale, 99=vuelto
+- `MovEntidades` tracks card transactions
+- `CtaCteCli` tracks account movements
+
+**User/Vendor System:**
+- `Usuarios` model (models/sessions.py): id, nombre, usuario, clave, documento, email, telefono, direccion
+- NO explicit "vendedor" role — vendors are just users with `idusuario` in `facturav`
+- Session stores: `user_id`, `id_sucursal`, `id_empresa`
+- `facturav.idusuario` = who registered the sale (currently used as "vendedor")
+
+**Permission System:**
+- `Tareas` model: roles/tasks (id, tarea)
+- `TareasUsuarios`: assigns tasks to users (idtarea, idusuario)
+- `OpcionesMenu`: menu items with `codigo` string identifier
+- `PermisosMenu`: links menu options to tasks
+- Template function `tiene_permiso('codigo')` checks permission
+- Decorator `@check_session` validates session
+- If no permissions configured → allows all (backward compatible)
+- Sidebar uses `tiene_permiso('Nueva venta')` etc.
+
+**Database Access Patterns:**
+- ORM: `db.session.query()`, `db.session.get()`, `Model.query.filter_by()`
+- Raw SQL: `db.session.execute(text("CALL procedure(:param)"), params)`
+- Heavy use of stored procedures for reports
+- `Decimal` for all monetary values
+- `db.session.flush()` before getting auto-increment IDs
+
+**Template Patterns:**
+- Templates in `templates/{module}/` directories
+- Extend `base.html`, use `{% block body %}`
+- Bootstrap 5 cards with `.modern-card`, `.card-header`
+- Partials in `templates/partials/` and `templates/{module}/partials/`
+- jQuery AJAX for dynamic operations, SweetAlert2 for alerts
+- HTMX for some dynamic updates
+- DataTables for list views
+
+**Blueprint Registration Pattern (index.py):**
+```python
+from routes.ventas import bp_ventas
+app.register_blueprint(bp_ventas, url_prefix='/ventas')
 ```
 
-**Non-standard section:**
-- **Tipo IVAs + Tipo Documentos** (line 182-202): A single card containing two side-by-side `col-6` columns, each with just a table (no add form). These are edit-only sections.
+**Sidebar Pattern:**
+- Collapsible sections with `data-bs-toggle="collapse"`
+- Permission-gated links using `tiene_permiso('codigo')`
 
 ### Affected Areas
 
-- `templates/configuracion/configuraciones.html` — Main template, needs complete restructuring to accordion layout
-- `templates/configuracion/partials/_configuracion.html` — Configuración general section (included as-is, no structural change needed beyond accordion wrapping)
-- `templates/configuracion/partials/_tabla_alc_iva.html` — Alícuotas IVA table partial
-- `templates/configuracion/partials/_tabla_alc_ib.html` — Alícuotas IB table partial
-- `templates/configuracion/partials/_tabla_listas_precios.html` — Listas precios table partial
-- `templates/configuracion/partials/_tabla_tareas.html` — Tareas table partial
-- `templates/configuracion/partials/_tabla_plan_ctas.html` — Plan cuentas table partial
-- `templates/configuracion/partials/_tabla_tipo_ivas.html` — Tipo IVAs table partial
-- `templates/configuracion/partials/_tabla_tipo_docs.html` — Tipo Documentos table partial
-- `templates/configuracion/partials/_tabla_categorias.html` — Categorías table partial
-- `templates/configuracion/partials/_tabla_monedas_billetes.html` — Monedas/billetes table partial
-- `templates/configuracion/partials/_tabla_colores.html` — Colores table partial
-- `templates/configuracion/partials/_tabla_detalles_articulos.html` — Detalles table partial
-- `routes/configs.py` — Needs new route/model for "Reglas de redondeo" section
-- `models/configs.py` — Needs new model for "Reglas de redondeo" if not exists
-- `static/css/main.css` — May need additional accordion-specific styles
+- `models/ventas.py` — must add `costo_unitario` and `costo_total` to `Item` model
+- `services/ventas/ventas.py` — must capture `articulo.costo` during item creation in `procesar_items()`
+- `index.py` — must register new `bp_comisiones` blueprint
+- `templates/partials/_sidebar.html` — must add Comisiones menu section
+- `models/sessions.py` — may need new `OpcionesMenu` entries for commission permissions
+- NEW: `models/comisiones.py` — 6 new models (planes, reglas, tramos, asignaciones, liquidaciones, detalle)
+- NEW: `routes/comisiones.py` — new blueprint
+- NEW: `services/comisiones/` — service layer with calculator engine
+- NEW: `templates/comisiones/` — CRUD screens
+- NEW: `static/js/comisiones.js` — frontend logic
 
-### Bootstrap 5 Accordion Availability
+### Approaches
 
-**YES — Bootstrap 5.3.3 is fully available:**
-- CSS CDN: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css` (line 25 of base.html)
-- JS Bundle (includes Popper): `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js` (line 117 of base.html)
+1. **Monolith integration** — Follow existing pattern: models in `models/`, services in `services/`, routes in `routes/`
+   - Pros: Matches existing architecture exactly, easy for team to maintain
+   - Cons: Files may get large, no clear module boundary
+   - Effort: Medium
 
-The Bootstrap 5 accordion component requires NO additional dependencies. It uses standard Bootstrap CSS classes (`accordion`, `accordion-item`, `accordion-header`, `accordion-button`, `accordion-collapse`, `accordion-body`) and data attributes (`data-bs-toggle="collapse"`, `data-bs-target="..."`).
+2. **Self-contained module** — Create `comisiones/` package with routes, services, models, calculator
+   - Pros: Clear separation, spec recommends this (Section 48), extensible
+   - Cons: Slightly different from existing pattern, more files to manage
+   - Effort: Medium-High
 
-### HTMX Integration Consideration
+3. **Hybrid** — Models in `models/comisiones.py`, services in `services/comisiones/`, routes in `routes/comisiones.py`
+   - Pros: Follows existing conventions while keeping commission logic grouped
+   - Cons: Slightly less self-contained than approach 2
+   - Effort: Medium
 
-HTMX partials render table content into `#tabla-xxx` divs. The accordion pattern is compatible because:
-- The `hx-target` and `hx-swap` attributes reference the table container divs, which will still exist inside accordion bodies
-- Bootstrap 5 accordion collapse/expand is CSS-driven and won't interfere with HTMX DOM swaps
-- The existing `hx-on::after-request="if(event.detail.successful) this.reset()"` pattern works unchanged
+### Recommendation
 
-### Partials That Need Modification
-
-**Table partials (11 files)** — These are fine as-is since HTMX swaps their innerHTML. The only change is that their parent containers will now be inside accordion bodies instead of standalone cards. No changes needed to the partials themselves.
-
-**The main template (`configuraciones.html`)** — This is where ALL the structural change happens. Each `<div class="card m-3">` section wraps into an `accordion-item`.
-
-### Sections with Non-Standard Layouts
-
-1. **Configuración general** (section 1) — Standalone form, no table, no HTMX. This is a complex multi-section form with sub-sections. Should probably be the **first accordion item, expanded by default**.
-
-2. **Tipo IVAs + Tipo Documentos** (section 7) — Single card with two side-by-side `col-6` sections, each with only a table (no add form). These are edit-only. Could be split into two accordion items or kept as one with internal tabs.
-
-### Approach: Bootstrap 5 Accordion
-
-**Structure per section:**
-```html
-<div class="accordion-item">
-    <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" 
-                data-bs-toggle="collapse" data-bs-target="#collapse-xxx">
-            <i class="fas fa-icon me-2"></i> Section Title
-        </button>
-    </h2>
-    <div id="collapse-xxx" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
-        <div class="accordion-body">
-            <!-- existing section content (form+table row) -->
-        </div>
-    </div>
-</div>
-```
-
-**Recommendation:**
-- Wrap all 12 sections in a single `<div class="accordion" id="configAccordion">`
-- Each section becomes an `accordion-item`
-- First item (Configuración general) should be expanded by default (`accordion-button` without `collapsed` class, `accordion-collapse show`)
-- Use `data-bs-parent="#configAccordion"` for mutual exclusion (only one open at a time)
-- Add section icons to accordion buttons for visual distinction
-- For "Tipo IVAs + Tipo Documentos", split into two separate accordion items for better UX
-- Add CSS for accordion button styling to match the project's design system (gradients, custom colors)
-
-**Pros:**
-- Bootstrap 5 native — no new dependencies
-- Reduces visual clutter — only one section visible at a time
-- Consistent with Bootstrap ecosystem already in use
-- HTMX partials work unchanged
-- Minimal JS needed (Bootstrap handles collapse behavior)
-
-**Cons:**
-- Users can only see one section at a time (may slow down users who frequently jump between sections)
-- The existing nested card-inside-card pattern may look odd inside accordion body — need to flatten the inner cards or style them as bordered sections
+**Approach 3 (Hybrid)** — because:
+- The existing codebase has a very consistent pattern (one model file per domain, one route file per domain, services grouped by domain)
+- Deviating too much creates maintenance friction
+- The calculator engine can live in `services/comisiones/calculator.py` as the spec suggests
+- Models go in `models/comisiones.py` following the pattern of `models/ventas.py`, `models/articulos.py`
+- Routes go in `routes/comisiones.py` following existing blueprint pattern
 
 ### Risks
 
-- **HTMX + Accordion interaction**: If a user expands a section, submits via HTMX, the partial swap works. But if they collapse and re-expand, the previously swapped content persists (which is correct behavior). No risk here.
-- **Inner nested cards**: The existing pattern has a `card` inside the accordion `accordion-body` (the form card and the table card). These should be restyled to remove the outer card border or kept as subtle sections to avoid visual nesting.
-- **"Reglas de redondeo" section**: Requires new model, route, partial, and form. This is a new feature addition on top of the visual redesign.
+1. **Historical data** — Existing sales lack `costo_unitario` in items; margin calculations require this. Must handle NULL/0 gracefully.
+2. **Stored procedures** — Many report queries use MySQL stored procedures; commission reports may need new SPs or ORM queries.
+3. **Performance** — Commission calculation iterates all items in a period; needs batch queries, not N+1.
+4. **Transaction safety** — Adding `costo_unitario` capture to `procesar_items()` modifies the existing sale transaction — must be backward-compatible (default 0).
+5. **Permission granularity** — Current permission system uses string codes in `OpcionesMenu.codigo`; must add new codes without breaking existing ones.
+6. **NC identification** — Must correctly identify NC vs Sale using `tipo_comp_aplica.id_tipo_oper`; verify the exact type IDs.
+7. **Idempotency** — Commission calculation must be idempotent per spec; requires unique constraint on (id_liquidacion, id_factura, id_item, id_regla).
 
 ### Ready for Proposal
 
-Yes — the exploration is complete. The orchestrator should:
-1. Confirm the accordion approach (single accordion, one open at a time)
-2. Decide whether "Tipo IVAs + Tipo Documentos" should be one or two accordion items
-3. Clarify what "Reglas de redondeo" should contain (fields, validation, behavior)
-4. Proceed to SDD proposal phase
+Yes — the exploration is complete. The spec is thorough and the codebase patterns are well understood. Ready to proceed to proposal/design phase.

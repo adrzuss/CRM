@@ -2,7 +2,7 @@ from flask import session, redirect, url_for
 
 from functools import wraps
 from decimal import Decimal, InvalidOperation
-from models.configs import AlcIva
+from configs.models import AlcIva
 import locale
 
 # Set the locale to default 'C' locale

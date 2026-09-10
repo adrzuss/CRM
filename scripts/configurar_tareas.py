@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask
 from utils.config import Config
 from utils.db import db
-from models.sessions import Tareas, Usuarios, TareasUsuarios
+from sessions.models import Tareas, Usuarios, TareasUsuarios
 
 def create_app():
     """Crear la aplicación Flask para acceder a la base de datos"""

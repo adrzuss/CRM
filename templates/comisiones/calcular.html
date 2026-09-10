@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-calculator me-1"></i>Calcular
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Calcular Comisiones</h1>
+            <p class="page-subtitle text-muted mb-0">Calcular comisiones para un período específico</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Formulario de cálculo -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-cog me-1"></i>Parámetros de Cálculo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('comisiones.calcular_preview') }}">
+                        <div class="mb-3">
+                            <label for="desde" class="form-label">Fecha Desde *</label>
+                            <input type="date" class="form-control" id="desde" name="desde" 
+                                   value="{{ desde if desde else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="hasta" class="form-label">Fecha Hasta *</label>
+                            <input type="date" class="form-control" id="hasta" name="hasta" 
+                                   value="{{ hasta if hasta else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="usuario_id" class="form-label">Vendedor</label>
+                            <select class="form-select" id="usuario_id" name="usuario_id">
+                                <option value="">Todos los vendedores</option>
+                                {% for vendedor in vendedores %}
+                                <option value="{{ vendedor.id }}" 
+                                        {{ 'selected' if usuario_id and usuario_id == vendedor.id }}>
+                                    {{ vendedor.usuario }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-play me-1"></i>Previsualizar Cálculo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="col-lg-8">
+            {% if resultado %}
+            <!-- Resumen -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-1"></i>Resumen del Cálculo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Comisiones
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-success">
+                                    ${{ "{:,.2f}".format(resultado.total) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Vendedores
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-info">
+                                    {{ resultado.resumen_por_vendedor|length }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Detalles
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-warning">
+                                    {{ resultado.detalles|length }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen por vendedor -->
+            {% if resultado.resumen_por_vendedor %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users me-1"></i>Por Vendedor
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Vendedor ID</th>
+                                    <th class="text-end">Total Comisión</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vendedor_id, total in resultado.resumen_por_vendedor.items() %}
+                                <tr>
+                                    <td>Vendedor {{ vendedor_id }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(total) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Detalles -->
+            {% if resultado.detalles %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Detalle de Comisiones
+                    </h6>
+                    <form method="POST" action="{{ url_for('comisiones.calcular_confirmar') }}" class="d-inline">
+                        <input type="hidden" name="desde" value="{{ desde }}">
+                        <input type="hidden" name="hasta" value="{{ hasta }}">
+                        {% if usuario_id %}
+                        <input type="hidden" name="usuario_id" value="{{ usuario_id }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-1"></i>Confirmar y Crear Liquidación
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Vendedor</th>
+                                    <th>Factura</th>
+                                    <th>Artículo</th>
+                                    <th>Tipo</th>
+                                    <th class="text-end">Venta</th>
+                                    <th class="text-end">Costo</th>
+                                    <th class="text-end">Margen</th>
+                                    <th class="text-end">%</th>
+                                    <th class="text-end">Comisión</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for det in resultado.detalles %}
+                                <tr>
+                                    <td>{{ det.idusuario }}</td>
+                                    <td>{{ det.idfactura }}</td>
+                                    <td>{{ det.id_item }}</td>
+                                    <td><span class="badge bg-{{ 'success' if det.tipo_movimiento == 'VENTA' else 'danger' }}">{{ det.tipo_movimiento }}</span></td>
+                                    <td class="text-end">${{ "{:,.2f}".format(det.importe_venta|float) }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(det.importe_costo|float) }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(det.importe_margen|float) }}</td>
+                                    <td class="text-end">{{ det.porcentaje }}%</td>
+                                    <td class="text-end font-weight-bold text-{{ 'success' if det.importe_comision|float > 0 else 'danger' }}">
+                                        ${{ "{:,.2f}".format(det.importe_comision|float) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Sin resultados -->
+            <div class="card shadow mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-calculator fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-muted">Ingrese los parámetros y haga clic en "Previsualizar Cálculo"</h5>
+                    <p class="text-muted">Se mostrarán las comisiones calculadas antes de confirmar</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.listar_planes') }}">
+                <i class="fas fa-file-invoice me-1"></i>Planes
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}">{{ plan.nombre }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-gavel me-1"></i>Reglas
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div class="header-icon bg-primary">
+                <i class="fas fa-gavel"></i>
+            </div>
+            <div class="ms-3">
+                <h1 class="page-title mb-0">Reglas de Comisión</h1>
+                <p class="page-subtitle text-muted mb-0">Plan: {{ plan.nombre }}</p>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevaRegla">
+                <i class="fas fa-plus me-1"></i>Nueva Regla
+            </button>
+            <a href="{{ url_for('comisiones.ver_plan', id=plan.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Lista de reglas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-1"></i>Reglas Configuradas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if reglas %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Criterio</th>
+                                    <th>Valor Criterio</th>
+                                    <th>Porcentaje</th>
+                                    <th>Importe Fijo</th>
+                                    <th>Prioridad</th>
+                                    <th>Acumulable</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for regla in reglas %}
+                                <tr>
+                                    <td><strong>{{ regla.nombre }}</strong></td>
+                                    <td><span class="badge bg-info">{{ regla.tipo_regla }}</span></td>
+                                    <td>{{ regla.criterio }}</td>
+                                    <td>{{ regla.valor_criterio }}</td>
+                                    <td>{{ regla.porcentaje }}%</td>
+                                    <td>${{ regla.importe_fijo }}</td>
+                                    <td>{{ regla.prioridad }}</td>
+                                    <td>
+                                        {% if regla.acumulable %}
+                                        <span class="badge bg-success">Sí</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-editar-regla"
+                                                    title="Editar"
+                                                    data-id="{{ regla.id }}"
+                                                    data-nombre="{{ regla.nombre }}"
+                                                    data-tipo-regla="{{ regla.tipo_regla }}"
+                                                    data-criterio="{{ regla.criterio }}"
+                                                    data-valor-criterio="{{ regla.valor_criterio }}"
+                                                    data-porcentaje="{{ regla.porcentaje }}"
+                                                    data-importe-fijo="{{ regla.importe_fijo }}"
+                                                    data-prioridad="{{ regla.prioridad }}"
+                                                    data-acumulable="{{ '1' if regla.acumulable else '0' }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form method="POST" action="{{ url_for('comisiones.eliminar_regla', id=regla.id) }}" 
+                                                  class="d-inline frm-confirmar-eliminar">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-gavel fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-muted">No hay reglas configuradas para este plan</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaRegla">
+                            <i class="fas fa-plus me-1"></i>Crear Primera Regla
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Regla -->
+<div class="modal fade" id="modalNuevaRegla" tabindex="-1" aria-labelledby="modalNuevaReglaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('comisiones.nueva_regla', id_plan=plan.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevaReglaLabel">Nueva Regla de Comisión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tipo_regla" class="form-label">Tipo de Regla *
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpTipoRegla" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <select class="form-select" id="tipo_regla" name="tipo_regla" required>
+                                {% for tr in tipos_regla %}
+                                <option value="{{ tr.value }}">{{ tr.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="criterio" class="form-label">Criterio *
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpCriterio" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <select class="form-select" id="criterio" name="criterio" required>
+                                <option value="TODOS">Todos</option>
+                                <option value="RUBRO">Rubro</option>
+                                <option value="MARCA">Marca</option>
+                                <option value="ARTICULO">Artículo</option>
+                                <option value="TIPO_COMPROBANTE">Tipo Comprobante</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="valor_criterio" class="form-label">Valor Criterio</label>
+                            <input type="text" class="form-control" id="valor_criterio" name="valor_criterio" 
+                                   placeholder="ID o nombre del criterio">
+                            <small class="text-muted">Dejar vacío para "Todos"</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="porcentaje" class="form-label">Porcentaje (%)</label>
+                            <input type="number" class="form-control" id="porcentaje" name="porcentaje" 
+                                   step="0.000001" min="0" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="importe_fijo" class="form-label">Importe Fijo</label>
+                            <input type="number" class="form-control" id="importe_fijo" name="importe_fijo" 
+                                   step="0.01" min="0" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="prioridad" class="form-label">Prioridad
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpPrioridad" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <input type="number" class="form-control" id="prioridad" name="prioridad" 
+                                   min="0" value="0">
+                            <small class="text-muted">Mayor = mayor prioridad</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="acumulable" name="acumulable" value="1">
+                                <label class="form-check-label" for="acumulable">
+                                    Acumulable con otras reglas
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpAcumulable" class="text-decoration-none" title="¿Qué es?">
+                                        <i class="fas fa-question-circle text-info"></i>
+                                    </a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Guardar Regla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Regla -->
+<div class="modal fade" id="modalEditarRegla" tabindex="-1" aria-labelledby="modalEditarReglaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" id="formEditarRegla">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarReglaLabel">Editar Regla de Comisión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editar_nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="editar_nombre" name="nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar_tipo_regla" class="form-label">Tipo de Regla *
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpTipoRegla" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <select class="form-select" id="editar_tipo_regla" name="tipo_regla" required>
+                                {% for tr in tipos_regla %}
+                                <option value="{{ tr.value }}">{{ tr.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editar_criterio" class="form-label">Criterio *
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpCriterio" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <select class="form-select" id="editar_criterio" name="criterio" required>
+                                <option value="TODOS">Todos</option>
+                                <option value="RUBRO">Rubro</option>
+                                <option value="MARCA">Marca</option>
+                                <option value="ARTICULO">Artículo</option>
+                                <option value="TIPO_COMPROBANTE">Tipo Comprobante</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editar_valor_criterio" class="form-label">Valor Criterio</label>
+                            <input type="text" class="form-control" id="editar_valor_criterio" name="valor_criterio">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="editar_porcentaje" class="form-label">Porcentaje (%)</label>
+                            <input type="number" class="form-control" id="editar_porcentaje" name="porcentaje" 
+                                   step="0.000001" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editar_importe_fijo" class="form-label">Importe Fijo</label>
+                            <input type="number" class="form-control" id="editar_importe_fijo" name="importe_fijo" 
+                                   step="0.01" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editar_prioridad" class="form-label">Prioridad
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#helpPrioridad" class="text-decoration-none" title="¿Qué es?">
+                                    <i class="fas fa-question-circle text-info"></i>
+                                </a>
+                            </label>
+                            <input type="number" class="form-control" id="editar_prioridad" name="prioridad" min="0">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editar_acumulable" name="acumulable" value="1">
+                                <label class="form-check-label" for="editar_acumulable">
+                                    Acumulable con otras reglas
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpAcumulable" class="text-decoration-none" title="¿Qué es?">
+                                        <i class="fas fa-question-circle text-info"></i>
+                                    </a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Actualizar Regla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modals -->
+<div class="modal fade" id="helpTipoRegla" tabindex="-1" aria-labelledby="helpTipoReglaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpTipoReglaLabel">Tipo de Regla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Define si la regla puede <strong>combinarse</strong> con otras reglas del mismo plan.</p>
+                <ul class="mb-0">
+                    <li><strong>EXCLUSIVA</strong>: cuando una venta cumple esta regla, se aplica SOLO esta. Las demás se ignoran.</li>
+                    <li><strong>ACUMULABLE</strong>: la comisión de esta regla se suma con la de otras reglas que también apliquen a la misma venta.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpCriterio" tabindex="-1" aria-labelledby="helpCriterioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpCriterioLabel">Criterio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Filtra a qué ventas aplica la regla.</p>
+                <ul class="mb-0">
+                    <li><strong>TODOS</strong>: aplica a cualquier venta del vendedor.</li>
+                    <li><strong>RUBRO</strong>: aplica solo a artículos de un rubro específico (ej: "Electrónica").</li>
+                    <li><strong>MARCA</strong>: aplica solo a artículos de una marca específica (ej: "Samsung").</li>
+                    <li><strong>ARTICULO</strong>: aplica a un artículo específico por ID o nombre.</li>
+                    <li><strong>TIPO_COMPROBANTE</strong>: aplica según tipo de factura (ej: solo "Factura A").</li>
+                </ul>
+                <p class="mt-2 mb-0"><strong>Valor Criterio</strong>: el valor exacto a matchear (ej: el nombre del rubro). Dejar vacío si el criterio es "TODOS".</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpPrioridad" tabindex="-1" aria-labelledby="helpPrioridadLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpPrioridadLabel">Prioridad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Cuando varias reglas <strong>exclusivas</strong> podrían aplicar a la misma venta, se elige la de <strong>mayor prioridad</strong> (número más alto).</p>
+                <ul class="mb-0">
+                    <li>Si dos reglas exclusivas tienen la misma prioridad, gana la de menor ID (primera creada).</li>
+                    <li>La prioridad no afecta reglas acumulables.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpAcumulable" tabindex="-1" aria-labelledby="helpAcumulableLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpAcumulableLabel">Acumulable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Si está marcada como acumulable, la comisión de esta regla se <strong>suma</strong> con la de otras reglas acumulables que apliquen.</p>
+                <p class="mb-0">Ejemplo: una regla del 3% por marca Samsung + una regla del 1% por rubro Electrónica = <strong>4% total</strong> en una venta de un TV Samsung.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_script %}
+<script nonce="{{ g.nonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Editar regla
+    document.querySelectorAll('.btn-editar-regla').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var d = this.dataset;
+            document.getElementById('formEditarRegla').action = '/comisiones/reglas/' + d.id + '/editar';
+            document.getElementById('editar_nombre').value = d.nombre;
+            document.getElementById('editar_tipo_regla').value = d.tipoRegla;
+            document.getElementById('editar_criterio').value = d.criterio;
+            document.getElementById('editar_valor_criterio').value = d.valorCriterio;
+            document.getElementById('editar_porcentaje').value = d.porcentaje;
+            document.getElementById('editar_importe_fijo').value = d.importeFijo;
+            document.getElementById('editar_prioridad').value = d.prioridad;
+            document.getElementById('editar_acumulable').checked = d.acumulable === '1';
+            new bootstrap.Modal(document.getElementById('modalEditarRegla')).show();
+        });
+    });
+
+    // Confirmar eliminación
+    document.querySelectorAll('.frm-confirmar-eliminar').forEach(function(frm) {
+        frm.addEventListener('submit', function(e) {
+            if (!confirm('¿Está seguro de eliminar esta regla?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

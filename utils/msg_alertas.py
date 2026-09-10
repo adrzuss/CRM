@@ -1,12 +1,12 @@
 import time
 from flask import g, session
 from functools import wraps
-from services.articulos import alerta_stocks_faltante, alerta_stocks_limite, alerta_precios_nuevos, remitos_mercaderia
-from services.ctactecli import ctacte_vencida
-from services.sessions import alerta_mensajes_usuario, alerta_mensajes_sucursal, alerta_mensajes_creditos_nuevos, \
+from articulos.services import alerta_stocks_faltante, alerta_stocks_limite, alerta_precios_nuevos, remitos_mercaderia
+from ctactecli.services import ctacte_vencida
+from sessions.services import alerta_mensajes_usuario, alerta_mensajes_sucursal, alerta_mensajes_creditos_nuevos, \
                               alerta_mensajes_creditos_pendientes, alerta_mensajes_creditos_rechazados, \
                               alerta_mensajes_creditos_aprobados
-from services.creditos import alerta_creditos_atrasados                              
+from creditos.services import alerta_creditos_atrasados                              
 
 # Cache en memoria por usuario+sucursal para evitar N queries por request
 _cache = {}

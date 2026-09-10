@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-calculator me-1"></i>Comisiones
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Sistema de Comisiones</h1>
+            <p class="page-subtitle text-muted mb-0">Gestión de planes, cálculos y liquidaciones</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Tarjetas de resumen -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Planes Activos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ planes_activos }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Liquidaciones Pendientes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_pendientes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Comisiones del Mes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "{:,.2f}".format(total_comisiones_mes) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Accesos Rápidos
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <a href="{{ url_for('comisiones.calcular_form') }}" class="text-decoration-none">
+                                    Calcular
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bolt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces rápidos -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-file-invoice me-1"></i>Gestión de Planes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Administrar planes de comisiones, reglas y tramos</p>
+                    <a href="{{ url_for('comisiones.listar_planes') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Ver Planes
+                    </a>
+                    <a href="{{ url_for('comisiones.nuevo_plan') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus me-1"></i>Nuevo Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-user-check me-1"></i>Asignaciones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Asignar planes a vendedores</p>
+                    <a href="{{ url_for('comisiones.listar_asignaciones') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Ver Asignaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-calculator me-1"></i>Calcular Comisiones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Calcular y generar liquidaciones</p>
+                    <a href="{{ url_for('comisiones.calcular_form') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-play me-1"></i>Calcular
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-file-alt me-1"></i>Liquidaciones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Ver y gestionar liquidaciones</p>
+                    <a href="{{ url_for('comisiones.listar_liquidaciones') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Ver Liquidaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-chart-bar me-1"></i>Reportes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Análisis de comisiones por vendedor, período o artículo</p>
+                    <a href="{{ url_for('comisiones.reportes') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-chart-line me-1"></i>Ver Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

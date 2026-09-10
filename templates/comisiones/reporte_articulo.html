@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.reportes') }}">
+                <i class="fas fa-chart-bar me-1"></i>Reportes
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-box me-1"></i>Por Artículo
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Reporte por Artículo</h1>
+            <p class="page-subtitle text-muted mb-0">Comisiones generadas por artículo vendido</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-cog me-1"></i>Parámetros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="desde" class="form-label">Desde *</label>
+                                <input type="date" class="form-control" id="desde" name="desde" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="hasta" class="form-label">Hasta *</label>
+                                <input type="date" class="form-control" id="hasta" name="hasta" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Generar Reporte
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="col-lg-8">
+            {% if datos %}
+            <!-- Resumen -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-1"></i>Resumen del Período
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total General
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-success">
+                                    ${{ "{:,.2f}".format(datos.total_general) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Período
+                                </div>
+                                <div class="h6 mb-0 font-weight-bold text-info">
+                                    {{ datos.desde.strftime('%d/%m/%Y') }} - {{ datos.hasta.strftime('%d/%m/%Y') }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Artículos
+                                </div>
+                                <div class="h4 mb-0 font-weight-bold text-warning">
+                                    {{ datos.por_articulo|length }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose por artículo -->
+            {% if datos.por_articulo %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-box me-1"></i>Desglose por Artículo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Artículo</th>
+                                    <th class="text-center">Veces Vendido</th>
+                                    <th class="text-end">Total Comisión</th>
+                                    <th class="text-end">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for articulo_id, info in datos.por_articulo.items() %}
+                                <tr>
+                                    <td><strong>{{ info.nombre }}</strong></td>
+                                    <td class="text-center">{{ info.cantidad }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(info.total) }}</td>
+                                    <td class="text-end">
+                                        {% if datos.total_general > 0 %}
+                                        {{ "%.1f"|format((info.total / datos.total_general) * 100) }}%
+                                        {% else %}
+                                        0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-primary">
+                                    <td><strong>TOTAL</strong></td>
+                                    <td class="text-center">
+                                        <strong>{{ datos.por_articulo.values()|sum(attribute='cantidad') }}</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>${{ "{:,.2f}".format(datos.total_general) }}</strong>
+                                    </td>
+                                    <td class="text-end"><strong>100%</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="card shadow mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-box fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-muted">Seleccione un período para generar el reporte</h5>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

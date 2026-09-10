@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('comisiones.dashboard') }}">
+                <i class="fas fa-calculator me-1"></i>Comisiones
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-chart-bar me-1"></i>Reportes
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de página -->
+<div class="page-header mb-4">
+    <div class="d-flex align-items-center">
+        <div class="header-icon bg-primary">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="ms-3">
+            <h1 class="page-title mb-0">Reportes de Comisiones</h1>
+            <p class="page-subtitle text-muted mb-0">Análisis y estadísticas de comisiones</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Reporte por Vendedor -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-user me-1"></i>Por Vendedor
+                    </h6>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted flex-grow-1">Ver comisiones calculadas por vendedor en un período específico</p>
+                    <a href="{{ url_for('comisiones.reporte_vendedor') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-1"></i>Ver Reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte por Período -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar me-1"></i>Por Período
+                    </h6>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted flex-grow-1">Resumen de comisiones por período con desglose por vendedor</p>
+                    <a href="{{ url_for('comisiones.reporte_periodo') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-1"></i>Ver Reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte por Artículo -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-box me-1"></i>Por Artículo
+                    </h6>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted flex-grow-1">Análisis de comisiones generadas por artículo vendido</p>
+                    <a href="{{ url_for('comisiones.reporte_articulo') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-pie me-1"></i>Ver Reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

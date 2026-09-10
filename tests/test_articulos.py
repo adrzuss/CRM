@@ -61,11 +61,11 @@ def test_get_articulos_listado(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.render_template', return_value='') as mock_render:
-                with patch('models.articulos.Marca.query') as mock_marca_query:
+            with patch('articulos.routes.render_template', return_value='') as mock_render:
+                with patch('articulos.models.Marca.query') as mock_marca_query:
                     mock_marca_query.order_by.return_value.all.return_value = [mock_marca]
 
-                    with patch('models.articulos.Rubro.query') as mock_rubro_query:
+                    with patch('articulos.models.Rubro.query') as mock_rubro_query:
                         mock_rubro_query.order_by.return_value.all.return_value = [mock_rubro]
 
                         response = client.get('/articulos/articulos')
@@ -104,7 +104,7 @@ def test_api_articulos_datatables(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.get_listado_articulos',
+            with patch('articulos.routes.get_listado_articulos',
                        return_value=(1, 2, 2, mock_data)) as mock_get_listado:
 
                     response = client.get('/articulos/api/articulos?draw=1&start=0&length=10')
@@ -132,7 +132,7 @@ def test_api_articulos_sin_resultados(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.get_listado_articulos',
+            with patch('articulos.routes.get_listado_articulos',
                        return_value=(1, 0, 0, [])):
 
                     response = client.get('/articulos/api/articulos?draw=1&start=0&length=10')
@@ -197,26 +197,26 @@ def test_get_update_articulo_existente(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.render_template', return_value='') as mock_render:
-                with patch('models.articulos.Marca.query') as mock_marca:
+            with patch('articulos.routes.render_template', return_value='') as mock_render:
+                with patch('articulos.models.Marca.query') as mock_marca:
                     mock_marca.order_by.return_value.all.return_value = []
 
-                    with patch('models.configs.AlcIva.query') as mock_iva:
+                    with patch('configs.models.AlcIva.query') as mock_iva:
                         mock_iva.all.return_value = []
 
-                        with patch('models.configs.AlcIB.query') as mock_ib:
+                        with patch('configs.models.AlcIB.query') as mock_ib:
                             mock_ib.all.return_value = []
 
-                            with patch('models.articulos.Rubro.query') as mock_rubro:
+                            with patch('articulos.models.Rubro.query') as mock_rubro:
                                 mock_rubro.order_by.return_value.all.return_value = []
 
-                                with patch('models.configs.TipoArticulos.query') as mock_tipo:
+                                with patch('configs.models.TipoArticulos.query') as mock_tipo:
                                     mock_tipo.all.return_value = []
 
-                                    with patch('models.articulos.Colores.query') as mock_col:
+                                    with patch('articulos.models.Colores.query') as mock_col:
                                         mock_col.all.return_value = []
 
-                                        with patch('models.articulos.DetallesArticulos.query') as mock_det:
+                                        with patch('articulos.models.DetallesArticulos.query') as mock_det:
                                             mock_det.all.return_value = []
 
                                             with patch('utils.db.db.session.query',
@@ -251,29 +251,29 @@ def test_get_update_articulo_nuevo(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.render_template', return_value='') as mock_render:
-                with patch('models.articulos.Marca.query') as mock_marca:
+            with patch('articulos.routes.render_template', return_value='') as mock_render:
+                with patch('articulos.models.Marca.query') as mock_marca:
                     mock_marca.order_by.return_value.all.return_value = []
 
-                    with patch('models.configs.AlcIva.query') as mock_iva:
+                    with patch('configs.models.AlcIva.query') as mock_iva:
                         mock_iva.all.return_value = []
 
-                        with patch('models.configs.AlcIB.query') as mock_ib:
+                        with patch('configs.models.AlcIB.query') as mock_ib:
                             mock_ib.all.return_value = []
 
-                            with patch('models.articulos.Rubro.query') as mock_rubro:
+                            with patch('articulos.models.Rubro.query') as mock_rubro:
                                 mock_rubro.order_by.return_value.all.return_value = []
 
-                                with patch('models.configs.TipoArticulos.query') as mock_tipo:
+                                with patch('configs.models.TipoArticulos.query') as mock_tipo:
                                     mock_tipo.all.return_value = []
 
-                                    with patch('models.articulos.ListasPrecios.query') as mock_lp:
+                                    with patch('articulos.models.ListasPrecios.query') as mock_lp:
                                         mock_lp.all.return_value = []
 
-                                        with patch('models.articulos.Colores.query') as mock_col:
+                                        with patch('articulos.models.Colores.query') as mock_col:
                                             mock_col.all.return_value = []
 
-                                            with patch('models.articulos.DetallesArticulos.query') as mock_det:
+                                            with patch('articulos.models.DetallesArticulos.query') as mock_det:
                                                 mock_det.all.return_value = []
 
                                                 response = client.get(
@@ -423,7 +423,7 @@ def test_filtrar_articulos_con_todos_parametros(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?marca=1&rubro=2&lista_precio=3&porcentaje=10')
@@ -454,7 +454,7 @@ def test_filtrar_articulos_solo_lista_precio(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?lista_precio=3')
@@ -483,7 +483,7 @@ def test_filtrar_articulos_solo_marca(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?marca=1&lista_precio=3')
@@ -510,7 +510,7 @@ def test_filtrar_articulos_solo_rubro(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?rubro=2&lista_precio=3')
@@ -554,7 +554,7 @@ def test_filtrar_articulos_resultado_vacio_retorna_200(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=[]) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?lista_precio=999')
@@ -588,7 +588,7 @@ def test_filtrar_articulos_legacy_path_params(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos/1/2/3/10.0')

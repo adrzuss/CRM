@@ -13,7 +13,7 @@ Estrategia de mocks:
   - Modelos (PuntosVenta): se parchea .query.get para retornar datos de prueba
   - db.session: se parchea commit/rollback para evitar DB real
   - PagosFV, MovEntidades, CtaCteCli, Creditos: se parchean a nivel del módulo
-    donde se usan (services.ventas.ventas) porque fueron importados con
+    donde se usan (ventas.services.ventas) porque fueron importados con
     `from models.xxx import ...`
 """
 
@@ -59,10 +59,10 @@ def test_get_nro_comprobante_factura_a(app):
         from flask import session
         session['idPuntoVenta'] = '0001'
 
-        with patch('services.ventas.facturacion.db.session.get', return_value=mock_pv):
+        with patch('ventas.services.facturacion.db.session.get', return_value=mock_pv):
             with patch('utils.db.db.session.commit'):
 
-                from services.ventas.facturacion import getNroComprobante
+                from ventas.services.facturacion import getNroComprobante
 
                 resultado = getNroComprobante(1)
 
@@ -78,10 +78,10 @@ def test_get_nro_comprobante_factura_b(app):
         from flask import session
         session['idPuntoVenta'] = '0001'
 
-        with patch('services.ventas.facturacion.db.session.get', return_value=mock_pv):
+        with patch('ventas.services.facturacion.db.session.get', return_value=mock_pv):
             with patch('utils.db.db.session.commit'):
 
-                from services.ventas.facturacion import getNroComprobante
+                from ventas.services.facturacion import getNroComprobante
 
                 resultado = getNroComprobante(2)
 
@@ -97,10 +97,10 @@ def test_get_nro_comprobante_nota_credito_a(app):
         from flask import session
         session['idPuntoVenta'] = '0001'
 
-        with patch('services.ventas.facturacion.db.session.get', return_value=mock_pv):
+        with patch('ventas.services.facturacion.db.session.get', return_value=mock_pv):
             with patch('utils.db.db.session.commit'):
 
-                from services.ventas.facturacion import getNroComprobante
+                from ventas.services.facturacion import getNroComprobante
 
                 resultado = getNroComprobante(4)
 
@@ -116,10 +116,10 @@ def test_get_nro_comprobante_factura_c(app):
         from flask import session
         session['idPuntoVenta'] = '0002'
 
-        with patch('services.ventas.facturacion.db.session.get', return_value=mock_pv):
+        with patch('ventas.services.facturacion.db.session.get', return_value=mock_pv):
             with patch('utils.db.db.session.commit'):
 
-                from services.ventas.facturacion import getNroComprobante
+                from ventas.services.facturacion import getNroComprobante
 
                 resultado = getNroComprobante(10)
 
@@ -135,10 +135,10 @@ def test_get_nro_comprobante_remito(app):
         from flask import session
         session['idPuntoVenta'] = '0001'
 
-        with patch('services.ventas.facturacion.db.session.get', return_value=mock_pv):
+        with patch('ventas.services.facturacion.db.session.get', return_value=mock_pv):
             with patch('utils.db.db.session.commit'):
 
-                from services.ventas.facturacion import getNroComprobante
+                from ventas.services.facturacion import getNroComprobante
 
                 resultado = getNroComprobante(20)
 
@@ -159,16 +159,16 @@ def test_procesar_pagos_intereses_sin_tarjeta(app):
       intereses = 0.0 (sin tarjeta)
       totalPagos = efectivo + ctacte + bonificacion + credito - total
 
-    Parcheamos los modelos en el namespace de services.ventas.ventas
+    Parcheamos los modelos en el namespace de ventas.services.ventas
     porque allí fueron importados con `from models.xxx import Yyy`.
     """
-    from services.ventas.ventas import procesar_pagos
+    from ventas.services.ventas import procesar_pagos
 
     with app.test_request_context():
-        with patch('services.ventas.ventas.PagosFV') as mock_pagos_fv:
-            with patch('services.ventas.ventas.MovEntidades') as mock_mov_ent:
-                with patch('services.ventas.ventas.CtaCteCli'):
-                    with patch('services.ventas.ventas.Creditos'):
+        with patch('ventas.services.ventas.PagosFV') as mock_pagos_fv:
+            with patch('ventas.services.ventas.MovEntidades') as mock_mov_ent:
+                with patch('ventas.services.ventas.CtaCteCli'):
+                    with patch('ventas.services.ventas.Creditos'):
                         with patch('utils.db.db.session') as mock_db:
                             mock_db.session.add.return_value = None
 
@@ -230,7 +230,7 @@ def test_idempotency_uuid_invalido(app):
 
         import pytest
         with pytest.raises(Exception, match="Formato de clave de idempotencia inválido"):
-            from services.ventas.ventas import procesar_nueva_venta
+            from ventas.services.ventas import procesar_nueva_venta
             procesar_nueva_venta(form, 1)
 
 
@@ -253,10 +253,10 @@ def test_idempotency_early_return(app):
         mock_factura.id = 42
         mock_factura.nro_comprobante = '0001-00000005'
 
-        with patch('services.ventas.ventas.Factura') as mock_factura_cls:
+        with patch('ventas.services.ventas.Factura') as mock_factura_cls:
             mock_factura_cls.query.filter_by.return_value.first.return_value = mock_factura
 
-            from services.ventas.ventas import procesar_nueva_venta
+            from ventas.services.ventas import procesar_nueva_venta
             resultado = procesar_nueva_venta(form, 1)
 
             assert resultado == ('0001-00000005', 42)
@@ -293,14 +293,14 @@ def test_no_idempotency_key_skips_check(app):
             'nro_comprobante': '',
         })
 
-        from models.ventas import Factura as FacturaModel
-        with patch('services.ventas.ventas.Factura', spec=FacturaModel) as mock_factura:
-            with patch('services.ventas.ventas.procesar_items', return_value=(0, 0, 0, 0, 0, 0)):
-                with patch('services.ventas.ventas.procesar_pagos'):
-                    with patch('services.ventas.ventas.getNroComprobante', return_value='0001-00000001'):
+        from ventas.models import Factura as FacturaModel
+        with patch('ventas.services.ventas.Factura', spec=FacturaModel) as mock_factura:
+            with patch('ventas.services.ventas.procesar_items', return_value=(0, 0, 0, 0, 0, 0)):
+                with patch('ventas.services.ventas.procesar_pagos'):
+                    with patch('ventas.services.ventas.getNroComprobante', return_value='0001-00000001'):
                         with patch('utils.db.db.session.commit'):
                             with patch('utils.db.db.session'):
-                                from services.ventas.ventas import procesar_nueva_venta
+                                from ventas.services.ventas import procesar_nueva_venta
 
                                 resultado = procesar_nueva_venta(form, 1)
 
@@ -319,7 +319,7 @@ def test_idempotency_integrity_error_rollback_recovery(app):
     retorna factura existente.
     """
     from sqlalchemy.exc import IntegrityError
-    from models.ventas import Factura as FacturaModel
+    from ventas.models import Factura as FacturaModel
 
     with app.test_request_context():
         from flask import session
@@ -349,19 +349,19 @@ def test_idempotency_integrity_error_rollback_recovery(app):
         mock_factura_existente.id = 42
         mock_factura_existente.nro_comprobante = '0001-00000005'
 
-        with patch('services.ventas.ventas.Factura', spec=FacturaModel) as mock_factura_cls:
+        with patch('ventas.services.ventas.Factura', spec=FacturaModel) as mock_factura_cls:
             mock_factura_cls.query.filter_by.side_effect = [
                 MagicMock(first=lambda: None),                    # 1ra: early check → None
                 MagicMock(first=lambda: mock_factura_existente),  # 2da: tras IntegrityError
             ]
 
-            with patch('services.ventas.ventas.procesar_items', return_value=(Decimal('1000'), Decimal('800'), Decimal('0'), Decimal('200'), Decimal('0'), Decimal('0'))):
-                with patch('services.ventas.ventas.procesar_pagos'):
-                    with patch('services.ventas.ventas.getNroComprobante', return_value='0001-00000005'):
+            with patch('ventas.services.ventas.procesar_items', return_value=(Decimal('1000'), Decimal('800'), Decimal('0'), Decimal('200'), Decimal('0'), Decimal('0'))):
+                with patch('ventas.services.ventas.procesar_pagos'):
+                    with patch('ventas.services.ventas.getNroComprobante', return_value='0001-00000005'):
                         with patch('utils.db.db.session') as mock_session:
                             mock_session.commit.side_effect = IntegrityError("test", "orig", "stmt")
 
-                            from services.ventas.ventas import procesar_nueva_venta
+                            from ventas.services.ventas import procesar_nueva_venta
 
                             resultado = procesar_nueva_venta(form, 1)
 
@@ -378,13 +378,13 @@ def test_idempotency_integrity_error_rollback_recovery(app):
       - totalPagos - total = 600 - 1000 = -400 → NO hay vuelto (negativo)
       - efectivo no se modifica
     """
-    from services.ventas.ventas import procesar_pagos
+    from ventas.services.ventas import procesar_pagos
 
     with app.test_request_context():
-        with patch('services.ventas.ventas.PagosFV') as mock_pagos_fv:
-            with patch('services.ventas.ventas.MovEntidades') as mock_mov_ent:
-                with patch('services.ventas.ventas.CtaCteCli'):
-                    with patch('services.ventas.ventas.Creditos'):
+        with patch('ventas.services.ventas.PagosFV') as mock_pagos_fv:
+            with patch('ventas.services.ventas.MovEntidades') as mock_mov_ent:
+                with patch('ventas.services.ventas.CtaCteCli'):
+                    with patch('ventas.services.ventas.Creditos'):
                         with patch('utils.db.db.session') as mock_db:
                             mock_db.session.add.return_value = None
 

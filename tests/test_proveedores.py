@@ -61,14 +61,14 @@ def test_get_proveedores_existente(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.proveedores.render_template', return_value='') as mock_render:
-                with patch('models.configs.TipoDocumento.query') as mock_td:
+            with patch('proveedores.routes.render_template', return_value='') as mock_render:
+                with patch('configs.models.TipoDocumento.query') as mock_td:
                     mock_td.all.return_value = []
 
-                    with patch('models.configs.TipoIva.query') as mock_ti:
+                    with patch('configs.models.TipoIva.query') as mock_ti:
                         mock_ti.all.return_value = []
 
-                        with patch('models.proveedores.Proveedores.query') as mock_prov:
+                        with patch('proveedores.models.Proveedores.query') as mock_prov:
                             mock_prov.all.return_value = [mock_proveedor]
 
                             with patch('utils.db.db.session.get', return_value=mock_proveedor):
@@ -99,14 +99,14 @@ def test_get_proveedores_cero(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.proveedores.render_template', return_value='') as mock_render:
-                with patch('models.configs.TipoDocumento.query') as mock_td:
+            with patch('proveedores.routes.render_template', return_value='') as mock_render:
+                with patch('configs.models.TipoDocumento.query') as mock_td:
                     mock_td.all.return_value = []
 
-                    with patch('models.configs.TipoIva.query') as mock_ti:
+                    with patch('configs.models.TipoIva.query') as mock_ti:
                         mock_ti.all.return_value = []
 
-                        with patch('models.proveedores.Proveedores.query') as mock_prov:
+                        with patch('proveedores.models.Proveedores.query') as mock_prov:
                             mock_prov.all.return_value = []
 
                             # Con la corrección int(id) != 0, id='0' → int('0')=0,
@@ -163,7 +163,7 @@ def test_get_compras_con_fechas(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.proveedores.render_template', return_value='') as mock_render:
+            with patch('proveedores.routes.render_template', return_value='') as mock_render:
                 with patch('utils.db.db.session.query',
                            return_value=mock_db_query):
 
@@ -200,7 +200,7 @@ def test_get_compras_sin_fechas(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.proveedores.render_template', return_value='') as mock_render:
+            with patch('proveedores.routes.render_template', return_value='') as mock_render:
                 with patch('utils.db.db.session.query',
                            return_value=mock_db_query):
 
@@ -248,8 +248,8 @@ def test_get_ver_factura_comp(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.proveedores.render_template', return_value='') as mock_render:
-                with patch('routes.proveedores.get_factura',
+            with patch('proveedores.routes.render_template', return_value='') as mock_render:
+                with patch('proveedores.routes.get_factura',
                            return_value=(mock_factura, mock_items, mock_pagos)) as mock_get_factura:
 
                         response = client.get('/proveedores/ver_factura_comp/1')

@@ -50,7 +50,7 @@ def test_integracion_filtrar_con_marca_y_rubro(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?marca=1&rubro=2&lista_precio=3&porcentaje=10')
@@ -80,7 +80,7 @@ def test_integracion_filtrar_solo_marca(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?marca=1&lista_precio=3&porcentaje=5')
@@ -109,7 +109,7 @@ def test_integracion_filtrar_solo_rubro(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?rubro=2&lista_precio=3&porcentaje=5')
@@ -140,7 +140,7 @@ def test_integracion_filtrar_solo_lista_precio(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?lista_precio=3')
@@ -166,7 +166,7 @@ def test_integracion_filtrar_resultado_vacio(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=[]) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?marca=999&rubro=999&lista_precio=3')
@@ -212,7 +212,7 @@ def test_integracion_filtrar_porcentaje_default_cero(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=[]) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos?lista_precio=1')
@@ -237,7 +237,7 @@ def test_integracion_filtrar_legacy_path_params_todavia_funcionan(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos) as mock_obtener:
 
                 response = client.get('/articulos/filtrar_articulos/1/2/3/10.0')
@@ -269,7 +269,7 @@ def test_integracion_estructura_respuesta_para_tabla(client):
 
     with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)):
         with patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
-            with patch('routes.articulos.obtenerArticulosMarcaRubro',
+            with patch('articulos.routes.obtenerArticulosMarcaRubro',
                        return_value=mock_articulos):
 
                 response = client.get('/articulos/filtrar_articulos?lista_precio=1&porcentaje=10')

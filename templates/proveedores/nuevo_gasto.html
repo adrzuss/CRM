@@ -173,9 +173,9 @@
                                 </h4>
                             </div>
                             <div class="col-md-6">
-                                <h4 class="text-success" id="saldo-container">
+                                <h4 class="text-success" id="saldo-container-main">
                                     <i class="fas fa-balance-scale me-2"></i>Saldo: 
-                                    <span class="badge bg-success fs-5">$<span id="saldo_factura">0.00</span></span>
+                                    <span class="badge bg-success fs-5">$<span id="saldo_factura_main">0.00</span></span>
                                 </h4>
                             </div>
                         </div>
@@ -195,12 +195,11 @@
             </div>
         </div>
 
-        <!-- Campos ocultos para los métodos de pago -->
-        <div style="display: none;">
-            <input type="number" name="efectivo" id="efectivo_hidden" value="0">
-            <input type="number" name="ctacte" id="ctacte_hidden" value="0">
-            <input type="number" name="bonificacion" id="bonificacion_hidden" value="0">
-        </div>
+        <!-- Modal universal de transacciones -->
+        {% set modal_type = 'pago' %}
+        {% set modal_context = 'proveedores' %}
+        {% set modal_title = '💰 Pago de Gasto' %}
+        {% include 'partials/_modal-transacciones.html' %}
 
             </form>
         </div>    
@@ -215,12 +214,6 @@
     
     <!-- Modal universal de búsqueda -->
     {% include 'partials/_modal-busqueda-universal.html' %}
-    
-    <!-- Modal universal de transacciones -->
-    {% set modal_type = 'pago' %}
-    {% set modal_context = 'proveedores' %}
-    {% set modal_title = '💰 Pago de Gasto' %}
-    {% include 'partials/_modal-transacciones.html' %}
     
     <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
     <script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>

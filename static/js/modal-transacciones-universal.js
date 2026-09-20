@@ -1070,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Aquí puedes agregar validaciones antes de cerrar si es necesario
     });
     
+    // Delegación de eventos para campos de pago: ahora está en el inline script
+    // de _modal-transacciones.html (funciona sin importar module vs regular script)
+    
     // Delegación de eventos CSP-compatible para eliminar cheques
     document.getElementById('cheques')?.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-eliminar-cheque');

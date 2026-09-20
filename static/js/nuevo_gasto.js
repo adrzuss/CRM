@@ -1,8 +1,7 @@
 isFormSubmited = false; // Variable para controlar si el formulario ha sido enviado
 
-window.onbeforeunload = confirmarSalida;
-
 document.addEventListener("DOMContentLoaded", function () {
+  window.onbeforeunload = confirmarSalida;
   const form = document.getElementById("invoice_form");
   const btnGrabar = document.getElementById("grabarGasto");
 
@@ -35,6 +34,35 @@ document.addEventListener("DOMContentLoaded", function () {
       btnGrabar.click(); // Simula un click en el botón "Grabar Venta"
     }
 
+  });
+
+  document.getElementById('idproveedor').addEventListener('blur', function() {
+      const idproveedor = this.value;
+      fetchProveedor(idproveedor);
+  });
+
+  document.getElementById('invoice_form').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      const totalFac = parseFloat(document.getElementById('total').value);
+      if (totalFac <= 0) {
+          mostrarAdvertencia('El total debe ser mayor a 0');
+          return;
+      }   
+      
+      if (checkTotales() == false){
+          mostrarAdvertencia('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
+          return;
+      }    
+      
+      const confirmado = await confirmar('¿Grabar la factura?');
+      if (!confirmado) {
+          return;
+      }
+      
+      sinGuardar = false;
+          isFormSubmited = true;
+      this.submit();
   });
 });
 
@@ -119,36 +147,8 @@ function mostrarModalSeleccionProveedores(proveedores) {
   window.universalSearchModal.show('proveedores', proveedores || [], callback);
 } 
   
-function calcSaldo(){
-    const totalFac = parseFloat(document.getElementById('total').value);
-    const efectivo = parseFloat(document.getElementById('efectivo').value);
-    const ctacte = parseFloat(document.getElementById('ctacte').value);
-    let diferencia = (totalFac - (efectivo + ctacte));
-    
-    // Actualizar el contenido del saldo
-    let lblSaldo = document.getElementById('saldo_factura');
-    lblSaldo.textContent = diferencia.toFixed(2);
-    
-    // Actualizar la clase del contenedor
-    const saldoContainer = document.getElementById("saldo-container");
-    if (diferencia > 0){
-        saldoContainer.className = 'total-amount negativo';
-    }
-    else if (diferencia === 0){
-        saldoContainer.className = 'total-amount neutro';
-    }
-    else{
-        saldoContainer.className = 'total-amount positivo';
-    }
-}
-
-function checkTotales() {
-    const totalFac = parseFloat(document.getElementById('total').value);
-    const efectivo = parseFloat(document.getElementById('efectivo').value);
-    const ctacte = parseFloat(document.getElementById('ctacte').value);
-    let HayDiferencia = (totalFac == (efectivo + ctacte));
-    return HayDiferencia;
-}
+// calcSaldo() y checkTotales() están definidos en modal-transacciones-universal.js
+// NO definirlos aquí — sombrean las funciones universales del modal de pagos
 
 // Event listeners movidos a modal-transacciones-universal.js
 // document.getElementById('efectivo').addEventListener('input', function(event){
@@ -158,33 +158,3 @@ function checkTotales() {
 // document.getElementById('ctacte').addEventListener('input', function(event){
 //     calcSaldo();
 // })
-
-document.getElementById('idproveedor').addEventListener('blur', function() {
-    const idproveedor = this.value;
-    fetchProveedor(idproveedor);
-});
-
-document.getElementById('invoice_form').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    
-    const totalFac = parseFloat(document.getElementById('total').value);
-    if (totalFac <= 0) {
-        mostrarAdvertencia('El total debe ser mayor a 0');
-        return;
-    }   
-    
-    if (checkTotales() == false){
-        mostrarAdvertencia('La suma de "Efectivo" + "Cta. cte." debe ser igual al total de la factura');
-        return;
-    }    
-    
-    const confirmado = await confirmar('¿Grabar la factura?');
-    if (!confirmado) {
-        return;
-    }
-    
-    sinGuardar = false;
-        isFormSubmited = true;
-    this.submit();
-});
- 

@@ -4,9 +4,8 @@ let contadorFilas = 0;
 // ensureColorDetalleFields() → movida a invoice-utils.js
 
 
-window.onbeforeunload = confirmarSalida;
-
 document.addEventListener("DOMContentLoaded", async function () {
+  window.onbeforeunload = confirmarSalida;
   try {
     // Realizar la solicitud a la API
     const response = await fetch(`${BASE_URL}/ventas/get_punto_vta`);	

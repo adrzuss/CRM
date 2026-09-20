@@ -1,4 +1,5 @@
 ﻿from flask import session, current_app, flash, jsonify
+import logging
 import math
 from sqlalchemy import text, func, and_, or_
 from utils.db import db
@@ -12,6 +13,34 @@ from datetime import date, timedelta
 from decimal import Decimal
 import os
 from werkzeug.utils import secure_filename
+
+logger = logging.getLogger(__name__)
+
+# Mapa de transliteración para caracteres especiales del español
+_TRANSLIT_MAP = str.maketrans({
+    'ñ': 'n', 'Ñ': 'N',
+    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+    'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+    'ü': 'u', 'Ü': 'U',
+})
+
+def safe_filename(filename):
+    """Limpia el nombre del archivo transliterando caracteres especiales y usando secure_filename."""
+    if not filename:
+        return filename
+    # Separar nombre y extensión
+    base, ext = os.path.splitext(filename)
+    # Transliterar caracteres especiales
+    base = base.translate(_TRANSLIT_MAP)
+    # Reunir y aplicar secure_filename
+    return secure_filename(base + ext)
+
+def allowed_file(filename):
+    """Valida que la extensión del archivo esté en ALLOWED_EXTENSIONS."""
+    if not filename or '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in current_app.config.get('ALLOWED_EXTENSIONS', set())
 
 def get_planes_creditos():
     planes_creditos = PlanesCreditos.query.all()
@@ -87,7 +116,7 @@ def get_docs_por_plan(idPlan = None):
                                                 DocumentosParaCreditos.idplan_credito
                                                 ).outerjoin(DocumentosParaCreditos, and_(DocumentosCreditos.id == DocumentosParaCreditos.iddocumento_credito, DocumentosParaCreditos.idplan_credito == idPlan)).all()
         except Exception as e:
-            print(f'Error al obtener los documentos para el plan: {e}')
+            logger.error('Error al obtener los documentos para el plan: %s', e)
             documentos_por_plan = []
     else:
         documentos_por_plan = []
@@ -102,7 +131,7 @@ def get_cats_por_plan(idPlan = None):
                                                 CategoriasCreditos.idplan
                                                 ).outerjoin(CategoriasCreditos, and_(CategoriasCreditos.idcategoria == Categorias.id, CategoriasCreditos.idplan == idPlan)).all()
         except Exception as e:
-            print(f'Error al obtener las categorias para el plan: {e}')
+            logger.error('Error al obtener las categorias para el plan: %s', e)
             categorias_por_plan = []
     else:
         categorias_por_plan = []
@@ -137,7 +166,7 @@ def limpiar_documentos_para_plan(idPlan):
         db.session.query(DocumentosParaCreditos).filter(DocumentosParaCreditos.idplan_credito == idPlan).delete()
     except Exception as e:
         db.session.rollback()
-        print(f'Error al limpiar los documentos para el plan: {e}')
+        logger.error('Error al limpiar los documentos para el plan: %s', e)
         raise Exception(f'Error al limpiar los documentos para el plan: {e}')
     
 def limpiar_categorias_para_plan(idPlan):
@@ -145,7 +174,7 @@ def limpiar_categorias_para_plan(idPlan):
         db.session.query(CategoriasCreditos).filter(CategoriasCreditos.idplan == idPlan).delete()
     except Exception as e:
         db.session.rollback()
-        print(f'Error al limpiar las categorias para el plan: {e}')
+        logger.error('Error al limpiar las categorias para el plan: %s', e)
         raise Exception(f'Error al limpiar las categorias para el plan: {e}')
     
 def asignar_documento_para_plan(documento, idplan_credito):
@@ -157,7 +186,7 @@ def asignar_documento_para_plan(documento, idplan_credito):
             db.session.commit()
     except Exception as e:
         db.session.rollback()
-        print(f'Error al asignar el documento a la plan: {e}')
+        logger.error('Error al asignar el documento a la plan: %s', e)
         raise Exception(f'Error al asignar el documento a la plan: {e}')
     
 def asignar_categoria_para_plan(categoria, idplan_credito):
@@ -169,7 +198,7 @@ def asignar_categoria_para_plan(categoria, idplan_credito):
             db.session.commit()
     except Exception as e:
         db.session.rollback()
-        print(f'Error al asignar la categoria a la plan: {e}')
+        logger.error('Error al asignar la categoria a la plan: %s', e)
         raise Exception(f'Error al asignar la categoria a la plan: {e}')
     
 def calcular_cuota_frances(monto, tasa_mensual, plazo_meses):
@@ -239,7 +268,7 @@ def grabar_cuotas(idcredito, idplan, cronograma):
         return True
     except Exception as e:
         db.session.rollback()
-        print(f'Error al grabar las cuotas: {e}')
+        logger.error('Error al grabar las cuotas: %s', e)
         raise Exception(f'Error al grabar las cuotas: {e}')
         
 def actualizar_credito(idcredito, estado, monto_total, tasa_interes, cuotas, observaciones):
@@ -254,7 +283,7 @@ def actualizar_credito(idcredito, estado, monto_total, tasa_interes, cuotas, obs
         return True
     except Exception as e:
         db.session.rollback()
-        print(f'Error al actualizar el crédito: {e}')
+        logger.error('Error al actualizar el crédito: %s', e)
         raise Exception(f'Error al actualizar el crédito: {e}')
 
 def get_requisitos(idPlan):
@@ -266,7 +295,7 @@ def get_requisitos(idPlan):
                                     ).all()
         return requisitos
     except Exception as e:
-        print(f'Error al obtener los requisitos del plan: {e}')
+        logger.error('Error al obtener los requisitos del plan: %s', e)
         raise Exception(f'Error al obtener los requisitos del plan: {e}')
     
 def generar_credito_cliente(form, files):
@@ -306,16 +335,28 @@ def generar_credito_cliente(form, files):
         if file_key in files and id_key in form:
             archivo = files[file_key]
             id_documento = form[id_key]
-            if archivo.filename == "":
-                break
-            documentos.append({
-                "id": id_documento,
-                "archivo": archivo
-            })
+            if archivo.filename != "":
+                documentos.append({
+                    "id": int(id_documento),
+                    "archivo": archivo
+                })
             i += 1
         else:
             break   
     
+    # Validar que se hayan subido todos los documentos requeridos por el plan
+    try:
+        requisitos = get_requisitos(int(idplan))
+        ids_requeridos = {req[1] for req in requisitos}
+        ids_enviados = {doc['id'] for doc in documentos}
+        faltantes = ids_requeridos - ids_enviados
+        if faltantes:
+            nombres_faltantes = [req[2] for req in requisitos if req[1] in faltantes]
+            return None, f'Documentos requeridos faltantes: {", ".join(nombres_faltantes)}'
+    except Exception as e:
+        logger.error('Error al validar documentos requeridos: %s', e)
+        return None, f'Error al validar documentos requeridos: {e}'
+
     try:
         paso = 'Creando crédito'
         try:
@@ -346,18 +387,23 @@ def generar_credito_cliente(form, files):
             db.session.add(garante_credito)    
         
         paso = 'Asignando documentos'
-        if not os.path.exists(current_app.config['UPLOAD_FOLDER_CREDITOS']):
-            print('El directorio no existe, creándolo...')
-            os.makedirs(current_app.config['UPLOAD_FOLDER_CREDITOS'])
+        upload_dir = current_app.config['UPLOAD_FOLDER_CREDITOS']
+        os.makedirs(upload_dir, exist_ok=True)
 
         for documento in documentos:
             archivo = documento['archivo']
             id_doc = documento['id']
             if archivo.filename and id_doc:
+                # Validar extensión del archivo
+                if not allowed_file(archivo.filename):
+                    logger.warning('Archivo con extensión no permitida: %s', archivo.filename)
+                    return None, f'Extensión no permitida: {archivo.filename}'
                 # Guardar el archivo en el sistema de archivos
                 filename = f"{idcredito}_{id_doc}_{archivo.filename}"
-                filename = secure_filename(filename)  # Asegura que el nombre del archivo sea seguro para el sistema de archivos
-                archivo.save(os.path.join(current_app.config['UPLOAD_FOLDER_CREDITOS'], filename))
+                filename = safe_filename(filename)
+                destino = os.path.join(upload_dir, filename)
+                archivo.save(destino)
+                logger.info('Archivo guardado: %s (%d bytes) en %s', filename, archivo.content_length or 0, destino)
                 # Obtenemos la versión del archivo guardado
                 version = db.session.query(func.max(DocumentosDelCreditos.version)).filter(and_(DocumentosDelCreditos.idcredito == idcredito, DocumentosDelCreditos.iddocumento_credito == id_doc)).scalar()
                 if version is None:
@@ -375,12 +421,13 @@ def generar_credito_cliente(form, files):
                     db.session.add(doc_credito)
                 except Exception as e:
                     paso = paso + f' - Error al crear el documento del crédito: {e}'    
-                    print(f'Error al crear el documento del crédito: {e}')
+                    logger.error('Error al crear el documento del crédito: %s', e)
                     return None, paso
         db.session.commit()
         return idcredito, 'ok'    
     except Exception as e:
-        print(f'Error al crear el crédito: {e}')
+        db.session.rollback()
+        logger.error('Error al crear el crédito: %s', e)
         return None, f'Error al crear el crédito: {e} - {paso}'
     
 def get_credito_by_id(id_credito):
@@ -433,7 +480,7 @@ def get_credito_by_id(id_credito):
                                             ).filter(VencimientosCreditos.idcredito == id_credito).all()                             
         return credito, garantes, documentos, cuotas_generadas
     except Exception as e:
-        print(f'Error al obtener el crédito: {e}')
+        logger.error('Error al obtener el crédito: %s', e)
         return None, None, None
     
 def get_creditos_by_estado(desde, hasta, *args):
@@ -450,7 +497,7 @@ def get_creditos_by_estado(desde, hasta, *args):
             return []   
         return nuevos
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
     
 def buscar_documento_descarga(idcredito, iddocumento):
@@ -461,13 +508,13 @@ def buscar_documento_descarga(idcredito, iddocumento):
         return None
     paso = os.path.join(current_app.config['UPLOAD_FOLDER_CREDITOS'], paso)
     if not os.path.exists(paso):
-        print(f"El archivo {paso} no existe.")
+        logger.warning("El archivo %s no existe.", paso)
         return None
     return paso
 
 def get_credito_by_idcliente(idcliente):
     try:
-        print(f"🔍 Buscando crédito para cliente ID: {idcliente}")
+        logger.info("Buscando crédito para cliente ID: %s", idcliente)
         
         # Primero veamos todos los créditos del cliente
         todos_creditos = db.session.query(Creditos.id,
@@ -476,9 +523,9 @@ def get_credito_by_idcliente(idcliente):
                                          Creditos.estado,
                                          ).filter(Creditos.idcliente == idcliente).all()
         
-        print(f"📊 Cliente tiene {len(todos_creditos)} créditos en total:")
+        logger.info("Cliente tiene %d créditos en total:", len(todos_creditos))
         for c in todos_creditos:
-            print(f"   - Crédito ID: {c.id}, Estado: {c.estado}, Monto: {c.monto_total}")
+            logger.info("   - Crédito ID: %s, Estado: %s, Monto: %s", c.id, c.estado, c.monto_total)
         
         # Buscar crédito aprobado (estado 3)
         credito = db.session.query(Creditos.id,
@@ -488,13 +535,13 @@ def get_credito_by_idcliente(idcliente):
                                    ).filter(and_(Creditos.idcliente == idcliente, Creditos.estado == 3)).first()
         
         if credito:
-            print(f"✅ Crédito aprobado encontrado: ID {credito.id}, Monto: {credito.monto_total}")
+            logger.info("Crédito aprobado encontrado: ID %s, Monto: %s", credito.id, credito.monto_total)
         else:
-            print("❌ No se encontró crédito aprobado (estado 3)")
+            logger.info("No se encontró crédito aprobado (estado 3)")
             
         return credito
     except Exception as e:
-        print(f'❌ Error al obtener el crédito por cliente: {e}')
+        logger.error('Error al obtener el crédito por cliente: %s', e)
         return None
     
 def vencimientos_cuotas_creditos(desde, hasta):
@@ -502,15 +549,15 @@ def vencimientos_cuotas_creditos(desde, hasta):
         vencimientos = db.session.execute(text("CALL get_vencimientos_cuotas_creditos(:desde, :hasta)"),{'desde': desde, 'hasta': hasta}).fetchall()
         return vencimientos
     except Exception as e:
-        print(f"Error obteniendo vencimientos de cuotas de créditos: {e}")
+        logger.error("Error obteniendo vencimientos de cuotas de créditos: %s", e)
         return []
-
+    
 def ver_cuotas_creditos_vencidas():
     try:
         vencimientos = db.session.execute(text("CALL get_cuotas_creditos_vencidas()"),).fetchall()
         return vencimientos
     except Exception as e:
-        print(f"Error obteniendo vencimientos de cuotas de créditos: {e}")
+        logger.error("Error obteniendo vencimientos de cuotas de créditos: %s", e)
         return []
 
     
@@ -529,7 +576,7 @@ def get_datos_creditos():
         ).first()
         
     except Exception as e:
-        print(f"Error obteniendo datos de créditos de la semana: {e}")
+        logger.error("Error obteniendo datos de créditos de la semana: %s", e)
         return []
     
     try:
@@ -545,7 +592,7 @@ def get_datos_creditos():
         ).first()
 
     except Exception as e:
-        print(f"Error obteniendo datos de créditos del mes: {e}")
+        logger.error("Error obteniendo datos de créditos del mes: %s", e)
         return []
     resultado = {
         'creditos_semana': {
@@ -567,7 +614,7 @@ def get_cuotas_pendientes(idcliente):
             return []
         return cuotasPendientes
     except Exception as e:
-        print(f"Error al obtener cuotas pendientes: {e}")
+        logger.error("Error al obtener cuotas pendientes: %s", e)
         return None
     
 def generarRecibo(idCliente, cuotas, totalCuotas, efectivo, tarjeta, entidad):
@@ -592,13 +639,13 @@ def generarRecibo(idCliente, cuotas, totalCuotas, efectivo, tarjeta, entidad):
             db.session.add(pagoCredito)
             db.session.flush()
             # Aquí iría la lógica para procesar el cobro de cada cuota
-            print(f"Cobrando cuota {numeroCuota} del crédito {idCredito} para el cliente {idCliente}. Registro de pago: {pagoCredito.id}")
+            logger.info("Cobrando cuota %s del crédito %s para el cliente %s. Registro de pago: %s", numeroCuota, idCredito, idCliente, pagoCredito.id)
         db.session.commit()
         
         return {'success':True, 'mensaje': 'Cuotas cobradas exitosamente.'}
     except Exception as e:
         db.session.rollback()
-        print(f"Error al generar recibo: {e}")
+        logger.error("Error al generar recibo: %s", e)
         return {'success':False, 'mensaje': f'Error al generar recibo: {e}'}
 
 

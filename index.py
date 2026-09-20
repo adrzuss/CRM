@@ -235,5 +235,12 @@ def internal_server_error(e):
 def database_error(e):
     return render_template("error.html", tipoError="bd", error=f"No se pudo conectar a la base de datos: {e}"), 500
 
+# Manejador para error 413 (archivo demasiado grande)
+@app.errorhandler(413)
+def request_entity_too_large(e):
+    app.logger.warning("Request entity too large: %s", e)
+    flash("El archivo es demasiado grande. El tamaño máximo permitido es 16MB.", "error")
+    return redirect(url_for('creditos.otorgamiento'))
+
 if __name__ == "__main__":
     app.run(debug=True)

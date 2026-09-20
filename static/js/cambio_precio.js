@@ -1,10 +1,9 @@
 
 let isFormSubmited = false;
 
-window.onbeforeunload = confirmarSalida;
-  
 // JavaScript para manejar la interacción
 document.addEventListener('DOMContentLoaded', function() {
+    window.onbeforeunload = confirmarSalida;
     const form = document.getElementById('form-cambio-precios');
     const btnAgregar = document.getElementById('agregar-item');
     const btnGrabar = document.getElementById('guardar-cambio');
@@ -107,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Validar salida sin guardar
-    window.addEventListener("beforeunload", confirmarSalida);
     
     // Cargar artículos en tabla de acuerdo a los filtros
     document.querySelector('#cargarRubroMarca').addEventListener('click', async (e) => {

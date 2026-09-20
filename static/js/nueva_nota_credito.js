@@ -8,12 +8,11 @@ let contadorFilas = 0;
 let articulosFacturados = [];
 let ofertasDeCierre = [];
 
-window.onbeforeunload = confirmarSalida;
-
 // Función para asegurar que todas las filas tengan campos de color y detalle
 // ensureColorDetalleFields() → movida a invoice-utils.js
 
 document.addEventListener("DOMContentLoaded", async function () {
+  window.onbeforeunload = confirmarSalida;
   document.getElementById('idcliente').focus();
   try {
     // Realizar la solicitud a la API

@@ -275,7 +275,7 @@ def ver_remito_comp(id):
 
 #--------- ordenes de pago --------------
                        
-@proveedores_bp.route('/nueva_op', methods = ['GET', 'POST']) 
+@proveedores_bp.route('/nueva_op', methods = ['GET', 'POST'])
 @check_session
 @alertas_mensajes
 def nueva_op():

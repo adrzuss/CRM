@@ -39,7 +39,7 @@
         <div class="col-lg-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-cog me-1"></i>Parámetros de Cálculo
                     </h6>
                 </div>
@@ -81,7 +81,7 @@
             <!-- Resumen -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-chart-line me-1"></i>Resumen del Cálculo
                     </h6>
                 </div>
@@ -89,7 +89,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="text-center">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
                                     Total Comisiones
                                 </div>
                                 <div class="h4 mb-0 font-weight-bold text-success">
@@ -99,7 +99,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
                                     Vendedores
                                 </div>
                                 <div class="h4 mb-0 font-weight-bold text-info">
@@ -109,7 +109,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
                                     Detalles
                                 </div>
                                 <div class="h4 mb-0 font-weight-bold text-warning">
@@ -125,7 +125,7 @@
             {% if resultado.resumen_por_vendedor %}
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-users me-1"></i>Por Vendedor
                     </h6>
                 </div>
@@ -156,7 +156,7 @@
             {% if resultado.detalles %}
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-list me-1"></i>Detalle de Comisiones
                     </h6>
                     <form method="POST" action="{{ url_for('comisiones.calcular_confirmar') }}" class="d-inline">

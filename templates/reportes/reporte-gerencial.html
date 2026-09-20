@@ -41,7 +41,7 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ventas Totales</div>
+                            <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Ventas Totales</div>
                             <div class="h4 mb-0 font-weight-bold text-gray-800">{{ data.resumen.ventas_totales }}</div>
                             <div class="mt-2 small {% if data.resumen.var_ventas >= 0 %}text-success{% else %}text-danger{% endif %}">
                                 <i class="fas fa-{% if data.resumen.var_ventas >= 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
@@ -122,7 +122,7 @@
         <div class="col-xl-8 col-lg-7">
             <div class="card shadow h-100">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-chart-area me-2"></i>Evolución de Ventas
                     </h6>
                 </div>
@@ -136,7 +136,7 @@
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow h-100">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-credit-card me-2"></i>Medios de Pago
                     </h6>
                 </div>
@@ -162,7 +162,7 @@
         <div class="col-xl-6">
             <div class="card shadow h-100">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-trophy me-2"></i>Top 10 Productos Más Vendidos
                     </h6>
                 </div>
@@ -204,7 +204,7 @@
         <div class="col-xl-6">
             <div class="card shadow h-100">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-users me-2"></i>Concentración de Clientes (ABC)
                     </h6>
                     <span class="badge bg-info">{{ data.concentracion_clientes.total_clientes }} clientes activos</span>
@@ -292,7 +292,7 @@
         <div class="col-xl-8">
             <div class="card shadow h-100">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-industry me-2"></i>Principales Proveedores
                     </h6>
                 </div>
@@ -396,7 +396,7 @@
         <div class="col-xl-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-chart-pie me-2"></i>Distribución por Sucursal
                     </h6>
                 </div>
@@ -418,7 +418,7 @@
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card card-kpi border-start-primary h-100">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Valor del Inventario</div>
+                    <div class="text-xs font-weight-bold text-white text-uppercase mb-1">Valor del Inventario</div>
                     <div class="h5 mb-0 font-weight-bold">{{ data.estado_inventario.valor_inventario }}</div>
                     <small class="text-muted">{{ data.estado_inventario.total_articulos }} artículos</small>
                 </div>
@@ -455,7 +455,7 @@
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-sync-alt me-2"></i>Rotación de Inventario por Rubro
                     </h6>
                 </div>
@@ -506,7 +506,7 @@
                 <div class="col-xl-6">
                     <div class="card shadow h-100">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
+                            <h6 class="m-0 font-weight-bold text-white">
                                 <i class="fas fa-circle-notch me-2"></i>Burbujas por Sección: Cantidad Vendida
                             </h6>
                             <small class="text-muted">Eje X: días de inventario, eje Y: unidades vendidas, tamaño: stock actual</small>
@@ -521,7 +521,7 @@
                 <div class="col-xl-6">
                     <div class="card shadow h-100">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
+                            <h6 class="m-0 font-weight-bold text-white">
                                 <i class="fas fa-circle-notch me-2"></i>Burbujas por Sección: Importe Vendido
                             </h6>
                             <small class="text-muted">Eje X: días de inventario, eje Y: importe vendido, tamaño: stock actual</small>
@@ -554,7 +554,7 @@
         <div class="col-xl-8">
             <div class="card shadow h-100">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-user-clock me-2"></i>Principales Deudores
                     </h6>
                 </div>

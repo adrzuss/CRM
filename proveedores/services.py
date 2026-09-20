@@ -56,6 +56,10 @@ def procesar_nueva_compra(form, id_sucursal):
         
         nueva_factura.total = total
         # Registrar los pagos
+        print("===============================================")
+        print(f"Procesando pagos para factura de compra {idfactura}")
+        print(f"Efectivo: {efectivo}, CtaCte: {ctacte}")
+        print("===============================================")
         procesar_pagos(idfactura, idproveedor, fecha, efectivo, ctacte)
         procesar_remitos(idfactura, form)
         db.session.commit()
@@ -175,6 +179,10 @@ def procesar_nuevo_gasto(form, idsucursal):
         idfactura = nueva_gasto.id
 
         # Registrar los pagos
+        print("===============================================")
+        print(f"Procesando pagos para factura de compra {idfactura}")
+        print(f"Efectivo: {efectivo}, CtaCte: {ctacte}")
+        print("===============================================")
         procesar_pagos(idfactura, idproveedor, fecha, efectivo, ctacte)
         procesar_remitos(idfactura, form)
         db.session.commit()
@@ -388,21 +396,25 @@ def procesar_movs_cc(idop, idproveedor, fecha, total, form):
             if key.startswith('mov_cc') and key.endswith('[check]'):  # Verificar si es un checkbox
                 index = key.split('[')[1].split(']')[0]  # Obtener el índice del ítem
                 if value == 'on':  # Si el checkbox está marcado
-                    # Obtener el ID del remito asociado
+                    # Obtener el ID del movimiento asociado
                     id_mov_cc = form[f'mov_cc_id[{index}][id]']
                     print('vamos a buscar el saldo')
                     resultado = db.session.execute(text("CALL get_saldo_mov_ccp(:idpro, :idmov)"), {'idpro': idproveedor, 'idmov': id_mov_cc}).first()
                     print(f'El resultado es: {resultado}')
                     idfactura = resultado[0]
-                    saldoMov = resultado[1]
+                    saldoMov = Decimal(resultado[1])
                     print(f'idfactura: {idfactura}, saldoMov: {saldoMov}')
+                    if saldoMov <= 0 or saldo <= 0:
+                        continue
                     if saldoMov > saldo:
+                        # El saldo del movimiento supera lo que queda por pagar
                         itemsOP = ItemsOP(idop=idop, idfactura=idfactura, pago=Decimal(saldo))
+                        saldo = Decimal(0)
                     else:    
-                        if (saldoMov > 0) and (saldo >= 0):
-                                itemsOP = ItemsOP(idop=idop, idfactura=idfactura, pago=Decimal(saldoMov))
-                    saldo -= saldoMov        
-                    # Procesar el remito seleccionado (por ejemplo, asociarlo a la factura)
+                        # Pago completo de este movimiento
+                        itemsOP = ItemsOP(idop=idop, idfactura=idfactura, pago=Decimal(saldoMov))
+                        saldo -= saldoMov
+                    print(f'ItemsOP: idop={idop}, idfactura={idfactura}, pago={itemsOP.pago}')
                     db.session.add(itemsOP)
         
     except SQLAlchemyError as e:
@@ -410,12 +422,11 @@ def procesar_movs_cc(idop, idproveedor, fecha, total, form):
         raise Exception(f"Error procesando movimientos de cta. cte.: {e}")
     
     try:
+        # Si queda saldo positivo, crear movimiento a favor del proveedor
+        print(f'Verificando saldo a favor del proveedor: {saldo}')
         if saldo > 0:
-            print(f'Saldo positivo: {saldo}')
-            db.session.add(CtaCteProv(idproveedor=idproveedor, idfactura=idop, fecha=fecha, debe=Decimal(saldo), haber=0.0))
-        if (total-saldo != 0):
-            ctacteprov = CtaCteProv(idproveedor=idproveedor, idfactura=idop, fecha=fecha, debe=(total-saldo), haber=0.0)
-            db.session.add(ctacteprov)    
+            print(f'Saldo a favor del proveedor: {saldo}')
+            db.session.add(CtaCteProv(idproveedor=idproveedor, idfactura=idop, fecha=fecha, debe=Decimal(saldo), haber=Decimal(0)))
     except SQLAlchemyError as e:
         print(f"Error procesando saldo a favor movimientos de cta. cte.: {e}")
         raise Exception(f"Error procesando saldo a favor movimientos de cta. cte.: {e}")

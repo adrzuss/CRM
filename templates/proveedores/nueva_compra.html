@@ -199,12 +199,6 @@
                     </div>
                 </div>    
 
-                <!-- Campos ocultos para los métodos de pago -->
-                <div style="display: none;">
-                    <input type="number" name="efectivo" id="efectivo_hidden" step="0.01" value="0">
-                    <input type="number" name="ctacte" id="ctacte_hidden" step="0.01" value="0">
-                    <input type="number" name="bonificacion" id="bonificacion_hidden" step="0.01" value="0">
-                </div>
                 
                 <!-- Total y acciones -->
                 <div class="row">
@@ -257,6 +251,12 @@
                     </small>
                 </div>
 
+                <!-- Modal universal de transacciones -->
+                {% set modal_type = 'pago' %}
+                {% set modal_context = 'proveedores' %}
+                {% set modal_title = '🏦 Pago a Proveedor' %}
+                {% include 'partials/_modal-transacciones.html' %}
+
             </form>
             <span class="text-danger">* Datos requeridos</span>
         </div>    
@@ -268,11 +268,6 @@
     <!-- FIXIT
      si el campo de precio tiene un valor no actualizarlo
     --> 
-    <!-- Modal universal de transacciones -->
-    {% set modal_type = 'pago' %}
-    {% set modal_context = 'proveedores' %}
-    {% set modal_title = '🏦 Pago a Proveedor' %}
-    {% include 'partials/_modal-transacciones.html' %}
     
     <!-- Modal para selección de colores y detalles -->
     {% include 'partials/modal-color-detalle.html' %}

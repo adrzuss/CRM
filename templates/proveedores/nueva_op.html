@@ -1,157 +1,342 @@
 {% extends "base.html" %}
 
 {% block body %}
-    <h1 class="m-3">Nueva orden de pago</h1>
-    <div class="m-2">
-        <div class="container-fluid">
-            {% include 'partials/_modal-proveedor.html' %}
-            <form id="invoice_form" method="post">
-                <div class="row justify-content-center">
-                    
-                    <div class="card mb-3 ml-2 col-10">    
-                        <div class="card-header">
-                            <h3 class="m-2">Datos de la orden</h3>
-                        </div>
-                        
-                        <div class="card-body">
-                            <div class="row">
-                                <h4 class="m-2 col-5">Proveedor</h4>
-                                <h4 class="m-2 col-5" id="tipo_comprobante">Tipo de factura: </h4>
-                            </div>
-                            <div class="row m-3">
-                                <div class="col-md-2">
-                                    <label for="idproveedor">Proveedor:</label>
-                                    {% if idproveedor %}
-                                        <input class="form-control" type="text" name="idproveedor" id="idproveedor" value="{{ idproveedor }}" required>
-                                    {% else %}
-                                        <input class="form-control" type="text" name="idproveedor" id="idproveedor" required>
-                                    {% endif %}
-                                </div>    
-                                <div class="col-md-5">
-                                    <label for="proveedor_nombre">Nombre del Proveedor:</label>
-                                    <input class="form-control" type="text" name="proveedor_nombre" id="proveedor_nombre" readonly>   
-                                </div>   
-                                <div class="col-md-2">
-                                    <label for="fecha">Fecha:</label>
-                                    <input class="form-control" type="date" name="fecha" value="{{ hoy }}" required>
-                                </div>    
-                                <div class="col-md-3">
-                                    <label for="total">Total:</label>
-                                    <input class="form-control" type="number" name="total" id="total" step="0.01" min="0.01" required>
-                                </div>    
-                            </div>    
-                        </div>
-                    </div>        
-                </div>    
-                <div class="row justify-content-center">
-                    <div class="card mb-3 ml-2 col-8">    
-                        <div class="card-header">
-                            <h5 class="m-2">Facturas pendientes</h3>
-                        </div>
-                        <div class="row">
-                            <div id="movs_select" class="col-12 m-2" style="display: none;"></div>
-                            
-                        </div>
-                        <div class="cardbody">
-                        </div>
-                    </div>        
-                </div>
 
-                <div class="card">
-                    <div class="cardbody">
-                        <div id="items" name="items">
-                            
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb modern-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ url_for('proveedores.proveedores', id=0) }}">
+                <i class="fas fa-truck me-1"></i>Proveedores
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-file-invoice-dollar me-1"></i>Nueva Orden de Pago
+        </li>
+    </ol>
+</nav>
+
+<!-- Header de pagina -->
+<div class="container-fluid px-4 py-3">
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice-dollar" style="color: #0198a5;"></i> Nueva Orden de Pago
+                </h1>
+                <p class="page-subtitle">
+                    Registra un pago a proveedor
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('proveedores.ordenes_pago') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Ordenes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% include 'partials/_modal-proveedor.html' %}
+
+    <form id="invoice_form" method="post">
+        <div class="row">
+            <!-- Columna principal: datos de la orden -->
+            <div class="col-lg-8">
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #0198a5 0%, #017a85 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 600;">Datos de la Orden</h5>
+                                <small style="opacity: 0.8;">Proveedor, fecha y tipo de comprobante</small>
+                            </div>
                         </div>
                     </div>
-                </div>    
-
-                <div class="row">
-                    <h3>Total op: $<span id="total_factura">0.00</span></h3>
-                    <h3 id="saldo-container" class="total-amount">Saldo: $<span id="saldo_factura">0.00</span></h3>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-lg-3 col-md-4">
+                                <div class="form-floating">
+                                    {% if idproveedor %}
+                                        <input class="form-control form-control-modern" type="text" name="idproveedor"
+                                               id="idproveedor" value="{{ idproveedor }}" required placeholder="ID del proveedor">
+                                    {% else %}
+                                        <input class="form-control form-control-modern" type="text" name="idproveedor"
+                                               id="idproveedor" required placeholder="ID del proveedor">
+                                    {% endif %}
+                                    <label for="idproveedor"><i class="fas fa-hashtag me-2"></i>ID Proveedor <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                            <div class="col-lg-5 col-md-8">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="proveedor_nombre"
+                                           id="proveedor_nombre" readonly placeholder="Nombre del proveedor">
+                                    <label for="proveedor_nombre"><i class="fas fa-building me-2"></i>Nombre del Proveedor</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="date" name="fecha"
+                                           value="{{ hoy }}" required>
+                                    <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="number" name="total"
+                                           id="total" step="0.01" min="0.01" required placeholder="0.00">
+                                    <label for="total"><i class="fas fa-dollar-sign me-2"></i>Total <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div id="tipo_comprobante" class="text-muted" style="font-size: 0.9rem;">
+                                    Tipo de factura: <span class="fw-semibold" style="color: #1e293b;">—</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
                 </div>
 
-                <!-- Campos ocultos para los métodos de pago -->
-                <div style="display: none;">
-                    <input type="number" name="efectivo" id="efectivo_hidden" value="0">
-                    <div id="cheques-data"></div>
+                <!-- Items de la orden -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                    <i class="fas fa-list-ul"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 600;">Detalle de la Orden</h5>
+                                    <small style="opacity: 0.8;">Conceptos incluidos en el pago</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm" id="btn_facturas_pendientes" disabled
+                                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 0.4rem 1rem; font-weight: 500;">
+                                <i class="fas fa-file-invoice me-1"></i>
+                                <span class="badge bg-light text-dark" id="badge_facturas_pendientes" style="font-size: 0.75rem;">0</span>
+                                Facturas pendientes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="items" name="items" class="min-height-120">
+                            <!-- Items se cargan dinamicamente -->
+                        </div>
+                        <div class="p-3 bg-light border-top text-center text-muted" id="items-empty-state">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block" style="color: #cbd5e1;"></i>
+                            <p class="mb-0" style="font-size: 0.95rem;">No hay items agregados</p>
+                            <small>Selecciona facturas pendientes para agregar conceptos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna lateral: resumen (sticky) -->
+            <div class="col-lg-4">
+                <div class="sidebar-sticky">
+                <!-- Resumen de totales -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 600;">Resumen</h5>
+                                <small style="opacity: 0.8;">Totales de la orden</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span class="text-muted">Total orden</span>
+                            <h4 class="mb-0 fw-bold" style="color: #1e293b;">$<span id="total_factura">0.00</span></h4>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" id="saldo-container-main">
+                            <span class="text-muted">Saldo</span>
+                            <h4 class="mb-0 fw-bold total-amount">$<span id="saldo_factura_main">0.00</span></h4>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="row">
-                    <button id="btnAbrirPagos" class="btn btn-success col-2 m-2" type="button">F9 - 🏦 Procesar Pago</button>
-                    <button class="btn btn-primary col-2 m-2" type="submit" id="grabarOp" style="display:none;">Guardar Orden</button>
+                <!-- Acciones -->
+                <div class="card modern-card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-grid gap-3">
+                            <button id="btnAbrirPagos" class="btn btn-lg shadow-sm" type="button"
+                                    style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; border: none; border-radius: 10px; padding: 0.85rem 1.5rem; font-weight: 600; transition: all 0.3s ease;">
+                                <i class="fas fa-credit-card me-2"></i>Procesar Pago <kbd style="background: rgba(255,255,255,0.25); border: none; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem;">F9</kbd>
+                            </button>
+                            <button class="btn btn-primary btn-lg shadow-sm" type="submit" id="grabarOp" style="display:none; border-radius: 10px;">
+                                <i class="fas fa-save me-2"></i>Guardar Orden
+                            </button>
+                            <a href="{{ url_for('proveedores.ordenes_pago') }}" class="btn btn-outline-secondary" style="border-radius: 10px;">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span class="text-danger">*</span> Campos obligatorios
+                            </small>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-            </form>
-        </div>    
-    </div>    
+        <!-- Campos ocultos funcionales (usados por JS: calcularTotal, sincronizarCheques) -->
+        <div style="display: none;">
+            <div id="cheques-data"></div>
+            <input type="number" id="total_movs" name="total_movs" value="0">
+        </div>
 
-    <!-- TODO
-     Mover todos los scripts a archivos separados y/o a un blocke de scripts
-    -->
-    <!-- FIXIT
-     si el campo de precio tiene un valor no actualizarlo
-    --> 
-    
-    <!-- Modal universal de búsqueda -->
-    {% include 'partials/_modal-busqueda-universal.html' %}
-    
-    <!-- Modal universal de transacciones -->
-    {% set modal_type = 'pago' %}
-    {% set modal_context = 'proveedores' %}
-    {% set modal_title = '🏦 Orden de Pago' %}
-    {% include 'partials/_modal-transacciones.html' %}
-    
-    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/nueva_op.js')}}"></script>
-    
-    <script nonce="{{ g.nonce }}">
-    function abrirModalPagos() {
-        const total = document.getElementById('total').value;
-        cargarDatosModal(parseFloat(total) || 0);
-        $('#transaccionesModal').modal('show');
+        <!-- Modal de facturas pendientes -->
+        <div class="modal fade" id="facturasPendientesModal" tabindex="-1"
+             aria-labelledby="facturasPendientesModalLabel" aria-label="Facturas pendientes" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 1.5rem 2rem; color: white;">
+                        <h5 class="modal-title" id="facturasPendientesModalLabel" style="font-weight: 600;">
+                            <i class="fas fa-file-invoice me-2"></i>Facturas pendientes
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div id="no-facturas-msg" class="text-center text-muted py-4 d-none">
+                            <i class="fas fa-inbox fa-2x mb-2" style="color: #dee2e6;"></i>
+                            <p class="mb-0">No hay facturas pendientes</p>
+                        </div>
+                        <ul id="movs_select" class="list-group list-group-flush"></ul>
+                    </div>
+                    <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e9ecef; padding: 1rem 2rem;">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="btn_salir_facturas_pend"
+                                style="border-radius: 8px; padding: 0.5rem 1.25rem;">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn" id="btn_aceptar_facturas_pend"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.25rem; font-weight: 500;">
+                            <i class="fas fa-check me-1"></i>Aceptar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal universal de transacciones -->
+        {% set modal_type = 'pago' %}
+        {% set modal_context = 'proveedores' %}
+        {% set modal_title = '🏦 Orden de Pago' %}
+        {% include 'partials/_modal-transacciones.html' %}
+
+    </form>
+</div>
+
+<!-- Modal universal de busqueda -->
+{% include 'partials/_modal-busqueda-universal.html' %}
+
+<script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+<script src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
+<script src="{{ url_for('static', filename='js/nueva_op.js')}}"></script>
+
+<style>
+    /* Estilos especificos para nueva_op - no alteran el sistema global */
+    #nueva-op-items-empty .min-height-120 {
+        min-height: 120px;
     }
-    
-    // Personalizar procesamiento para órdenes de pago
-    function procesarTransaccion() {
-        if (!checkTotales()) {
-            alert('Los totales no coinciden.');
-            return false;
+    .min-height-120 {
+        min-height: 120px;
+    }
+    /* Focus visible para accesibilidad */
+    .btn:focus-visible,
+    .form-control:focus-visible,
+    .form-select:focus-visible {
+        outline: 2px solid #0198a5;
+        outline-offset: 2px;
+    }
+    /* Hover sutil en cards de esta pagina */
+    .modern-card {
+        transition: box-shadow 0.3s ease;
+    }
+    .modern-card:hover {
+        box-shadow: 0 8px 30px rgba(1, 152, 165, 0.12);
+    }
+    /* Boton de pago: hover */
+    #btnAbrirPagos:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+    }
+    #btnAbrirPagos:active {
+        transform: translateY(0);
+    }
+    /* Sidebar sticky */
+    .sidebar-sticky {
+        position: sticky;
+        top: 1.5rem;
+    }
+    @media (max-width: 991.98px) {
+        .sidebar-sticky {
+            position: static;
         }
-        
-        // Sincronizar datos de cheques al formulario principal
-        sincronizarCheques();
-        
-        // Cerrar modal y procesar
-        $('#transaccionesModal').modal('hide');
-        document.getElementById('grabarOp').click();
-        return true;
     }
-    
-    // Sincronizar cheques del modal al formulario
-    function sincronizarCheques() {
-        const chequesContainer = document.getElementById('cheques-data');
-        const chequesModal = document.querySelectorAll('#cheques input[type="hidden"]');
-        
-        chequesContainer.innerHTML = '';
-        chequesModal.forEach(input => {
-            const clonedInput = input.cloneNode(true);
-            chequesContainer.appendChild(clonedInput);
-        });
-    }
-    
-    // Atajos de teclado
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'F9') {
-            e.preventDefault();
-            abrirModalPagos();
-        }
-    });
+</style>
 
-    // Wiring de handlers (refactor CSP)
-    document.getElementById('btnAbrirPagos').addEventListener('click', function () {
-        window.abrirModalPagos();
+<script nonce="{{ g.nonce }}">
+function abrirModalPagos() {
+    const total = document.getElementById('total').value;
+    cargarDatosModal(parseFloat(total) || 0);
+    $('#transaccionesModal').modal('show');
+}
+
+// Personalizar procesamiento para ordenes de pago
+function procesarTransaccion() {
+    if (!checkTotales()) {
+        alert('Los totales no coinciden.');
+        return false;
+    }
+
+    // Sincronizar datos de cheques al formulario principal
+    sincronizarCheques();
+
+    // Cerrar modal y procesar
+    $('#transaccionesModal').modal('hide');
+    document.getElementById('grabarOp').click();
+    return true;
+}
+
+// Sincronizar cheques del modal al formulario
+function sincronizarCheques() {
+    const chequesContainer = document.getElementById('cheques-data');
+    const chequesModal = document.querySelectorAll('#cheques input[type="hidden"]');
+
+    chequesContainer.innerHTML = '';
+    chequesModal.forEach(input => {
+        const clonedInput = input.cloneNode(true);
+        chequesContainer.appendChild(clonedInput);
     });
-    </script>
-    
+}
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F9') {
+        e.preventDefault();
+        abrirModalPagos();
+    }
+});
+
+// Wiring de handlers (refactor CSP)
+document.getElementById('btnAbrirPagos').addEventListener('click', function () {
+    window.abrirModalPagos();
+});
+</script>
+
 {% endblock %}

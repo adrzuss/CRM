@@ -1,5 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for, jsonify, send_file
 from flask import g
+import logging
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from entidades_cred.models import EntidadesCred
@@ -15,6 +16,8 @@ from datetime import date, timedelta
 
 
 from creditos import bp_creditos
+
+logger = logging.getLogger(__name__)
 
 @bp_creditos.route('/config_cred')
 @check_session
@@ -168,7 +171,7 @@ def ver_credito(id_credito):
         flash('Crédito no encontrado', 'error')
         return redirect(url_for('creditos.otorgamiento'))
     planesCategorias = get_planes_creditos_categoria(credito.idcategoria)
-    print(f"los documentos del crédito son: {documentos}")
+    logger.info("Documentos del crédito: %s", documentos)
     return render_template('ver-credito.html', credito=credito, garantes=garantes, documentos=documentos, cuotas_generadas=cuotas_generadas, planesCategorias=planesCategorias)
 
 @bp_creditos.route('/generar_credito', methods=['POST'])
@@ -181,6 +184,7 @@ def generar_credito():
     
     idcredito, mensaje = generar_credito_cliente(formulario, archivos)
     if not idcredito:
+        logger.error('Error al generar el crédito: %s', mensaje)
         flash(f'Error al generar el crédito: {mensaje}', 'error')
         return redirect(url_for('creditos.otorgamiento'))
     flash(f'El crédito ha sido generado con éxito: {idcredito}', 'success')
@@ -226,7 +230,7 @@ def lst_creditos():
         titulo = 'Créditos registrados'
         return render_template('lst-estados-creditos.html', accion='creditos.lst_creditos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
 
 @bp_creditos.route('/lst_nuevos')
@@ -242,7 +246,7 @@ def lst_nuevos():
         titulo = 'Créditos Nuevos'
         return render_template('lst-estados-creditos.html', accion='creditos.lst_nuevos', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
 
 
@@ -259,7 +263,7 @@ def lst_pendientes():
         titulo = 'Créditos Pendientes de Aprobación o con pedido de actualización de datos'
         return render_template('lst-estados-creditos.html', accion='creditos.lst_pendientes', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
 
 @bp_creditos.route('/lst_rechazados')
@@ -275,7 +279,7 @@ def lst_rechazados():
         titulo = 'Créditos Rechazados'
         return render_template('lst-estados-creditos.html', accion='creditos.lst_rechazados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
     
 @bp_creditos.route('/lst_aprobados')
@@ -291,7 +295,7 @@ def lst_aprobados():
         titulo = 'Créditos Aprobados'
         return render_template('lst-estados-creditos.html', accion='creditos.lst_aprobados', titulo=titulo, desde=desde, hasta=hasta, creditos=nuevos)
     except Exception as e:
-        print(f"Error al ejecutar el procedimiento almacenado: {e}")
+        logger.error("Error al ejecutar el procedimiento almacenado: %s", e)
         return None
 
 @bp_creditos.route('/descargar_documento/<idcredito>/<iddocumento>')
@@ -307,7 +311,7 @@ def descargar_documento(idcredito, iddocumento):
 def hay_credito(idcliente):
     # Lógica para verificar si hay crédito para el cliente
     try:
-        print(f"🔍 Endpoint hay_credito llamado para cliente: {idcliente}")
+        logger.info("Endpoint hay_credito llamado para cliente: %s", idcliente)
         credito = get_credito_by_idcliente(idcliente)
         
         if credito:
@@ -320,7 +324,7 @@ def hay_credito(idcliente):
                     'cuotas': credito.cuotas
                 }
             }
-            print(f"✅ Respuesta con crédito: {respuesta}")
+            logger.info("Respuesta con crédito: %s", respuesta)
             return jsonify(respuesta)
         else:
             respuesta = {
@@ -332,10 +336,10 @@ def hay_credito(idcliente):
                     'cuotas': 0
                 }
             }
-            print(f"❌ Respuesta sin crédito: {respuesta}")
+            logger.info("Respuesta sin crédito: %s", respuesta)
             return jsonify(respuesta)
     except Exception as e:
-        print(f"❌ Error al verificar crédito del cliente: {e}")
+        logger.error("Error al verificar crédito del cliente: %s", e)
         return jsonify(success=False, mensaje='Error al verificar crédito del cliente.')    
 
 @bp_creditos.route('/vencimientos_cuotas', methods=['GET', 'POST'])
@@ -384,7 +388,7 @@ def cuotas_pendientes(idcliente):
         cuotasPendientes = get_cuotas_pendientes(idcliente)
         return jsonify(success=True, cuotas = [{'id': cuota[0], 'monto_credito': cuota[1], 'numero_cuota': cuota[2], 'fecha_vencimiento': cuota[3], 'dias_mora': 0 if cuota[4] <= 0 else cuota[4], 'monto': cuota[5], 'interes_mora': cuota[6], 'total_a_pagar': cuota[7]} for cuota in cuotasPendientes])
     except Exception as e:
-        print(f"Error al obtener las cuotas pendientes: {e}")
+        logger.error("Error al obtener las cuotas pendientes: %s", e)
         return jsonify(success=False, mensaje=f'Error al obtener las cuotas pendientes: {e}')    
     
 @bp_creditos.route('/cobrar_cuotas', methods=['POST'])
@@ -403,11 +407,11 @@ def cobrar_cuotas():
         resultado = generarRecibo(idCliente, cuotas, totalCuotas, efectivo, tarjeta, entidad)
         
         if not resultado['success']:
-            print(f"Error al cobrar cuotas: {resultado['mensaje']}")
+            logger.error("Error al cobrar cuotas: %s", resultado['mensaje'])
             flash(f"Error al cobrar cuotas: {resultado['mensaje']}", 'error')
             return jsonify(success=False, mensaje=resultado['mensaje'])
         else:    
-            print("Cuotas cobradas exitosamente")    
+            logger.info("Cuotas cobradas exitosamente")    
             flash('Cuotas cobradas exitosamente.')
             return jsonify(success=True, mensaje='Cuotas cobradas exitosamente.')
     

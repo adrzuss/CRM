@@ -6,361 +6,398 @@
 
 {% block body %}
 
+<div class="container-fluid px-4 py-3">
 
-<div class="container-fluid">
-    
-    <!-- Header elegante con breadcrumbs -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 text-gray-800 mb-1">🧾 Nueva Factura de Venta</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url_for('ventas.ventas') }}">Ventas</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Nueva Factura</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div class="invoice-number">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="text-center">
-                            <small class="text-muted d-block">Punto de Venta</small>
-                            <div class="h5 mb-0" id="punto_vta">Cargando...</div>
-                            <input type="hidden" id="ptovta_seleccionado" name="ptovta_seleccionado" value="">
-                            <input type="hidden" id="fac_electronica" name="fac_electronica" value="false">
-                            <input type="hidden" id="pos_printer" name="pos_printer" value="">
-                        </div>
-                        <div class="text-center">
-                            <small class="text-muted d-block">Terminal POS</small>
-                            <div class="h6 mb-0" id="posPrinter">{{ session['posPrinter'] or 'N/A' }}</div>
-                            <div class="h6 text-center" id="facElectronica">{{ session['facElectronica'] or '' }}</div>
-                        </div>
-                        <button class="btn btn-action btn-sm" id="cambiar_pto_vta">
-                            <i class="fas fa-exchange-alt"></i>
-                            Cambiar Pto. Vta.
-                        </button>
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb modern-breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ventas.ventas') }}"><i class="fas fa-receipt"></i> Ventas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-file-invoice-dollar"></i> Nueva Factura
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-invoice-dollar" style="color: #0198a5;"></i> Nueva Factura de Venta
+                </h1>
+                <p class="page-subtitle">
+                    Registra una venta a cliente
+                </p>
+            </div>
+            <div class="header-actions d-flex align-items-center gap-3">
+                <!-- Datos del comprobante -->
+                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 0.6rem 1.25rem; display: flex; align-items: center; gap: 1.25rem;">
+                    <div class="text-center">
+                        <small style="color: #6c757d; font-size: 0.7rem; display: block;">Punto de Venta</small>
+                        <div class="fw-bold" style="color: #1e293b; font-size: 1rem;" id="punto_vta">Cargando...</div>
+                        <input type="hidden" id="ptovta_seleccionado" name="ptovta_seleccionado" value="">
+                        <input type="hidden" id="fac_electronica" name="fac_electronica" value="false">
+                        <input type="hidden" id="pos_printer" name="pos_printer" value="">
                     </div>
+                    <div style="width: 1px; height: 35px; background: #dee2e6;"></div>
+                    <div class="text-center">
+                        <small style="color: #6c757d; font-size: 0.7rem; display: block;">Terminal POS</small>
+                        <div class="fw-semibold" style="color: #495057; font-size: 0.9rem;" id="posPrinter">{{ session['posPrinter'] or 'N/A' }}</div>
+                        <div style="color: #6c757d; font-size: 0.8rem;" id="facElectronica">{{ session['facElectronica'] or '' }}</div>
+                    </div>
+                    <button class="btn btn-sm" id="cambiar_pto_vta"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; padding: 0.4rem 1rem; font-weight: 500;">
+                        <i class="fas fa-exchange-alt me-1"></i>Cambiar
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Modals -->
     {% include 'partials/_modal-busqueda-universal.html' %}
     {% include 'partials/_modal-seleccion-ptovta.html' %}
     {% include 'partials/_modal-credito-disponible.html' %}
     {% include 'ventas/partials/_modal-confirmacion-impresion.html' %}
-       
-    
-    <!-- Spinner mejorado -->
+
+    <!-- Spinner -->
     <div id="spinner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
         <div class="spinner-overlay">
             <div class="loader"></div>
-            <h5 class="mt-3 text-primary">Procesando factura</h5>
+            <h5 class="mt-3" style="color: #0198a5;">Procesando factura</h5>
             <p class="text-muted">Por favor espere...</p>
         </div>
-    </div> 
+    </div>
+
     <form id="invoice_form" method="post">
         {% set modal_type = 'pago' %}
         {% set modal_context = 'ventas' %}
         {% set modal_title = '💰 Métodos de Pago' %}
         {% set show_offers = true %}
         {% include 'partials/_modal-transacciones.html' %}
-        
-        <!-- SECCIÓN 1: Información del Cliente -->
-        <div class="card modern-card mb-4 fade-in">
-            <div class="card-header modern-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-user fa-lg me-2"></i>
-                    <div>
-                        <h5 class="card-title mb-0">Información del Cliente</h5>
-                        <small class="text-white-50">Datos de la factura de venta</small>
-                    </div>
-                </div>
-                <div class="status-badge" id="tipo_comprobante">
-                    <i class="fas fa-file-invoice"></i>
-                    Tipo de factura: Cargando...
-                </div>
-            </div>
-            <div class="card-body p-4">
-                <div class="row g-3">
-                    <div class="col-lg-2 col-md-3">
-                        <div class="form-floating">
-                            <input class="form-control form-control-modern" type="text" name="id" id="id" readonly placeholder="ID Cliente">
-                            <label for="id"><i class="fas fa-hashtag me-2"></i>ID Cliente</label>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-4">
-                        <div class="form-floating">
-                            <input class="form-control form-control-modern" type="text" name="idcliente" id="idcliente" required placeholder="Buscar Cliente">
-                            <label for="idcliente"><i class="fas fa-search me-2"></i>Buscar Cliente <span class="text-danger">*</span></label>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-5">
-                        <div class="form-floating">
-                            <input class="form-control form-control-modern" type="text" name="cliente_nombre" id="cliente_nombre" readonly placeholder="Nombre del Cliente">
-                            <label for="cliente_nombre"><i class="fas fa-user-tag me-2"></i>Nombre del Cliente</label>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="form-floating">
-                            <input class="form-control form-control-modern" type="date" name="fecha" value="{{ hoy }}" required placeholder="Fecha de Venta">
-                            <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha de Venta <span class="text-danger">*</span></label>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-3 mt-2">
-                    <div class="col-lg-4">
-                        <div class="form-floating">
-                            <select class="form-select form-control-modern" name="idlista" id="idlista">
-                                {% for lista in listas_precio %}
-                                    <option value="{{ lista.id }}" {{ 'selected' if loop.first else '' }}>
-                                        {{ lista.nombre }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <label for="idlista"><i class="fas fa-tags me-2"></i>Lista de Precios</label>
-                        </div>
-                    </div>
-                </div>
-                <!-- Campo oculto para tipo de comprobante -->
-                <input type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
-            </div>
-        </div>
 
-        <!-- SECCIÓN 2: Artículos de la Venta -->
-        <div class="card shadow mb-4 fade-in">
-            <div class="section-header d-flex justify-content-between align-items-center">
-                <h3>
-                    <i class="fas fa-shopping-cart"></i>
-                    Artículos de la Venta
-                </h3>
-                <button class="btn btn-light" type="button" id="agregarArticulo">
-                    <i class="fas fa-plus"></i>
-                    Agregar Artículo (F4)
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabla-items">
-                        <thead>
-                            <tr>
-                                <th class="text-center">#ID</th>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th class="text-right">Precio Unit.</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-right">Total</th>
-                                <th hidden>Oferta</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="table-group-divider">
-                            <tr id="no-items-row">
-                                <td colspan="7" class="text-center py-5">
-                                    <i class="fas fa-shopping-basket fa-3x text-gray-300 mb-3"></i>
-                                    <h5 class="text-gray-500">No hay artículos agregados</h5>
-                                    <p class="text-muted">Presione "Agregar Artículo" o F4 para comenzar</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>    
-
-        <!-- SECCIÓN 3: Resumen y Acciones -->
         <div class="row">
-            <!-- Total de la Factura -->
+            <!-- Columna principal -->
             <div class="col-lg-8">
-                <div class="card shadow mb-4 fade-in border-left-primary">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="d-flex align-items-center">
-                                    <div class="mr-3">
-                                        <i class="fas fa-calculator fa-3x text-primary"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-weight-bold text-primary mb-1">Total de la Factura</h4>
-                                        <p class="text-muted mb-0">Suma total de todos los artículos</p>
-                                    </div>
+
+                <!-- Información del Cliente -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #0198a5 0%, #017a85 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0" style="font-weight: 600;">Información del Cliente</h5>
+                                    <small style="opacity: 0.8;">Datos de la factura de venta</small>
                                 </div>
                             </div>
-                            <div class="col-lg-6 text-right">
-                                <div class="total-display" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); color: white; padding: 1.5rem; border-radius: 1rem; text-align: center;">
-                                    <h2 class="mb-0 font-weight-bold" style="font-size: 2.5rem;">
-                                        $<span id="totalFacturaDisplay">0.00</span>
-                                    </h2>
-                                    <small>Importe Total</small>
-                                </div>
-                                <input type="number" name="totalFactura" id="totalFactura" step="0.01" value="0" readonly hidden>
+                            <div id="tipo_comprobante"
+                                 style="background: rgba(255,255,255,0.2); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
+                                <i class="fas fa-file-invoice me-1"></i>
+                                Tipo de factura: Cargando...
                             </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-lg-2 col-md-3">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="id" id="id" readonly placeholder="ID Cliente">
+                                    <label for="id"><i class="fas fa-hashtag me-2"></i>ID Cliente</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-4">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="idcliente" id="idcliente" required placeholder="Buscar Cliente">
+                                    <label for="idcliente"><i class="fas fa-search me-2"></i>Buscar Cliente <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-5">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="text" name="cliente_nombre" id="cliente_nombre" readonly placeholder="Nombre del Cliente">
+                                    <label for="cliente_nombre"><i class="fas fa-user-tag me-2"></i>Nombre del Cliente</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="form-floating">
+                                    <input class="form-control form-control-modern" type="date" name="fecha" value="{{ hoy }}" required placeholder="Fecha de Venta">
+                                    <label for="fecha"><i class="fas fa-calendar-alt me-2"></i>Fecha de Venta <span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-lg-4">
+                                <div class="form-floating">
+                                    <select class="form-select form-control-modern" name="idlista" id="idlista">
+                                        {% for lista in listas_precio %}
+                                            <option value="{{ lista.id }}" {{ 'selected' if loop.first else '' }}>
+                                                {{ lista.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="idlista"><i class="fas fa-tags me-2"></i>Lista de Precios</label>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="number" name="id_tipo_comprobante" id="id_tipo_comprobante" hidden>
+                    </div>
+                </div>
+
+                <!-- Artículos de la Venta -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0" style="font-weight: 600;">Artículos de la Venta</h5>
+                                    <small style="opacity: 0.8;">Detalle de ítems</small>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm" type="button" id="agregarArticulo"
+                                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 0.4rem 1rem; font-weight: 500;">
+                                <i class="fas fa-plus me-1"></i>Agregar Artículo <kbd style="background: rgba(255,255,255,0.25); border: none; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.65rem;">F4</kbd>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tabla-items">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">#ID</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th class="text-end">Precio Unit.</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Total</th>
+                                        <th hidden>Oferta</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <tr id="no-items-row">
+                                        <td colspan="7" class="text-center py-5" style="background: #f8f9fa;">
+                                            <i class="fas fa-shopping-basket fa-3x mb-3" style="color: #dee2e6;"></i>
+                                            <h5 style="color: #6c757d;">No hay artículos agregados</h5>
+                                            <p class="text-muted mb-0">Presioná "Agregar Artículo" o F4 para comenzar</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Botón de Procesar Pago -->
+
+            <!-- Columna lateral: Resumen (sticky) -->
             <div class="col-lg-4">
-                <div class="card shadow mb-4 fade-in border-left-success">
-                    <div class="card-body text-center">
-                        <h5 class="text-success mb-3">
-                            <i class="fas fa-credit-card"></i>
-                            Finalizar Venta
-                        </h5>
-                        <button class="btn btn-success btn-lg btn-block" type="button" id="btnPagos" name="btnPagos">
-                            <i class="fas fa-money-bill-wave"></i>
-                            Procesar Pago
-                        </button>
-                        <small class="text-muted d-block mt-2">
-                            <i class="fas fa-keyboard"></i>
-                            Atajo: F8
-                        </small>
+                <div class="sidebar-sticky">
+                <!-- Total -->
+                <div class="card modern-card mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 1.25rem 1.5rem;">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-size: 1.1rem;">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0" style="font-weight: 600;">Total de la Factura</h5>
+                                <small style="opacity: 0.8;">Suma de todos los artículos</small>
+                            </div>
+                        </div>
                     </div>
+                    <div class="card-body p-4 text-center">
+                        <h2 class="mb-0 fw-bold" style="color: #1e293b; font-size: 2.25rem;">
+                            $<span id="totalFacturaDisplay">0.00</span>
+                        </h2>
+                        <small style="color: #6c757d;">Importe Total</small>
+                        <input type="number" name="totalFactura" id="totalFactura" step="0.01" value="0" readonly hidden>
+                    </div>
+                </div>
+
+                <!-- Procesar Pago -->
+                <div class="card modern-card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-grid">
+                            <button class="btn btn-lg" type="button" id="btnPagos" name="btnPagos"
+                                    style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; border: none; border-radius: 10px; padding: 0.85rem 1.5rem; font-weight: 600; transition: all 0.3s ease;">
+                                <i class="fas fa-credit-card me-2"></i>Procesar Pago
+                                <kbd style="background: rgba(255,255,255,0.25); border: none; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem;">F8</kbd>
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small style="color: #6c757d;">
+                                <i class="fas fa-keyboard me-1"></i>Atajo de teclado
+                            </small>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
-        
+
     </form>
-</div>        
+</div>
 
-    
-    <script nonce="{{ g.nonce }}">
-        // Solo si hay presupuesto
-        {% if presupuesto %}
-            window.PRESUPUESTO = {
-            id: {{ presupuesto.id }},
-            idcliente: {{ presupuesto.idcliente }},
-            total: {{ presupuesto.total }},
-            
-            articulos: [
-                {% for art in articulos_presupuesto %}
-                {
-                    idarticulo: {{ art.idarticulo }},
-                    codigo: {{ art.codigo }},
-                    precio_unitario: {{ art.precio_unitario }},
-                    cantidad: {{ art.cantidad }}
-                }
-                {% if not loop.last %},{% endif %}
-                {% endfor %}
-            ]
-            };
-        {% else %}
-            window.PRESUPUESTO = null;
-        {% endif %}
-    </script>
-    <script nonce="{{ g.nonce }}">
-        // Solo si hay remito
-        {% if remito %}
-            window.REMITO = {
-            id: {{ remito.id }},
-            idcliente: {{ remito.idcliente }},
-            total: {{ remito.total }},
+<script nonce="{{ g.nonce }}">
+    // Solo si hay presupuesto
+    {% if presupuesto %}
+        window.PRESUPUESTO = {
+        id: {{ presupuesto.id }},
+        idcliente: {{ presupuesto.idcliente }},
+        total: {{ presupuesto.total }},
 
-            articulos: [
-                {% for art in articulos_remito %}
-                {
-                    idarticulo: {{ art.idarticulo }},
-                    codigo: {{ art.codigo }},
-                    precio_unitario: {{ art.precio_unitario }},
-                    cantidad: {{ art.cantidad }}
-                }
-                {% if not loop.last %},{% endif %}
-                {% endfor %}
-            ]
-            };
-        {% else %}
-            window.REMITO = null;
-        {% endif %}
-    </script>
-    
-    <!-- Modal para selección de colores y detalles -->
-    {% include 'partials/modal-color-detalle.html' %}
-    
-    <!-- Script para sincronización del total -->
-    <script nonce="{{ g.nonce }}">
-        // Sincronizar el total visual con el input oculto
-        function sincronizarTotal() {
-            const totalInput = document.getElementById('totalFactura');
-            const totalDisplay = document.getElementById('totalFacturaDisplay');
-            const noItemsRow = document.getElementById('no-items-row');
-            const tablaItems = document.getElementById('tabla-items').querySelector('tbody');
-            
-            if (totalInput && totalDisplay) {
-                const valor = parseFloat(totalInput.value) || 0;
-                totalDisplay.textContent = valor.toLocaleString('es-AR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-                
-                // Animación del total
-                totalDisplay.parentElement.classList.add('total-animate');
-                setTimeout(() => {
-                    totalDisplay.parentElement.classList.remove('total-animate');
-                }, 500);
+        articulos: [
+            {% for art in articulos_presupuesto %}
+            {
+                idarticulo: {{ art.idarticulo }},
+                codigo: {{ art.codigo }},
+                precio_unitario: {{ art.precio_unitario }},
+                cantidad: {{ art.cantidad }}
             }
-            
-            // Mostrar/ocultar fila de "no hay items"
-            if (noItemsRow && tablaItems) {
-                const filas = tablaItems.querySelectorAll('tr:not(#no-items-row)');
-                if (filas.length === 0 || (filas.length === 1 && filas[0].style.display === 'none')) {
-                    noItemsRow.style.display = 'table-row';
-                } else {
-                    noItemsRow.style.display = 'none';
-                }
+            {% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+        };
+    {% else %}
+        window.PRESUPUESTO = null;
+    {% endif %}
+</script>
+<script nonce="{{ g.nonce }}">
+    // Solo si hay remito
+    {% if remito %}
+        window.REMITO = {
+        id: {{ remito.id }},
+        idcliente: {{ remito.idcliente }},
+        total: {{ remito.total }},
+
+        articulos: [
+            {% for art in articulos_remito %}
+            {
+                idarticulo: {{ art.idarticulo }},
+                codigo: {{ art.codigo }},
+                precio_unitario: {{ art.precio_unitario }},
+                cantidad: {{ art.cantidad }}
+            }
+            {% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+        };
+    {% else %}
+        window.REMITO = null;
+    {% endif %}
+</script>
+
+<!-- Modal para selección de colores y detalles -->
+{% include 'partials/modal-color-detalle.html' %}
+
+<!-- Sincronización del total -->
+<script nonce="{{ g.nonce }}">
+    function sincronizarTotal() {
+        const totalInput = document.getElementById('totalFactura');
+        const totalDisplay = document.getElementById('totalFacturaDisplay');
+        const noItemsRow = document.getElementById('no-items-row');
+        const tablaItems = document.getElementById('tabla-items').querySelector('tbody');
+
+        if (totalInput && totalDisplay) {
+            const valor = parseFloat(totalInput.value) || 0;
+            totalDisplay.textContent = valor.toLocaleString('es-AR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            totalDisplay.parentElement.classList.add('total-animate');
+            setTimeout(() => {
+                totalDisplay.parentElement.classList.remove('total-animate');
+            }, 500);
+        }
+
+        if (noItemsRow && tablaItems) {
+            const filas = tablaItems.querySelectorAll('tr:not(#no-items-row)');
+            if (filas.length === 0 || (filas.length === 1 && filas[0].style.display === 'none')) {
+                noItemsRow.style.display = 'table-row';
+            } else {
+                noItemsRow.style.display = 'none';
             }
         }
-        
-        // Observer para cambios en el total
-        document.addEventListener('DOMContentLoaded', function() {
-            // Asegurar que el spinner esté oculto al cargar
-            const spinner = document.getElementById('spinner');
-            if (spinner) {
-                spinner.style.display = 'none';
-                spinner.classList.add('hidden');
-            }
-            const totalInput = document.getElementById('totalFactura');
-            if (totalInput) {
-                // Sincronizar al cargar
-                sincronizarTotal();
-                
-                // Observar cambios
-                const observer = new MutationObserver(sincronizarTotal);
-                observer.observe(totalInput, { 
-                    attributes: true, 
-                    attributeFilter: ['value'],
-                    childList: false,
-                    subtree: false 
-                });
-                
-                // También escuchar eventos de input
-                totalInput.addEventListener('input', sincronizarTotal);
-                totalInput.addEventListener('change', sincronizarTotal);
-            }
-            
-            // Observar cambios en la tabla
-            const tablaItems = document.getElementById('tabla-items');
-            if (tablaItems) {
-                const observer = new MutationObserver(sincronizarTotal);
-                observer.observe(tablaItems.querySelector('tbody'), {
-                    childList: true,
-                    subtree: true
-                });
-            }
-        });
-        
-        // Exponer función globalmente para uso en otros scripts
-        window.sincronizarTotal = sincronizarTotal;
-    </script>
-    
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/modal-color-detalle.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/transaction-color-detail-helper.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/invoice-utils.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/nueva_venta.js')}}"></script>
-    
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const spinner = document.getElementById('spinner');
+        if (spinner) {
+            spinner.style.display = 'none';
+            spinner.classList.add('hidden');
+        }
+        const totalInput = document.getElementById('totalFactura');
+        if (totalInput) {
+            sincronizarTotal();
+            const observer = new MutationObserver(sincronizarTotal);
+            observer.observe(totalInput, {
+                attributes: true,
+                attributeFilter: ['value'],
+                childList: false,
+                subtree: false
+            });
+            totalInput.addEventListener('input', sincronizarTotal);
+            totalInput.addEventListener('change', sincronizarTotal);
+        }
+
+        const tablaItems = document.getElementById('tabla-items');
+        if (tablaItems) {
+            const observer = new MutationObserver(sincronizarTotal);
+            observer.observe(tablaItems.querySelector('tbody'), {
+                childList: true,
+                subtree: true
+            });
+        }
+    });
+
+    window.sincronizarTotal = sincronizarTotal;
+</script>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/universal-search-modal.js')}}"></script>
+<script src="{{ url_for('static', filename='js/modal-color-detalle.js')}}"></script>
+<script src="{{ url_for('static', filename='js/transaction-color-detail-helper.js')}}"></script>
+<script src="{{ url_for('static', filename='js/invoice-utils.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modal-transacciones-universal.js')}}"></script>
+<script type="module" src="{{ url_for('static', filename='js/nueva_venta.js')}}"></script>
+
+<style>
+    .btn:focus-visible,
+    .form-control:focus-visible,
+    .form-select:focus-visible {
+        outline: 2px solid #0198a5;
+        outline-offset: 2px;
+    }
+    .modern-card {
+        transition: box-shadow 0.3s ease;
+    }
+    .modern-card:hover {
+        box-shadow: 0 8px 30px rgba(1, 152, 165, 0.1);
+    }
+    #btnPagos:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+    }
+    #btnPagos:active {
+        transform: translateY(0);
+    }
+    /* Sidebar sticky: se queda visible mientras scrolleá */
+    .sidebar-sticky {
+        position: sticky;
+        top: 1.5rem;
+    }
+    @media (max-width: 991.98px) {
+        .sidebar-sticky {
+            position: static;
+        }
+    }
+</style>
+
 {% endblock %}

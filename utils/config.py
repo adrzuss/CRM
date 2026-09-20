@@ -26,8 +26,8 @@ class Config:
     IDSTOCK = 1  # El valor de idstock
     LOGO_PATH = os.getenv('LOGO_PATH')
     UPLOAD_FOLDER = 'static/img/articulos'
-    UPLOAD_FOLDER_CREDITOS = 'static/img/creditos'
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
+    UPLOAD_FOLDER_CREDITOS = os.getenv('UPLOAD_FOLDER_CREDITOS', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'static', 'img', 'creditos'))
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf', 'doc', 'docx', 'xls', 'xlsx'}
     FE_FILES_FOLDER = 'cert_fe'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # Tamaño máximo de archivo de 16MB
     # Duración de la sesión (120 minutos)

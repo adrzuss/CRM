@@ -31,10 +31,8 @@ function ensureColorDetalleFields() {
   });
 }
 
-window.onbeforeunload = confirmarSalida;        
-
-
 document.addEventListener('DOMContentLoaded', function() {
+    window.onbeforeunload = confirmarSalida;
     const form = document.getElementById('invoice_form');
     const btnAgregar = document.getElementById('agregarArticulo');
     const btnGrabar = document.getElementById('grabarBalance');

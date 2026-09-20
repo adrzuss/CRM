@@ -3,9 +3,8 @@ let contadorFilas = 0;
 
 // ensureColorDetalleFields() → movida a invoice-utils.js
 
-window.onbeforeunload = confirmarSalida;
-
 document.addEventListener("DOMContentLoaded", function () {
+  window.onbeforeunload = confirmarSalida;
   const form = document.getElementById("invoice_form");
   const btnAgregar = document.getElementById("agregarArticulo");
   const btnGrabar = document.getElementById("grabarCompra");

@@ -1,8 +1,37 @@
 isFormSubmited = false; // Variable para controlar si el formulario ha sido enviado
 
-window.onbeforeunload = confirmarSalida;
+document.addEventListener("DOMContentLoaded", function () {
+    window.onbeforeunload = confirmarSalida;
 
-document.getElementById('idproveedor').focus();
+    // Abrir modal de facturas pendientes al hacer click en el badge
+    const btnFacturas = document.getElementById("btn_facturas_pendientes");
+    if (btnFacturas) {
+        btnFacturas.addEventListener("click", function () {
+            const modal = new bootstrap.Modal(document.getElementById("facturasPendientesModal"));
+            modal.show();
+        });
+    }
+
+    // Botón Aceptar del modal de facturas pendientes
+    const btnAceptar = document.getElementById("btn_aceptar_facturas_pend");
+    if (btnAceptar) {
+        btnAceptar.addEventListener("click", function () {
+            calcularTotal();
+            const modal = bootstrap.Modal.getInstance(document.getElementById("facturasPendientesModal"));
+            if (modal) modal.hide();
+        });
+    }
+
+    // Event delegation para checkboxes de facturas pendientes
+    const movsSelect = document.getElementById("movs_select");
+    if (movsSelect) {
+        movsSelect.addEventListener("change", function (e) {
+            if (e.target.type === "checkbox") {
+                calcularTotal();
+            }
+        });
+    }
+});
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -83,14 +112,16 @@ function limpiarDatosProveedor() {
 function asignarProveedor(proveedor) {
     document.getElementById("idproveedor").value = proveedor.id;
     document.getElementById("proveedor_nombre").value = proveedor.nombre;
-    const movsSelect = document.getElementById("movs_select");
-    movsSelect.innerHTML = `<ul class='list-group'></ul>`; // Limpiar el select de remitos
     obtener_mov_ctacte(proveedor.id);
 }
   
 async function obtener_mov_ctacte(idproveedor) { 
     const response = await fetch(`${BASE_URL}/proveedores/get_movs_ctacte/${idproveedor}`);
     const data = await response.json();
+    const badge = document.getElementById("badge_facturas_pendientes");
+    const btn = document.getElementById("btn_facturas_pendientes");
+    const noFacturasMsg = document.getElementById("no-facturas-msg");
+    
     if (data.length > 0) {
         const movsSelect = document.getElementById("movs_select");
         movsSelect.innerHTML = `<ul class='list-group'></ul>`; // Limpiar el select de remitos
@@ -103,22 +134,32 @@ async function obtener_mov_ctacte(idproveedor) {
             option.className = "list-group-item ml-2"; 
             option.value = movs.id;
             const saldo = parseFloat(movs.saldo);
-            option.innerHTML = `<input class="form-check-input me-1" type="checkbox" id="checkbox${index}" name="mov_cc[${index}][check]" onClick="calcularTotal()" >
+            option.innerHTML = `<input class="form-check-input me-1" type="checkbox" id="checkbox${index}" name="mov_cc[${index}][check]">
                                 <label class="form-check-label" for="firstCheckbox">${dia}/${mes}/${anio} - Comprobante: ${movs.tipo_comprobante} / ${movs.nro_comprobante} - Saldo $${saldo.toFixed(2)}</label>
                                 <input type="hidden" name="mov_cc_saldo[${index}][id]" id="mov_cc_saldo[${index}][id]" value="${saldo}">
                                 <input type="hidden" name="mov_cc_id[${index}][id]" value="${movs.id}">`;
             movsSelect.appendChild(option);
         });
-        movsSelect.style.display = "block"; // Mostrar el select de remitos
+        
+        badge.textContent = data.length;
+        btn.disabled = false;
+        if (noFacturasMsg) noFacturasMsg.classList.add("d-none");
+    } else {
+        badge.textContent = 0;
+        btn.disabled = true;
+        if (noFacturasMsg) noFacturasMsg.classList.remove("d-none");
     }
-    
 }
 
 function calcularTotal(){
+    const totalMovsEl = document.getElementById("total_movs");
+    if (!totalMovsEl) return;
     const listodoMovs = document.getElementById("movs_select");
     const movs = listodoMovs.querySelectorAll("input[type=checkbox]:checked");
     if (movs.length == 0){
-        document.getElementById("total_movs").textContent = 0;
+        totalMovsEl.value = 0;
+        document.getElementById("total").value = "0.00";
+        document.getElementById("total_factura").textContent = "0.00";
         return;
     }
     let totalMovs = 0;
@@ -127,6 +168,7 @@ function calcularTotal(){
         const saldo = document.getElementById("mov_cc_saldo[" + index + "][id]").value;
         totalMovs += parseFloat(saldo);
     });
+    totalMovsEl.value = totalMovs.toFixed(2);
     document.getElementById("total").value = totalMovs.toFixed(2);
     document.getElementById("total_factura").textContent = totalMovs.toFixed(2);
 }
@@ -143,46 +185,8 @@ function mostrarModalSeleccionProveedores(proveedores) {
   window.universalSearchModal.show('proveedores', proveedores || [], callback);
 } 
   
-function calcSaldo(){
-    const totalFac = parseFloat(document.getElementById('total').value);
-    const efectivo = parseFloat(document.getElementById('efectivo').value);
-    let diferencia = (totalFac - (efectivo));
-    
-    // Actualizar el contenido del saldo
-    let lblSaldo = document.getElementById('saldo_factura');
-    lblSaldo.textContent = diferencia.toFixed(2);
-    
-    // Actualizar la clase del contenedor
-    const saldoContainer = document.getElementById("saldo-container");
-    if (diferencia > 0){
-        saldoContainer.className = 'total-amount negativo';
-    }
-    else if (diferencia === 0){
-        saldoContainer.className = 'total-amount neutro';
-    }
-    else{
-        saldoContainer.className = 'total-amount positivo';
-    }
-}
-
-function checkTotales() {
-    const efectivo = parseFloat(document.getElementById('efectivo').value);
-    const cheques = document.querySelectorAll('#cheques input[name$="[monto]"]');
-    console.log(cheques);
-    document.getElementById('total').value = efectivo;
-    let totalCheques = 0;
-    cheques.forEach((cheque) => {
-        totalCheques += parseFloat(cheque.value);
-    });
-    console.log('Total cheques: ' + totalCheques);
-    if (efectivo + totalCheques > 0){
-        return true;
-    }
-    else{
-        return false;
-    }
-    
-}
+// calcSaldo() y checkTotales() están definidos en modal-transacciones-universal.js
+// NO definirlos aquí — sombrean las funciones universales del modal de pagos
 
 // Event listener movido a modal-transacciones-universal.js
 // document.getElementById('efectivo').addEventListener('input', function(event){
@@ -191,6 +195,7 @@ function checkTotales() {
 
 document.getElementById('idproveedor').addEventListener('blur', function() {
     const idproveedor = this.value;
+    console.log('ID Proveedor:', idproveedor);
     fetchProveedor(idproveedor);
 });
 

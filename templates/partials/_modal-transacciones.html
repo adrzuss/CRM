@@ -787,4 +787,18 @@ document.addEventListener('focusin', function (e) {
         e.target.select();
     }
 });
+
+// Delegación de eventos para campos de pago: actualiza saldo automáticamente
+// Se ejecuta SIEMPRE como inline script, sin importar si el JS universal
+// se carga como module o script regular. Usa delegation en #transaccionesModal
+// para cubrir inputs dinámicos (clonados en cargarDatosModal).
+document.getElementById('transaccionesModal')?.addEventListener('input', function (e) {
+    if (e.target.matches('input[type="number"]')) {
+        if (typeof calcSaldo === 'function') {
+            calcSaldo();
+        } else if (typeof window.calcSaldo === 'function') {
+            window.calcSaldo();
+        }
+    }
+});
 </script>

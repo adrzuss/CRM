@@ -1,11 +1,10 @@
 let isFormSubmited = false;
 let contadorFilas = 0;
 
-window.onbeforeunload = confirmarSalida;
-
 // ensureColorDetalleFields() → movida a invoice-utils.js
 
 document.addEventListener("DOMContentLoaded", async function () {
+  window.onbeforeunload = confirmarSalida;
   // Configurar atajos de teclado
   setupKeyboardShortcuts();
   

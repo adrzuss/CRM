@@ -303,3 +303,19 @@ class ReglaRedondeo(db.Model):
         self.tipo_redondeo = tipo_redondeo
         self.restar_unidades = restar_unidades
         self.activo = activo
+
+class Impuestos(db.Model):
+    __tablename__ = 'impuestos'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    descripcion = db.Column(db.String(100), nullable=False)
+    alicuota = db.Column(db.Numeric(20,6), nullable=False)
+    activo = db.Column(db.Boolean, nullable=False, default=True)
+    alta = db.Column(db.Date, nullable=False, default=date.today)
+    compras_ventas = db.Column(db.Enum('compras', 'ventas', 'ambas'), nullable=False)
+
+    def __init__(self, descripcion, alicuota, compras_ventas, activo=True, alta=None):
+        self.descripcion = descripcion
+        self.alicuota = alicuota
+        self.compras_ventas = compras_ventas
+        self.activo = activo
+        self.alta = alta if alta is not None else date.today()

@@ -127,3 +127,19 @@ class RemitoFacturas(db.Model):
     def __init__(self, idremito, idfactura):
         self.idremito = idremito
         self.idfactura = idfactura
+
+class ItemsImpC(db.Model):
+    __tablename__ = 'items_imp_c'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    idfactura = db.Column(db.Integer, db.ForeignKey('facturac.id'), nullable=False)
+    idimpuesto = db.Column(db.Integer, db.ForeignKey('impuestos.id'), nullable=False)
+    alicuota = db.Column(db.Numeric(20,6), nullable=False)
+    importe = db.Column(db.Numeric(20,6), nullable=False)
+    factura = db.relationship('FacturaC', backref=db.backref('items_imp_c', lazy=True))
+    impuesto = db.relationship('Impuestos', backref=db.backref('items_imp_c', lazy=True))
+
+    def __init__(self, idfactura, idimpuesto, alicuota, importe):
+        self.idfactura = idfactura
+        self.idimpuesto = idimpuesto
+        self.alicuota = alicuota
+        self.importe = importe

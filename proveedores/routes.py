@@ -168,7 +168,12 @@ def nueva_compra():
 @alertas_mensajes
 def nuevo_gasto():
     if request.method == 'POST':
-        procesar_nuevo_gasto(request.form, session['id_sucursal']) 
+        try:
+            procesar_nuevo_gasto(request.form, session['id_sucursal'])
+        except ValueError as e:
+            db.session.rollback()
+            flash(str(e), 'error')
+            return redirect(url_for('proveedores.nuevo_gasto'))
         flash('Gasto grabado')
         return redirect(url_for('index'))
     else:

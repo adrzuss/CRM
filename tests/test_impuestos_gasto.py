@@ -5,6 +5,8 @@ Mismos patrones de mocks que test_proveedores.py / test_services_ventas.py."""
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from configs.models import Impuestos
 from proveedores.models import ItemsImpC
 
@@ -170,3 +172,51 @@ def test_procesar_nuevo_gasto_recalcula_total_1240(app):
     assert items[0].importe == Decimal('30')
     mock_session.get.assert_called_once_with(Impuestos, 5)
     mock_session.commit.assert_called_once()
+
+
+def _form_gasto_minimo(neto=None):
+    """Form mínimo que alcanza el parse de neto (el guard va antes del add)."""
+    form = {'idproveedor': '1', 'fecha': '2026-01-15', 'periodo': '2026-01',
+            'id_tipo_comprobante': '2', 'id_plan_cuenta': '3',
+            'nro_factura': '0001-00000001'}
+    if neto is not None:
+        form['neto'] = neto
+    return form
+
+
+def _rechazar_neto(form):
+    """procesar_nuevo_gasto debe tirar ValueError sin tocar la sesión."""
+    from proveedores.services import procesar_nuevo_gasto
+    mock_session = MagicMock()
+    with patch('proveedores.services.db.session', mock_session):
+        with pytest.raises(ValueError, match='Neto inválido'):
+            procesar_nuevo_gasto(form, idsucursal=1)
+    mock_session.add.assert_not_called()
+    mock_session.commit.assert_not_called()
+
+
+def test_procesar_nuevo_gasto_neto_ausente_rechazado():
+    """neto ausente (tab viejo / cliente scripted) → ValueError, sin persistir."""
+    _rechazar_neto(_form_gasto_minimo())
+
+
+@pytest.mark.parametrize('neto', ['0', '-5', 'NaN'])
+def test_procesar_nuevo_gasto_neto_invalido_rechazado(neto):
+    """neto=0 / negativo / NaN → rechazado igual, sin persistir el gasto."""
+    _rechazar_neto(_form_gasto_minimo(neto))
+
+
+def test_nuevo_gasto_post_neto_ausente_flash_error_sin_grabar(client):
+    """POST sin neto → flash de error, redirige y NO flash 'Gasto grabado'."""
+    _configurar_sesion(client)
+    with client.session_transaction() as sess:
+        sess['id_sucursal'] = 1
+    with patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)), \
+         patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)):
+        response = client.post('/proveedores/nuevo_gasto', data=_form_gasto_minimo())
+    assert response.status_code == 302
+    assert '/proveedores/nuevo_gasto' in response.headers['Location']
+    with client.session_transaction() as sess:
+        flash_messages = [mensaje for _, mensaje in sess.get('_flashes', [])]
+    assert 'Gasto grabado' not in flash_messages
+    assert any('Neto inválido' in mensaje for mensaje in flash_messages)

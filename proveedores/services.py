@@ -191,6 +191,9 @@ def procesar_nuevo_gasto(form, idsucursal):
         id_plan_cuenta = form['id_plan_cuenta']
         nro_comprobante = form['nro_factura']
         neto = convertir_decimal(form.get('neto', '0') or '0')
+        # Valida neto en el servidor: ausente, cero, negativo o no finito => total 0
+        if not neto.is_finite() or neto < Decimal('0.01'):
+            raise ValueError("Neto inválido: debe ser mayor a cero")
         iva = convertir_decimal(form.get('iva', '0') or '0')
         exento = convertir_decimal(form.get('exento', '0') or '0')
         impint = convertir_decimal(form.get('impint', '0') or '0')

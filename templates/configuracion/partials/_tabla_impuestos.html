@@ -1,0 +1,54 @@
+{# Tabla de Impuestos - Partial para HTMX #}
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Alícuota</th>
+                    <th scope="col">Aplica a</th>
+                    <th scope="col">Activo</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for impuesto in impuestos %}
+                <tr class="table table-light">
+                    <td>{{ impuesto.descripcion }}</td>
+                    <td>{{ impuesto.alicuota }}%</td>
+                    <td>{{ impuesto.compras_ventas|capitalize }}</td>
+                    <td>
+                        {% if impuesto.activo %}
+                            <i class="fas fa-check text-success"></i>
+                        {% else %}
+                            <i class="fas fa-times text-danger"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-exito btn-sm"
+                                hx-get="{{ url_for('configuraciones.get_impuesto', id=impuesto.id) }}"
+                                hx-target="#modal-config-body"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalConfigEditar">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm ms-1"
+                                hx-post="{{ url_for('configuraciones.delete_impuesto', id=impuesto.id) }}"
+                                hx-target="#tabla-impuestos"
+                                hx-swap="innerHTML"
+                                hx-confirm="¿Está seguro que desea eliminar este impuesto?">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not impuestos %}
+                <tr>
+                    <td colspan="5" class="text-center">Sin resultados</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

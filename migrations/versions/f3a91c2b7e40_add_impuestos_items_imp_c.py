@@ -10,7 +10,7 @@ Ambas operaciones estan guardadas con inspect().has_table, de modo que
 re-ejecutar la revision sobre un esquema ya migrado es un no-op seguro.
 
 Revision ID: f3a91c2b7e40
-Revises: a1b2c3d4e5f6
+Revises: c2d3df6d5f32
 Create Date: 2026-09-23 21:10:00.000000
 
 """
@@ -20,7 +20,7 @@ from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = 'f3a91c2b7e40'
-down_revision = 'a1b2c3d4e5f6'
+down_revision = 'c2d3df6d5f32'
 branch_labels = None
 depends_on = None
 

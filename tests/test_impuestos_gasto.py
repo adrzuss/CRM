@@ -1,16 +1,6 @@
-"""
-Tests para impuestos en facturas de gasto (nuevo_gasto) del proyecto CRM.
-
-Cubre:
-  - Fórmula autoritativa de total: neto + 7 columnas de facturac + Σ items_imp_c.importe
-  - Parsing de filas impuesto[i][idimpuesto] del formulario
-  - GET /nuevo_gasto pasa solo impuestos activos de compras/ambas
-  - CRUD de impuestos: validación 400 y borrado lógico (activo=False)
-  - procesar_nuevo_gasto recalcula total en Decimal y hace snapshot del impuesto
-
-Estrategia de mocks: mismos patrones que tests/test_proveedores.py y
-tests/test_services_ventas.py (render_template, .query y db.session parcheados).
-"""
+"""Tests de impuestos en nuevo_gasto: fórmula total, parsing de filas
+impuesto[i], filtro GET, CRUD (400/soft-delete) y recálculo autoritativo.
+Mismos patrones de mocks que test_proveedores.py / test_services_ventas.py."""
 
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
@@ -27,10 +17,6 @@ def _configurar_sesion(client):
         sess['id_empresa'] = 1
         sess['permisos_menu'] = []
 
-
-# ──────────────────────────────────────────────
-# Fórmula y parsing (helpers puros)
-# ──────────────────────────────────────────────
 
 def test_calcular_total_gasto_formula_1240():
     """Fórmula: neto=1000 + iva=210 + importe=30 = 1240, en Decimal."""
@@ -59,10 +45,6 @@ def test_parsear_ids_impuesto_orden_y_filtrado():
 
     assert parsear_ids_impuesto(form) == [5, 7]
 
-
-# ──────────────────────────────────────────────
-# GET /nuevo_gasto: filtro de impuestos
-# ──────────────────────────────────────────────
 
 def test_nuevo_gasto_get_pasa_impuestos_activos_compras(client):
     """GET pasa impuestos= filtrando activo y compras_ventas in (compras, ambas)."""
@@ -94,10 +76,6 @@ def test_nuevo_gasto_get_pasa_impuestos_activos_compras(client):
     assert 'impuestos.activo' in criterios
     assert 'impuestos.compras_ventas' in criterios
 
-
-# ──────────────────────────────────────────────
-# CRUD de impuestos: 400 y borrado lógico
-# ──────────────────────────────────────────────
 
 def test_htmx_add_impuesto_descripcion_vacia_devuelve_400(client):
     """Descripción vacía → 400 con partial de error y sin fila creada."""
@@ -139,10 +117,6 @@ def test_htmx_delete_impuesto_borrado_logico(client):
     assert impuesto.activo is False
     mock_commit.assert_called_once()
 
-
-# ──────────────────────────────────────────────
-# Servicio: recompute autoritativo del total
-# ──────────────────────────────────────────────
 
 def test_procesar_nuevo_gasto_recalcula_total_1240(app):
     """AC: neto=1000 + iva=210 + IIBB 3% (=30) → total 1240 exacto en Decimal.

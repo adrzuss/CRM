@@ -103,8 +103,8 @@
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-floating">
-                                    <input class="form-control form-control-modern total-field" type="number" name="total" 
-                                           id="total" step="0.01" min="0.01" required placeholder="0.00">
+                                    <input class="form-control form-control-modern total-field" type="number" name="total"
+                                           id="total" step="0.01" min="0.01" readonly required placeholder="0.00">
                                     <label for="total"><i class="fas fa-dollar-sign me-2"></i>Total <span class="text-danger">*</span></label>
                                 </div>
                             </div>    
@@ -140,6 +140,45 @@
                             <i class="fas fa-search fa-2x mb-2"></i>
                             <p class="mb-0">Selecciona un proveedor para ver remitos</p>
                         </div>
+                    </div>
+                </div>
+                <!-- Impuestos del gasto: neto base + filas bracket impuesto[i] -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-percent me-2"></i>Impuestos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="neto" class="form-label"><i class="fas fa-coins me-1"></i>Neto</label>
+                            <input class="form-control form-control-modern" type="number" name="neto"
+                                   id="neto" step="0.01" min="0" value="0.00" placeholder="0.00">
+                        </div>
+                        {% if impuestos %}
+                        <div class="mb-3">
+                            <label for="select_impuesto" class="form-label">Impuesto</label>
+                            <div class="input-group">
+                                <select class="form-select" id="select_impuesto">
+                                    <option value="">Seleccionar impuesto...</option>
+                                    {% for imp in impuestos %}
+                                    <option value="{{ imp.id }}" data-alicuota="{{ imp.alicuota }}">{{ imp.descripcion }} ({{ imp.alicuota }}%)</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-primary" type="button" id="btnAgregarImpuesto">
+                                    <i class="fas fa-plus"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                        <div id="impuestos_rows">
+                            <!-- Filas impuesto[i][idimpuesto]/[alicuota]/[importe] creadas por nuevo_gasto.js -->
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3" id="impuestos_vacios">
+                            <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                            <p class="mb-0">Sin impuestos disponibles</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

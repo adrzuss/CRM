@@ -1,7 +1,7 @@
 ﻿from flask import render_template, request, redirect, flash, url_for, jsonify, session, g
 from datetime import date
 from proveedores.models import Proveedores, FacturaC, RemitoFacturas
-from configs.models import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica
+from configs.models import TipoDocumento, TipoIva, TipoComprobantes, PlanCtas, TipoCompAplica, Impuestos
 from bancos.services import BancoService
 from proveedores import proveedores_bp
 from proveedores.services import procesar_nueva_compra, procesar_nuevo_gasto, get_factura, actualizar_precios_por_compras, \
@@ -168,7 +168,12 @@ def nueva_compra():
 @alertas_mensajes
 def nuevo_gasto():
     if request.method == 'POST':
-        procesar_nuevo_gasto(request.form, session['id_sucursal']) 
+        try:
+            procesar_nuevo_gasto(request.form, session['id_sucursal'])
+        except ValueError as e:
+            db.session.rollback()
+            flash(str(e), 'error')
+            return redirect(url_for('proveedores.nuevo_gasto'))
         flash('Gasto grabado')
         return redirect(url_for('index'))
     else:
@@ -176,7 +181,12 @@ def nuevo_gasto():
         tiposComp = db.session.query(TipoComprobantes.id,
                                 TipoComprobantes.nombre) \
                                 .join(TipoCompAplica, and_(TipoComprobantes.id == TipoCompAplica.id_tipo_comp,  TipoCompAplica.id_tipo_oper == 2)).all()
-        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp)
+        # Solo impuestos activos aplicables a compras (IVA no se ofrece: vive en facturac.iva)
+        impuestos = Impuestos.query.filter(
+            Impuestos.activo == True,
+            Impuestos.compras_ventas.in_(['compras', 'ambas'])
+        ).all()
+        return render_template('nuevo_gasto.html', planesCtas=planesCtas, tiposComp=tiposComp, impuestos=impuestos)
     
 @proveedores_bp.route('/ver_factura_comp/<id>') 
 @check_session

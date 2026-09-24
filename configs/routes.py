@@ -4,9 +4,12 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 import os
 import uuid
+from decimal import Decimal, InvalidOperation
+
 from configs import bp_configuraciones
 from configs.models import Configuracion, AlcIva, Categorias, TipoIva, TipoDocumento, AlcIB, PuntosVenta, PlanCtas, \
-                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema, LineasComprobantes, ReglaRedondeo
+                           TipoComprobantes, TipoCompAplica, MonedasBilletes, PlanesSistema, OpcionesPlanSistema, LineasComprobantes, ReglaRedondeo, \
+                           Impuestos
 from sessions.models import Tareas
 from articulos.models import ListasPrecios, Colores, DetallesArticulos
 from sucursales.models import Sucursales
@@ -53,7 +56,8 @@ def configuraciones():
     colores = Colores.query.all()
     detalles_articulos = DetallesArticulos.query.all()
     reglas_redondeo = ReglaRedondeo.query.all()
-    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, colores=colores, detalles_articulos=detalles_articulos, reglas_redondeo=reglas_redondeo)
+    impuestos = Impuestos.query.all()
+    return render_template('configuraciones.html', configuracion=configuracion, tipo_ivas=tipo_ivas, tipo_docs=tipo_docs, alicuotas=alcIva, listas_precios=listas_precios, tareas=tareas, ingBtos=alcIB, planCtas=planCtas, categorias=categorias, monedasBilletes=monedasBilletes, colores=colores, detalles_articulos=detalles_articulos, reglas_redondeo=reglas_redondeo, impuestos=impuestos)
 
 @bp_configuraciones.route('/update_config', methods=['POST'])
 @check_session
@@ -889,3 +893,92 @@ def delete_regla_redondeo(id):
     except Exception as e:
         db.session.rollback()
         return render_template('partials/_error_htmx.html', mensaje=f'Error al eliminar regla: {str(e)}'), 500
+
+# =============================================================================
+# IMPUESTOS - HTMX CRUD (borrado lógico vía activo)
+# =============================================================================
+
+def render_tabla_impuestos():
+    """Renderiza la tabla parcial de impuestos"""
+    impuestos = Impuestos.query.all()
+    return render_template('partials/_tabla_impuestos.html', impuestos=impuestos)
+
+def _validar_impuesto_form():
+    """Valida el formulario de impuesto. Devuelve (datos, mensaje_error)."""
+    descripcion = request.form.get('descripcion', '').strip()
+    alicuota_raw = request.form.get('alicuota', '').strip()
+    compras_ventas = request.form.get('compras_ventas', '')
+
+    if not descripcion:
+        return None, 'La descripción es obligatoria'
+    if len(descripcion) > 100:
+        return None, 'La descripción no puede superar los 100 caracteres'
+    try:
+        alicuota = Decimal(alicuota_raw)
+    except (InvalidOperation, ValueError):
+        return None, 'La alícuota debe ser un número válido'
+    if alicuota <= 0:
+        return None, 'La alícuota debe ser mayor a 0'
+    if compras_ventas not in ('compras', 'ventas', 'ambas'):
+        return None, 'Aplica a debe ser compras, ventas o ambas'
+    return {'descripcion': descripcion, 'alicuota': alicuota, 'compras_ventas': compras_ventas}, None
+
+@bp_configuraciones.route('/htmx/add_impuesto', methods=['POST'])
+@check_session
+def htmx_add_impuesto():
+    """Crea un nuevo impuesto"""
+    datos, error = _validar_impuesto_form()
+    if error:
+        return render_template('partials/_error_htmx.html', mensaje=error), 400
+    try:
+        impuesto = Impuestos(
+            descripcion=datos['descripcion'],
+            alicuota=datos['alicuota'],
+            compras_ventas=datos['compras_ventas'],
+            activo=True
+        )
+        db.session.add(impuesto)
+        db.session.commit()
+        return render_tabla_impuestos()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al crear impuesto: {str(e)}'), 500
+
+@bp_configuraciones.route('/htmx/get_impuesto/<int:id>', methods=['GET'])
+@check_session
+def get_impuesto(id):
+    """Obtiene un impuesto para editar"""
+    item = db.get_or_404(Impuestos, id)
+    return render_template('partials/_form_edit_impuesto.html', item=item, entidad='impuestos')
+
+@bp_configuraciones.route('/htmx/update_impuesto/<int:id>', methods=['POST'])
+@check_session
+def update_impuesto(id):
+    """Actualiza un impuesto (incluye reactivación vía checkbox activo)"""
+    datos, error = _validar_impuesto_form()
+    if error:
+        return render_template('partials/_error_htmx.html', mensaje=error), 400
+    try:
+        item = db.get_or_404(Impuestos, id)
+        item.descripcion = datos['descripcion']
+        item.alicuota = datos['alicuota']
+        item.compras_ventas = datos['compras_ventas']
+        item.activo = bool(request.form.get('activo'))
+        db.session.commit()
+        return render_tabla_impuestos()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al actualizar impuesto: {str(e)}'), 500
+
+@bp_configuraciones.route('/htmx/delete_impuesto/<int:id>', methods=['POST'])
+@check_session
+def delete_impuesto(id):
+    """Borrado lógico de un impuesto: activo=False (preserva FKs de items_imp_c)"""
+    try:
+        item = db.get_or_404(Impuestos, id)
+        item.activo = False
+        db.session.commit()
+        return render_tabla_impuestos()
+    except Exception as e:
+        db.session.rollback()
+        return render_template('partials/_error_htmx.html', mensaje=f'Error al eliminar impuesto: {str(e)}'), 500

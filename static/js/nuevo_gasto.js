@@ -41,6 +41,30 @@ document.addEventListener("DOMContentLoaded", function () {
       fetchProveedor(idproveedor);
   });
 
+  // ---- Impuestos del gasto: filas bracket impuesto[i] + totales ----
+  const netoInput = document.getElementById('neto');
+  if (netoInput) {
+    netoInput.addEventListener('input', recalcularTotales);
+  }
+  const btnAgregarImpuesto = document.getElementById('btnAgregarImpuesto');
+  if (btnAgregarImpuesto) {
+    btnAgregarImpuesto.addEventListener('click', agregarImpuestoFila);
+  }
+  // Alta/baja delegadas en el contenedor (las filas se crean y borran en runtime)
+  const contenedorImpuestos = document.getElementById('impuestos_rows');
+  if (contenedorImpuestos) {
+    contenedorImpuestos.addEventListener('click', function (event) {
+      const btnQuitar = event.target.closest('[data-quitar-impuesto]');
+      if (btnQuitar) {
+        btnQuitar.closest('.impuesto-fila').remove();
+        renumerarFilasImpuesto();
+        recalcularTotales();
+      }
+    });
+  }
+  // Estado inicial: #total y #total_factura sincronizados con neto=0
+  recalcularTotales();
+
   document.getElementById('invoice_form').addEventListener('submit', async function(event) {
       event.preventDefault();
       
@@ -149,6 +173,68 @@ function mostrarModalSeleccionProveedores(proveedores) {
   
 // calcSaldo() y checkTotales() están definidos en modal-transacciones-universal.js
 // NO definirlos aquí — sombrean las funciones universales del modal de pagos
+
+// ---- Impuestos del gasto: alta de filas, renumeración y totales ----
+function agregarImpuestoFila() {
+  const select = document.getElementById('select_impuesto');
+  const contenedor = document.getElementById('impuestos_rows');
+  if (!select || !contenedor || !select.value) return;
+
+  const opcion = select.selectedOptions[0];
+  const idimpuesto = select.value;
+  const alicuota = parseFloat(opcion.dataset.alicuota) || 0;
+  const indice = contenedor.querySelectorAll('.impuesto-fila').length;
+
+  const fila = document.createElement('div');
+  fila.className = 'impuesto-fila input-group mb-2';
+  fila.innerHTML =
+    `<span class="input-group-text">${opcion.text}</span>` +
+    `<input type="hidden" name="impuesto[${indice}][idimpuesto]" value="${idimpuesto}">` +
+    `<input type="hidden" name="impuesto[${indice}][alicuota]" value="${alicuota}">` +
+    `<input class="form-control" type="text" name="impuesto[${indice}][importe]" value="0.00" readonly>` +
+    `<button class="btn btn-outline-danger" type="button" data-quitar-impuesto title="Quitar impuesto">` +
+    `<i class="fas fa-times"></i></button>`;
+
+  contenedor.appendChild(fila);
+  select.value = '';
+  renumerarFilasImpuesto();
+  recalcularTotales();
+}
+
+// Reordena los nombres impuesto[i][...] tras altas/bajas, para que el
+// servidor reciba índices contiguos 0..n-1
+function renumerarFilasImpuesto() {
+  document.querySelectorAll('#impuestos_rows .impuesto-fila').forEach((fila, indice) => {
+    fila.querySelectorAll('[name]').forEach((campo) => {
+      campo.name = campo.name.replace(/\[\d+\]/, `[${indice}]`);
+    });
+  });
+}
+
+// Recalcula importes (neto * alicuota / 100) y sincroniza #total + #total_factura
+// El total del cliente es solo visual: el servidor recalcula con la misma fórmula
+function recalcularTotales() {
+  const netoInput = document.getElementById('neto');
+  const totalInput = document.getElementById('total');
+  if (!netoInput || !totalInput) return;
+
+  const redondear = (valor) => Math.round(valor * 100) / 100;
+  const neto = parseFloat(netoInput.value) || 0;
+  let total = neto;
+
+  document.querySelectorAll('#impuestos_rows .impuesto-fila').forEach((fila) => {
+    const alicuota = parseFloat(fila.querySelector('input[name$="[alicuota]"]').value) || 0;
+    const importe = redondear((neto * alicuota) / 100);
+    fila.querySelector('input[name$="[importe]"]').value = importe.toFixed(2);
+    total += importe;
+  });
+
+  total = redondear(total);
+  totalInput.value = total.toFixed(2);
+  const totalFactura = document.getElementById('total_factura');
+  if (totalFactura) totalFactura.textContent = total.toFixed(2);
+}
+
 
 // Event listeners movidos a modal-transacciones-universal.js
 // document.getElementById('efectivo').addEventListener('input', function(event){

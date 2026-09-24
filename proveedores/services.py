@@ -1,9 +1,9 @@
 ﻿from flask import request, session
 from datetime import date, datetime
-from proveedores.models import Proveedores, FacturaC, ItemC, ItemsOP, PagosFC, RemitoFacturas
+from proveedores.models import Proveedores, FacturaC, ItemC, ItemsOP, PagosFC, RemitoFacturas, ItemsImpC
 from articulos.models import Articulo, Stock, Colores, DetallesArticulos
 from ctacteprov.models import CtaCteProv
-from configs.models import AlcIva
+from configs.models import AlcIva, Impuestos
 from articulos.services import actualizarStock, get_articulo_by_codigo, actulizarProvByArt
 from bancos.services import BancoPropioService, BancoPropioProveedorService
 from utils.db import db
@@ -151,6 +151,36 @@ def procesar_remitos(idfactura, form):
     except SQLAlchemyError as e:
         raise Exception(f"Error procesando remitos: {e}")
 
+def parsear_ids_impuesto(form):
+    """Extrae los idimpuesto de las filas impuesto[i][idimpuesto] del formulario.
+
+    Devuelve la lista de ids como enteros, ordenada por índice de fila e
+    ignorando índices vacíos (filas no completadas). Solo interesa el id: la
+    alícuota e importe posteados son de exhibición, el servidor recalcula.
+    """
+    filas = {}
+    for key, value in form.items():
+        if key.startswith('impuesto[') and key.endswith('[idimpuesto]'):
+            indice = key.split('[')[1].split(']')[0]
+            if str(value).strip() != '':
+                filas[indice] = int(value)
+    return [filas[indice] for indice in sorted(filas, key=lambda i: int(i))]
+
+
+def calcular_total_gasto(neto, iva, exento, impint, pagpersepcuenta, mto_percep,
+                         percep_iibb, importes_items=None):
+    """Total autoritativo del gasto en Decimal (sin float, sin capitalización).
+
+    Fórmula: neto + iva + exento + impint + pagpersepcuenta + mto_percep
+             + percep_iibb + SUM(items_imp_c.importe)
+    """
+    total = (Decimal(neto) + Decimal(iva) + Decimal(exento) + Decimal(impint)
+             + Decimal(pagpersepcuenta) + Decimal(mto_percep) + Decimal(percep_iibb))
+    for importe in (importes_items or []):
+        total += Decimal(importe)
+    return total
+
+
 def procesar_nuevo_gasto(form, idsucursal):
     try:
         idproveedor = form['idproveedor']
@@ -160,23 +190,60 @@ def procesar_nuevo_gasto(form, idsucursal):
         id_tipo_comprobante = form['id_tipo_comprobante']
         id_plan_cuenta = form['id_plan_cuenta']
         nro_comprobante = form['nro_factura']
-        gasto = convertir_decimal(form['total'])
+        neto = convertir_decimal(form.get('neto', '0') or '0')
+        # Valida neto en el servidor: ausente, cero, negativo o no finito => total 0
+        if not neto.is_finite() or neto < Decimal('0.01'):
+            raise ValueError("Neto inválido: debe ser mayor a cero")
+        iva = convertir_decimal(form.get('iva', '0') or '0')
+        exento = convertir_decimal(form.get('exento', '0') or '0')
+        impint = convertir_decimal(form.get('impint', '0') or '0')
         efectivo = convertir_decimal(form['efectivo'])
         ctacte = convertir_decimal(form['ctacte'])
-        # Crear la factura
-        nueva_gasto = FacturaC(idproveedor=idproveedor, 
+        ids_impuesto = parsear_ids_impuesto(form)
+        # Crear la factura (total inicial 0: se recalcula con la fórmula autoritativa)
+        nueva_gasto = FacturaC(idproveedor=idproveedor,
                                fecha=fecha,
-                               periodo=periodoFormateado, 
-                               total=gasto,
+                               periodo=periodoFormateado,
+                               total=Decimal(0),
+                               neto=neto,
+                               iva=iva,
+                               exento=exento,
+                               impint=impint,
                                idsucursal=idsucursal,
                                idtipocomprobante=id_tipo_comprobante,
                                idplancuenta=id_plan_cuenta,
                                idusuario=session['user_id'],
                                nro_comprobante=nro_comprobante)
+        # FacturaC.__init__ no inicializa las percepciones: se fijan en 0
+        # para que la fórmula del total tenga valores definidos pre-commit
+        nueva_gasto.percep_iibb = Decimal(0)
+        nueva_gasto.pagpersepcuenta = Decimal(0)
+        nueva_gasto.mto_percep = Decimal(0)
         db.session.add(nueva_gasto)
         db.session.flush()
-        
+
         idfactura = nueva_gasto.id
+
+        # Ítems de impuestos: la alícuota se re-lee de la DB (no confiar en la
+        # posteada); FLAT sobre neto, sin capitalización entre alícuotas
+        importes_items = []
+        for idimpuesto in ids_impuesto:
+            impuesto = db.session.get(Impuestos, idimpuesto)
+            alicuota = Decimal(impuesto.alicuota)
+            importe = alicuota * neto / Decimal(100)
+            db.session.add(ItemsImpC(idfactura=idfactura,
+                                     idimpuesto=idimpuesto,
+                                     alicuota=alicuota,
+                                     importe=importe))
+            importes_items.append(importe)
+
+        # Total autoritativo del servidor (el posteado en #total se ignora)
+        nueva_gasto.total = calcular_total_gasto(
+            neto=neto, iva=iva, exento=exento, impint=impint,
+            pagpersepcuenta=nueva_gasto.pagpersepcuenta,
+            mto_percep=nueva_gasto.mto_percep,
+            percep_iibb=nueva_gasto.percep_iibb,
+            importes_items=importes_items)
 
         # Registrar los pagos
         print("===============================================")

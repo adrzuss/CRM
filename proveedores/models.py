@@ -45,7 +45,7 @@ class FacturaC(db.Model):
     proveedor = db.relationship('Proveedores', backref=db.backref('facturac', lazy=True))
     pagosfc = db.relationship('PagosFC', backref=db.backref('facturac', lazy=True))
     
-    def __init__(self, idproveedor, fecha, periodo, total, nro_comprobante, neto=0,iva=0, exento=0, impint=0, idsucursal=0, idtipocomprobante=0, idusuario=0, idplancuenta=0):
+    def __init__(self, idproveedor, fecha, periodo, total, nro_comprobante, neto=0,iva=0, exento=0, impint=0, pagpersepcuenta=0, mto_percep=0, percep_iibb=0, idsucursal=0, idtipocomprobante=0, idusuario=0, idplancuenta=0):
         self.idproveedor = idproveedor
         self.fecha = fecha
         self.periodo = periodo
@@ -55,6 +55,9 @@ class FacturaC(db.Model):
         self.iva = iva
         self.exento = exento    
         self.impint = impint
+        self.pagpersepcuenta = pagpersepcuenta
+        self.mto_percep = mto_percep
+        self.percep_iibb = percep_iibb
         self.idsucursal = idsucursal
         self.idtipocomprobante = idtipocomprobante
         self.idusuario = idusuario

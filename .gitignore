@@ -18,3 +18,5 @@ SQL/*
 *.mwb
 .env
 cert_fe/
+# Local Pi runtime state
+.atl/

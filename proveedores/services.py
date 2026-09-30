@@ -197,6 +197,9 @@ def procesar_nuevo_gasto(form, idsucursal):
         iva = convertir_decimal(form.get('iva', '0') or '0')
         exento = convertir_decimal(form.get('exento', '0') or '0')
         impint = convertir_decimal(form.get('impint', '0') or '0')
+        pagpersepcuenta = convertir_decimal(form.get('pagpersepcuenta', '0') or '0')
+        mto_percep = convertir_decimal(form.get('mto_percep', '0') or '0')
+        percep_iibb = convertir_decimal(form.get('percep_iibb', '0') or '0')
         efectivo = convertir_decimal(form['efectivo'])
         ctacte = convertir_decimal(form['ctacte'])
         ids_impuesto = parsear_ids_impuesto(form)
@@ -209,6 +212,9 @@ def procesar_nuevo_gasto(form, idsucursal):
                                iva=iva,
                                exento=exento,
                                impint=impint,
+                               pagpersepcuenta=pagpersepcuenta,
+                               mto_percep=mto_percep,
+                               percep_iibb=percep_iibb,
                                idsucursal=idsucursal,
                                idtipocomprobante=id_tipo_comprobante,
                                idplancuenta=id_plan_cuenta,

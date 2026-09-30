@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       
       sinGuardar = false;
-          isFormSubmited = true;
+      isFormSubmited = true;
       this.submit();
   });
 });
@@ -215,12 +215,17 @@ function renumerarFilasImpuesto() {
 // El total del cliente es solo visual: el servidor recalcula con la misma fórmula
 function recalcularTotales() {
   const netoInput = document.getElementById('neto');
+  const ivaInput = document.getElementById('iva');
+  const exentoInput = document.getElementById('exento');
+  const pagpersepcuentaInput = document.getElementById('pagpersepcuenta');
+  const mto_percepInput = document.getElementById('mto_percep');
+  const percep_iibbInput = document.getElementById('percep_iibb');
   const totalInput = document.getElementById('total');
-  if (!netoInput || !totalInput) return;
+  if (!netoInput || !totalInput || !ivaInput || !exentoInput || !pagpersepcuentaInput || !mto_percepInput || !percep_iibbInput) return;
 
   const redondear = (valor) => Math.round(valor * 100) / 100;
   const neto = parseFloat(netoInput.value) || 0;
-  let total = neto;
+  let total = neto + (parseFloat(ivaInput.value) || 0) + (parseFloat(exentoInput.value) || 0) + (parseFloat(pagpersepcuentaInput.value) || 0) + (parseFloat(mto_percepInput.value) || 0) + (parseFloat(percep_iibbInput.value) || 0);
 
   document.querySelectorAll('#impuestos_rows .impuesto-fila').forEach((fila) => {
     const alicuota = parseFloat(fila.querySelector('input[name$="[alicuota]"]').value) || 0;

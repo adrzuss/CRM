@@ -414,3 +414,41 @@ def test_idempotency_integrity_error_rollback_recovery(app):
                             assert calls[0][1]['total'] == Decimal('500')
                             # tarjeta=1100
                             assert calls[1][1]['total'] == Decimal('1100')
+
+
+def test_verificar_clave_idempotencia_devuelve_factura_existente(app):
+    """
+    REQ-02: el helper reutilizable debe recuperar la factura ganadora
+    cuando la clave ya existe.
+    """
+    clave = '550e8400-e29b-41d4-a716-446655440000'
+    mock_factura = MagicMock()
+    mock_factura.id = 42
+    mock_factura.nro_comprobante = '0001-00000005'
+
+    with app.test_request_context():
+        with patch('ventas.services.ventas.Factura') as mock_factura_cls:
+            mock_factura_cls.query.filter_by.return_value.first.return_value = mock_factura
+
+            from ventas.services.ventas import verificar_clave_idempotencia
+
+            resultado = verificar_clave_idempotencia(clave)
+
+            assert resultado is mock_factura
+            mock_factura_cls.query.filter_by.assert_called_once_with(
+                idempotency_key=clave
+            )
+
+
+def test_verificar_clave_idempotencia_sin_clave_no_consulta_db(app):
+    """
+    REQ-01: sin clave de idempotencia el helper no debe consultar la DB.
+    """
+    with app.test_request_context(), \
+            patch('ventas.services.ventas.Factura') as mock_factura_cls:
+        from ventas.services.ventas import verificar_clave_idempotencia
+
+        resultado = verificar_clave_idempotencia(None)
+
+        assert resultado is None
+        mock_factura_cls.query.filter_by.assert_not_called()

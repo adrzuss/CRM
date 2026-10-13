@@ -1,4 +1,4 @@
-// ✅ VERSION ACTUALIZADA - Nueva Venta JS v2.0 - Fix label-ctacte
+﻿// ✅ VERSION ACTUALIZADA - Nueva Venta JS v2.0 - Fix label-ctacte
 import InvoiceHandler from './invoice_handler.js';
 
 console.log("🚀 Nueva Venta JS cargado - Versión corregida 2.0");
@@ -22,6 +22,14 @@ let isFormSubmited = false;
 let contadorFilas = 0;
 let articulosFacturados = [];
 let ofertasDeCierre = [];
+
+function obtenerReferenciaComprobante(respuesta) {
+  return respuesta?.nro_comprobante || respuesta?.id || 'sin referencia';
+}
+
+function construirMensajeDuplicado(respuesta) {
+  return `Esta venta ya fue registrada con el comprobante ${obtenerReferenciaComprobante(respuesta)}. No se generó un duplicado.`;
+}
 
 window.onbeforeunload = function () {
   if (!isFormSubmited) {
@@ -334,6 +342,11 @@ async function procesarTransaccion() {
     .then(response => response.json())
     .then(data => {
         console.log('Respuesta del servidor:', data);
+
+        if (data?.duplicate === true) {
+            toastAdvertencia(construirMensajeDuplicado(data));
+            return;
+        }
         
         if (data.success) {
             // Mostrar mensaje de éxito con el número de comprobante
@@ -1319,6 +1332,13 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
         });
 
         const result = await response.json();
+
+        if (result?.duplicate === true) {
+            document.getElementById("spinner").style.display = "none";
+            isFormSubmited = false;
+            toastAdvertencia(construirMensajeDuplicado(result));
+            return;
+        }
 
         if (result.success) {
 

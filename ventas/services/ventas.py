@@ -1,4 +1,5 @@
-﻿from flask import session, jsonify, json, Response, current_app
+﻿# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportOptionalCall=false, reportOptionalIterable=false, reportOptionalOperand=false
+from flask import session, jsonify, json, Response, current_app
 import os
 import tempfile
 from decimal import Decimal
@@ -27,18 +28,26 @@ from .facturacion import getNroComprobante
 from .notas_credito import procesar_nueva_nc
 
 
+def verificar_clave_idempotencia(idempotency_key):
+    # Si no llega clave, se deja seguir el flujo normal.
+    if not idempotency_key:
+        return None
+
+    try:
+        uuid.UUID(idempotency_key, version=4)
+    except ValueError:
+        raise ValueError("Formato de clave de idempotencia inválido")
+
+    return Factura.query.filter_by(idempotency_key=idempotency_key).first()
+
+
 def procesar_nueva_venta(form, id_sucursal):
     try:
         # --- Idempotency check ---
         idempotency_key = form.get('_idempotency_key')
-        if idempotency_key:
-            try:
-                uuid.UUID(idempotency_key, version=4)
-            except ValueError:
-                raise ValueError("Formato de clave de idempotencia inválido")
-            factura_existente = Factura.query.filter_by(idempotency_key=idempotency_key).first()
-            if factura_existente:
-                return factura_existente.nro_comprobante, factura_existente.id
+        factura_existente = verificar_clave_idempotencia(idempotency_key)
+        if factura_existente:
+            return factura_existente.nro_comprobante, factura_existente.id
         # --- End idempotency check ---
 
         idcliente = form['idcliente']
@@ -134,10 +143,9 @@ def procesar_nueva_venta(form, id_sucursal):
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            if idempotency_key:
-                factura_existente = Factura.query.filter_by(idempotency_key=idempotency_key).first()
-                if factura_existente:
-                    return factura_existente.nro_comprobante, factura_existente.id
+            factura_existente = verificar_clave_idempotencia(idempotency_key)
+            if factura_existente:
+                return factura_existente.nro_comprobante, factura_existente.id
             raise
     except SQLAlchemyError as e:
         db.session.rollback()

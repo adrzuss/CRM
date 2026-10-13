@@ -14,7 +14,7 @@ Estrategia de mocks:
   - Para endpoints JSON, NO se parchea render_template
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def _configurar_sesion(client):
@@ -182,3 +182,42 @@ def test_buscar_comprobantes_nc_sin_fecha(client):
         assert 'Debe proporcionar una fecha' in data['message']
         # El servicio no debe llamarse si falta la fecha
         mock_get_comp.assert_not_called()
+
+
+def test_post_nueva_venta_duplicada_devuelve_factura_existente(client):
+    """
+    Test POST /ventas/nueva_venta cuando la clave de idempotencia ya existe.
+
+    Verifica que:
+      1. Responde con status 200
+      2. Retorna success=True y duplicate=True
+      3. Incluye id y nro_comprobante de la venta ganadora
+      4. No vuelve a procesar la venta
+    """
+    _configurar_sesion(client)
+
+    mock_factura = MagicMock()
+    mock_factura.id = 42
+    mock_factura.nro_comprobante = '0001-00000005'
+    clave = '550e8400-e29b-41d4-a716-446655440000'
+
+    with (
+        patch('utils.msg_alertas.obtener_alertas', return_value=([], 0)),
+        patch('utils.msg_alertas.obtener_mensajes', return_value=([], 0)),
+        patch('ventas.routes.verificar_clave_idempotencia', return_value=mock_factura, create=True) as mock_verificar,
+        patch('ventas.routes.procesar_nueva_venta') as mock_procesar,
+    ):
+        response = client.post(
+            '/ventas/nueva_venta',
+            data={'_idempotency_key': clave}
+        )
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert data['duplicate'] is True
+        assert data['id'] == 42
+        assert data['nro_comprobante'] == '0001-00000005'
+        assert 'registrada' in data['message']
+        mock_verificar.assert_called_once_with(clave)
+        mock_procesar.assert_not_called()

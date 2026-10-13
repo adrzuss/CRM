@@ -18,6 +18,7 @@ from sqlalchemy import text
 import traceback
 
 from ventas.services.printer_service import get_printer_service, WindowsPrinterService, LinuxPrinterService
+from ventas.services.ventas import verificar_clave_idempotencia
 
 from ventas import bp_ventas
 
@@ -103,10 +104,22 @@ def nueva_venta():
         # DEBUG: Retorno inmediato para verificar que el código nuevo se ejecuta
         # return jsonify({'debug': True, 'message': 'Código actualizado OK - v2'}), 200
         try:
+            idempotency_key = request.form.get('_idempotency_key')
+            factura_existente = verificar_clave_idempotencia(idempotency_key)
+            if factura_existente:
+                return jsonify({
+                    'success': True,
+                    'duplicate': True,
+                    'message': 'Venta ya registrada previamente (reenvío detectado)',
+                    'nro_comprobante': factura_existente.nro_comprobante,
+                    'id': factura_existente.id
+                })
+
             nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
             # No usar flash aquí, ya que retornamos JSON y el mensaje se muestra con SweetAlert en el frontend
             return jsonify({
                 'success': True,
+                'duplicate': False,
                 'message': f'Factura grabada exitosamente: {nro_comprobante}',
                 'nro_comprobante': nro_comprobante,
                 'id': id_factura 
@@ -131,10 +144,22 @@ def nueva_nota_credito():
         # DEBUG: Retorno inmediato para verificar que el código nuevo se ejecuta
         # return jsonify({'debug': True, 'message': 'Código actualizado OK - v2'}), 200
         try:
+            idempotency_key = request.form.get('_idempotency_key')
+            factura_existente = verificar_clave_idempotencia(idempotency_key)
+            if factura_existente:
+                return jsonify({
+                    'success': True,
+                    'duplicate': True,
+                    'message': 'Venta ya registrada previamente (reenvío detectado)',
+                    'nro_comprobante': factura_existente.nro_comprobante,
+                    'id': factura_existente.id
+                })
+
             nro_comprobante, id_factura = procesar_nueva_venta(request.form, session['id_sucursal'])
             # No usar flash aquí, ya que retornamos JSON y el mensaje se muestra con SweetAlert en el frontend
             return jsonify({
                 'success': True,
+                'duplicate': False,
                 'message': f'Factura grabada exitosamente: {nro_comprobante}',
                 'nro_comprobante': nro_comprobante,
                 'id': id_factura 
@@ -391,7 +416,7 @@ def obtener_factura(factura_id):
 def enivar_factura_vta_mail(id, idcliente):
     generar_factura_pdf(id, footer_text="")
     cliente = db.session.get(Clientes, idcliente)
-    if cliente.email != None:
+    if cliente.email is not None:
         pdf_path = f"factura-{id}.pdf"
         enviar_factura_por_email(cliente.email, pdf_path)
     return redirect(url_for('ventas.ver_factura_vta', id=id))

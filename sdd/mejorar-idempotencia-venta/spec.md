@@ -2,224 +2,127 @@
 
 ## Resumen Ejecutivo
 
-Este spec documenta las mejoras necesarias para implementar un sistema completo de prevención de duplicados en el módulo de creación de ventas del CRM. El sistema actual implementa una base técnica básica para idempotencia, pero requiere mejoras significativas para proporcionar una protección robusta contra ventas duplicadas y una mejor experiencia de usuario.
+Este cambio documenta y consolida el alcance real implementado para evitar ventas duplicadas en el flujo de nueva venta del CRM. La solución no introduce endpoints nuevos ni una tabla separada de idempotencia: reutiliza el mismo `POST /ventas/nueva_venta`, apoya la persistencia en `facturav.idempotency_key` y diferencia explícitamente la respuesta cuando el servidor detecta que la venta ya fue registrada.
 
-## Problema Actual
+## Alcance real del cambio
 
-El módulo de ventas (`templates/ventas/nueva_venta.html` y `static/js/nueva_venta.js`) implementa una solución parcial:
+**Incluido en este slice:**
+- Reutilización del endpoint existente `POST /ventas/nueva_venta`
+- Detección server-side de duplicados por `_idempotency_key`
+- Respuesta `200` con `success: true` y `duplicate: true` cuando la clave ya existe
+- Devolución de `id` y `nro_comprobante` de la venta ya registrada
+- Manejo cliente del caso duplicado en las dos rutas JS actuales de envío
+- Prevención de efectos secundarios en duplicado: no imprimir y no limpiar automáticamente el formulario
 
-**Implementado Actualmente:**
-- Generador de UUID (`generarUUID()`) - Genera identificadores únicos usando `crypto.randomUUID()`
-- Bandera de envío múltiple (`isFormSubmited`) - Previene envíos concurrentes
-- Clave de idempotencia (`_idempotency_key`) - Se añade al formulario antes del envío
+**Explícitamente fuera de alcance:**
+- Endpoints nuevos como `/ventas/validate_duplicate` o `/ventas/create`
+- Validación previa separada antes del alta
+- Tabla adicional como `sales_idempotency_keys`
+- Modo offline, recuperación de sesión o flujos extra no presentes en el diseño aprobado
 
-**Brechas Identificadas:**
-1. **Detección de Duplicados:** No existe validación cliente-side para prevenir ventas duplicadas
-2. **Manejo de Errores:** Respuestas genéricas del servidor sin manejo específico de casos de duplicado
-3. **Interfaz de Usuario:** Sin indicadores visuales claros de estado o advertencias por duplicados
-4. **Flujo de Usuario:** Sin información clara sobre intentos de duplicado y siguientes pasos
+## Problema que resuelve
 
-## Objetivos del Sistema
+El flujo de nueva venta ya enviaba una `_idempotency_key`, pero faltaba cerrar el contrato funcional completo para distinguir claramente un alta nueva de un reenvío duplicado. Sin esa señal explícita, el cliente no podía informar correctamente al usuario que la venta ya existía ni evitar tratar el duplicado como una venta recién creada.
 
-### Objetivo Principal
-Implementar un sistema completo de prevención de duplicados que detecte proactivamente ventas duplicadas antes de su creación y proporcione una clara comunicación al usuario sobre el estado y cualquier conflicto de duplicado.
+## Objetivo del sistema
 
-### Requisitos Específicos
+Garantizar que un reenvío de `POST /ventas/nueva_venta` con la misma `_idempotency_key` no cree una segunda venta y que el frontend informe el duplicado sin ejecutar el flujo de impresión ni el de limpieza de una venta nueva.
 
-#### R1: Validación Previa al Envío
+## Requisitos funcionales
 
-**SCENARIO SCE-001 - Validación con campos válidos**
-- DADO que el usuario completa el formulario de venta con datos válidos (cliente, fecha, total, lista de precios)
-- CUANDO el usuario hace clic en "Validar Duplicados"
-- ENTONCES el sistema verifica la existencia de ventas duplicadas basadas en los mismos criterios clave
-- Y el sistema devuelve respuesta de éxito indicando validación completada
+### R1: Alta de venta por el endpoint existente
 
-**SCENARIO SCE-002 - Validación con campos incompletos**
-- DADO que el usuario intenta validar sin campos requeridos
-- CUANDO el usuario hace clic en "Validar Duplicados"
-- ENTONCES el sistema devuelve error indicando campos requeridos para validación
+**SCENARIO SCE-001 - Alta normal con clave nueva**
+- DADO que el usuario envía una venta válida a `POST /ventas/nueva_venta`
+- Y la `_idempotency_key` no existe previamente
+- CUANDO el backend procesa la solicitud
+- ENTONCES el sistema crea la venta
+- Y responde `200`
+- Y devuelve `success: true`
+- Y devuelve `duplicate: false`
+- Y devuelve `id` y `nro_comprobante` de la venta creada
 
-**SCENARIO SCE-003 - Detección de duplicado**
-- DADO que existe una venta con los mismos criterios clave (cliente, fecha, total, lista de precios)
-- CUANDO el usuario intenta validar
-- ENTONCES el sistema devuelve advertencia clara indicando duplicado detectado
+**SCENARIO SCE-002 - Reenvío con clave ya registrada**
+- DADO que ya existe una venta grabada con la misma `_idempotency_key`
+- CUANDO el cliente vuelve a enviar `POST /ventas/nueva_venta`
+- ENTONCES el sistema no crea una nueva venta
+- Y responde `200`
+- Y devuelve `success: true`
+- Y devuelve `duplicate: true`
+- Y devuelve `id` y `nro_comprobante` de la venta ya existente
 
-#### R2: Endpoint de Creación con Deduplicación Completa
+### R2: Persistencia de idempotencia en la venta
 
-**SCENARIO SCE-004 - Creación exitosa sin duplicados**
-- DADO que no existe duplicado y validación pasó
-- CUANDO el usuario hace clic en "Crear Venta"
-- ENTONCES el sistema crea nueva venta y devuelve ID de venta y número de comprobante
-- Y el sistema registra clave de idempotencia en base de datos
-- Y el sistema limpia formulario para próxima venta
+**SCENARIO SCE-003 - La clave se asocia a `facturav`**
+- DADO que se procesa una venta nueva correctamente
+- CUANDO la operación se persiste
+- ENTONCES la idempotencia queda respaldada en `facturav.idempotency_key`
+- Y no se requiere una tabla separada para registrar claves
 
-**SCENARIO SCE-005 - Intento de creación con duplicado**
-- DADO que se detectó duplicado en validación previa
-- CUANDO el usuario intenta crear venta
-- ENTONCES el sistema devuelve error 409 indicando venta duplicada
-- Y el sistema muestra detalles del duplicado (número de comprobante, fecha, monto, cliente)
-- Y el sistema sugiere acciones para resolver conflicto
+### R3: Manejo cliente del duplicado en ambas rutas JS
 
-#### R3: Interfaz de Usuario con Indicadores de Estado
+**SCENARIO SCE-004 - Duplicado detectado desde `procesarTransaccion()`**
+- DADO que la ruta JS `procesarTransaccion()` recibe una respuesta con `duplicate: true`
+- CUANDO procesa la respuesta del backend
+- ENTONCES muestra una advertencia de venta ya registrada
+- Y no continúa el flujo de éxito de una venta nueva
 
-**SCENARIO SCE-006 - Inicio de validación**
-- DADO que el usuario hace clic en "Validar Duplicados"
-- CUANDO validación comienza
-- ENTONCES el sistema muestra indicador de carga con mensaje "Validando para prevenir duplicados..."
-- Y el botón de validación se deshabilita
+**SCENARIO SCE-005 - Duplicado detectado desde el listener `submit`**
+- DADO que el listener `submit` de `#invoice_form` recibe una respuesta con `duplicate: true`
+- CUANDO procesa la respuesta del backend
+- ENTONCES muestra una advertencia de venta ya registrada
+- Y detiene el flujo normal de éxito o redirección de una venta nueva
 
-**SCENARIO SCE-007 - Validación completada exitosamente**
-- DADO que validación pasó
-- CUANDO validación completa
-- ENTONCES el sistema muestra indicador de éxito con clave de idempotencia
-- Y el botón de crear venta se habilita
-- Y el indicador de validación se oculta
+### R4: Sin efectos secundarios en caso de duplicado
 
-**SCENARIO SCE-008 - Duplicado detectado**
-- DADO que se detectó duplicado
-- CUANDO validación completa
-- ENTONCES el sistema muestra advertencia clara con detalles del duplicado
-- Y el botón de crear venta se deshabilita
-- Y se muestra botón "Resolver Conflicto"
+**SCENARIO SCE-006 - No imprimir en duplicado**
+- DADO que el backend responde `duplicate: true`
+- CUANDO el frontend maneja la respuesta
+- ENTONCES no debe abrir el flujo de impresión
+- Y no debe tratar la operación como una factura recién emitida
 
-#### R4: Manejo de Errores Especificado
+**SCENARIO SCE-007 - No limpiar automáticamente el formulario en duplicado**
+- DADO que el backend responde `duplicate: true`
+- CUANDO el frontend maneja la respuesta
+- ENTONCES no debe limpiar automáticamente el formulario
+- Y el usuario debe conservar el contexto visible de la operación reenviada
 
-**SCENARIO SCE-009 - Error de validación servidor**
-- DADO que servidor retorna error durante validación
-- CUANDO el usuario intenta continuar
-- ENTONCES el sistema muestra mensaje de error específico
-- Y el usuario puede intentar nuevamente
+## Contrato de respuesta esperado
 
-**SCENARIO SCE-010 - Error de red**
-- DADO que falla conexión con servidor
-- CUANDO el usuario intenta validar
-- ENTONCES el sistema muestra error de red
-- Y el usuario puede reintentar
-
-**SCENARIO SCE-011 - Sin conexión a internet**
-- DADO que no hay conexión a internet
-- CUANDO el usuario intenta validar o crear
-- ENTONCES el sistema usa modo offline con advertencia
-- Y el usuario es notificado cuando se restablece conexión
-
-#### R5: Recuperación de Sesión
-
-**SCENARIO SCE-012 - Reingreso a aplicación**
-- DADO que usuario cierra sesión durante validación
-- CUANDO el usuario regresa
-- ENTONCES el sistema pregunta si desea continuar con validación previa
-- Y el usuario puede continuar o iniciar nueva validación
-
-**SCENARIO SCE-013 - Cierre de sesión durante creación**
-- DADO que usuario cierra sesión durante creación de venta
-- CUANDO el usuario regresa
-- ENTONCES el sistema muestra resumen de progreso
-- Y el usuario puede continuar o iniciar nueva venta
-
-## Arquitectura del Sistema
-
-### 1. Interfaz de Usuario (Frontend)
-**Componentes Requeridos:**
-- Indicador de Estado: Muestra estado actual de validación
-- Botones de Acción: Validar, Regenerar, Crear
-- Notificaciones: Advertencias, éxitos, errores
-- Modales: Duplicado detectado, Resolver conflicto
-- Cache Local: Almacenamiento temporal de claves de idempotencia
-
-**Endpoints de API:**
-- `POST /ventas/validate_duplicate` - Validación de duplicados
-- `POST /ventas/create` - Creación de ventas con deduplicación
-
-### 2. Backend API
-**Endpoints Implementados:**
-
-#### Endpoint de Validación
-```http
-POST /ventas/validate_duplicate HTTP/1.1
-Authorization: Bearer <token>
-Content-Type: application/x-www-form-urlencoded
-_idempotency_key=<uuid>&idcliente=<id>&fecha=<date>&totalFactura=<amount>&idlista=<price_list_id>
-```
-
-**Response (200 OK):**
+### Respuesta exitosa de alta nueva
 ```json
 {
   "success": true,
-  "message": "Validación completada",
-  "validation_passed": true,
-  "idempotency_key": "uuid-generated"
+  "duplicate": false,
+  "id": 12345,
+  "nro_comprobante": "001-001-00001"
 }
 ```
 
-**Response (409 Conflict):**
-```json
-{
-  "success": false,
-  "message": "No se puede validar: venta duplicada detectada",
-  "duplicate_exists": true,
-  "duplicate_info": {
-    "nro_comprobante": "001-001-00001",
-    "fecha": "2024-01-15",
-    "monto": 15000.00,
-    "cliente": "Nombre Cliente"
-  }
-}
-```
-
-#### Endpoint de Creación
-```http
-POST /ventas/create HTTP/1.1
-Authorization: Bearer <token>
-Content-Type: application/x-www-form-urlencoded
-_idempotency_key=<uuid>&idcliente=<id>&fecha=<date>&totalFactura=<amount>&idlista=<price_list_id>&items[0][codigo]=...
-```
-
-**Response (200 OK):**
+### Respuesta exitosa de duplicado detectado
 ```json
 {
   "success": true,
-  "message": "Venta creada exitosamente",
-  "sale_id": 12345,
-  "nro_comprobante": "001-001-00001",
-  "idempotency_key": "uuid-used"
+  "duplicate": true,
+  "message": "Venta ya registrada previamente (reenvío detectado)",
+  "id": 12345,
+  "nro_comprobante": "001-001-00001"
 }
 ```
 
-**Response (409 Conflict):**
-```json
-{
-  "success": false,
-  "message": "No se puede crear: venta duplicada detectada",
-  "duplicate_info": {
-    "nro_comprobante": "001-001-00001",
-    "fecha": "2024-01-15",
-    "monto": 15000.00,
-    "cliente": "Nombre Cliente"
-  }
-}
-```
+## Criterios de aceptación
 
-### 3. Base de Datos
-**Tablas Requeridas:**
+1. El sistema mantiene el mismo `POST /ventas/nueva_venta` como punto de entrada.
+2. Un reenvío con la misma `_idempotency_key` no genera una nueva venta.
+3. La respuesta de duplicado usa `200` con `success: true` y `duplicate: true`.
+4. La venta existente se identifica con `id` y `nro_comprobante` en la respuesta de duplicado.
+5. Las dos rutas JS actuales reconocen `duplicate: true` y muestran advertencia.
+6. En duplicado no se dispara impresión ni limpieza automática del formulario.
+7. La persistencia de la idempotencia se apoya en `facturav.idempotency_key`.
 
-```sql
-CREATE TABLE sales_idempotency_keys (
-    idempotency_key VARCHAR(36) PRIMARY KEY,
-    sale_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL 24 HOUR),
-    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE SET NULL,
-    INDEX idx_expires_at (expires_at),
-    INDEX idx_created_at (created_at)
-);
+## Qué no cambia
 
-CREATE INDEX idx_sales_duplicate_check 
-ON sales (idcliente, fecha, total, idlista) 
-WHERE activa = TRUE;
-```
-
-## Datos Clave del Dominio
-
-### Campos Clave para Detección de Duplicados
-
-Una venta se considera duplicada
+- El endpoint funcional sigue siendo `POST /ventas/nueva_venta`.
+- No se agrega validación previa separada.
+- No se agrega una tabla nueva de claves de idempotencia.
+- No se redefine el flujo general de creación de venta fuera del caso de duplicado.

@@ -22,6 +22,7 @@ let isFormSubmited = false;
 let contadorFilas = 0;
 let articulosFacturados = [];
 let ofertasDeCierre = [];
+let listaPrecioPredeterminadaActual = null;
 
 function obtenerReferenciaComprobante(respuesta) {
   return respuesta?.nro_comprobante || respuesta?.id || 'sin referencia';
@@ -29,6 +30,189 @@ function obtenerReferenciaComprobante(respuesta) {
 
 function construirMensajeDuplicado(respuesta) {
   return `Esta venta ya fue registrada con el comprobante ${obtenerReferenciaComprobante(respuesta)}. No se generó un duplicado.`;
+}
+
+function aplicarListaPrecioPredeterminada(idListaPrecio = null) {
+  const selectLista = document.getElementById('idlista');
+  if (!selectLista || selectLista.options.length === 0) {
+    return;
+  }
+
+  const valorPredeterminado = idListaPrecio ? String(idListaPrecio) : '';
+  const existeListaPredeterminada = valorPredeterminado && Array.from(selectLista.options)
+    .some((option) => option.value === valorPredeterminado);
+  const valorFallback = selectLista.options[0].value;
+  const valorAplicado = existeListaPredeterminada ? valorPredeterminado : valorFallback;
+
+  selectLista.value = valorAplicado;
+  listaPrecioPredeterminadaActual = existeListaPredeterminada ? valorPredeterminado : null;
+  listaAnterior = valorAplicado;
+}
+
+function abrirDocumentoEnNuevaPestana(url) {
+  if (!(url instanceof URL) || url.origin !== window.location.origin) {
+    throw new Error('URL insegura para apertura de documento');
+  }
+
+  const enlace = document.createElement('a');
+  enlace.href = url.toString();
+  enlace.target = '_blank';
+  enlace.rel = 'noopener noreferrer';
+  enlace.click();
+}
+
+function abrirFacturaPdf(facturaId) {
+  const urlFactura = new URL(`/ventas/imprimir_factura_vta/${encodeURIComponent(String(facturaId))}`, window.location.origin);
+  abrirDocumentoEnNuevaPestana(urlFactura);
+}
+
+function redirigirANuevaVenta() {
+  const urlNuevaVenta = new URL('/ventas/nueva_venta', window.location.origin);
+  window.location.assign(urlNuevaVenta.pathname + urlNuevaVenta.search + urlNuevaVenta.hash);
+}
+
+function crearInputOculto(name, value = '') {
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = name;
+  input.value = value;
+  return input;
+}
+
+function crearInputTabla({ type = 'text', className = '', name, value = '', step = null, min = null, readOnly = false, required = false }) {
+  const input = document.createElement('input');
+  input.type = type;
+  input.className = className;
+  input.name = name;
+  input.value = value;
+  if (step !== null) {
+    input.step = step;
+  }
+  if (min !== null) {
+    input.min = min;
+  }
+  input.readOnly = readOnly;
+  input.required = required;
+  return input;
+}
+
+function crearCeldaCabeceraComprobante({ containerId, labelClass, labelText, inputName, inputId, inputValue }) {
+  const contenedor = document.createElement('div');
+  contenedor.className = 'm-2 col-2';
+  contenedor.id = containerId;
+
+  const titulo = document.createElement('h4');
+  titulo.className = labelClass;
+  titulo.textContent = labelText;
+
+  const input = document.createElement('input');
+  input.className = 'form-control';
+  input.type = 'number';
+  input.name = inputName;
+  input.id = inputId;
+  input.value = inputValue;
+  input.hidden = true;
+
+  contenedor.append(titulo, input);
+  return contenedor;
+}
+
+function crearFilaArticulo(indice) {
+  const fila = document.createElement('tr');
+  fila.className = 'items';
+
+  const tdIdArticulo = document.createElement('td');
+  tdIdArticulo.className = 'id-articulo';
+  tdIdArticulo.setAttribute('name', `items[${indice}][idarticulo]`);
+  tdIdArticulo.textContent = '- ';
+  tdIdArticulo.append(
+    crearInputOculto(`items[${indice}][idrubro]`),
+    crearInputOculto(`items[${indice}][idmarca]`),
+    crearInputOculto(`items[${indice}][id_color]`, '0'),
+    crearInputOculto(`items[${indice}][id_detalle]`, '0')
+  );
+
+  const tdIdMarca = document.createElement('td');
+  tdIdMarca.className = 'id-marca';
+  tdIdMarca.setAttribute('name', `items[${indice}][idmarca]`);
+  tdIdMarca.hidden = true;
+  tdIdMarca.textContent = ' ';
+
+  const tdIdRubro = document.createElement('td');
+  tdIdRubro.className = 'id-rubro';
+  tdIdRubro.setAttribute('name', `items[${indice}][idrubro]`);
+  tdIdRubro.hidden = true;
+  tdIdRubro.textContent = ' ';
+
+  const tdCodigo = document.createElement('td');
+  tdCodigo.appendChild(crearInputTabla({
+    type: 'text',
+    className: 'form-control codigo-articulo',
+    name: `items[${indice}][codigo]`,
+    required: true,
+  }));
+
+  const tdDescripcion = document.createElement('td');
+  tdDescripcion.className = 'descripcion-articulo';
+  tdDescripcion.textContent = '-';
+
+  const tdPrecioUnitario = document.createElement('td');
+  tdPrecioUnitario.appendChild(crearInputTabla({
+    type: 'number',
+    className: 'form-control precio-unitario',
+    name: `items[${indice}][precio_unitario]`,
+    readOnly: true,
+  }));
+
+  const tdCantidad = document.createElement('td');
+  tdCantidad.appendChild(crearInputTabla({
+    type: 'number',
+    className: 'form-control cantidad',
+    name: `items[${indice}][cantidad]`,
+    value: '1',
+    step: '0.01',
+    min: '0.01',
+    required: true,
+  }));
+
+  const tdPrecioTotal = document.createElement('td');
+  tdPrecioTotal.appendChild(crearInputTabla({
+    type: 'number',
+    className: 'form-control precio-total',
+    name: `items[${indice}][precio_total]`,
+    readOnly: true,
+  }));
+
+  const tdIdOferta = document.createElement('td');
+  tdIdOferta.hidden = true;
+  tdIdOferta.appendChild(crearInputTabla({
+    type: 'number',
+    className: 'idoferta',
+    name: `items[${indice}][idoferta]`,
+    value: '0',
+  }));
+
+  const tdEliminar = document.createElement('td');
+  const botonEliminar = document.createElement('button');
+  botonEliminar.type = 'button';
+  botonEliminar.className = 'btn btn-danger btn-eliminar';
+  botonEliminar.textContent = 'Eliminar';
+  tdEliminar.appendChild(botonEliminar);
+
+  fila.append(
+    tdIdArticulo,
+    tdIdMarca,
+    tdIdRubro,
+    tdCodigo,
+    tdDescripcion,
+    tdPrecioUnitario,
+    tdCantidad,
+    tdPrecioTotal,
+    tdIdOferta,
+    tdEliminar,
+  );
+
+  return fila;
 }
 
 window.onbeforeunload = function () {
@@ -67,6 +251,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       document.getElementById("ptovta_seleccionado").value = data.punto_vta;
       document.getElementById("fac_electronica").value = data.fac_electronica ? 'true' : 'false';
       document.getElementById("pos_printer").value = data.pos_printer || '';
+      aplicarListaPrecioPredeterminada(data.id_lista_precio);
     }
   } catch (error) {
     console.log("Error al obtener el punto de venta:", error);
@@ -77,11 +262,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Cargar cabecera
     let cabecera = document.getElementById("cabecera");
     if (!cabecera.querySelector("#idPresupuestoContainer")) {
-      cabecera.innerHTML += `<div class="m-2 col-2" id="idPresupuestoContainer">
-                                <h4 class="idPresupuestoLabel" >#Presupuesto: ${window.PRESUPUESTO.id} </h4>
-                                <input class="form-control" type="number" name="idPresupuesto" id="idPresupuesto" value="${window.PRESUPUESTO.id}" hidden>
-                              </div>`;
-
+      cabecera.appendChild(crearCeldaCabeceraComprobante({
+        containerId: 'idPresupuestoContainer',
+        labelClass: 'idPresupuestoLabel',
+        labelText: `#Presupuesto: ${window.PRESUPUESTO.id}`,
+        inputName: 'idPresupuesto',
+        inputId: 'idPresupuesto',
+        inputValue: String(window.PRESUPUESTO.id),
+      }));
     }
     else {
       let idPresupuestoLabel = document.getElementById("idPresupuestoLabel");
@@ -119,11 +307,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Cargar cabecera
     let cabecera = document.getElementById("cabecera");
     if (!cabecera.querySelector("#idRemitoContainer")) {
-      cabecera.innerHTML += `<div class="m-2 col-2" id="idRemitoContainer">
-                                <h4 class="idRemitoLabel" >#Remito: ${window.REMITO.id} </h4>
-                                <input class="form-control" type="number" name="idRemito" id="idRemito" value="${window.REMITO.id}" hidden>
-                              </div>`;
-
+      cabecera.appendChild(crearCeldaCabeceraComprobante({
+        containerId: 'idRemitoContainer',
+        labelClass: 'idRemitoLabel',
+        labelText: `#Remito: ${window.REMITO.id}`,
+        inputName: 'idRemito',
+        inputId: 'idRemito',
+        inputValue: String(window.REMITO.id),
+      }));
     }
     else {
       let idRemitoLabel = document.getElementById("idRemitoLabel");
@@ -169,7 +360,7 @@ function seleccionarPtoVta(datos) {
   const modalContent = document.getElementById("modalContentPtoVta");
 
   // Limpiar contenido previo para evitar acumulación de selects al reabrir el modal
-  modalContent.innerHTML = "";
+  modalContent.replaceChildren();
         
   const listaPtosVtasSucursal = document.createElement("select");
   listaPtosVtasSucursal.classList.add("form-select");
@@ -332,8 +523,6 @@ async function procesarTransaccion() {
     formData.append('_idempotency_key', generarUUID());
     
     // Mostrar loading
-    const originalText = 'Grabando venta...';
-    
     let url = form.action || window.location.href;
     fetch(url, {
         method: 'POST',
@@ -404,16 +593,16 @@ async function procesarTransaccion() {
                         if (!printResult || !printResult.success) {
                             console.warn('Error en impresión POS:', printResult?.error || 'Error desconocido');
                             // Fallback a PDF
-                            window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                            abrirFacturaPdf(facturaId);
                         }
                     } else {
                         // Abrir el PDF de la factura en nueva pestaña
-                        window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                        abrirFacturaPdf(facturaId);
                     }
                 } catch (error) {
                     console.error('Error al procesar:', error);
                     // Intentar abrir PDF de todas formas
-                    window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+                    abrirFacturaPdf(facturaId);
                 } finally {
                     document.getElementById('spinner').style.display = 'none';
                 }
@@ -468,11 +657,11 @@ async function imprimirRemitoVenta(facturaId) {
     if (!printResult || !printResult.success) {
         console.warn('Error en impresión POS:', printResult?.error || 'Error desconocido');
         // Fallback a PDF
-        window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+        abrirFacturaPdf(facturaId);
     }
   } else {
     // Abrir el PDF de la factura en nueva pestaña
-    window.open(`${BASE_URL}/ventas/imprimir_factura_vta/${facturaId}`, '_blank');
+    abrirFacturaPdf(facturaId);
   }
   limpiarFormularioVenta();
 }              
@@ -489,7 +678,7 @@ function limpiarFormularioVenta() {
     // Limpiar tabla de artículos
     const tbody = document.querySelector('#tabla-items tbody');
     if (tbody) {
-        tbody.innerHTML = '';
+        tbody.replaceChildren();
     }
     
     // Resetear total
@@ -508,18 +697,20 @@ function limpiarFormularioVenta() {
     const idcliente = document.getElementById('idcliente');
     if (idcliente) {
         idcliente.value = '';
+        idcliente.focus();
     }
-    
+
     const idInput = document.getElementById('id');
     if (idInput) {
         idInput.value = '';
     }
+
+    aplicarListaPrecioPredeterminada(listaPrecioPredeterminadaActual);
 }
 
 async function calcularOfetasDeCierre(){
   articulosFacturados = [];
   const filas = document.querySelectorAll("#tabla-items tbody tr");
-  let totalFactura = 0;
   filas.forEach((fila) => {
     const idofertaInput = fila.querySelector(".idoferta").value;
     const idoferta = parseInt(idofertaInput);
@@ -586,15 +777,7 @@ async function asignarPuntoVenta(idPuntoVenta) {
       document.getElementById("fac_electronica").value = result.facElectronica ? 'true' : 'false';
       // Guardar la impresora POS si existe
       document.getElementById("pos_printer").value = result.posPrinter || '';
-      // Auto-seleccionar lista de precios del punto de venta
-      const selectLista = document.getElementById('idlista');
-      if (selectLista) {
-        if (result.id_lista_precio) {
-          selectLista.value = result.id_lista_precio;
-        } else if (selectLista.options.length > 0) {
-          selectLista.value = selectLista.options[0].value;
-        }
-      }
+      aplicarListaPrecioPredeterminada(result.id_lista_precio);
       document.getElementById("idcliente").focus();
     } else {
       mostrarError('Error al asignar el punto de venta: ' + result.message);
@@ -608,7 +791,6 @@ async function asignarPuntoVenta(idPuntoVenta) {
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("invoice_form");
   const btnAgregar = document.getElementById("agregarArticulo");
-  const btnGrabar = document.getElementById("grabarVenta");
 
   // Detectar tecla Enter en los inputs del formulario
   form.addEventListener("keydown", async function (event) {
@@ -780,7 +962,7 @@ async function fetchCliente(input) {
         // Si hay un solo resultado, asignar directamente
         asignarCliente(data[0]);
       } else {
-        limpiarDatosCliente
+        limpiarDatosCliente();
         mostrarInfo("No se encontraron clientes con ese nombre.");
       }
     }
@@ -1064,12 +1246,6 @@ function updateTotalFactura() {
   }
 }
 
-function removeItem(itemDiv) {
-  itemDiv.remove();
-  updateTotalFactura();
-  renumberItems();
-}
-
 // renumberItems() → movida a invoice-utils.js
 
 function checkDatosTarjeta() {
@@ -1217,28 +1393,10 @@ const tablaItems = document.querySelector("#tabla-items tbody");
 
 // Agregar nueva fila
 document.getElementById("agregarArticulo").addEventListener("click", () => {
-  const nuevaFila = `
-                <tr class="items">
-                    <td class="id-articulo" name="items[${contadorFilas}][idarticulo]">- 
-                        <input type="hidden" name="items[${contadorFilas}][idrubro]">
-                        <input type="hidden" name="items[${contadorFilas}][idmarca]">
-                        <input type="hidden" name="items[${contadorFilas}][id_color]" value="0">
-                        <input type="hidden" name="items[${contadorFilas}][id_detalle]" value="0">
-                    </td>                    <td class="id-marca" name="items[${contadorFilas}][idmarca]" hidden> </td>
-                    <td class="id-rubro" name="items[${contadorFilas}][idrubro]" hidden> </td>
-
-                    <td><input type="text" class="form-control codigo-articulo" name="items[${contadorFilas}][codigo]" required></td>
-                    <td class="descripcion-articulo">-</td>
-                    <td><input type="number" class="form-control precio-unitario" name="items[${contadorFilas}][precio_unitario]" readonly></td>
-                    <td><input type="number" class="form-control cantidad" name="items[${contadorFilas}][cantidad]" value="1" step="0.01" min="0.01" required></td> 
-                    <td><input type="number" class="form-control precio-total" name="items[${contadorFilas}][precio_total]" readonly></td>
-                    <td hidden><input type="number" class="idoferta" name="items[${contadorFilas}][idoferta]" value="0"></td> 
-                    <td><button type="button" class="btn btn-danger btn-eliminar">Eliminar</button></td>
-                </tr>`;
-  tablaItems.insertAdjacentHTML("beforeend", nuevaFila);
+  const nuevaTr = crearFilaArticulo(contadorFilas);
+  tablaItems.appendChild(nuevaTr);
 
   // Agregar event listeners focus (CSP-compatible) a los inputs de la nueva fila
-  const nuevaTr = tablaItems.querySelector(`tr:last-child`);
   nuevaTr.querySelectorAll('.codigo-articulo, .precio-unitario, .cantidad').forEach(input => {
     input.addEventListener('focus', function() { this.select(); });
   });
@@ -1353,16 +1511,18 @@ document.getElementById("invoice_form").addEventListener("submit", async functio
               }
             }
 
-            window.location.href = `${BASE_URL}/ventas/nueva_venta`;
+            redirigirANuevaVenta();
         } else {
+            document.getElementById("spinner").style.display = "none";
+            isFormSubmited = false;
             mostrarError(result.message);
-            window.location.href = `${BASE_URL}/ventas/nueva_venta`;
         }
     }
     catch (error) {
+        document.getElementById("spinner").style.display = "none";
+        isFormSubmited = false;
         console.error(error);
         mostrarError('Error al procesar la venta');
-        window.location.href = `${BASE_URL}/ventas/nueva_venta`;
     }
 });
 
@@ -1584,11 +1744,15 @@ function mostrarNotificacionCredito(monto) {
     font-weight: 600;
     animation: slideIn 0.3s ease-out;
   `;
-  notification.innerHTML = `
-    <i class="fas fa-check-circle"></i>
-    Crédito de $${montoCredito.toLocaleString('es-AR', {minimumFractionDigits: 2})} listo para usar
-  `;
-  
+  const icono = document.createElement('i');
+  icono.className = 'fas fa-check-circle';
+
+  const mensaje = document.createTextNode(
+    ` Crédito de $${montoCredito.toLocaleString('es-AR', { minimumFractionDigits: 2 })} listo para usar`
+  );
+
+  notification.append(icono, mensaje);
+
   document.body.appendChild(notification);
   
   setTimeout(() => {
@@ -1686,16 +1850,6 @@ async function imprimirFactura(id) {
         mostrarError(`Error al imprimir la factura: ${error.message}`);
         return false;
     }
-}
-
-async function coefCuotas(tarjeta, cuotas) {
-  if (cuotas === 0) return 0;
-  const url = `${BASE_URL}/entidades/coeficiente_cuotas/${tarjeta}/${cuotas}`;
-  response = await fetch(url);
-  if (response.ok) {
-    const data = await response.json();
-    return data.coeficiente;
-  }  
 }
 
 // Event listener para cuotas movido a modal-transacciones-universal.js

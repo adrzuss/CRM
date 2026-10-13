@@ -1,4 +1,4 @@
-﻿from flask import render_template, request, redirect, flash, url_for, jsonify, session, g
+from flask import render_template, request, redirect, flash, url_for, jsonify, session, g
 from articulos.models import ListasPrecios, PedirEnVentas
 from clientes.models import Clientes
 from entidades_cred.models import EntidadesCred
@@ -14,7 +14,7 @@ from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
 from utils.print_send_invoices import generar_factura_pdf, enviar_factura_por_email
 from datetime import date
-from sqlalchemy import text
+from sqlalchemy import select, text
 import traceback
 
 from ventas.services.printer_service import get_printer_service, WindowsPrinterService, LinuxPrinterService
@@ -45,13 +45,23 @@ def get_punto_vta():
             punto_vta = None
             fac_electronica = False
             pos_printer = None
-        else:    
+            id_lista_precio = None
+        else:
             punto_vta = session['idPuntoVenta']
             session['posPrinter'], session['facElectronica'] = getPosPrinter(punto_vta)
             fac_electronica = session.get('facElectronica', False)
             pos_printer = session.get('posPrinter', None)
-        #punto_vta = 1    
-        return jsonify({'success': True, 'punto_vta': punto_vta, 'fac_electronica': fac_electronica, 'pos_printer': pos_printer})
+            punto_vta_actual = db.session.execute(
+                select(PuntosVenta).filter_by(id=punto_vta)
+            ).scalar_one_or_none()
+            id_lista_precio = punto_vta_actual.id_lista_precio if punto_vta_actual else None
+        return jsonify({
+            'success': True,
+            'punto_vta': punto_vta,
+            'fac_electronica': fac_electronica,
+            'pos_printer': pos_printer,
+            'id_lista_precio': id_lista_precio,
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -60,14 +70,17 @@ def get_punto_vta():
 def get_puntos_vta_sucursal():
     try:
         session['posPrinter'] = None
-        puntosVtaSucursal = db.session.query(
-                                            PuntosVenta.id,
-                                            PuntosVenta.punto_vta,
-                                            PuntosVenta.fac_electronica,
-                                            PuntosVenta.id_lista_precio,
-                                            ListasPrecios.nombre.label('nombre_lista')
-                                        ).outerjoin(ListasPrecios, PuntosVenta.id_lista_precio == ListasPrecios.id)\
-                                         .filter(PuntosVenta.idsucursal == session['id_sucursal']).all()
+        puntosVtaSucursal = db.session.execute(
+            select(
+                PuntosVenta.id,
+                PuntosVenta.punto_vta,
+                PuntosVenta.fac_electronica,
+                PuntosVenta.id_lista_precio,
+                ListasPrecios.nombre.label('nombre_lista'),
+            )
+            .outerjoin(ListasPrecios, PuntosVenta.id_lista_precio == ListasPrecios.id)
+            .filter(PuntosVenta.idsucursal == session['id_sucursal'])
+        ).all()
         return jsonify([{
             'id': pv.id,
             'puntoVta': pv.punto_vta,
@@ -89,13 +102,15 @@ def set_punto_vta():
 
         # Asignar el valor a la sesión
         session['idPuntoVenta'] = punto_vta_id
-        puntoVta = db.session.get(PuntosVenta, punto_vta_id)
+        puntoVta = db.session.execute(
+            select(PuntosVenta).filter_by(id=punto_vta_id)
+        ).scalar_one_or_none()
         session['posPrinter'] = puntoVta.pos_printer
-        
+
         return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica, 'id_lista_precio': puntoVta.id_lista_precio})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al asignar el punto de venta: {str(e)}'}), 500
-    
+
 @bp_ventas.route('/nueva_venta', methods=['GET', 'POST'])
 @check_session
 @alertas_mensajes
@@ -122,7 +137,7 @@ def nueva_venta():
                 'duplicate': False,
                 'message': f'Factura grabada exitosamente: {nro_comprobante}',
                 'nro_comprobante': nro_comprobante,
-                'id': id_factura 
+                'id': id_factura
             })
         except Exception as e:
             print(f'Error al procesar venta: {traceback.format_exc()}')  # Log para el servidor
@@ -130,11 +145,10 @@ def nueva_venta():
                 'success': False,
                 'message': f'Error al procesar la venta en servidor: {str(e)}'
             }), 500
-    if request.method == 'GET':
-        hoy = date.today()
-        entidades = EntidadesCred.query.all()
-        listas_precio = ListasPrecios.query.all()
-        return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
+    hoy = date.today()
+    entidades = EntidadesCred.query.all()
+    listas_precio = ListasPrecios.query.all()
+    return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
 
 @bp_ventas.route('/nueva_nota_credito', methods=['GET', 'POST'])
 @check_session
@@ -162,7 +176,7 @@ def nueva_nota_credito():
                 'duplicate': False,
                 'message': f'Factura grabada exitosamente: {nro_comprobante}',
                 'nro_comprobante': nro_comprobante,
-                'id': id_factura 
+                'id': id_factura
             })
         except Exception as e:
             print(f'Error al procesar nota de crédito: {traceback.format_exc()}')  # Log para el servidor
@@ -170,11 +184,10 @@ def nueva_nota_credito():
                 'success': False,
                 'message': f'Error al procesar la nota de crédito en servidor: {str(e)}'
             }), 500
-    if request.method == 'GET':
-        hoy = date.today()
-        entidades = EntidadesCred.query.all()
-        listas_precio = ListasPrecios.query.all()
-        return render_template('nueva_ncredito.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
+    hoy = date.today()
+    entidades = EntidadesCred.query.all()
+    listas_precio = ListasPrecios.query.all()
+    return render_template('nueva_ncredito.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, pedirEnVentas=PedirEnVentas)
 
 
 @bp_ventas.route('/buscar_comprobantes_nc', methods=['POST'])
@@ -189,16 +202,16 @@ def buscar_comprobantes_nc():
         data = request.get_json()
         fecha = data.get('fecha')
         nro_comprobante = data.get('nro_comprobante', '')
-        
+
         if not fecha:
             return jsonify({
                 'success': False,
                 'message': 'Debe proporcionar una fecha'
             }), 400
-        
+
         # Buscar comprobantes usando la fecha como desde y hasta
         comprobantes = get_comprobantes_para_nc(fecha, fecha, nro_comprobante)
-        
+
         return jsonify({
             'success': True,
             'comprobantes': comprobantes,
@@ -221,7 +234,7 @@ def get_items_comprobante(idcomprobante):
     """
     try:
         items = get_items_comprobante_venta(idcomprobante)
-        
+
         return jsonify({
             'success': True,
             'items': items,
@@ -246,17 +259,17 @@ def buscar_vale():
     try:
         data = request.get_json()
         nro_comprobante = data.get('nro_comprobante', '')
-        
+
         if not nro_comprobante:
             return jsonify({
                 'success': False,
                 'message': 'Debe proporcionar el número de comprobante del vale'
             }), 400
-        
+
         vale = get_vale_disponible(nro_comprobante)
-        
+
         print(f'Búsqueda de vale para nro_comprobante "{nro_comprobante}": {"Encontrado" if vale else "No encontrado"}')
-        
+
         if vale:
             return jsonify({
                 'success': True,
@@ -274,8 +287,8 @@ def buscar_vale():
             'message': f'Error al buscar vale: {str(e)}'
         }), 500
 
-    
-@bp_ventas.route('/ver_factura_vta/<id>') 
+
+@bp_ventas.route('/ver_factura_vta/<id>')
 @check_session
 @alertas_mensajes
 def ver_factura_vta(id):
@@ -290,11 +303,11 @@ def facturar(ptovta, idfactura):
     try:
         paso = 1
         print(f'Paso {paso}: Iniciando facturación electrónica para factura ID {idfactura} en punto de venta {ptovta}')
-        response, statuscode = facturar_fe(ptovta, idfactura)  
+        response, statuscode = facturar_fe(ptovta, idfactura)
         paso = 2
         print(f'Paso {paso}: Respuesta recibida del servicio de facturación electrónica para factura ID {idfactura}')
         data = response.get_json()
-        if data.get('success') == True:
+        if data.get('success'):
             paso = 3
             cae = data.get('result', {}).get('cae')
             nro_cbte = data.get('result', {}).get('nro_cbte')
@@ -316,11 +329,11 @@ def facturar_venta(ptovta, idfactura):
     try:
         paso = 1
         print(f'Paso {paso}: Iniciando facturación electrónica para factura ID {idfactura} en punto de venta {ptovta}')
-        response, statuscode = facturar_fe(ptovta, idfactura)  
+        response, statuscode = facturar_fe(ptovta, idfactura)
         paso = 2
         print(f'Paso {paso}: Respuesta recibida del servicio de facturación electrónica para factura ID {idfactura}')
         data = response.get_json()
-        if data.get('success') == True:
+        if data.get('success'):
             paso = 3
             cae = data.get('result', {}).get('cae')
             nro_cbte = data.get('result', {}).get('nro_cbte')
@@ -338,12 +351,12 @@ def facturar_venta(ptovta, idfactura):
 
 #----------------- imprimir factura  ------------------#
 
-@bp_ventas.route('/imprimir_factura_vta/<id>') 
+@bp_ventas.route('/imprimir_factura_vta/<id>')
 @check_session
 def imprimir_factura_vta(id):
     return generar_factura(id)
 
-@bp_ventas.route('/imprimir_factura_vta2/<id>') 
+@bp_ventas.route('/imprimir_factura_vta2/<id>')
 @check_session
 @alertas_mensajes
 def imprimir_factura_vta2(id):
@@ -355,13 +368,13 @@ def imprimir_factura_vta2(id):
 def obtener_factura(factura_id):
     try:
         # Obtener datos de la factura de tu base de datos
-        
-        factura, items, pagos = get_factura(factura_id)  
+
+        factura, items, pagos = get_factura(factura_id)
         empresa = getDatosSucEmpresa()  # Implementa esta función
-        
+
         # Obtener datos del cliente para el QR
         cliente = db.session.get(Clientes, factura.idcliente)
-        
+
         laFactura = {'id': factura.id,
                    'nro_comprobante': factura.nro_comprobante,
                    'fecha': factura.fecha.strftime('%Y-%m-%d'),
@@ -379,7 +392,7 @@ def obtener_factura(factura_id):
                    'impint': factura.impint,
                    'cae': factura.cae,
                    'cae_vto': factura.cae_vto.strftime('%Y-%m-%d') if factura.cae_vto else '',
-                   'punto_vta': factura.punto_vta                   
+                   'punto_vta': factura.punto_vta
                    }
         losItems = []
         for item in items:
@@ -394,7 +407,7 @@ def obtener_factura(factura_id):
                              'impint': item.impint,
                              'bonificacion': item.bonificacion
                              })
-        
+
         return jsonify({
             'success': True,
             'factura': laFactura,
@@ -407,11 +420,11 @@ def obtener_factura(factura_id):
             'success': False,
             'error': str(e)
         }), 500
-        
-#----------------- fin imprimir factura  ------------------#
-        
 
-@bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>') 
+#----------------- fin imprimir factura  ------------------#
+
+
+@bp_ventas.route('/enivar_factura_vta_mail/<id>/<idcliente>')
 @check_session
 def enivar_factura_vta_mail(id, idcliente):
     generar_factura_pdf(id, footer_text="")
@@ -429,20 +442,20 @@ def ventasArticulos():
         if 'desde' in request.args:
             desde = request.args.get('desde')
         else:
-            desde = date.today()   
-        if 'hasta' in request.args:    
+            desde = date.today()
+        if 'hasta' in request.args:
             hasta = request.args.get('hasta')
         else:
-            hasta = date.today()    
+            hasta = date.today()
         if 'con_detalles' in request.args:
             con_detalles = request.args.get('con_detalles', 'false').lower() == 'true'
         else:
-            con_detalles = False    
-        if 'con_colores' in request.args:    
+            con_detalles = False
+        if 'con_colores' in request.args:
             con_colores = request.args.get('con_colores', 'false').lower() == 'true'
         else:
-            con_colores = False    
-        
+            con_colores = False
+
         articulos = db.session.execute(text("CALL venta_articulos(:desde, :hasta, :con_detalles, :con_colores)"),
                          {'desde': desde, 'hasta': hasta, 'con_detalles': con_detalles, 'con_colores': con_colores}).fetchall()
         return render_template('ventas-articulos.html', articulos=articulos, desde=desde, hasta=hasta)
@@ -451,7 +464,7 @@ def ventasArticulos():
         hasta = request.form['hasta']
         con_detalles = 'con_talle' in request.form
         con_colores = 'con_colores' in request.form
-        return redirect(url_for('ventas.ventasArticulos', desde=desde, hasta=hasta, con_detalles=con_detalles, con_colores=con_colores))    
+        return redirect(url_for('ventas.ventasArticulos', desde=desde, hasta=hasta, con_detalles=con_detalles, con_colores=con_colores))
 
 @bp_ventas.route('/ventasClientes', methods=['GET', 'POST'])
 @check_session
@@ -477,7 +490,7 @@ def ventasUnCliente():
         hasta = request.args.get('hasta', date.today())
         id = request.args.get('idcliente', None)
         if id:
-            
+
             cliente = db.session.get(Clientes, id)
             ventas = db.session.execute(text("CALL ventas_un_cliente(:idcliente, :desde, :hasta)"),
                             {'idcliente': id, 'desde': desde, 'hasta': hasta}).fetchall()
@@ -486,15 +499,14 @@ def ventasUnCliente():
         else:
             cliente = []
             ventas = []
-            articulos = []    
+            articulos = []
         return render_template('ventas-un-cliente.html', cliente=cliente, ventas=ventas, articulos=articulos, desde=desde, hasta=hasta)
     else:
         id = request.form['idcliente']
         desde = request.form['desde']
         hasta = request.form['hasta']
         return redirect(url_for('ventas.ventasUnCliente', idcliente=id, desde=desde, hasta=hasta))
-        
-    
+
 
 @bp_ventas.route('/ventasVendedores', methods=['GET', 'POST'])
 @check_session
@@ -527,7 +539,7 @@ def ventasTipoPago():
                          {'desde': desde, 'hasta': hasta, 'id_sucursal': session['id_sucursal']}).fetchall()
         porListaPrecio = db.session.execute(text("CALL ventas_listas_precios(:desde, :hasta, :id_sucursal)"),
                          {'desde': desde, 'hasta': hasta, 'id_sucursal': session['id_sucursal']}).fetchall()
-        
+
     return render_template('ventas-tipo-pagos.html', porVentas=porVentas, porListaPrecio=porListaPrecio, desde=desde, hasta=hasta)
 
 @bp_ventas.route('/ventasUnVendedor', methods=['GET', 'POST'])
@@ -544,7 +556,7 @@ def ventasUnVendedor():
         id = request.form['idVendedor']
         desde = request.form['fechaDesde']
         hasta = request.form['fechaHasta']
-        
+
         vendedor = db.session.get(Usuarios, id)
         ventas = db.session.execute(text("CALL ventas_un_vendedor(:idvendedor, :desde, :hasta)"),
                          {'idvendedor': id, 'desde': desde, 'hasta': hasta}).fetchall()
@@ -557,14 +569,14 @@ def ventasUnVendedor():
 @check_session
 def get_vta_sucursales(desde, hasta):
     ventas = get_vta_sucursales_data(desde, hasta)
-    return jsonify(success=True, ventas=ventas) 
+    return jsonify(success=True, ventas=ventas)
 
-        
+
 @bp_ventas.route('/get_vta_vendedores/<desde>/<hasta>')
 @check_session
 def get_vta_vendedores(desde, hasta):
     ventas = get_vta_vendedores_data(desde, hasta)
-    return jsonify(success=True, ventas=ventas) 
+    return jsonify(success=True, ventas=ventas)
 
 #----------------------- Remitos -----------------------#
 
@@ -622,7 +634,7 @@ def facturar_remito(id):
         except Exception as e:
             flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
             return redirect(url_for('ventas.nueva_venta'))
-    else:    
+    else:
         id_remito = id
         remito = None
         articulos_remito = []
@@ -630,7 +642,7 @@ def facturar_remito(id):
             remito, articulos_remito = get_remito(id_remito)
         hoy = date.today()
         entidades = EntidadesCred.query.all()
-        listas_precio = ListasPrecios.query.all()   
+        listas_precio = ListasPrecios.query.all()
         return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, remito=remito, articulos_remito=articulos_remito)
 #----------------------- Fin Remitos ------------------------#
 
@@ -667,7 +679,7 @@ def presupuestos():
         desde = request.form['desde']
         hasta = request.form['hasta']
         return redirect(url_for('ventas.presupuestos', desde=desde, hasta=hasta))
-    
+
 
 @bp_ventas.route('/ver_presupuesto/<id>', methods=['GET', 'POST'])
 @check_session
@@ -691,7 +703,7 @@ def facturar_presupuesto(id):
         except Exception as e:
             flash(f'Ocurrió un error al procesar la venta (2): {e}', 'error')
             return redirect(url_for('ventas.nueva_venta'))
-    else:    
+    else:
         id_presupuesto = id
         presupuesto = None
         articulos_presupuesto = []
@@ -699,36 +711,34 @@ def facturar_presupuesto(id):
             presupuesto, articulos_presupuesto = get_presupuesto(id_presupuesto)
         hoy = date.today()
         entidades = EntidadesCred.query.all()
-        listas_precio = ListasPrecios.query.all()   
+        listas_precio = ListasPrecios.query.all()
         return render_template('nueva_venta.html', hoy=hoy, entidades=entidades, listas_precio=listas_precio, presupuesto=presupuesto, articulos_presupuesto=articulos_presupuesto)
 
-@bp_ventas.route('/imprimir_presupuesto/<id>') 
+@bp_ventas.route('/imprimir_presupuesto/<id>')
 @check_session
 def imprimir_presupuesto(id):
     return generar_presupuesto(id)
-    
+
 #------------- impresion de comprobantes -------------#
-                   
+
 @bp_ventas.route('/imprimir_factura_vta_pos/<id>')
 @check_session
 def imprimir_factura_vta_pos(id):
     try:
-        
+
         factura, items, pagos = get_factura(id)
         empresa = getDatosSucEmpresa()
         posPrinterName = getPosPrinter(session['idPuntoVenta'])
         printer_service = get_printer_service()
         # "POS Printer 203DPI Series"
-        if isinstance(printer_service, WindowsPrinterService):
-            printer_service.printer_name = posPrinterName 
-        elif isinstance(printer_service, LinuxPrinterService):
+        if isinstance(printer_service, (WindowsPrinterService, LinuxPrinterService)):
             printer_service.printer_name = posPrinterName
         else:
             printer_service.vendor_id = 0x0483
             printer_service.product_id = 0x5740
-        
+
         printer_service.print_invoice(factura, items, empresa)
-        
+
         return jsonify({
             'success': True,
             'message': 'Factura impresa correctamente'
@@ -738,13 +748,13 @@ def imprimir_factura_vta_pos(id):
             'success': False,
             'message': f'Error al imprimir: {str(e)}'
         }), 500
-        
+
 @bp_ventas.route('/list_printers')
 @check_session
 def list_printers():
     try:
         printer_service = get_printer_service()
-        
+
         result = printer_service.list_printers()
         if result['success']:
             for printer in result['printers']:
@@ -752,7 +762,7 @@ def list_printers():
         else:
             print(f"Error: {result['error']}")
     except Exception as e:
-        print(f'Error listando impresoras: {e}')        
+        print(f'Error listando impresoras: {e}')
 
 @bp_ventas.route('/ivaVentas', methods=['GET', 'POST'])
 @check_session

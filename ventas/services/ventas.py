@@ -1,4 +1,4 @@
-﻿# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportOptionalCall=false, reportOptionalIterable=false, reportOptionalOperand=false
+﻿# pyright: reportOptionalMemberAccess = false
 from flask import session, jsonify, json, Response, current_app
 import os
 import tempfile
@@ -17,7 +17,7 @@ from ctactecli.models import CtaCteCli
 from configs.models import Configuracion, PagosCobros, AlcIva, AlcIB, PuntosVenta, TipoComprobantes, TipoIva, \
                            TipoCompAplica, Localidades, Provincias
 from creditos.models import Creditos 
-from sqlalchemy import func, extract, text, and_
+from sqlalchemy import func, extract, text, and_, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from utils.db import db
 from utils.config import Config
@@ -183,9 +183,15 @@ def procesar_items(form, idfactura, discrimina, id_sucursal, descuento, id_tipo_
                         bonificacion = (original - precioUnit) * cantidad
                     else:
                         bonificacion = 0    
-                    articulo = db.session.query(Articulo).filter_by(codigo=codigo).first()
-                    iva = db.session.get(AlcIva, articulo.idiva)
-                    ingbto = db.session.get(AlcIB, articulo.idib)
+                    articulo = db.session.execute(
+                        select(Articulo).filter_by(codigo=codigo)
+                    ).scalar_one_or_none()
+                    iva = db.session.execute(
+                        select(AlcIva).filter_by(id=articulo.idiva)
+                    ).scalar_one_or_none()
+                    ingbto = db.session.execute(
+                        select(AlcIB).filter_by(id=articulo.idib)
+                    ).scalar_one_or_none()
                     precios = precio(precioUnit, articulo.impint, articulo.exento, Decimal(0), Decimal(0), Decimal(iva.alicuota), Decimal(ingbto.alicuota))
                     #precio = Precio.query.filter_by(idarticulo=articulo.id, idlista=idlista).first()
                     #precio_unitario = precio.precio if precio else Decimal(0)

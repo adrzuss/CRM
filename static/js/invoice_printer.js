@@ -4,8 +4,15 @@
 class BasePrinterService {
     constructor() {
         this.printerName = null;
+        // Modo impresión directa (envío silencioso; requiere --kiosk-printing)
+        this.impresionDirecta = false;
     }
-    
+
+    // Activa la impresión directa (sin ventana de vista previa)
+    setImpresionDirecta(esDirecto) {
+        this.impresionDirecta = !!esDirecto;
+    }
+
     /**
      * Lista impresoras disponibles
      * @returns {Promise<Object>} Resultado de la operación
@@ -211,6 +218,58 @@ class POSPrinterService extends BasePrinterService {
         super();
         this._lineasCache = {}; // Cache para líneas de comprobantes
     }
+
+    // Carga perezosa de qrcode-generator en el padre: el popup ya no incluye
+    // scripts (CSP) y script-src permite cdn.jsdelivr.net
+    _cargarLibreriaQr() {
+        if (!this._promesaLibQr) {
+            this._promesaLibQr = new Promise(resolver => {
+                if (typeof window.qrcode !== 'undefined') return resolver(true);
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+                script.onload = () => resolver(true);
+                script.onerror = () => resolver(false);
+                document.head.appendChild(script);
+                setTimeout(() => resolver(typeof window.qrcode !== 'undefined'), 3000);
+            });
+        }
+        return this._promesaLibQr;
+    }
+
+    // Genera el HTML del QR de AFIP en el padre, ANTES de abrir la ventana
+    _generarQrHtml(qrUrl) {
+        if (!qrUrl || typeof window.qrcode === 'undefined') return '';
+        const qr = window.qrcode(0, 'M');
+        qr.addData(qrUrl);
+        qr.make();
+        return qr.createImgTag(3, 4);
+    }
+
+    // Imprime y cierra la ventana desde el padre (sin scripts inline: CSP).
+    // Con --kiosk-printing imprime en silencio; sin él, diálogo normal.
+    _orquestrearImpresion(printWindow) {
+        const esDirecto = this.impresionDirecta;
+        let intento = false;
+        const cerrar = () => { try { if (!printWindow.closed) printWindow.close(); } catch (e) {} };
+        const imprimir = () => {
+            if (intento) return;
+            intento = true;
+            try {
+                printWindow.focus();
+                printWindow.print();
+            } catch (e) {
+                console.error('Error al imprimir ticket:', e);
+            }
+            setTimeout(cerrar, esDirecto ? 200 : 400);
+        };
+        printWindow.addEventListener('afterprint', cerrar);
+        if (printWindow.document.readyState === 'complete') {
+            imprimir();
+        } else {
+            printWindow.onload = imprimir;
+        }
+        setTimeout(imprimir, 4000); // Red de seguridad si el evento load no dispara
+    }
     
     /**
      * Obtiene las líneas de comprobantes de un punto de venta
@@ -326,6 +385,8 @@ class POSPrinterService extends BasePrinterService {
     
     async printInvoice(factura, items, empresa) {
         try {
+            // Cargar la librería QR en paralelo con los awaits existentes
+            const promesaLibQr = this._cargarLibreriaQr();
             // Determinar si factura es un array o un objeto
             const esArray = Array.isArray(factura);
             const numero = esArray ? factura[7] : factura.nro_comprobante;
@@ -403,6 +464,13 @@ class POSPrinterService extends BasePrinterService {
                 `;
             });
             
+            // QR generado en el padre ANTES de abrir la ventana (sin QR no se abre)
+            await promesaLibQr;
+            if (qrUrl && typeof window.qrcode === 'undefined') {
+                throw new Error('No se pudo cargar la librería del QR de AFIP');
+            }
+            const qrImgHtml = this._generarQrHtml(qrUrl);
+
             // Crear ventana de impresión con formato POS
             const printWindow = window.open('', '_blank', 'width=300,height=600');
             
@@ -474,7 +542,6 @@ class POSPrinterService extends BasePrinterService {
                             }
                         }
                     </style>
-                    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
                 </head>
                 <body>
                     <div class="header">
@@ -525,7 +592,7 @@ class POSPrinterService extends BasePrinterService {
                         </div>
                         ${qrUrl ? `
                         <div class="qr-container">
-                            <div id="qrcode"></div>
+                            ${qrImgHtml}
                         </div>
                         ` : ''}
                     ` : ''}
@@ -539,29 +606,13 @@ class POSPrinterService extends BasePrinterService {
                     <div class="footer">
                         <p>¡Gracias por su compra!</p>
                     </div>
-                    
-                    <script>
-                        window.onload = function() {
-                            ${qrUrl ? `
-                            // Generar QR de AFIP
-                            var qr = qrcode(0, 'M');
-                            qr.addData('${qrUrl}');
-                            qr.make();
-                            document.getElementById('qrcode').innerHTML = qr.createImgTag(3, 4);
-                            ` : ''}
-                            
-                            // Esperar un momento para que el QR se renderice
-                            setTimeout(function() {
-                                window.print();
-                                setTimeout(function() { window.close(); }, 500);
-                            }, 100);
-                        };
-                    </script>
                 </body>
                 </html>
             `);
             
             printWindow.document.close();
+            // El padre imprime y cierra la ventana (sin scripts inline: CSP)
+            this._orquestrearImpresion(printWindow);
             
             return { success: true, message: 'Ticket enviado a impresión' };
         } catch (error) {
@@ -737,18 +788,13 @@ class POSPrinterService extends BasePrinterService {
                     <div class="footer">
                         <p>¡Gracias por su compra!</p>
                     </div>
-                    
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            setTimeout(function() { window.close(); }, 500);
-                        };
-                    </script>
                 </body>
                 </html>
             `);
             
             printWindow.document.close();
+            // El padre imprime y cierra la ventana (sin scripts inline: CSP)
+            this._orquestrearImpresion(printWindow);
             
             return { success: true, message: 'Ticket enviado a impresión' };
         } catch (error) {

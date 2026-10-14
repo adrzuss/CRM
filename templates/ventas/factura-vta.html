@@ -52,6 +52,8 @@
             </div>
         </div>
         <div class="card-body p-4">
+            <!-- Modo de impresión del punto de venta en sesión (preview / envío directo) -->
+            <input type="hidden" id="impresion_directa" value="{{ 'true' if impresion_directa else 'false' }}">
             <!-- Fila 1: Información básica -->
             <div class="row mb-4">
                 <div class="col-lg-2 col-md-3 col-sm-6">

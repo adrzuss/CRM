@@ -161,8 +161,34 @@
                         </div>
                         <small class="text-muted">Si está activo, imprime en formato ticket (80mm) usando la impresora por defecto del sistema. Si no, genera PDF A4.</small>
                     </div>
+                    <div class="col-md-5 mb-3" id="grupoModoImpresion">
+                        <label class="form-label d-block">Modo de impresión</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="impresion_directa" id="modo_preview" value="0" {{ 'checked' if not (puntoVenta and puntoVenta.impresion_directa) else '' }}>
+                            <label class="form-check-label" for="modo_preview">Previsualizar (ventana de impresión)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="impresion_directa" id="modo_directo" value="1" {{ 'checked' if puntoVenta and puntoVenta.impresion_directa else '' }}>
+                            <label class="form-check-label" for="modo_directo">Envío directo a la impresora</label>
+                        </div>
+                        <small class="text-muted">Envío directo: imprime silenciosamente en la impresora por defecto del terminal. Requiere Chrome/Edge iniciado con --kiosk-printing (ver IMPRESION_DIRECTA_POS.md); sin ese parámetro se abre el diálogo de impresión normalmente.</small>
+                    </div>
                 </div>
             </div>
+
+            <script nonce="{{ g.nonce }}">
+            (function () {
+                var chk = document.getElementById('pos_printer');
+                var grupo = document.getElementById('grupoModoImpresion');
+                if (!chk || !grupo) return;
+                function actualizar() {
+                    grupo.querySelectorAll('input').forEach(function (r) { r.disabled = !chk.checked; });
+                    grupo.classList.toggle('text-muted', !chk.checked);
+                }
+                chk.addEventListener('change', actualizar);
+                actualizar();
+            })();
+            </script>
             
             <div class="d-flex gap-2 mt-3">
                 <button class="btn btn-exito btn-lg" type="submit">

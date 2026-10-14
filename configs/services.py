@@ -103,6 +103,8 @@ def grabarDatosPtoVta(form):
     ultimo_rem_x = form.get('ultimo_rem_x', 0) or 0
     ultimo_rec_x = form.get('ultimo_rec_x', 0) or 0
     pos_printer = '1' if form.get('pos_printer') else ''
+    # Gate server-side: sin impresora POS el modo directo no tiene sentido, se fuerza vista previa.
+    impresion_directa = 1 if (form.get('impresion_directa') == '1' and form.get('pos_printer')) else 0
     fac_electronica = 1 if form.get('fac_electronica') else 0
     certificado_p12 = form.get('certificado', '')
     clave_certificado = form.get('clave_cert', '')
@@ -128,6 +130,7 @@ def grabarDatosPtoVta(form):
             puntoVenta.ultimo_rem_x = ultimo_rem_x
             puntoVenta.ultimo_rec_x = ultimo_rec_x
             puntoVenta.pos_printer = pos_printer
+            puntoVenta.impresion_directa = impresion_directa
             puntoVenta.fac_electronica = fac_electronica
             puntoVenta.certificado_p12 = certificado_p12
             puntoVenta.clave_certificado = clave_certificado
@@ -137,6 +140,7 @@ def grabarDatosPtoVta(form):
         else:
             puntoVenta = PuntosVenta(punto_venta, idsucursal, ultima_fac_a, ultima_fac_b, ultima_fac_c, ultima_deb_a, ultima_deb_b, ultima_deb_c, ultima_nc_a, ultima_nc_b, ultima_nc_c, ultimo_rem_x, ultimo_rec_x)
             puntoVenta.pos_printer = pos_printer
+            puntoVenta.impresion_directa = impresion_directa
             puntoVenta.fac_electronica = fac_electronica
             puntoVenta.certificado_p12 = certificado_p12
             puntoVenta.clave_certificado = clave_certificado
@@ -202,6 +206,17 @@ def getPosPrinter(idPuntoVenta):
     posPrinter = puntoVenta.pos_printer if puntoVenta else None
     facElectronica = puntoVenta.fac_electronica if puntoVenta else None
     return posPrinter, facElectronica
+
+def get_impresion_directa(idPuntoVenta):
+    """
+    Retorna True si el punto de venta esta en modo impresion directa
+    (envio silencioso a la impresora por defecto del terminal, sin
+    ventana de vista previa). False si la fila no existe o el id es None.
+    """
+    if idPuntoVenta is None:
+        return False
+    puntoVenta = db.session.get(PuntosVenta, idPuntoVenta)
+    return bool(puntoVenta.impresion_directa) if puntoVenta else False
 
 # =============================================================================
 # LÍNEAS DE COMPROBANTES (Cabecera y Pie de Ticket)

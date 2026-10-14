@@ -79,6 +79,11 @@ class InvoiceHandler {
     setPrinterType(type) {
         this.printerService = getPrinterService(type);
     }
+
+    // Debe invocarse DESPUÉS de setPrinterType (reemplaza la instancia de servicio)
+    setImpresionDirecta(esDirecto) {
+        this.printerService.setImpresionDirecta(esDirecto);
+    }
 }
 
 // Exportamos la clase

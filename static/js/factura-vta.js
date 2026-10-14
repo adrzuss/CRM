@@ -18,6 +18,8 @@ function showStatus(message, isError = false) {
 // Imprimir factura
 document.getElementById('printBtn').addEventListener('click', async () => {
     invoiceHandler.setPrinterType('pos');
+    // Modo de impresión de la sesión del punto de venta ('true' => envío directo)
+    invoiceHandler.setImpresionDirecta(document.getElementById('impresion_directa')?.value === 'true');
     const facturaId = document.getElementById('id').value;
     if (!facturaId) {
         showStatus('Ingrese un ID de factura válido', true);

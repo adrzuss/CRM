@@ -259,7 +259,9 @@ def buscar_vale():
 @alertas_mensajes
 def ver_factura_vta(id):
     factura, items, pagos = get_factura(id)
-    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos)
+    # session.get con default False: get_punto_vta no limpia la clave sin punto de venta
+    return render_template('factura-vta.html', factura=factura, items=items, pagos=pagos,
+                           impresion_directa=session.get('impresionDirecta', False))
 
 #----------------- factura electronica ------------------#
 #----------------- factura desde la ventana donde se ve el comprobante realizado -------------------------#

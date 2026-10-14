@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       document.getElementById("ptovta_seleccionado").value = data.punto_vta;
       document.getElementById("fac_electronica").value = data.fac_electronica ? 'true' : 'false';
       document.getElementById("pos_printer").value = data.pos_printer || '';
+      document.getElementById("impresion_directa").value = data.impresion_directa ? 'true' : 'false';
     }
   } catch (error) {
     console.log("Error al obtener el punto de venta:", error);
@@ -342,6 +343,8 @@ async function procesarTransaccion() {
             // Verificar si tiene facturación electrónica e impresora POS
             const tieneFacElectronica = document.getElementById('fac_electronica')?.value === 'true';
             const posPrinter = document.getElementById('pos_printer')?.value || '';
+            // Modo de impresión del punto de venta ('true' => envío directo)
+            const esImpresionDirecta = document.getElementById('impresion_directa')?.value === 'true';
             const facturaId = data.id;
             const ptoVta = document.getElementById('ptovta_seleccionado')?.value || '1';
             
@@ -384,6 +387,7 @@ async function procesarTransaccion() {
                         const invoiceHandler = new InvoiceHandler();
                         console.log('Se creo el objeto de impresion');
                         invoiceHandler.setPrinterType('pos');
+                        invoiceHandler.setImpresionDirecta(esImpresionDirecta);
                         console.log('Se seteo el tipo de impresora a POS');
                         const printResult = await invoiceHandler.printInvoice(facturaId);
                         console.log('Se envió la factura a imprimir en POS, resultado:', printResult);
@@ -446,10 +450,14 @@ async function imprimirRemitoVenta(facturaId) {
   console.log('-----------------------------------------------');
   console.log('Intentando imprimir remito para factura ID:', facturaId);
   console.log('-----------------------------------------------');
+  // Declarados localmente: corrige el ReferenceError latente de posPrinter
+  const posPrinter = document.getElementById('pos_printer')?.value || '';
+  const esImpresionDirecta = document.getElementById('impresion_directa')?.value === 'true';
   if (posPrinter) {
     // Usar impresora POS (formato ticket térmico via navegador)
     const invoiceHandler = new InvoiceHandler();
     invoiceHandler.setPrinterType('pos');
+    invoiceHandler.setImpresionDirecta(esImpresionDirecta);
     const printResult = await invoiceHandler.printDelivery(facturaId);
     
     if (!printResult || !printResult.success) {
@@ -573,6 +581,8 @@ async function asignarPuntoVenta(idPuntoVenta) {
       document.getElementById("fac_electronica").value = result.facElectronica ? 'true' : 'false';
       // Guardar la impresora POS si existe
       document.getElementById("pos_printer").value = result.posPrinter || '';
+      // Guardar el modo de impresión del punto de venta
+      document.getElementById("impresion_directa").value = result.impresion_directa ? 'true' : 'false';
       // Auto-seleccionar lista de precios del punto de venta
       const selectLista = document.getElementById('idlista');
       if (selectLista) {

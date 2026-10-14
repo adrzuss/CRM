@@ -8,7 +8,7 @@ from sucursales.models import Sucursales
 from ventas.services import get_factura, procesar_nueva_venta, get_vta_sucursales_data, get_vta_vendedores_data, procesar_nuevo_remito, \
                             ventas_desde_hasta, facturar_fe, generar_factura, procesar_nuevo_presupuesto, get_presupuesto, get_remito, \
                             generar_presupuesto, get_comprobantes_para_nc, get_items_comprobante_venta, get_vale_disponible
-from configs.services import getDatosSucEmpresa, getPosPrinter
+from configs.services import getDatosSucEmpresa, getPosPrinter, get_impresion_directa
 from utils.db import db
 from utils.utils import check_session
 from utils.msg_alertas import alertas_mensajes
@@ -44,13 +44,16 @@ def get_punto_vta():
             punto_vta = None
             fac_electronica = False
             pos_printer = None
+            impresion_directa = False
         else:    
             punto_vta = session['idPuntoVenta']
             session['posPrinter'], session['facElectronica'] = getPosPrinter(punto_vta)
             fac_electronica = session.get('facElectronica', False)
             pos_printer = session.get('posPrinter', None)
+            impresion_directa = get_impresion_directa(punto_vta)
+            session['impresionDirecta'] = impresion_directa
         #punto_vta = 1    
-        return jsonify({'success': True, 'punto_vta': punto_vta, 'fac_electronica': fac_electronica, 'pos_printer': pos_printer})
+        return jsonify({'success': True, 'punto_vta': punto_vta, 'fac_electronica': fac_electronica, 'pos_printer': pos_printer, 'impresion_directa': impresion_directa})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -90,8 +93,9 @@ def set_punto_vta():
         session['idPuntoVenta'] = punto_vta_id
         puntoVta = db.session.get(PuntosVenta, punto_vta_id)
         session['posPrinter'] = puntoVta.pos_printer
-        
-        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica, 'id_lista_precio': puntoVta.id_lista_precio})
+        session['impresionDirecta'] = bool(puntoVta.impresion_directa)
+
+        return jsonify({'success': True, 'message': 'Punto de venta asignado correctamente', 'posPrinter': puntoVta.pos_printer, 'facElectronica': puntoVta.fac_electronica, 'impresion_directa': bool(puntoVta.impresion_directa), 'id_lista_precio': puntoVta.id_lista_precio})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al asignar el punto de venta: {str(e)}'}), 500
     
